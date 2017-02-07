@@ -1,0 +1,1244 @@
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<script type="text/javascript">
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+    // array declaration
+    var hospitalsArray = [];
+    var districtsArray = [];
+    var circlesArray = [];
+    var dxUIDs = [];
+
+    var sNo = 0;
+
+    // jsonObj
+    var dataJsonObj;
+
+    // table dx
+   var tableDX = [ 
+					{ dxName: "1", dxId: "UROqXtz4l0L.xD6lmYsuXEF+UROqXtz4l0L.q7GreYKqtJr+UROqXtz4l0L.jp5eEmKFg6c+UROqXtz4l0L.NtrO4vkAnz4+UROqXtz4l0L.MdbVFagDcvM+UROqXtz4l0L.pS5QAG6ifEE+UROqXtz4l0L.dE2LroslFmI+UROqXtz4l0L.d1KOjSqmQfS"},
+{ dxName: "2", dxId: "UROqXtz4l0L.qlprr8RvGRX+UROqXtz4l0L.Bmnh0pn7Wyh+UROqXtz4l0L.GweI6PQcSuA+UROqXtz4l0L.UZJ3ufiwuZX+UROqXtz4l0L.K9oz7QsOX9y+UROqXtz4l0L.uWKSMAog0DK+UROqXtz4l0L.hT6vOD6u3aJ+UROqXtz4l0L.XY4AUaQXb8N"},
+{ dxName: "3", dxId: "OQo3vMLMozg.TVKsg3FE6Ox+OQo3vMLMozg.KgEdissejtN"},
+{ dxName: "4", dxId: "zo6Ze69zqfN.iOYsO0cj43o+zja1VSMWp8m.xD6lmYsuXEF+zja1VSMWp8m.q7GreYKqtJr+zja1VSMWp8m.jp5eEmKFg6c+zja1VSMWp8m.NtrO4vkAnz4+zja1VSMWp8m.MdbVFagDcvM+zja1VSMWp8m.pS5QAG6ifEE+zja1VSMWp8m.dE2LroslFmI+zja1VSMWp8m.d1KOjSqmQfS"},
+{ dxName: "5", dxId: "zo6Ze69zqfN.phPiDAEIlh1+zja1VSMWp8m.qlprr8RvGRX+zja1VSMWp8m.Bmnh0pn7Wyh+zja1VSMWp8m.GweI6PQcSuA+zja1VSMWp8m.UZJ3ufiwuZX+zja1VSMWp8m.K9oz7QsOX9y+zja1VSMWp8m.uWKSMAog0DK+zja1VSMWp8m.hT6vOD6u3aJ+zja1VSMWp8m.XY4AUaQXb8N"},
+{ dxName: "6", dxId: "N3QS8dseYgK.TVKsg3FE6Ox+N3QS8dseYgK.KgEdissejtN"},
+{ dxName: "7", dxId: "OahuAK2pDw4.xD6lmYsuXEF+Fd69CR15Kb7.xD6lmYsuXEF+Fd69CR15Kb7.q7GreYKqtJr+Fd69CR15Kb7.jp5eEmKFg6c+Fd69CR15Kb7.NtrO4vkAnz4+Fd69CR15Kb7.MdbVFagDcvM+Fd69CR15Kb7.pS5QAG6ifEE+Fd69CR15Kb7.dE2LroslFmI+Fd69CR15Kb7.d1KOjSqmQfS"},
+{ dxName: "8", dxId: "OahuAK2pDw4.phPiDAEIlh1+Fd69CR15Kb7.qlprr8RvGRX+Fd69CR15Kb7.Bmnh0pn7Wyh+Fd69CR15Kb7.GweI6PQcSuA+Fd69CR15Kb7.UZJ3ufiwuZX+Fd69CR15Kb7.K9oz7QsOX9y+Fd69CR15Kb7.uWKSMAog0DK+Fd69CR15Kb7.hT6vOD6u3aJ+Fd69CR15Kb7.XY4AUaQXb8N"},
+{ dxName: "9", dxId: "pCIgAYbtdcD.TVKsg3FE6Ox+pCIgAYbtdcD.KgEdissejtN"},
+{ dxName: "10", dxId: "afb4YLhynr7.iOYsO0cj43o+QZj31W8iDqf.xD6lmYsuXEF+QZj31W8iDqf.q7GreYKqtJr+QZj31W8iDqf.jp5eEmKFg6c+QZj31W8iDqf.NtrO4vkAnz4+QZj31W8iDqf.MdbVFagDcvM+QZj31W8iDqf.pS5QAG6ifEE+QZj31W8iDqf.dE2LroslFmI+QZj31W8iDqf.d1KOjSqmQfS"},
+{ dxName: "11", dxId: "afb4YLhynr7.phPiDAEIlh1+QZj31W8iDqf.qlprr8RvGRX+QZj31W8iDqf.Bmnh0pn7Wyh+QZj31W8iDqf.GweI6PQcSuA+QZj31W8iDqf.UZJ3ufiwuZX+QZj31W8iDqf.K9oz7QsOX9y+QZj31W8iDqf.uWKSMAog0DK+QZj31W8iDqf.hT6vOD6u3aJ+QZj31W8iDqf.XY4AUaQXb8N"},
+{ dxName: "12", dxId: "Hr8AuSy4YKS.TVKsg3FE6Ox+Hr8AuSy4YKS.KgEdissejtN"},
+{ dxName: "13", dxId: "by6ApBm8Oly.AWFHAFYJTph+DPimQ948Cdl.qlprr8RvGRX+DPimQ948Cdl.Bmnh0pn7Wyh+DPimQ948Cdl.GweI6PQcSuA+DPimQ948Cdl.UZJ3ufiwuZX+DPimQ948Cdl.K9oz7QsOX9y+DPimQ948Cdl.uWKSMAog0DK+DPimQ948Cdl.hT6vOD6u3aJ+DPimQ948Cdl.XY4AUaQXb8N"},
+{ dxName: "14", dxId: "VpUGS0bfeMz.TVKsg3FE6Ox+VpUGS0bfeMz.KgEdissejtN"},
+{ dxName: "15", dxId: "kOKsWjtHA36.AWFHAFYJTph+RL6zDOxipUf.qlprr8RvGRX+RL6zDOxipUf.Bmnh0pn7Wyh+RL6zDOxipUf.GweI6PQcSuA+RL6zDOxipUf.UZJ3ufiwuZX+RL6zDOxipUf.K9oz7QsOX9y+RL6zDOxipUf.uWKSMAog0DK+RL6zDOxipUf.hT6vOD6u3aJ+RL6zDOxipUf.XY4AUaQXb8N"},
+{ dxName: "16", dxId: "NxYhMBENJnt.TVKsg3FE6Ox+NxYhMBENJnt.KgEdissejtN"},
+{ dxName: "17", dxId: "Ukr1DuYBTJk.iOYsO0cj43o+woC5n7JpeRd.xD6lmYsuXEF+woC5n7JpeRd.q7GreYKqtJr+woC5n7JpeRd.jp5eEmKFg6c+woC5n7JpeRd.NtrO4vkAnz4+woC5n7JpeRd.MdbVFagDcvM+woC5n7JpeRd.pS5QAG6ifEE+woC5n7JpeRd.dE2LroslFmI+woC5n7JpeRd.d1KOjSqmQfS"},
+{ dxName: "18", dxId: "Ukr1DuYBTJk.phPiDAEIlh1+woC5n7JpeRd.qlprr8RvGRX+woC5n7JpeRd.Bmnh0pn7Wyh+woC5n7JpeRd.GweI6PQcSuA+woC5n7JpeRd.UZJ3ufiwuZX+woC5n7JpeRd.K9oz7QsOX9y+woC5n7JpeRd.uWKSMAog0DK+woC5n7JpeRd.hT6vOD6u3aJ+woC5n7JpeRd.XY4AUaQXb8N"},
+{ dxName: "19", dxId: "aJ2iu7DSTE3.TVKsg3FE6Ox+aJ2iu7DSTE3.KgEdissejtN"},
+{ dxName: "20", dxId: "BRHGE5CuoEE.iOYsO0cj43o+P5l9reCQSos.xD6lmYsuXEF+P5l9reCQSos.q7GreYKqtJr+P5l9reCQSos.jp5eEmKFg6c+P5l9reCQSos.NtrO4vkAnz4+P5l9reCQSos.MdbVFagDcvM+P5l9reCQSos.pS5QAG6ifEE+P5l9reCQSos.dE2LroslFmI+P5l9reCQSos.d1KOjSqmQfS"},
+{ dxName: "21", dxId: "BRHGE5CuoEE.phPiDAEIlh1+P5l9reCQSos.qlprr8RvGRX+P5l9reCQSos.Bmnh0pn7Wyh+P5l9reCQSos.GweI6PQcSuA+P5l9reCQSos.UZJ3ufiwuZX+P5l9reCQSos.K9oz7QsOX9y+P5l9reCQSos.uWKSMAog0DK+P5l9reCQSos.hT6vOD6u3aJ+P5l9reCQSos.XY4AUaQXb8N"},
+{ dxName: "22", dxId: "CmD9190sTk3.TVKsg3FE6Ox+CmD9190sTk3.KgEdissejtN"},
+{ dxName: "23", dxId: "B6VDLZxyo3D.iOYsO0cj43o+DtmsvisQUha.xD6lmYsuXEF+DtmsvisQUha.q7GreYKqtJr+DtmsvisQUha.jp5eEmKFg6c+DtmsvisQUha.NtrO4vkAnz4+DtmsvisQUha.MdbVFagDcvM+DtmsvisQUha.pS5QAG6ifEE+DtmsvisQUha.dE2LroslFmI+DtmsvisQUha.d1KOjSqmQfS"},
+{ dxName: "24", dxId: "B6VDLZxyo3D.phPiDAEIlh1+DtmsvisQUha.qlprr8RvGRX+DtmsvisQUha.Bmnh0pn7Wyh+DtmsvisQUha.GweI6PQcSuA+DtmsvisQUha.UZJ3ufiwuZX+DtmsvisQUha.K9oz7QsOX9y+DtmsvisQUha.uWKSMAog0DK+DtmsvisQUha.hT6vOD6u3aJ+DtmsvisQUha.XY4AUaQXb8N"},
+{ dxName: "25", dxId: "W5gQjYOpiMz.TVKsg3FE6Ox+W5gQjYOpiMz.KgEdissejtN"},
+{ dxName: "26", dxId: "QAOzptxkcKo.iOYsO0cj43o+P0Ytk0RKmbJ.xD6lmYsuXEF+P0Ytk0RKmbJ.q7GreYKqtJr+P0Ytk0RKmbJ.jp5eEmKFg6c+P0Ytk0RKmbJ.NtrO4vkAnz4+P0Ytk0RKmbJ.MdbVFagDcvM+P0Ytk0RKmbJ.pS5QAG6ifEE+P0Ytk0RKmbJ.dE2LroslFmI+P0Ytk0RKmbJ.d1KOjSqmQfS"},
+{ dxName: "27", dxId: "QAOzptxkcKo.phPiDAEIlh1+P0Ytk0RKmbJ.qlprr8RvGRX+P0Ytk0RKmbJ.Bmnh0pn7Wyh+P0Ytk0RKmbJ.GweI6PQcSuA+P0Ytk0RKmbJ.UZJ3ufiwuZX+P0Ytk0RKmbJ.K9oz7QsOX9y+P0Ytk0RKmbJ.uWKSMAog0DK+P0Ytk0RKmbJ.hT6vOD6u3aJ+P0Ytk0RKmbJ.XY4AUaQXb8N"},
+{ dxName: "28", dxId: "EEfp3VGHuII.TVKsg3FE6Ox+EEfp3VGHuII.KgEdissejtN"},
+{ dxName: "29", dxId: "nKWJJob5k61.iOYsO0cj43o+kv9nGOpOXM0.xD6lmYsuXEF+kv9nGOpOXM0.q7GreYKqtJr+kv9nGOpOXM0.jp5eEmKFg6c+kv9nGOpOXM0.NtrO4vkAnz4+kv9nGOpOXM0.MdbVFagDcvM+kv9nGOpOXM0.pS5QAG6ifEE+kv9nGOpOXM0.dE2LroslFmI+kv9nGOpOXM0.d1KOjSqmQfS"},
+{ dxName: "30", dxId: "nKWJJob5k61.phPiDAEIlh1+kv9nGOpOXM0.qlprr8RvGRX+kv9nGOpOXM0.Bmnh0pn7Wyh+kv9nGOpOXM0.GweI6PQcSuA+kv9nGOpOXM0.UZJ3ufiwuZX+kv9nGOpOXM0.K9oz7QsOX9y+kv9nGOpOXM0.uWKSMAog0DK+kv9nGOpOXM0.hT6vOD6u3aJ+kv9nGOpOXM0.XY4AUaQXb8N"},
+{ dxName: "31", dxId: "kX15I1Xgw3K.TVKsg3FE6Ox+kX15I1Xgw3K.KgEdissejtN"},
+{ dxName: "32", dxId: "ZvMY5WUwGPd.iOYsO0cj43o+Mx6a0AMHygn.xD6lmYsuXEF+Mx6a0AMHygn.q7GreYKqtJr+Mx6a0AMHygn.jp5eEmKFg6c+Mx6a0AMHygn.NtrO4vkAnz4+Mx6a0AMHygn.MdbVFagDcvM+Mx6a0AMHygn.pS5QAG6ifEE+Mx6a0AMHygn.dE2LroslFmI+Mx6a0AMHygn.d1KOjSqmQfS"},
+{ dxName: "33", dxId: "ZvMY5WUwGPd.phPiDAEIlh1+Mx6a0AMHygn.qlprr8RvGRX+Mx6a0AMHygn.Bmnh0pn7Wyh+Mx6a0AMHygn.GweI6PQcSuA+Mx6a0AMHygn.UZJ3ufiwuZX+Mx6a0AMHygn.K9oz7QsOX9y+Mx6a0AMHygn.uWKSMAog0DK+Mx6a0AMHygn.hT6vOD6u3aJ+Mx6a0AMHygn.XY4AUaQXb8N"},
+{ dxName: "34", dxId: "XIq5kSZFIxc.TVKsg3FE6Ox+XIq5kSZFIxc.KgEdissejtN"},
+{ dxName: "35", dxId: "VC7ohsuT2ym.iOYsO0cj43o+qsjP4WtWNeM.xD6lmYsuXEF+qsjP4WtWNeM.q7GreYKqtJr+qsjP4WtWNeM.jp5eEmKFg6c+qsjP4WtWNeM.NtrO4vkAnz4+qsjP4WtWNeM.MdbVFagDcvM+qsjP4WtWNeM.pS5QAG6ifEE+qsjP4WtWNeM.dE2LroslFmI+qsjP4WtWNeM.d1KOjSqmQfS"},
+{ dxName: "36", dxId: "VC7ohsuT2ym.phPiDAEIlh1+qsjP4WtWNeM.qlprr8RvGRX+qsjP4WtWNeM.Bmnh0pn7Wyh+qsjP4WtWNeM.GweI6PQcSuA+qsjP4WtWNeM.UZJ3ufiwuZX+qsjP4WtWNeM.K9oz7QsOX9y+qsjP4WtWNeM.uWKSMAog0DK+qsjP4WtWNeM.hT6vOD6u3aJ+qsjP4WtWNeM.XY4AUaQXb8N"},
+{ dxName: "37", dxId: "tYjYIQMBOWg.TVKsg3FE6Ox+tYjYIQMBOWg.KgEdissejtN"},
+{ dxName: "38", dxId: "cc3K8H4rV5y.iOYsO0cj43o+yQwGoCoEz6n.xD6lmYsuXEF+yQwGoCoEz6n.q7GreYKqtJr+yQwGoCoEz6n.jp5eEmKFg6c+yQwGoCoEz6n.NtrO4vkAnz4+yQwGoCoEz6n.MdbVFagDcvM+yQwGoCoEz6n.pS5QAG6ifEE+yQwGoCoEz6n.dE2LroslFmI+yQwGoCoEz6n.d1KOjSqmQfS"},
+{ dxName: "39", dxId: "cc3K8H4rV5y.phPiDAEIlh1+yQwGoCoEz6n.qlprr8RvGRX+yQwGoCoEz6n.Bmnh0pn7Wyh+yQwGoCoEz6n.GweI6PQcSuA+yQwGoCoEz6n.UZJ3ufiwuZX+yQwGoCoEz6n.K9oz7QsOX9y+yQwGoCoEz6n.uWKSMAog0DK+yQwGoCoEz6n.hT6vOD6u3aJ+yQwGoCoEz6n.XY4AUaQXb8N"},
+{ dxName: "40", dxId: "YaCaSx5WgeP.TVKsg3FE6Ox+YaCaSx5WgeP.KgEdissejtN"},
+{ dxName: "41", dxId: "Yspq2ZarstT.iOYsO0cj43o+oXVvdpkoOpQ.xD6lmYsuXEF+oXVvdpkoOpQ.q7GreYKqtJr+oXVvdpkoOpQ.jp5eEmKFg6c+oXVvdpkoOpQ.NtrO4vkAnz4+oXVvdpkoOpQ.MdbVFagDcvM+oXVvdpkoOpQ.pS5QAG6ifEE+oXVvdpkoOpQ.dE2LroslFmI+oXVvdpkoOpQ.d1KOjSqmQfS"},
+{ dxName: "42", dxId: "Yspq2ZarstT.phPiDAEIlh1+oXVvdpkoOpQ.qlprr8RvGRX+oXVvdpkoOpQ.Bmnh0pn7Wyh+oXVvdpkoOpQ.GweI6PQcSuA+oXVvdpkoOpQ.UZJ3ufiwuZX+oXVvdpkoOpQ.K9oz7QsOX9y+oXVvdpkoOpQ.uWKSMAog0DK+oXVvdpkoOpQ.hT6vOD6u3aJ+oXVvdpkoOpQ.XY4AUaQXb8N"},
+{ dxName: "43", dxId: "NCn69WVzGmS.TVKsg3FE6Ox+NCn69WVzGmS.KgEdissejtN"},
+{ dxName: "44", dxId: "oQLO71Qsp1e.iOYsO0cj43o+JxWv1puiWhd.xD6lmYsuXEF+JxWv1puiWhd.q7GreYKqtJr+JxWv1puiWhd.jp5eEmKFg6c+JxWv1puiWhd.NtrO4vkAnz4+JxWv1puiWhd.MdbVFagDcvM+JxWv1puiWhd.pS5QAG6ifEE+JxWv1puiWhd.dE2LroslFmI+JxWv1puiWhd.d1KOjSqmQfS"},
+{ dxName: "45", dxId: "oQLO71Qsp1e.phPiDAEIlh1+JxWv1puiWhd.qlprr8RvGRX+JxWv1puiWhd.Bmnh0pn7Wyh+JxWv1puiWhd.GweI6PQcSuA+JxWv1puiWhd.UZJ3ufiwuZX+JxWv1puiWhd.K9oz7QsOX9y+JxWv1puiWhd.uWKSMAog0DK+JxWv1puiWhd.hT6vOD6u3aJ+JxWv1puiWhd.XY4AUaQXb8N"},
+{ dxName: "46", dxId: "ecJ1sFcbOaw.TVKsg3FE6Ox+ecJ1sFcbOaw.KgEdissejtN"},
+{ dxName: "47", dxId: "UROqXtz4l0L.xD6lmYsuXEF+UROqXtz4l0L.q7GreYKqtJr+UROqXtz4l0L.jp5eEmKFg6c+UROqXtz4l0L.NtrO4vkAnz4+UROqXtz4l0L.MdbVFagDcvM+UROqXtz4l0L.pS5QAG6ifEE+UROqXtz4l0L.dE2LroslFmI+UROqXtz4l0L.d1KOjSqmQfS+zo6Ze69zqfN.iOYsO0cj43o+zja1VSMWp8m.xD6lmYsuXEF+zja1VSMWp8m.q7GreYKqtJr+zja1VSMWp8m.jp5eEmKFg6c+zja1VSMWp8m.NtrO4vkAnz4+zja1VSMWp8m.MdbVFagDcvM+zja1VSMWp8m.pS5QAG6ifEE+zja1VSMWp8m.dE2LroslFmI+zja1VSMWp8m.d1KOjSqmQfS+OahuAK2pDw4.xD6lmYsuXEF+Fd69CR15Kb7.xD6lmYsuXEF+Fd69CR15Kb7.q7GreYKqtJr+Fd69CR15Kb7.jp5eEmKFg6c+Fd69CR15Kb7.NtrO4vkAnz4+Fd69CR15Kb7.MdbVFagDcvM+Fd69CR15Kb7.pS5QAG6ifEE+Fd69CR15Kb7.dE2LroslFmI+Fd69CR15Kb7.d1KOjSqmQfS+afb4YLhynr7.iOYsO0cj43o+QZj31W8iDqf.xD6lmYsuXEF+QZj31W8iDqf.q7GreYKqtJr+QZj31W8iDqf.jp5eEmKFg6c+QZj31W8iDqf.NtrO4vkAnz4+QZj31W8iDqf.MdbVFagDcvM+QZj31W8iDqf.pS5QAG6ifEE+QZj31W8iDqf.dE2LroslFmI+QZj31W8iDqf.d1KOjSqmQfS+Ukr1DuYBTJk.iOYsO0cj43o+woC5n7JpeRd.xD6lmYsuXEF+woC5n7JpeRd.q7GreYKqtJr+woC5n7JpeRd.jp5eEmKFg6c+woC5n7JpeRd.NtrO4vkAnz4+woC5n7JpeRd.MdbVFagDcvM+woC5n7JpeRd.pS5QAG6ifEE+woC5n7JpeRd.dE2LroslFmI+woC5n7JpeRd.d1KOjSqmQfS+BRHGE5CuoEE.iOYsO0cj43o+P5l9reCQSos.xD6lmYsuXEF+P5l9reCQSos.q7GreYKqtJr+P5l9reCQSos.jp5eEmKFg6c+P5l9reCQSos.NtrO4vkAnz4+P5l9reCQSos.MdbVFagDcvM+P5l9reCQSos.pS5QAG6ifEE+P5l9reCQSos.dE2LroslFmI+P5l9reCQSos.d1KOjSqmQfS+B6VDLZxyo3D.iOYsO0cj43o+DtmsvisQUha.xD6lmYsuXEF+DtmsvisQUha.q7GreYKqtJr+DtmsvisQUha.jp5eEmKFg6c+DtmsvisQUha.NtrO4vkAnz4+DtmsvisQUha.MdbVFagDcvM+DtmsvisQUha.pS5QAG6ifEE+DtmsvisQUha.dE2LroslFmI+DtmsvisQUha.d1KOjSqmQfS+QAOzptxkcKo.iOYsO0cj43o+P0Ytk0RKmbJ.xD6lmYsuXEF+P0Ytk0RKmbJ.q7GreYKqtJr+P0Ytk0RKmbJ.jp5eEmKFg6c+P0Ytk0RKmbJ.NtrO4vkAnz4+P0Ytk0RKmbJ.MdbVFagDcvM+P0Ytk0RKmbJ.pS5QAG6ifEE+P0Ytk0RKmbJ.dE2LroslFmI+P0Ytk0RKmbJ.d1KOjSqmQfS+nKWJJob5k61.iOYsO0cj43o+kv9nGOpOXM0.xD6lmYsuXEF+kv9nGOpOXM0.q7GreYKqtJr+kv9nGOpOXM0.jp5eEmKFg6c+kv9nGOpOXM0.NtrO4vkAnz4+kv9nGOpOXM0.MdbVFagDcvM+kv9nGOpOXM0.pS5QAG6ifEE+kv9nGOpOXM0.dE2LroslFmI+kv9nGOpOXM0.d1KOjSqmQfS+ZvMY5WUwGPd.iOYsO0cj43o+Mx6a0AMHygn.xD6lmYsuXEF+Mx6a0AMHygn.q7GreYKqtJr+Mx6a0AMHygn.jp5eEmKFg6c+Mx6a0AMHygn.NtrO4vkAnz4+Mx6a0AMHygn.MdbVFagDcvM+Mx6a0AMHygn.pS5QAG6ifEE+Mx6a0AMHygn.dE2LroslFmI+Mx6a0AMHygn.d1KOjSqmQfS+VC7ohsuT2ym.iOYsO0cj43o+qsjP4WtWNeM.xD6lmYsuXEF+qsjP4WtWNeM.q7GreYKqtJr+qsjP4WtWNeM.jp5eEmKFg6c+qsjP4WtWNeM.NtrO4vkAnz4+qsjP4WtWNeM.MdbVFagDcvM+qsjP4WtWNeM.pS5QAG6ifEE+qsjP4WtWNeM.dE2LroslFmI+qsjP4WtWNeM.d1KOjSqmQfS+cc3K8H4rV5y.iOYsO0cj43o+yQwGoCoEz6n.xD6lmYsuXEF+yQwGoCoEz6n.q7GreYKqtJr+yQwGoCoEz6n.jp5eEmKFg6c+yQwGoCoEz6n.NtrO4vkAnz4+yQwGoCoEz6n.MdbVFagDcvM+yQwGoCoEz6n.pS5QAG6ifEE+yQwGoCoEz6n.dE2LroslFmI+yQwGoCoEz6n.d1KOjSqmQfS+Yspq2ZarstT.iOYsO0cj43o+oXVvdpkoOpQ.xD6lmYsuXEF+oXVvdpkoOpQ.q7GreYKqtJr+oXVvdpkoOpQ.jp5eEmKFg6c+oXVvdpkoOpQ.NtrO4vkAnz4+oXVvdpkoOpQ.MdbVFagDcvM+oXVvdpkoOpQ.pS5QAG6ifEE+oXVvdpkoOpQ.dE2LroslFmI+oXVvdpkoOpQ.d1KOjSqmQfS+oQLO71Qsp1e.iOYsO0cj43o+JxWv1puiWhd.xD6lmYsuXEF+JxWv1puiWhd.q7GreYKqtJr+JxWv1puiWhd.jp5eEmKFg6c+JxWv1puiWhd.NtrO4vkAnz4+JxWv1puiWhd.MdbVFagDcvM+JxWv1puiWhd.pS5QAG6ifEE+JxWv1puiWhd.dE2LroslFmI+JxWv1puiWhd.d1KOjSqmQfS"},
+{ dxName: "48", dxId: "UROqXtz4l0L.qlprr8RvGRX+UROqXtz4l0L.Bmnh0pn7Wyh+UROqXtz4l0L.GweI6PQcSuA+UROqXtz4l0L.UZJ3ufiwuZX+UROqXtz4l0L.K9oz7QsOX9y+UROqXtz4l0L.uWKSMAog0DK+UROqXtz4l0L.hT6vOD6u3aJ+UROqXtz4l0L.XY4AUaQXb8N+zo6Ze69zqfN.phPiDAEIlh1+zja1VSMWp8m.qlprr8RvGRX+zja1VSMWp8m.Bmnh0pn7Wyh+zja1VSMWp8m.GweI6PQcSuA+zja1VSMWp8m.UZJ3ufiwuZX+zja1VSMWp8m.K9oz7QsOX9y+zja1VSMWp8m.uWKSMAog0DK+zja1VSMWp8m.hT6vOD6u3aJ+zja1VSMWp8m.XY4AUaQXb8N+OahuAK2pDw4.phPiDAEIlh1+Fd69CR15Kb7.qlprr8RvGRX+Fd69CR15Kb7.Bmnh0pn7Wyh+Fd69CR15Kb7.GweI6PQcSuA+Fd69CR15Kb7.UZJ3ufiwuZX+Fd69CR15Kb7.K9oz7QsOX9y+Fd69CR15Kb7.uWKSMAog0DK+Fd69CR15Kb7.hT6vOD6u3aJ+Fd69CR15Kb7.XY4AUaQXb8N+afb4YLhynr7.phPiDAEIlh1+QZj31W8iDqf.qlprr8RvGRX+QZj31W8iDqf.Bmnh0pn7Wyh+QZj31W8iDqf.GweI6PQcSuA+QZj31W8iDqf.UZJ3ufiwuZX+QZj31W8iDqf.K9oz7QsOX9y+QZj31W8iDqf.uWKSMAog0DK+QZj31W8iDqf.hT6vOD6u3aJ+QZj31W8iDqf.XY4AUaQXb8N+by6ApBm8Oly.AWFHAFYJTph+DPimQ948Cdl.qlprr8RvGRX+DPimQ948Cdl.Bmnh0pn7Wyh+DPimQ948Cdl.GweI6PQcSuA+DPimQ948Cdl.UZJ3ufiwuZX+DPimQ948Cdl.K9oz7QsOX9y+DPimQ948Cdl.uWKSMAog0DK+DPimQ948Cdl.hT6vOD6u3aJ+DPimQ948Cdl.XY4AUaQXb8N+kOKsWjtHA36.AWFHAFYJTph+RL6zDOxipUf.qlprr8RvGRX+RL6zDOxipUf.Bmnh0pn7Wyh+RL6zDOxipUf.GweI6PQcSuA+RL6zDOxipUf.UZJ3ufiwuZX+RL6zDOxipUf.K9oz7QsOX9y+RL6zDOxipUf.uWKSMAog0DK+RL6zDOxipUf.hT6vOD6u3aJ+RL6zDOxipUf.XY4AUaQXb8N+Ukr1DuYBTJk.phPiDAEIlh1+woC5n7JpeRd.qlprr8RvGRX+woC5n7JpeRd.Bmnh0pn7Wyh+woC5n7JpeRd.GweI6PQcSuA+woC5n7JpeRd.UZJ3ufiwuZX+woC5n7JpeRd.K9oz7QsOX9y+woC5n7JpeRd.uWKSMAog0DK+woC5n7JpeRd.hT6vOD6u3aJ+woC5n7JpeRd.XY4AUaQXb8N+BRHGE5CuoEE.phPiDAEIlh1+P5l9reCQSos.qlprr8RvGRX+P5l9reCQSos.Bmnh0pn7Wyh+P5l9reCQSos.GweI6PQcSuA+P5l9reCQSos.UZJ3ufiwuZX+P5l9reCQSos.K9oz7QsOX9y+P5l9reCQSos.uWKSMAog0DK+P5l9reCQSos.hT6vOD6u3aJ+P5l9reCQSos.XY4AUaQXb8N+B6VDLZxyo3D.phPiDAEIlh1+DtmsvisQUha.qlprr8RvGRX+DtmsvisQUha.Bmnh0pn7Wyh+DtmsvisQUha.GweI6PQcSuA+DtmsvisQUha.UZJ3ufiwuZX+DtmsvisQUha.K9oz7QsOX9y+DtmsvisQUha.uWKSMAog0DK+DtmsvisQUha.hT6vOD6u3aJ+DtmsvisQUha.XY4AUaQXb8N+QAOzptxkcKo.phPiDAEIlh1+P0Ytk0RKmbJ.qlprr8RvGRX+P0Ytk0RKmbJ.Bmnh0pn7Wyh+P0Ytk0RKmbJ.GweI6PQcSuA+P0Ytk0RKmbJ.UZJ3ufiwuZX+P0Ytk0RKmbJ.K9oz7QsOX9y+P0Ytk0RKmbJ.uWKSMAog0DK+P0Ytk0RKmbJ.hT6vOD6u3aJ+P0Ytk0RKmbJ.XY4AUaQXb8N+nKWJJob5k61.phPiDAEIlh1+kv9nGOpOXM0.qlprr8RvGRX+kv9nGOpOXM0.Bmnh0pn7Wyh+kv9nGOpOXM0.GweI6PQcSuA+kv9nGOpOXM0.UZJ3ufiwuZX+kv9nGOpOXM0.K9oz7QsOX9y+kv9nGOpOXM0.uWKSMAog0DK+kv9nGOpOXM0.hT6vOD6u3aJ+kv9nGOpOXM0.XY4AUaQXb8N+ZvMY5WUwGPd.phPiDAEIlh1+Mx6a0AMHygn.qlprr8RvGRX+Mx6a0AMHygn.Bmnh0pn7Wyh+Mx6a0AMHygn.GweI6PQcSuA+Mx6a0AMHygn.UZJ3ufiwuZX+Mx6a0AMHygn.K9oz7QsOX9y+Mx6a0AMHygn.uWKSMAog0DK+Mx6a0AMHygn.hT6vOD6u3aJ+Mx6a0AMHygn.XY4AUaQXb8N+VC7ohsuT2ym.phPiDAEIlh1+qsjP4WtWNeM.qlprr8RvGRX+qsjP4WtWNeM.Bmnh0pn7Wyh+qsjP4WtWNeM.GweI6PQcSuA+qsjP4WtWNeM.UZJ3ufiwuZX+qsjP4WtWNeM.K9oz7QsOX9y+qsjP4WtWNeM.uWKSMAog0DK+qsjP4WtWNeM.hT6vOD6u3aJ+qsjP4WtWNeM.XY4AUaQXb8N+cc3K8H4rV5y.phPiDAEIlh1+yQwGoCoEz6n.qlprr8RvGRX+yQwGoCoEz6n.Bmnh0pn7Wyh+yQwGoCoEz6n.GweI6PQcSuA+yQwGoCoEz6n.UZJ3ufiwuZX+yQwGoCoEz6n.K9oz7QsOX9y+yQwGoCoEz6n.uWKSMAog0DK+yQwGoCoEz6n.hT6vOD6u3aJ+yQwGoCoEz6n.XY4AUaQXb8N+Yspq2ZarstT.phPiDAEIlh1+oXVvdpkoOpQ.qlprr8RvGRX+oXVvdpkoOpQ.Bmnh0pn7Wyh+oXVvdpkoOpQ.GweI6PQcSuA+oXVvdpkoOpQ.UZJ3ufiwuZX+oXVvdpkoOpQ.K9oz7QsOX9y+oXVvdpkoOpQ.uWKSMAog0DK+oXVvdpkoOpQ.hT6vOD6u3aJ+oXVvdpkoOpQ.XY4AUaQXb8N+oQLO71Qsp1e.phPiDAEIlh1+JxWv1puiWhd.qlprr8RvGRX+JxWv1puiWhd.Bmnh0pn7Wyh+JxWv1puiWhd.GweI6PQcSuA+JxWv1puiWhd.UZJ3ufiwuZX+JxWv1puiWhd.K9oz7QsOX9y+JxWv1puiWhd.uWKSMAog0DK+JxWv1puiWhd.hT6vOD6u3aJ+JxWv1puiWhd.XY4AUaQXb8N"},
+{ dxName: "49", dxId: "OQo3vMLMozg.TVKsg3FE6Ox+OQo3vMLMozg.KgEdissejtN+N3QS8dseYgK.TVKsg3FE6Ox+N3QS8dseYgK.KgEdissejtN+pCIgAYbtdcD.TVKsg3FE6Ox+pCIgAYbtdcD.KgEdissejtN+Hr8AuSy4YKS.TVKsg3FE6Ox+Hr8AuSy4YKS.KgEdissejtN+VpUGS0bfeMz.TVKsg3FE6Ox+VpUGS0bfeMz.KgEdissejtN+NxYhMBENJnt.TVKsg3FE6Ox+NxYhMBENJnt.KgEdissejtN+aJ2iu7DSTE3.TVKsg3FE6Ox+aJ2iu7DSTE3.KgEdissejtN+CmD9190sTk3.TVKsg3FE6Ox+CmD9190sTk3.KgEdissejtN+W5gQjYOpiMz.TVKsg3FE6Ox+W5gQjYOpiMz.KgEdissejtN+EEfp3VGHuII.TVKsg3FE6Ox+EEfp3VGHuII.KgEdissejtN+kX15I1Xgw3K.TVKsg3FE6Ox+kX15I1Xgw3K.KgEdissejtN+XIq5kSZFIxc.TVKsg3FE6Ox+XIq5kSZFIxc.KgEdissejtN+tYjYIQMBOWg.TVKsg3FE6Ox+tYjYIQMBOWg.KgEdissejtN+YaCaSx5WgeP.TVKsg3FE6Ox+YaCaSx5WgeP.KgEdissejtN+NCn69WVzGmS.TVKsg3FE6Ox+NCn69WVzGmS.KgEdissejtN+ecJ1sFcbOaw.TVKsg3FE6Ox+ecJ1sFcbOaw.KgEdissejtN"},
+{ dxName: "50", dxId: "UROqXtz4l0L.GMMLAxjnI2E+UROqXtz4l0L.u8bv8gqLJPb+UROqXtz4l0L.VOpajE9t9Hj+UROqXtz4l0L.V6J0RnDCUN3+UROqXtz4l0L.xP27sqOJe1c+UROqXtz4l0L.t7M9HOIQqIz+UROqXtz4l0L.cZN8sSFQiBK+UROqXtz4l0L.m5ixZe5XYc9"},
+{ dxName: "51", dxId: "UROqXtz4l0L.E9P7UuT7XZx+UROqXtz4l0L.Xzn4EkzgqnN+UROqXtz4l0L.xst6skw6Jis+UROqXtz4l0L.eJd6lKrVOD9+UROqXtz4l0L.lsbQcMAkjnS+UROqXtz4l0L.J2WRoGiWl0h+UROqXtz4l0L.Vio8Jj3chhH+UROqXtz4l0L.rIUg2B7XPVQ"},
+{ dxName: "52", dxId: "OQo3vMLMozg.qy8hh5TKmAw+OQo3vMLMozg.DqjeIm3wnAz"},
+{ dxName: "53", dxId: "zo6Ze69zqfN.biyomRYTJLI+zja1VSMWp8m.GMMLAxjnI2E+zja1VSMWp8m.u8bv8gqLJPb+zja1VSMWp8m.VOpajE9t9Hj+zja1VSMWp8m.V6J0RnDCUN3+zja1VSMWp8m.xP27sqOJe1c+zja1VSMWp8m.t7M9HOIQqIz+zja1VSMWp8m.cZN8sSFQiBK+zja1VSMWp8m.m5ixZe5XYc9"},
+{ dxName: "54", dxId: "zo6Ze69zqfN.P609nIO6VuH+zja1VSMWp8m.E9P7UuT7XZx+zja1VSMWp8m.Xzn4EkzgqnN+zja1VSMWp8m.xst6skw6Jis+zja1VSMWp8m.eJd6lKrVOD9+zja1VSMWp8m.lsbQcMAkjnS+zja1VSMWp8m.J2WRoGiWl0h+zja1VSMWp8m.rIUg2B7XPVQ+zja1VSMWp8m.Vio8Jj3chhH"},
+{ dxName: "55", dxId: "N3QS8dseYgK.qy8hh5TKmAw+N3QS8dseYgK.DqjeIm3wnAz"},
+{ dxName: "56", dxId: "OahuAK2pDw4.biyomRYTJLI+Fd69CR15Kb7.GMMLAxjnI2E+Fd69CR15Kb7.u8bv8gqLJPb+Fd69CR15Kb7.VOpajE9t9Hj+Fd69CR15Kb7.V6J0RnDCUN3+Fd69CR15Kb7.xP27sqOJe1c+Fd69CR15Kb7.t7M9HOIQqIz+Fd69CR15Kb7.cZN8sSFQiBK+Fd69CR15Kb7.m5ixZe5XYc9"},
+{ dxName: "57", dxId: "OahuAK2pDw4.P609nIO6VuH+Fd69CR15Kb7.E9P7UuT7XZx+Fd69CR15Kb7.Xzn4EkzgqnN+Fd69CR15Kb7.xst6skw6Jis+Fd69CR15Kb7.eJd6lKrVOD9+Fd69CR15Kb7.lsbQcMAkjnS+Fd69CR15Kb7.J2WRoGiWl0h+Fd69CR15Kb7.rIUg2B7XPVQ+Fd69CR15Kb7.Vio8Jj3chhH"},
+{ dxName: "58", dxId: "pCIgAYbtdcD.qy8hh5TKmAw+pCIgAYbtdcD.DqjeIm3wnAz"},
+{ dxName: "59", dxId: "afb4YLhynr7.biyomRYTJLI+QZj31W8iDqf.GMMLAxjnI2E+QZj31W8iDqf.u8bv8gqLJPb+QZj31W8iDqf.VOpajE9t9Hj+QZj31W8iDqf.V6J0RnDCUN3+QZj31W8iDqf.xP27sqOJe1c+QZj31W8iDqf.t7M9HOIQqIz+QZj31W8iDqf.cZN8sSFQiBK+QZj31W8iDqf.m5ixZe5XYc9"},
+{ dxName: "60", dxId: "afb4YLhynr7.P609nIO6VuH+QZj31W8iDqf.E9P7UuT7XZx+QZj31W8iDqf.Xzn4EkzgqnN+QZj31W8iDqf.xst6skw6Jis+QZj31W8iDqf.eJd6lKrVOD9+QZj31W8iDqf.lsbQcMAkjnS+QZj31W8iDqf.J2WRoGiWl0h+QZj31W8iDqf.rIUg2B7XPVQ+QZj31W8iDqf.Vio8Jj3chhH"},
+{ dxName: "61", dxId: "Hr8AuSy4YKS.qy8hh5TKmAw+Hr8AuSy4YKS.DqjeIm3wnAz"},
+{ dxName: "62", dxId: "PQtpE5jOFjV.AWFHAFYJTph+DPimQ948Cdl.u8bv8gqLJPb+DPimQ948Cdl.VOpajE9t9Hj+DPimQ948Cdl.V6J0RnDCUN3+DPimQ948Cdl.xP27sqOJe1c+DPimQ948Cdl.t7M9HOIQqIz+DPimQ948Cdl.cZN8sSFQiBK+DPimQ948Cdl.m5ixZe5XYc9"},
+{ dxName: "63", dxId: "VpUGS0bfeMz.qy8hh5TKmAw+VpUGS0bfeMz.DqjeIm3wnAz"},
+{ dxName: "64", dxId: "uDaZi3Xte0e.AWFHAFYJTph+RL6zDOxipUf.Xzn4EkzgqnN+RL6zDOxipUf.xst6skw6Jis+RL6zDOxipUf.eJd6lKrVOD9+RL6zDOxipUf.lsbQcMAkjnS+RL6zDOxipUf.J2WRoGiWl0h+RL6zDOxipUf.rIUg2B7XPVQ+RL6zDOxipUf.Vio8Jj3chhH"},
+{ dxName: "65", dxId: "NxYhMBENJnt.qy8hh5TKmAw+NxYhMBENJnt.DqjeIm3wnAz"},
+{ dxName: "66", dxId: "Ukr1DuYBTJk.biyomRYTJLI+woC5n7JpeRd.GMMLAxjnI2E+woC5n7JpeRd.u8bv8gqLJPb+woC5n7JpeRd.VOpajE9t9Hj+woC5n7JpeRd.V6J0RnDCUN3+woC5n7JpeRd.xP27sqOJe1c+woC5n7JpeRd.t7M9HOIQqIz+woC5n7JpeRd.cZN8sSFQiBK+woC5n7JpeRd.m5ixZe5XYc9"},
+{ dxName: "67", dxId: "Ukr1DuYBTJk.P609nIO6VuH+woC5n7JpeRd.E9P7UuT7XZx+woC5n7JpeRd.Xzn4EkzgqnN+woC5n7JpeRd.xst6skw6Jis+woC5n7JpeRd.eJd6lKrVOD9+woC5n7JpeRd.lsbQcMAkjnS+woC5n7JpeRd.J2WRoGiWl0h+woC5n7JpeRd.rIUg2B7XPVQ+woC5n7JpeRd.Vio8Jj3chhH"},
+{ dxName: "68", dxId: "aJ2iu7DSTE3.qy8hh5TKmAw+aJ2iu7DSTE3.DqjeIm3wnAz"},
+{ dxName: "69", dxId: "BRHGE5CuoEE.biyomRYTJLI+P5l9reCQSos.GMMLAxjnI2E+P5l9reCQSos.u8bv8gqLJPb+P5l9reCQSos.VOpajE9t9Hj+P5l9reCQSos.V6J0RnDCUN3+P5l9reCQSos.xP27sqOJe1c+P5l9reCQSos.t7M9HOIQqIz+P5l9reCQSos.cZN8sSFQiBK+P5l9reCQSos.m5ixZe5XYc9"},
+{ dxName: "70", dxId: "BRHGE5CuoEE.P609nIO6VuH+P5l9reCQSos.E9P7UuT7XZx+P5l9reCQSos.Xzn4EkzgqnN+P5l9reCQSos.xst6skw6Jis+P5l9reCQSos.eJd6lKrVOD9+P5l9reCQSos.lsbQcMAkjnS+P5l9reCQSos.J2WRoGiWl0h+P5l9reCQSos.rIUg2B7XPVQ+P5l9reCQSos.Vio8Jj3chhH"},
+{ dxName: "71", dxId: "CmD9190sTk3.qy8hh5TKmAw+CmD9190sTk3.DqjeIm3wnAz"},
+{ dxName: "72", dxId: "B6VDLZxyo3D.biyomRYTJLI+DtmsvisQUha.GMMLAxjnI2E+DtmsvisQUha.u8bv8gqLJPb+DtmsvisQUha.VOpajE9t9Hj+DtmsvisQUha.V6J0RnDCUN3+DtmsvisQUha.xP27sqOJe1c+DtmsvisQUha.t7M9HOIQqIz+DtmsvisQUha.cZN8sSFQiBK+DtmsvisQUha.m5ixZe5XYc9"},
+{ dxName: "73", dxId: "B6VDLZxyo3D.P609nIO6VuH+DtmsvisQUha.E9P7UuT7XZx+DtmsvisQUha.Xzn4EkzgqnN+DtmsvisQUha.xst6skw6Jis+DtmsvisQUha.eJd6lKrVOD9+DtmsvisQUha.lsbQcMAkjnS+DtmsvisQUha.J2WRoGiWl0h+DtmsvisQUha.rIUg2B7XPVQ+DtmsvisQUha.Vio8Jj3chhH"},
+{ dxName: "74", dxId: "W5gQjYOpiMz.qy8hh5TKmAw+W5gQjYOpiMz.DqjeIm3wnAz"},
+{ dxName: "75", dxId: "QAOzptxkcKo.biyomRYTJLI+P0Ytk0RKmbJ.GMMLAxjnI2E+P0Ytk0RKmbJ.u8bv8gqLJPb+P0Ytk0RKmbJ.VOpajE9t9Hj+P0Ytk0RKmbJ.V6J0RnDCUN3+P0Ytk0RKmbJ.xP27sqOJe1c+P0Ytk0RKmbJ.t7M9HOIQqIz+P0Ytk0RKmbJ.cZN8sSFQiBK+P0Ytk0RKmbJ.m5ixZe5XYc9"},
+{ dxName: "76", dxId: "QAOzptxkcKo.P609nIO6VuH+P0Ytk0RKmbJ.E9P7UuT7XZx+P0Ytk0RKmbJ.Xzn4EkzgqnN+P0Ytk0RKmbJ.xst6skw6Jis+P0Ytk0RKmbJ.eJd6lKrVOD9+P0Ytk0RKmbJ.lsbQcMAkjnS+P0Ytk0RKmbJ.J2WRoGiWl0h+P0Ytk0RKmbJ.rIUg2B7XPVQ+P0Ytk0RKmbJ.Vio8Jj3chhH"},
+{ dxName: "77", dxId: "EEfp3VGHuII.qy8hh5TKmAw+EEfp3VGHuII.DqjeIm3wnAz"},
+{ dxName: "78", dxId: "nKWJJob5k61.biyomRYTJLI+kv9nGOpOXM0.GMMLAxjnI2E+kv9nGOpOXM0.u8bv8gqLJPb+kv9nGOpOXM0.VOpajE9t9Hj+kv9nGOpOXM0.V6J0RnDCUN3+kv9nGOpOXM0.xP27sqOJe1c+kv9nGOpOXM0.t7M9HOIQqIz+kv9nGOpOXM0.cZN8sSFQiBK+kv9nGOpOXM0.m5ixZe5XYc9"},
+{ dxName: "79", dxId: "nKWJJob5k61.P609nIO6VuH+kv9nGOpOXM0.E9P7UuT7XZx+kv9nGOpOXM0.Xzn4EkzgqnN+kv9nGOpOXM0.xst6skw6Jis+kv9nGOpOXM0.eJd6lKrVOD9+kv9nGOpOXM0.lsbQcMAkjnS+kv9nGOpOXM0.J2WRoGiWl0h+kv9nGOpOXM0.rIUg2B7XPVQ+kv9nGOpOXM0.Vio8Jj3chhH"},
+{ dxName: "80", dxId: "kX15I1Xgw3K.qy8hh5TKmAw+kX15I1Xgw3K.DqjeIm3wnAz"},
+{ dxName: "81", dxId: "ZvMY5WUwGPd.biyomRYTJLI+Mx6a0AMHygn.GMMLAxjnI2E+Mx6a0AMHygn.u8bv8gqLJPb+Mx6a0AMHygn.VOpajE9t9Hj+Mx6a0AMHygn.V6J0RnDCUN3+Mx6a0AMHygn.xP27sqOJe1c+Mx6a0AMHygn.t7M9HOIQqIz+Mx6a0AMHygn.cZN8sSFQiBK+Mx6a0AMHygn.m5ixZe5XYc9"},
+{ dxName: "82", dxId: "ZvMY5WUwGPd.P609nIO6VuH+Mx6a0AMHygn.E9P7UuT7XZx+Mx6a0AMHygn.Xzn4EkzgqnN+Mx6a0AMHygn.xst6skw6Jis+Mx6a0AMHygn.eJd6lKrVOD9+Mx6a0AMHygn.lsbQcMAkjnS+Mx6a0AMHygn.J2WRoGiWl0h+Mx6a0AMHygn.rIUg2B7XPVQ+Mx6a0AMHygn.Vio8Jj3chhH"},
+{ dxName: "83", dxId: "XIq5kSZFIxc.qy8hh5TKmAw+XIq5kSZFIxc.DqjeIm3wnAz"},
+{ dxName: "84", dxId: "VC7ohsuT2ym.biyomRYTJLI+qsjP4WtWNeM.GMMLAxjnI2E+qsjP4WtWNeM.u8bv8gqLJPb+qsjP4WtWNeM.VOpajE9t9Hj+qsjP4WtWNeM.V6J0RnDCUN3+qsjP4WtWNeM.xP27sqOJe1c+qsjP4WtWNeM.t7M9HOIQqIz+qsjP4WtWNeM.cZN8sSFQiBK+qsjP4WtWNeM.m5ixZe5XYc9"},
+{ dxName: "85", dxId: "VC7ohsuT2ym.P609nIO6VuH+qsjP4WtWNeM.E9P7UuT7XZx+qsjP4WtWNeM.Xzn4EkzgqnN+qsjP4WtWNeM.xst6skw6Jis+qsjP4WtWNeM.eJd6lKrVOD9+qsjP4WtWNeM.lsbQcMAkjnS+qsjP4WtWNeM.J2WRoGiWl0h+qsjP4WtWNeM.rIUg2B7XPVQ+qsjP4WtWNeM.Vio8Jj3chhH"},
+{ dxName: "86", dxId: "tYjYIQMBOWg.qy8hh5TKmAw+tYjYIQMBOWg.DqjeIm3wnAz"},
+{ dxName: "87", dxId: "cc3K8H4rV5y.biyomRYTJLI+yQwGoCoEz6n.GMMLAxjnI2E+yQwGoCoEz6n.u8bv8gqLJPb+yQwGoCoEz6n.VOpajE9t9Hj+yQwGoCoEz6n.V6J0RnDCUN3+yQwGoCoEz6n.xP27sqOJe1c+yQwGoCoEz6n.t7M9HOIQqIz+yQwGoCoEz6n.cZN8sSFQiBK+yQwGoCoEz6n.m5ixZe5XYc9"},
+{ dxName: "88", dxId: "cc3K8H4rV5y.P609nIO6VuH+yQwGoCoEz6n.E9P7UuT7XZx+yQwGoCoEz6n.Xzn4EkzgqnN+yQwGoCoEz6n.xst6skw6Jis+yQwGoCoEz6n.eJd6lKrVOD9+yQwGoCoEz6n.lsbQcMAkjnS+yQwGoCoEz6n.J2WRoGiWl0h+yQwGoCoEz6n.rIUg2B7XPVQ+yQwGoCoEz6n.Vio8Jj3chhH"},
+{ dxName: "89", dxId: "YaCaSx5WgeP.qy8hh5TKmAw+YaCaSx5WgeP.DqjeIm3wnAz"},
+{ dxName: "90", dxId: "Yspq2ZarstT.biyomRYTJLI+oXVvdpkoOpQ.GMMLAxjnI2E+oXVvdpkoOpQ.u8bv8gqLJPb+oXVvdpkoOpQ.VOpajE9t9Hj+oXVvdpkoOpQ.V6J0RnDCUN3+oXVvdpkoOpQ.xP27sqOJe1c+oXVvdpkoOpQ.t7M9HOIQqIz+oXVvdpkoOpQ.cZN8sSFQiBK+oXVvdpkoOpQ.m5ixZe5XYc9"},
+{ dxName: "91", dxId: "Yspq2ZarstT.P609nIO6VuH+oXVvdpkoOpQ.E9P7UuT7XZx+oXVvdpkoOpQ.Xzn4EkzgqnN+oXVvdpkoOpQ.xst6skw6Jis+oXVvdpkoOpQ.eJd6lKrVOD9+oXVvdpkoOpQ.lsbQcMAkjnS+oXVvdpkoOpQ.J2WRoGiWl0h+oXVvdpkoOpQ.rIUg2B7XPVQ+oXVvdpkoOpQ.Vio8Jj3chhH"},
+{ dxName: "92", dxId: "NCn69WVzGmS.qy8hh5TKmAw+NCn69WVzGmS.DqjeIm3wnAz"},
+{ dxName: "93", dxId: "oQLO71Qsp1e.biyomRYTJLI+JxWv1puiWhd.GMMLAxjnI2E+JxWv1puiWhd.u8bv8gqLJPb+JxWv1puiWhd.VOpajE9t9Hj+JxWv1puiWhd.V6J0RnDCUN3+JxWv1puiWhd.xP27sqOJe1c+JxWv1puiWhd.t7M9HOIQqIz+JxWv1puiWhd.cZN8sSFQiBK+JxWv1puiWhd.m5ixZe5XYc9"},
+{ dxName: "94", dxId: "oQLO71Qsp1e.P609nIO6VuH+JxWv1puiWhd.E9P7UuT7XZx+JxWv1puiWhd.Xzn4EkzgqnN+JxWv1puiWhd.xst6skw6Jis+JxWv1puiWhd.eJd6lKrVOD9+JxWv1puiWhd.lsbQcMAkjnS+JxWv1puiWhd.J2WRoGiWl0h+JxWv1puiWhd.rIUg2B7XPVQ+JxWv1puiWhd.Vio8Jj3chhH"},
+{ dxName: "95", dxId: "ecJ1sFcbOaw.qy8hh5TKmAw+ecJ1sFcbOaw.DqjeIm3wnAz"},
+{ dxName: "96", dxId: "UROqXtz4l0L.GMMLAxjnI2E+UROqXtz4l0L.u8bv8gqLJPb+UROqXtz4l0L.VOpajE9t9Hj+UROqXtz4l0L.V6J0RnDCUN3+UROqXtz4l0L.xP27sqOJe1c+UROqXtz4l0L.t7M9HOIQqIz+UROqXtz4l0L.cZN8sSFQiBK+UROqXtz4l0L.m5ixZe5XYc9+zo6Ze69zqfN.biyomRYTJLI+zja1VSMWp8m.GMMLAxjnI2E+zja1VSMWp8m.u8bv8gqLJPb+zja1VSMWp8m.VOpajE9t9Hj+zja1VSMWp8m.V6J0RnDCUN3+zja1VSMWp8m.xP27sqOJe1c+zja1VSMWp8m.t7M9HOIQqIz+zja1VSMWp8m.cZN8sSFQiBK+zja1VSMWp8m.m5ixZe5XYc9+OahuAK2pDw4.biyomRYTJLI+Fd69CR15Kb7.GMMLAxjnI2E+Fd69CR15Kb7.u8bv8gqLJPb+Fd69CR15Kb7.VOpajE9t9Hj+Fd69CR15Kb7.V6J0RnDCUN3+Fd69CR15Kb7.xP27sqOJe1c+Fd69CR15Kb7.t7M9HOIQqIz+Fd69CR15Kb7.cZN8sSFQiBK+Fd69CR15Kb7.m5ixZe5XYc9+afb4YLhynr7.biyomRYTJLI+QZj31W8iDqf.GMMLAxjnI2E+QZj31W8iDqf.u8bv8gqLJPb+QZj31W8iDqf.VOpajE9t9Hj+QZj31W8iDqf.V6J0RnDCUN3+QZj31W8iDqf.xP27sqOJe1c+QZj31W8iDqf.t7M9HOIQqIz+QZj31W8iDqf.cZN8sSFQiBK+QZj31W8iDqf.m5ixZe5XYc9+Ukr1DuYBTJk.biyomRYTJLI+woC5n7JpeRd.GMMLAxjnI2E+woC5n7JpeRd.u8bv8gqLJPb+woC5n7JpeRd.VOpajE9t9Hj+woC5n7JpeRd.V6J0RnDCUN3+woC5n7JpeRd.xP27sqOJe1c+woC5n7JpeRd.t7M9HOIQqIz+woC5n7JpeRd.cZN8sSFQiBK+woC5n7JpeRd.m5ixZe5XYc9+BRHGE5CuoEE.biyomRYTJLI+P5l9reCQSos.GMMLAxjnI2E+P5l9reCQSos.u8bv8gqLJPb+P5l9reCQSos.VOpajE9t9Hj+P5l9reCQSos.V6J0RnDCUN3+P5l9reCQSos.xP27sqOJe1c+P5l9reCQSos.t7M9HOIQqIz+P5l9reCQSos.cZN8sSFQiBK+P5l9reCQSos.m5ixZe5XYc9+B6VDLZxyo3D.biyomRYTJLI+DtmsvisQUha.GMMLAxjnI2E+DtmsvisQUha.u8bv8gqLJPb+DtmsvisQUha.VOpajE9t9Hj+DtmsvisQUha.V6J0RnDCUN3+DtmsvisQUha.xP27sqOJe1c+DtmsvisQUha.t7M9HOIQqIz+DtmsvisQUha.cZN8sSFQiBK+DtmsvisQUha.m5ixZe5XYc9+QAOzptxkcKo.biyomRYTJLI+P0Ytk0RKmbJ.GMMLAxjnI2E+P0Ytk0RKmbJ.u8bv8gqLJPb+P0Ytk0RKmbJ.VOpajE9t9Hj+P0Ytk0RKmbJ.V6J0RnDCUN3+P0Ytk0RKmbJ.xP27sqOJe1c+P0Ytk0RKmbJ.t7M9HOIQqIz+P0Ytk0RKmbJ.cZN8sSFQiBK+P0Ytk0RKmbJ.m5ixZe5XYc9+nKWJJob5k61.biyomRYTJLI+kv9nGOpOXM0.GMMLAxjnI2E+kv9nGOpOXM0.u8bv8gqLJPb+kv9nGOpOXM0.VOpajE9t9Hj+kv9nGOpOXM0.V6J0RnDCUN3+kv9nGOpOXM0.xP27sqOJe1c+kv9nGOpOXM0.t7M9HOIQqIz+kv9nGOpOXM0.cZN8sSFQiBK+kv9nGOpOXM0.m5ixZe5XYc9+ZvMY5WUwGPd.biyomRYTJLI+Mx6a0AMHygn.GMMLAxjnI2E+Mx6a0AMHygn.u8bv8gqLJPb+Mx6a0AMHygn.VOpajE9t9Hj+Mx6a0AMHygn.V6J0RnDCUN3+Mx6a0AMHygn.xP27sqOJe1c+Mx6a0AMHygn.t7M9HOIQqIz+Mx6a0AMHygn.cZN8sSFQiBK+Mx6a0AMHygn.m5ixZe5XYc9+VC7ohsuT2ym.biyomRYTJLI+qsjP4WtWNeM.GMMLAxjnI2E+qsjP4WtWNeM.u8bv8gqLJPb+qsjP4WtWNeM.VOpajE9t9Hj+qsjP4WtWNeM.V6J0RnDCUN3+qsjP4WtWNeM.xP27sqOJe1c+qsjP4WtWNeM.t7M9HOIQqIz+qsjP4WtWNeM.cZN8sSFQiBK+qsjP4WtWNeM.m5ixZe5XYc9+cc3K8H4rV5y.biyomRYTJLI+yQwGoCoEz6n.GMMLAxjnI2E+yQwGoCoEz6n.u8bv8gqLJPb+yQwGoCoEz6n.VOpajE9t9Hj+yQwGoCoEz6n.V6J0RnDCUN3+yQwGoCoEz6n.xP27sqOJe1c+yQwGoCoEz6n.t7M9HOIQqIz+yQwGoCoEz6n.cZN8sSFQiBK+yQwGoCoEz6n.m5ixZe5XYc9+Yspq2ZarstT.biyomRYTJLI+oXVvdpkoOpQ.GMMLAxjnI2E+oXVvdpkoOpQ.u8bv8gqLJPb+oXVvdpkoOpQ.VOpajE9t9Hj+oXVvdpkoOpQ.V6J0RnDCUN3+oXVvdpkoOpQ.xP27sqOJe1c+oXVvdpkoOpQ.t7M9HOIQqIz+oXVvdpkoOpQ.cZN8sSFQiBK+oXVvdpkoOpQ.m5ixZe5XYc9+oQLO71Qsp1e.biyomRYTJLI+JxWv1puiWhd.GMMLAxjnI2E+JxWv1puiWhd.u8bv8gqLJPb+JxWv1puiWhd.VOpajE9t9Hj+JxWv1puiWhd.V6J0RnDCUN3+JxWv1puiWhd.xP27sqOJe1c+JxWv1puiWhd.t7M9HOIQqIz+JxWv1puiWhd.cZN8sSFQiBK+JxWv1puiWhd.m5ixZe5XYc9"},
+{ dxName: "97", dxId: "UROqXtz4l0L.E9P7UuT7XZx+UROqXtz4l0L.Xzn4EkzgqnN+UROqXtz4l0L.xst6skw6Jis+UROqXtz4l0L.eJd6lKrVOD9+UROqXtz4l0L.lsbQcMAkjnS+UROqXtz4l0L.J2WRoGiWl0h+UROqXtz4l0L.Vio8Jj3chhH+UROqXtz4l0L.rIUg2B7XPVQ+zo6Ze69zqfN.P609nIO6VuH+zja1VSMWp8m.E9P7UuT7XZx+zja1VSMWp8m.Xzn4EkzgqnN+zja1VSMWp8m.xst6skw6Jis+zja1VSMWp8m.eJd6lKrVOD9+zja1VSMWp8m.lsbQcMAkjnS+zja1VSMWp8m.J2WRoGiWl0h+zja1VSMWp8m.rIUg2B7XPVQ+zja1VSMWp8m.Vio8Jj3chhH+OahuAK2pDw4.P609nIO6VuH+Fd69CR15Kb7.E9P7UuT7XZx+Fd69CR15Kb7.Xzn4EkzgqnN+Fd69CR15Kb7.xst6skw6Jis+Fd69CR15Kb7.eJd6lKrVOD9+Fd69CR15Kb7.lsbQcMAkjnS+Fd69CR15Kb7.J2WRoGiWl0h+Fd69CR15Kb7.rIUg2B7XPVQ+Fd69CR15Kb7.Vio8Jj3chhH+afb4YLhynr7.P609nIO6VuH+QZj31W8iDqf.E9P7UuT7XZx+QZj31W8iDqf.Xzn4EkzgqnN+QZj31W8iDqf.xst6skw6Jis+QZj31W8iDqf.eJd6lKrVOD9+QZj31W8iDqf.lsbQcMAkjnS+QZj31W8iDqf.J2WRoGiWl0h+QZj31W8iDqf.rIUg2B7XPVQ+QZj31W8iDqf.Vio8Jj3chhH+PQtpE5jOFjV.AWFHAFYJTph+DPimQ948Cdl.u8bv8gqLJPb+DPimQ948Cdl.VOpajE9t9Hj+DPimQ948Cdl.V6J0RnDCUN3+DPimQ948Cdl.xP27sqOJe1c+DPimQ948Cdl.t7M9HOIQqIz+DPimQ948Cdl.cZN8sSFQiBK+DPimQ948Cdl.m5ixZe5XYc9+uDaZi3Xte0e.AWFHAFYJTph+RL6zDOxipUf.Xzn4EkzgqnN+RL6zDOxipUf.xst6skw6Jis+RL6zDOxipUf.eJd6lKrVOD9+RL6zDOxipUf.lsbQcMAkjnS+RL6zDOxipUf.J2WRoGiWl0h+RL6zDOxipUf.rIUg2B7XPVQ+RL6zDOxipUf.Vio8Jj3chhH+Ukr1DuYBTJk.P609nIO6VuH+woC5n7JpeRd.E9P7UuT7XZx+woC5n7JpeRd.Xzn4EkzgqnN+woC5n7JpeRd.xst6skw6Jis+woC5n7JpeRd.eJd6lKrVOD9+woC5n7JpeRd.lsbQcMAkjnS+woC5n7JpeRd.J2WRoGiWl0h+woC5n7JpeRd.rIUg2B7XPVQ+woC5n7JpeRd.Vio8Jj3chhH+BRHGE5CuoEE.P609nIO6VuH+P5l9reCQSos.E9P7UuT7XZx+P5l9reCQSos.Xzn4EkzgqnN+P5l9reCQSos.xst6skw6Jis+P5l9reCQSos.eJd6lKrVOD9+P5l9reCQSos.lsbQcMAkjnS+P5l9reCQSos.J2WRoGiWl0h+P5l9reCQSos.rIUg2B7XPVQ+P5l9reCQSos.Vio8Jj3chhH+B6VDLZxyo3D.P609nIO6VuH+DtmsvisQUha.E9P7UuT7XZx+DtmsvisQUha.Xzn4EkzgqnN+DtmsvisQUha.xst6skw6Jis+DtmsvisQUha.eJd6lKrVOD9+DtmsvisQUha.lsbQcMAkjnS+DtmsvisQUha.J2WRoGiWl0h+DtmsvisQUha.rIUg2B7XPVQ+DtmsvisQUha.Vio8Jj3chhH+QAOzptxkcKo.P609nIO6VuH+P0Ytk0RKmbJ.E9P7UuT7XZx+P0Ytk0RKmbJ.Xzn4EkzgqnN+P0Ytk0RKmbJ.xst6skw6Jis+P0Ytk0RKmbJ.eJd6lKrVOD9+P0Ytk0RKmbJ.lsbQcMAkjnS+P0Ytk0RKmbJ.J2WRoGiWl0h+P0Ytk0RKmbJ.rIUg2B7XPVQ+P0Ytk0RKmbJ.Vio8Jj3chhH+nKWJJob5k61.P609nIO6VuH+kv9nGOpOXM0.E9P7UuT7XZx+kv9nGOpOXM0.Xzn4EkzgqnN+kv9nGOpOXM0.xst6skw6Jis+kv9nGOpOXM0.eJd6lKrVOD9+kv9nGOpOXM0.lsbQcMAkjnS+kv9nGOpOXM0.J2WRoGiWl0h+kv9nGOpOXM0.rIUg2B7XPVQ+kv9nGOpOXM0.Vio8Jj3chhH+ZvMY5WUwGPd.P609nIO6VuH+Mx6a0AMHygn.E9P7UuT7XZx+Mx6a0AMHygn.Xzn4EkzgqnN+Mx6a0AMHygn.xst6skw6Jis+Mx6a0AMHygn.eJd6lKrVOD9+Mx6a0AMHygn.lsbQcMAkjnS+Mx6a0AMHygn.J2WRoGiWl0h+Mx6a0AMHygn.rIUg2B7XPVQ+Mx6a0AMHygn.Vio8Jj3chhH+VC7ohsuT2ym.P609nIO6VuH+qsjP4WtWNeM.E9P7UuT7XZx+qsjP4WtWNeM.Xzn4EkzgqnN+qsjP4WtWNeM.xst6skw6Jis+qsjP4WtWNeM.eJd6lKrVOD9+qsjP4WtWNeM.lsbQcMAkjnS+qsjP4WtWNeM.J2WRoGiWl0h+qsjP4WtWNeM.rIUg2B7XPVQ+qsjP4WtWNeM.Vio8Jj3chhH+cc3K8H4rV5y.P609nIO6VuH+yQwGoCoEz6n.E9P7UuT7XZx+yQwGoCoEz6n.Xzn4EkzgqnN+yQwGoCoEz6n.xst6skw6Jis+yQwGoCoEz6n.eJd6lKrVOD9+yQwGoCoEz6n.lsbQcMAkjnS+yQwGoCoEz6n.J2WRoGiWl0h+yQwGoCoEz6n.rIUg2B7XPVQ+yQwGoCoEz6n.Vio8Jj3chhH+Yspq2ZarstT.P609nIO6VuH+oXVvdpkoOpQ.E9P7UuT7XZx+oXVvdpkoOpQ.Xzn4EkzgqnN+oXVvdpkoOpQ.xst6skw6Jis+oXVvdpkoOpQ.eJd6lKrVOD9+oXVvdpkoOpQ.lsbQcMAkjnS+oXVvdpkoOpQ.J2WRoGiWl0h+oXVvdpkoOpQ.rIUg2B7XPVQ+oXVvdpkoOpQ.Vio8Jj3chhH+oQLO71Qsp1e.P609nIO6VuH+JxWv1puiWhd.E9P7UuT7XZx+JxWv1puiWhd.Xzn4EkzgqnN+JxWv1puiWhd.xst6skw6Jis+JxWv1puiWhd.eJd6lKrVOD9+JxWv1puiWhd.lsbQcMAkjnS+JxWv1puiWhd.J2WRoGiWl0h+JxWv1puiWhd.rIUg2B7XPVQ+JxWv1puiWhd.Vio8Jj3chhH"},
+{ dxName: "98", dxId: "OQo3vMLMozg.qy8hh5TKmAw+OQo3vMLMozg.DqjeIm3wnAz+N3QS8dseYgK.qy8hh5TKmAw+N3QS8dseYgK.DqjeIm3wnAz+pCIgAYbtdcD.qy8hh5TKmAw+pCIgAYbtdcD.DqjeIm3wnAz+Hr8AuSy4YKS.qy8hh5TKmAw+Hr8AuSy4YKS.DqjeIm3wnAz+VpUGS0bfeMz.qy8hh5TKmAw+VpUGS0bfeMz.DqjeIm3wnAz+NxYhMBENJnt.qy8hh5TKmAw+NxYhMBENJnt.DqjeIm3wnAz+aJ2iu7DSTE3.qy8hh5TKmAw+aJ2iu7DSTE3.DqjeIm3wnAz+CmD9190sTk3.qy8hh5TKmAw+CmD9190sTk3.DqjeIm3wnAz+W5gQjYOpiMz.qy8hh5TKmAw+W5gQjYOpiMz.DqjeIm3wnAz+EEfp3VGHuII.qy8hh5TKmAw+EEfp3VGHuII.DqjeIm3wnAz+kX15I1Xgw3K.qy8hh5TKmAw+kX15I1Xgw3K.DqjeIm3wnAz+XIq5kSZFIxc.qy8hh5TKmAw+XIq5kSZFIxc.DqjeIm3wnAz+tYjYIQMBOWg.qy8hh5TKmAw+tYjYIQMBOWg.DqjeIm3wnAz+YaCaSx5WgeP.qy8hh5TKmAw+YaCaSx5WgeP.DqjeIm3wnAz+NCn69WVzGmS.qy8hh5TKmAw+NCn69WVzGmS.DqjeIm3wnAz+ecJ1sFcbOaw.qy8hh5TKmAw+ecJ1sFcbOaw.DqjeIm3wnAz"},
+{ dxName: "99", dxId: "UROqXtz4l0L.xD6lmYsuXEF+UROqXtz4l0L.q7GreYKqtJr+UROqXtz4l0L.jp5eEmKFg6c+UROqXtz4l0L.NtrO4vkAnz4+UROqXtz4l0L.MdbVFagDcvM+UROqXtz4l0L.pS5QAG6ifEE+UROqXtz4l0L.dE2LroslFmI+UROqXtz4l0L.d1KOjSqmQfS+UROqXtz4l0L.GMMLAxjnI2E+UROqXtz4l0L.u8bv8gqLJPb+UROqXtz4l0L.VOpajE9t9Hj+UROqXtz4l0L.V6J0RnDCUN3+UROqXtz4l0L.xP27sqOJe1c+UROqXtz4l0L.t7M9HOIQqIz+UROqXtz4l0L.cZN8sSFQiBK+UROqXtz4l0L.m5ixZe5XYc9"},
+{ dxName: "100", dxId: "UROqXtz4l0L.qlprr8RvGRX+UROqXtz4l0L.Bmnh0pn7Wyh+UROqXtz4l0L.GweI6PQcSuA+UROqXtz4l0L.UZJ3ufiwuZX+UROqXtz4l0L.K9oz7QsOX9y+UROqXtz4l0L.uWKSMAog0DK+UROqXtz4l0L.hT6vOD6u3aJ+UROqXtz4l0L.XY4AUaQXb8N+UROqXtz4l0L.E9P7UuT7XZx+UROqXtz4l0L.Xzn4EkzgqnN+UROqXtz4l0L.xst6skw6Jis+UROqXtz4l0L.eJd6lKrVOD9+UROqXtz4l0L.lsbQcMAkjnS+UROqXtz4l0L.J2WRoGiWl0h+UROqXtz4l0L.rIUg2B7XPVQ+UROqXtz4l0L.Vio8Jj3chhH"},
+{ dxName: "101", dxId: "OQo3vMLMozg.TVKsg3FE6Ox+OQo3vMLMozg.KgEdissejtN+OQo3vMLMozg.qy8hh5TKmAw+OQo3vMLMozg.DqjeIm3wnAz"},
+{ dxName: "102", dxId: "zo6Ze69zqfN.iOYsO0cj43o+zo6Ze69zqfN.biyomRYTJLI+zja1VSMWp8m.xD6lmYsuXEF+zja1VSMWp8m.q7GreYKqtJr+zja1VSMWp8m.jp5eEmKFg6c+zja1VSMWp8m.NtrO4vkAnz4+zja1VSMWp8m.MdbVFagDcvM+zja1VSMWp8m.pS5QAG6ifEE+zja1VSMWp8m.dE2LroslFmI+zja1VSMWp8m.d1KOjSqmQfS+zja1VSMWp8m.GMMLAxjnI2E+zja1VSMWp8m.u8bv8gqLJPb+zja1VSMWp8m.VOpajE9t9Hj+zja1VSMWp8m.V6J0RnDCUN3+zja1VSMWp8m.xP27sqOJe1c+zja1VSMWp8m.t7M9HOIQqIz+zja1VSMWp8m.cZN8sSFQiBK+zja1VSMWp8m.m5ixZe5XYc9"},
+{ dxName: "103", dxId: "zo6Ze69zqfN.phPiDAEIlh1+zo6Ze69zqfN.P609nIO6VuH+zja1VSMWp8m.qlprr8RvGRX+zja1VSMWp8m.Bmnh0pn7Wyh+zja1VSMWp8m.GweI6PQcSuA+zja1VSMWp8m.UZJ3ufiwuZX+zja1VSMWp8m.K9oz7QsOX9y+zja1VSMWp8m.uWKSMAog0DK+zja1VSMWp8m.hT6vOD6u3aJ+zja1VSMWp8m.XY4AUaQXb8N+zja1VSMWp8m.E9P7UuT7XZx+zja1VSMWp8m.Xzn4EkzgqnN+zja1VSMWp8m.xst6skw6Jis+zja1VSMWp8m.eJd6lKrVOD9+zja1VSMWp8m.lsbQcMAkjnS+zja1VSMWp8m.J2WRoGiWl0h+zja1VSMWp8m.rIUg2B7XPVQ+zja1VSMWp8m.Vio8Jj3chhH"},
+{ dxName: "104", dxId: "N3QS8dseYgK.TVKsg3FE6Ox+N3QS8dseYgK.KgEdissejtN+N3QS8dseYgK.qy8hh5TKmAw+N3QS8dseYgK.DqjeIm3wnAz"},
+{ dxName: "105", dxId: "OahuAK2pDw4.xD6lmYsuXEF+Fd69CR15Kb7.xD6lmYsuXEF+Fd69CR15Kb7.q7GreYKqtJr+Fd69CR15Kb7.jp5eEmKFg6c+Fd69CR15Kb7.NtrO4vkAnz4+Fd69CR15Kb7.MdbVFagDcvM+Fd69CR15Kb7.pS5QAG6ifEE+Fd69CR15Kb7.dE2LroslFmI+Fd69CR15Kb7.d1KOjSqmQfS+OahuAK2pDw4.biyomRYTJLI+Fd69CR15Kb7.GMMLAxjnI2E+Fd69CR15Kb7.u8bv8gqLJPb+Fd69CR15Kb7.VOpajE9t9Hj+Fd69CR15Kb7.V6J0RnDCUN3+Fd69CR15Kb7.xP27sqOJe1c+Fd69CR15Kb7.t7M9HOIQqIz+Fd69CR15Kb7.cZN8sSFQiBK+Fd69CR15Kb7.m5ixZe5XYc9"},
+{ dxName: "106", dxId: "OahuAK2pDw4.phPiDAEIlh1+OahuAK2pDw4.P609nIO6VuH+Fd69CR15Kb7.qlprr8RvGRX+Fd69CR15Kb7.Bmnh0pn7Wyh+Fd69CR15Kb7.GweI6PQcSuA+Fd69CR15Kb7.UZJ3ufiwuZX+Fd69CR15Kb7.K9oz7QsOX9y+Fd69CR15Kb7.uWKSMAog0DK+Fd69CR15Kb7.hT6vOD6u3aJ+Fd69CR15Kb7.XY4AUaQXb8N+Fd69CR15Kb7.E9P7UuT7XZx+Fd69CR15Kb7.Xzn4EkzgqnN+Fd69CR15Kb7.xst6skw6Jis+Fd69CR15Kb7.eJd6lKrVOD9+Fd69CR15Kb7.lsbQcMAkjnS+Fd69CR15Kb7.J2WRoGiWl0h+Fd69CR15Kb7.rIUg2B7XPVQ+Fd69CR15Kb7.Vio8Jj3chhH"},
+{ dxName: "107", dxId: "pCIgAYbtdcD.TVKsg3FE6Ox+pCIgAYbtdcD.KgEdissejtN+pCIgAYbtdcD.qy8hh5TKmAw+pCIgAYbtdcD.DqjeIm3wnAz"},
+{ dxName: "108", dxId: "afb4YLhynr7.iOYsO0cj43o+afb4YLhynr7.biyomRYTJLI+QZj31W8iDqf.xD6lmYsuXEF+QZj31W8iDqf.q7GreYKqtJr+QZj31W8iDqf.jp5eEmKFg6c+QZj31W8iDqf.NtrO4vkAnz4+QZj31W8iDqf.MdbVFagDcvM+QZj31W8iDqf.pS5QAG6ifEE+QZj31W8iDqf.dE2LroslFmI+QZj31W8iDqf.d1KOjSqmQfS+QZj31W8iDqf.GMMLAxjnI2E+QZj31W8iDqf.u8bv8gqLJPb+QZj31W8iDqf.VOpajE9t9Hj+QZj31W8iDqf.V6J0RnDCUN3+QZj31W8iDqf.xP27sqOJe1c+QZj31W8iDqf.t7M9HOIQqIz+QZj31W8iDqf.cZN8sSFQiBK+QZj31W8iDqf.m5ixZe5XYc9"},
+{ dxName: "109", dxId: "afb4YLhynr7.phPiDAEIlh1+afb4YLhynr7.P609nIO6VuH+QZj31W8iDqf.qlprr8RvGRX+QZj31W8iDqf.Bmnh0pn7Wyh+QZj31W8iDqf.GweI6PQcSuA+QZj31W8iDqf.UZJ3ufiwuZX+QZj31W8iDqf.K9oz7QsOX9y+QZj31W8iDqf.uWKSMAog0DK+QZj31W8iDqf.hT6vOD6u3aJ+QZj31W8iDqf.XY4AUaQXb8N+QZj31W8iDqf.E9P7UuT7XZx+QZj31W8iDqf.Xzn4EkzgqnN+QZj31W8iDqf.xst6skw6Jis+QZj31W8iDqf.eJd6lKrVOD9+QZj31W8iDqf.lsbQcMAkjnS+QZj31W8iDqf.J2WRoGiWl0h+QZj31W8iDqf.rIUg2B7XPVQ+QZj31W8iDqf.Vio8Jj3chhH"},
+{ dxName: "110", dxId: "Hr8AuSy4YKS.TVKsg3FE6Ox+Hr8AuSy4YKS.KgEdissejtN+Hr8AuSy4YKS.qy8hh5TKmAw+Hr8AuSy4YKS.DqjeIm3wnAz"},
+{ dxName: "111", dxId: "by6ApBm8Oly.AWFHAFYJTph+PQtpE5jOFjV.AWFHAFYJTph+DPimQ948Cdl.qlprr8RvGRX+DPimQ948Cdl.Bmnh0pn7Wyh+DPimQ948Cdl.GweI6PQcSuA+DPimQ948Cdl.UZJ3ufiwuZX+DPimQ948Cdl.K9oz7QsOX9y+DPimQ948Cdl.uWKSMAog0DK+DPimQ948Cdl.hT6vOD6u3aJ+DPimQ948Cdl.XY4AUaQXb8N+DPimQ948Cdl.u8bv8gqLJPb+DPimQ948Cdl.VOpajE9t9Hj+DPimQ948Cdl.V6J0RnDCUN3+DPimQ948Cdl.xP27sqOJe1c+DPimQ948Cdl.t7M9HOIQqIz+DPimQ948Cdl.cZN8sSFQiBK+DPimQ948Cdl.m5ixZe5XYc9"},
+{ dxName: "112", dxId: "VpUGS0bfeMz.TVKsg3FE6Ox+VpUGS0bfeMz.KgEdissejtN+VpUGS0bfeMz.qy8hh5TKmAw+VpUGS0bfeMz.DqjeIm3wnAz"},
+{ dxName: "113", dxId: "kOKsWjtHA36.AWFHAFYJTph+RL6zDOxipUf.qlprr8RvGRX+RL6zDOxipUf.Bmnh0pn7Wyh+RL6zDOxipUf.GweI6PQcSuA+RL6zDOxipUf.UZJ3ufiwuZX+RL6zDOxipUf.K9oz7QsOX9y+RL6zDOxipUf.uWKSMAog0DK+RL6zDOxipUf.hT6vOD6u3aJ+RL6zDOxipUf.XY4AUaQXb8N+uDaZi3Xte0e.AWFHAFYJTph+RL6zDOxipUf.Xzn4EkzgqnN+RL6zDOxipUf.xst6skw6Jis+RL6zDOxipUf.eJd6lKrVOD9+RL6zDOxipUf.lsbQcMAkjnS+RL6zDOxipUf.J2WRoGiWl0h+RL6zDOxipUf.rIUg2B7XPVQ+RL6zDOxipUf.Vio8Jj3chhH"},
+{ dxName: "114", dxId: "NxYhMBENJnt.TVKsg3FE6Ox+NxYhMBENJnt.KgEdissejtN+NxYhMBENJnt.qy8hh5TKmAw+NxYhMBENJnt.DqjeIm3wnAz"},
+{ dxName: "115", dxId: "Ukr1DuYBTJk.iOYsO0cj43o+woC5n7JpeRd.xD6lmYsuXEF+woC5n7JpeRd.q7GreYKqtJr+woC5n7JpeRd.jp5eEmKFg6c+woC5n7JpeRd.NtrO4vkAnz4+woC5n7JpeRd.MdbVFagDcvM+woC5n7JpeRd.pS5QAG6ifEE+woC5n7JpeRd.dE2LroslFmI+woC5n7JpeRd.d1KOjSqmQfS+Ukr1DuYBTJk.biyomRYTJLI+woC5n7JpeRd.GMMLAxjnI2E+woC5n7JpeRd.u8bv8gqLJPb+woC5n7JpeRd.VOpajE9t9Hj+woC5n7JpeRd.V6J0RnDCUN3+woC5n7JpeRd.xP27sqOJe1c+woC5n7JpeRd.t7M9HOIQqIz+woC5n7JpeRd.cZN8sSFQiBK+woC5n7JpeRd.m5ixZe5XYc9"},
+{ dxName: "116", dxId: "Ukr1DuYBTJk.phPiDAEIlh1+woC5n7JpeRd.qlprr8RvGRX+woC5n7JpeRd.Bmnh0pn7Wyh+woC5n7JpeRd.GweI6PQcSuA+woC5n7JpeRd.UZJ3ufiwuZX+woC5n7JpeRd.K9oz7QsOX9y+woC5n7JpeRd.uWKSMAog0DK+woC5n7JpeRd.hT6vOD6u3aJ+woC5n7JpeRd.XY4AUaQXb8N+Ukr1DuYBTJk.P609nIO6VuH+woC5n7JpeRd.E9P7UuT7XZx+woC5n7JpeRd.Xzn4EkzgqnN+woC5n7JpeRd.xst6skw6Jis+woC5n7JpeRd.eJd6lKrVOD9+woC5n7JpeRd.lsbQcMAkjnS+woC5n7JpeRd.J2WRoGiWl0h+woC5n7JpeRd.rIUg2B7XPVQ+woC5n7JpeRd.Vio8Jj3chhH"},
+{ dxName: "117", dxId: "aJ2iu7DSTE3.TVKsg3FE6Ox+aJ2iu7DSTE3.KgEdissejtN+aJ2iu7DSTE3.qy8hh5TKmAw+aJ2iu7DSTE3.DqjeIm3wnAz"},
+{ dxName: "118", dxId: "BRHGE5CuoEE.iOYsO0cj43o+P5l9reCQSos.xD6lmYsuXEF+P5l9reCQSos.q7GreYKqtJr+P5l9reCQSos.jp5eEmKFg6c+P5l9reCQSos.NtrO4vkAnz4+P5l9reCQSos.MdbVFagDcvM+P5l9reCQSos.pS5QAG6ifEE+P5l9reCQSos.dE2LroslFmI+P5l9reCQSos.d1KOjSqmQfS+BRHGE5CuoEE.biyomRYTJLI+P5l9reCQSos.GMMLAxjnI2E+P5l9reCQSos.u8bv8gqLJPb+P5l9reCQSos.VOpajE9t9Hj+P5l9reCQSos.V6J0RnDCUN3+P5l9reCQSos.xP27sqOJe1c+P5l9reCQSos.t7M9HOIQqIz+P5l9reCQSos.cZN8sSFQiBK+P5l9reCQSos.m5ixZe5XYc9"},
+{ dxName: "119", dxId: "BRHGE5CuoEE.phPiDAEIlh1+P5l9reCQSos.qlprr8RvGRX+P5l9reCQSos.Bmnh0pn7Wyh+P5l9reCQSos.GweI6PQcSuA+P5l9reCQSos.UZJ3ufiwuZX+P5l9reCQSos.K9oz7QsOX9y+P5l9reCQSos.uWKSMAog0DK+P5l9reCQSos.hT6vOD6u3aJ+P5l9reCQSos.XY4AUaQXb8N+BRHGE5CuoEE.P609nIO6VuH+P5l9reCQSos.E9P7UuT7XZx+P5l9reCQSos.Xzn4EkzgqnN+P5l9reCQSos.xst6skw6Jis+P5l9reCQSos.eJd6lKrVOD9+P5l9reCQSos.lsbQcMAkjnS+P5l9reCQSos.J2WRoGiWl0h+P5l9reCQSos.rIUg2B7XPVQ+P5l9reCQSos.Vio8Jj3chhH"},
+{ dxName: "120", dxId: "CmD9190sTk3.TVKsg3FE6Ox+CmD9190sTk3.KgEdissejtN+CmD9190sTk3.qy8hh5TKmAw+CmD9190sTk3.DqjeIm3wnAz"},
+{ dxName: "121", dxId: "B6VDLZxyo3D.iOYsO0cj43o+DtmsvisQUha.xD6lmYsuXEF+DtmsvisQUha.jp5eEmKFg6c+DtmsvisQUha.q7GreYKqtJr+DtmsvisQUha.NtrO4vkAnz4+DtmsvisQUha.MdbVFagDcvM+DtmsvisQUha.pS5QAG6ifEE+DtmsvisQUha.dE2LroslFmI+DtmsvisQUha.d1KOjSqmQfS"},
+{ dxName: "122", dxId: "B6VDLZxyo3D.phPiDAEIlh1+DtmsvisQUha.qlprr8RvGRX+DtmsvisQUha.Bmnh0pn7Wyh+DtmsvisQUha.GweI6PQcSuA+DtmsvisQUha.UZJ3ufiwuZX+DtmsvisQUha.K9oz7QsOX9y+DtmsvisQUha.uWKSMAog0DK+DtmsvisQUha.hT6vOD6u3aJ+DtmsvisQUha.XY4AUaQXb8N"},
+{ dxName: "123", dxId: "W5gQjYOpiMz.TVKsg3FE6Ox+W5gQjYOpiMz.KgEdissejtN+W5gQjYOpiMz.qy8hh5TKmAw+W5gQjYOpiMz.DqjeIm3wnAz"},
+{ dxName: "124", dxId: "QAOzptxkcKo.iOYsO0cj43o+P0Ytk0RKmbJ.xD6lmYsuXEF+P0Ytk0RKmbJ.q7GreYKqtJr+P0Ytk0RKmbJ.jp5eEmKFg6c+P0Ytk0RKmbJ.NtrO4vkAnz4+P0Ytk0RKmbJ.MdbVFagDcvM+P0Ytk0RKmbJ.pS5QAG6ifEE+P0Ytk0RKmbJ.dE2LroslFmI+P0Ytk0RKmbJ.d1KOjSqmQfS+QAOzptxkcKo.biyomRYTJLI+P0Ytk0RKmbJ.GMMLAxjnI2E+P0Ytk0RKmbJ.u8bv8gqLJPb+P0Ytk0RKmbJ.VOpajE9t9Hj+P0Ytk0RKmbJ.V6J0RnDCUN3+P0Ytk0RKmbJ.xP27sqOJe1c+P0Ytk0RKmbJ.t7M9HOIQqIz+P0Ytk0RKmbJ.cZN8sSFQiBK+P0Ytk0RKmbJ.m5ixZe5XYc9"},
+{ dxName: "125", dxId: "QAOzptxkcKo.phPiDAEIlh1+P0Ytk0RKmbJ.qlprr8RvGRX+P0Ytk0RKmbJ.Bmnh0pn7Wyh+P0Ytk0RKmbJ.GweI6PQcSuA+P0Ytk0RKmbJ.UZJ3ufiwuZX+P0Ytk0RKmbJ.K9oz7QsOX9y+P0Ytk0RKmbJ.uWKSMAog0DK+P0Ytk0RKmbJ.hT6vOD6u3aJ+P0Ytk0RKmbJ.XY4AUaQXb8N+B6VDLZxyo3D.P609nIO6VuH+DtmsvisQUha.E9P7UuT7XZx+DtmsvisQUha.Xzn4EkzgqnN+DtmsvisQUha.xst6skw6Jis+DtmsvisQUha.eJd6lKrVOD9+DtmsvisQUha.lsbQcMAkjnS+DtmsvisQUha.J2WRoGiWl0h+DtmsvisQUha.rIUg2B7XPVQ+DtmsvisQUha.Vio8Jj3chhH"},
+{ dxName: "126", dxId: "EEfp3VGHuII.TVKsg3FE6Ox+EEfp3VGHuII.KgEdissejtN+EEfp3VGHuII.qy8hh5TKmAw+EEfp3VGHuII.DqjeIm3wnAz"},
+{ dxName: "127", dxId: "nKWJJob5k61.iOYsO0cj43o+kv9nGOpOXM0.xD6lmYsuXEF+kv9nGOpOXM0.q7GreYKqtJr+kv9nGOpOXM0.jp5eEmKFg6c+kv9nGOpOXM0.NtrO4vkAnz4+kv9nGOpOXM0.MdbVFagDcvM+kv9nGOpOXM0.pS5QAG6ifEE+kv9nGOpOXM0.dE2LroslFmI+kv9nGOpOXM0.d1KOjSqmQfS+nKWJJob5k61.biyomRYTJLI+kv9nGOpOXM0.GMMLAxjnI2E+kv9nGOpOXM0.u8bv8gqLJPb+kv9nGOpOXM0.VOpajE9t9Hj+kv9nGOpOXM0.V6J0RnDCUN3+kv9nGOpOXM0.xP27sqOJe1c+kv9nGOpOXM0.t7M9HOIQqIz+kv9nGOpOXM0.cZN8sSFQiBK+kv9nGOpOXM0.m5ixZe5XYc9"},
+{ dxName: "128", dxId: "nKWJJob5k61.phPiDAEIlh1+kv9nGOpOXM0.qlprr8RvGRX+kv9nGOpOXM0.Bmnh0pn7Wyh+kv9nGOpOXM0.GweI6PQcSuA+kv9nGOpOXM0.UZJ3ufiwuZX+kv9nGOpOXM0.K9oz7QsOX9y+kv9nGOpOXM0.uWKSMAog0DK+kv9nGOpOXM0.hT6vOD6u3aJ+kv9nGOpOXM0.XY4AUaQXb8N+nKWJJob5k61.P609nIO6VuH+kv9nGOpOXM0.E9P7UuT7XZx+kv9nGOpOXM0.Xzn4EkzgqnN+kv9nGOpOXM0.xst6skw6Jis+kv9nGOpOXM0.eJd6lKrVOD9+kv9nGOpOXM0.lsbQcMAkjnS+kv9nGOpOXM0.J2WRoGiWl0h+kv9nGOpOXM0.rIUg2B7XPVQ+kv9nGOpOXM0.Vio8Jj3chhH"},
+{ dxName: "129", dxId: "kX15I1Xgw3K.TVKsg3FE6Ox+kX15I1Xgw3K.KgEdissejtN+kX15I1Xgw3K.qy8hh5TKmAw+kX15I1Xgw3K.DqjeIm3wnAz"},
+{ dxName: "130", dxId: "ZvMY5WUwGPd.iOYsO0cj43o+Mx6a0AMHygn.xD6lmYsuXEF+Mx6a0AMHygn.q7GreYKqtJr+Mx6a0AMHygn.jp5eEmKFg6c+Mx6a0AMHygn.NtrO4vkAnz4+Mx6a0AMHygn.MdbVFagDcvM+Mx6a0AMHygn.pS5QAG6ifEE+Mx6a0AMHygn.dE2LroslFmI+Mx6a0AMHygn.d1KOjSqmQfS+ZvMY5WUwGPd.biyomRYTJLI+Mx6a0AMHygn.GMMLAxjnI2E+Mx6a0AMHygn.u8bv8gqLJPb+Mx6a0AMHygn.VOpajE9t9Hj+Mx6a0AMHygn.V6J0RnDCUN3+Mx6a0AMHygn.xP27sqOJe1c+Mx6a0AMHygn.t7M9HOIQqIz+Mx6a0AMHygn.cZN8sSFQiBK+Mx6a0AMHygn.m5ixZe5XYc9"},
+{ dxName: "131", dxId: "ZvMY5WUwGPd.phPiDAEIlh1+Mx6a0AMHygn.qlprr8RvGRX+Mx6a0AMHygn.Bmnh0pn7Wyh+Mx6a0AMHygn.GweI6PQcSuA+Mx6a0AMHygn.UZJ3ufiwuZX+Mx6a0AMHygn.K9oz7QsOX9y+Mx6a0AMHygn.uWKSMAog0DK+Mx6a0AMHygn.hT6vOD6u3aJ+Mx6a0AMHygn.XY4AUaQXb8N+ZvMY5WUwGPd.P609nIO6VuH+Mx6a0AMHygn.E9P7UuT7XZx+Mx6a0AMHygn.Xzn4EkzgqnN+Mx6a0AMHygn.xst6skw6Jis+Mx6a0AMHygn.eJd6lKrVOD9+Mx6a0AMHygn.lsbQcMAkjnS+Mx6a0AMHygn.J2WRoGiWl0h+Mx6a0AMHygn.rIUg2B7XPVQ+Mx6a0AMHygn.Vio8Jj3chhH"},
+{ dxName: "132", dxId: "XIq5kSZFIxc.TVKsg3FE6Ox+XIq5kSZFIxc.KgEdissejtN+XIq5kSZFIxc.qy8hh5TKmAw+XIq5kSZFIxc.DqjeIm3wnAz"},
+{ dxName: "133", dxId: "VC7ohsuT2ym.iOYsO0cj43o+qsjP4WtWNeM.xD6lmYsuXEF+qsjP4WtWNeM.q7GreYKqtJr+qsjP4WtWNeM.jp5eEmKFg6c+qsjP4WtWNeM.NtrO4vkAnz4+qsjP4WtWNeM.MdbVFagDcvM+qsjP4WtWNeM.pS5QAG6ifEE+qsjP4WtWNeM.dE2LroslFmI+qsjP4WtWNeM.d1KOjSqmQfS+VC7ohsuT2ym.biyomRYTJLI+qsjP4WtWNeM.GMMLAxjnI2E+qsjP4WtWNeM.u8bv8gqLJPb+qsjP4WtWNeM.VOpajE9t9Hj+qsjP4WtWNeM.V6J0RnDCUN3+qsjP4WtWNeM.xP27sqOJe1c+qsjP4WtWNeM.t7M9HOIQqIz+qsjP4WtWNeM.cZN8sSFQiBK+qsjP4WtWNeM.m5ixZe5XYc9"},
+{ dxName: "134", dxId: "VC7ohsuT2ym.phPiDAEIlh1+qsjP4WtWNeM.qlprr8RvGRX+qsjP4WtWNeM.Bmnh0pn7Wyh+qsjP4WtWNeM.GweI6PQcSuA+qsjP4WtWNeM.UZJ3ufiwuZX+qsjP4WtWNeM.K9oz7QsOX9y+qsjP4WtWNeM.uWKSMAog0DK+qsjP4WtWNeM.hT6vOD6u3aJ+qsjP4WtWNeM.XY4AUaQXb8N+VC7ohsuT2ym.P609nIO6VuH+qsjP4WtWNeM.E9P7UuT7XZx+qsjP4WtWNeM.Xzn4EkzgqnN+qsjP4WtWNeM.xst6skw6Jis+qsjP4WtWNeM.eJd6lKrVOD9+qsjP4WtWNeM.lsbQcMAkjnS+qsjP4WtWNeM.J2WRoGiWl0h+qsjP4WtWNeM.rIUg2B7XPVQ+qsjP4WtWNeM.Vio8Jj3chhH"},
+{ dxName: "135", dxId: "tYjYIQMBOWg.TVKsg3FE6Ox+tYjYIQMBOWg.KgEdissejtN+tYjYIQMBOWg.qy8hh5TKmAw+tYjYIQMBOWg.DqjeIm3wnAz"},
+{ dxName: "136", dxId: "cc3K8H4rV5y.iOYsO0cj43o+yQwGoCoEz6n.xD6lmYsuXEF+yQwGoCoEz6n.q7GreYKqtJr+yQwGoCoEz6n.jp5eEmKFg6c+yQwGoCoEz6n.NtrO4vkAnz4+yQwGoCoEz6n.MdbVFagDcvM+yQwGoCoEz6n.pS5QAG6ifEE+yQwGoCoEz6n.dE2LroslFmI+yQwGoCoEz6n.d1KOjSqmQfS+cc3K8H4rV5y.biyomRYTJLI+yQwGoCoEz6n.GMMLAxjnI2E+yQwGoCoEz6n.u8bv8gqLJPb+yQwGoCoEz6n.VOpajE9t9Hj+yQwGoCoEz6n.V6J0RnDCUN3+yQwGoCoEz6n.xP27sqOJe1c+yQwGoCoEz6n.t7M9HOIQqIz+yQwGoCoEz6n.cZN8sSFQiBK+yQwGoCoEz6n.m5ixZe5XYc9"},
+{ dxName: "137", dxId: "cc3K8H4rV5y.phPiDAEIlh1+yQwGoCoEz6n.qlprr8RvGRX+yQwGoCoEz6n.Bmnh0pn7Wyh+yQwGoCoEz6n.GweI6PQcSuA+yQwGoCoEz6n.UZJ3ufiwuZX+yQwGoCoEz6n.K9oz7QsOX9y+yQwGoCoEz6n.uWKSMAog0DK+yQwGoCoEz6n.hT6vOD6u3aJ+yQwGoCoEz6n.XY4AUaQXb8N+cc3K8H4rV5y.P609nIO6VuH+yQwGoCoEz6n.E9P7UuT7XZx+yQwGoCoEz6n.Xzn4EkzgqnN+yQwGoCoEz6n.xst6skw6Jis+yQwGoCoEz6n.eJd6lKrVOD9+yQwGoCoEz6n.lsbQcMAkjnS+yQwGoCoEz6n.J2WRoGiWl0h+yQwGoCoEz6n.rIUg2B7XPVQ+yQwGoCoEz6n.Vio8Jj3chhH"},
+{ dxName: "138", dxId: "YaCaSx5WgeP.TVKsg3FE6Ox+YaCaSx5WgeP.KgEdissejtN+YaCaSx5WgeP.qy8hh5TKmAw+YaCaSx5WgeP.DqjeIm3wnAz"},
+{ dxName: "139", dxId: "Yspq2ZarstT.iOYsO0cj43o+oXVvdpkoOpQ.xD6lmYsuXEF+oXVvdpkoOpQ.q7GreYKqtJr+oXVvdpkoOpQ.jp5eEmKFg6c+oXVvdpkoOpQ.NtrO4vkAnz4+oXVvdpkoOpQ.MdbVFagDcvM+oXVvdpkoOpQ.pS5QAG6ifEE+oXVvdpkoOpQ.dE2LroslFmI+oXVvdpkoOpQ.d1KOjSqmQfS+Yspq2ZarstT.biyomRYTJLI+oXVvdpkoOpQ.GMMLAxjnI2E+oXVvdpkoOpQ.u8bv8gqLJPb+oXVvdpkoOpQ.VOpajE9t9Hj+oXVvdpkoOpQ.V6J0RnDCUN3+oXVvdpkoOpQ.xP27sqOJe1c+oXVvdpkoOpQ.t7M9HOIQqIz+oXVvdpkoOpQ.cZN8sSFQiBK+oXVvdpkoOpQ.m5ixZe5XYc9"},
+{ dxName: "140", dxId: "Yspq2ZarstT.phPiDAEIlh1+oXVvdpkoOpQ.qlprr8RvGRX+oXVvdpkoOpQ.Bmnh0pn7Wyh+oXVvdpkoOpQ.GweI6PQcSuA+oXVvdpkoOpQ.UZJ3ufiwuZX+oXVvdpkoOpQ.K9oz7QsOX9y+oXVvdpkoOpQ.uWKSMAog0DK+oXVvdpkoOpQ.hT6vOD6u3aJ+oXVvdpkoOpQ.XY4AUaQXb8N+Yspq2ZarstT.P609nIO6VuH+oXVvdpkoOpQ.E9P7UuT7XZx+oXVvdpkoOpQ.Xzn4EkzgqnN+oXVvdpkoOpQ.xst6skw6Jis+oXVvdpkoOpQ.eJd6lKrVOD9+oXVvdpkoOpQ.lsbQcMAkjnS+oXVvdpkoOpQ.J2WRoGiWl0h+oXVvdpkoOpQ.rIUg2B7XPVQ+oXVvdpkoOpQ.Vio8Jj3chhH"},
+{ dxName: "141", dxId: "NCn69WVzGmS.TVKsg3FE6Ox+NCn69WVzGmS.KgEdissejtN+NCn69WVzGmS.qy8hh5TKmAw+NCn69WVzGmS.DqjeIm3wnAz"},
+{ dxName: "142", dxId: "oQLO71Qsp1e.iOYsO0cj43o+JxWv1puiWhd.xD6lmYsuXEF+JxWv1puiWhd.q7GreYKqtJr+JxWv1puiWhd.jp5eEmKFg6c+JxWv1puiWhd.NtrO4vkAnz4+JxWv1puiWhd.MdbVFagDcvM+JxWv1puiWhd.pS5QAG6ifEE+JxWv1puiWhd.dE2LroslFmI+JxWv1puiWhd.d1KOjSqmQfS+oQLO71Qsp1e.biyomRYTJLI+JxWv1puiWhd.GMMLAxjnI2E+JxWv1puiWhd.u8bv8gqLJPb+JxWv1puiWhd.VOpajE9t9Hj+JxWv1puiWhd.V6J0RnDCUN3+JxWv1puiWhd.xP27sqOJe1c+JxWv1puiWhd.t7M9HOIQqIz+JxWv1puiWhd.cZN8sSFQiBK+JxWv1puiWhd.m5ixZe5XYc9"},
+{ dxName: "143", dxId: "oQLO71Qsp1e.phPiDAEIlh1+JxWv1puiWhd.qlprr8RvGRX+JxWv1puiWhd.Bmnh0pn7Wyh+JxWv1puiWhd.GweI6PQcSuA+JxWv1puiWhd.UZJ3ufiwuZX+JxWv1puiWhd.K9oz7QsOX9y+JxWv1puiWhd.uWKSMAog0DK+JxWv1puiWhd.hT6vOD6u3aJ+JxWv1puiWhd.XY4AUaQXb8N+oQLO71Qsp1e.P609nIO6VuH+JxWv1puiWhd.E9P7UuT7XZx+JxWv1puiWhd.Xzn4EkzgqnN+JxWv1puiWhd.xst6skw6Jis+JxWv1puiWhd.eJd6lKrVOD9+JxWv1puiWhd.lsbQcMAkjnS+JxWv1puiWhd.J2WRoGiWl0h+JxWv1puiWhd.rIUg2B7XPVQ+JxWv1puiWhd.Vio8Jj3chhH"},
+{ dxName: "144", dxId: "ecJ1sFcbOaw.TVKsg3FE6Ox+ecJ1sFcbOaw.KgEdissejtN+ecJ1sFcbOaw.qy8hh5TKmAw+ecJ1sFcbOaw.DqjeIm3wnAz"},
+{ dxName: "145", dxId: "UROqXtz4l0L.xD6lmYsuXEF+UROqXtz4l0L.q7GreYKqtJr+UROqXtz4l0L.jp5eEmKFg6c+UROqXtz4l0L.NtrO4vkAnz4+UROqXtz4l0L.MdbVFagDcvM+UROqXtz4l0L.pS5QAG6ifEE+UROqXtz4l0L.dE2LroslFmI+UROqXtz4l0L.d1KOjSqmQfS+UROqXtz4l0L.GMMLAxjnI2E+UROqXtz4l0L.u8bv8gqLJPb+UROqXtz4l0L.VOpajE9t9Hj+UROqXtz4l0L.V6J0RnDCUN3+UROqXtz4l0L.xP27sqOJe1c+UROqXtz4l0L.t7M9HOIQqIz+UROqXtz4l0L.cZN8sSFQiBK+UROqXtz4l0L.m5ixZe5XYc9+zo6Ze69zqfN.iOYsO0cj43o+zo6Ze69zqfN.biyomRYTJLI+zja1VSMWp8m.xD6lmYsuXEF+zja1VSMWp8m.q7GreYKqtJr+zja1VSMWp8m.jp5eEmKFg6c+zja1VSMWp8m.NtrO4vkAnz4+zja1VSMWp8m.MdbVFagDcvM+zja1VSMWp8m.pS5QAG6ifEE+zja1VSMWp8m.dE2LroslFmI+zja1VSMWp8m.d1KOjSqmQfS+zja1VSMWp8m.GMMLAxjnI2E+zja1VSMWp8m.u8bv8gqLJPb+zja1VSMWp8m.VOpajE9t9Hj+zja1VSMWp8m.V6J0RnDCUN3+zja1VSMWp8m.xP27sqOJe1c+zja1VSMWp8m.t7M9HOIQqIz+zja1VSMWp8m.cZN8sSFQiBK+zja1VSMWp8m.m5ixZe5XYc9+OahuAK2pDw4.xD6lmYsuXEF+Fd69CR15Kb7.xD6lmYsuXEF+Fd69CR15Kb7.q7GreYKqtJr+Fd69CR15Kb7.jp5eEmKFg6c+Fd69CR15Kb7.NtrO4vkAnz4+Fd69CR15Kb7.MdbVFagDcvM+Fd69CR15Kb7.pS5QAG6ifEE+Fd69CR15Kb7.dE2LroslFmI+Fd69CR15Kb7.d1KOjSqmQfS+OahuAK2pDw4.biyomRYTJLI+Fd69CR15Kb7.GMMLAxjnI2E+Fd69CR15Kb7.u8bv8gqLJPb+Fd69CR15Kb7.VOpajE9t9Hj+Fd69CR15Kb7.V6J0RnDCUN3+Fd69CR15Kb7.xP27sqOJe1c+Fd69CR15Kb7.t7M9HOIQqIz+Fd69CR15Kb7.cZN8sSFQiBK+Fd69CR15Kb7.m5ixZe5XYc9+afb4YLhynr7.iOYsO0cj43o+afb4YLhynr7.biyomRYTJLI+QZj31W8iDqf.xD6lmYsuXEF+QZj31W8iDqf.q7GreYKqtJr+QZj31W8iDqf.jp5eEmKFg6c+QZj31W8iDqf.NtrO4vkAnz4+QZj31W8iDqf.MdbVFagDcvM+QZj31W8iDqf.pS5QAG6ifEE+QZj31W8iDqf.dE2LroslFmI+QZj31W8iDqf.d1KOjSqmQfS+QZj31W8iDqf.GMMLAxjnI2E+QZj31W8iDqf.u8bv8gqLJPb+QZj31W8iDqf.VOpajE9t9Hj+QZj31W8iDqf.V6J0RnDCUN3+QZj31W8iDqf.xP27sqOJe1c+QZj31W8iDqf.t7M9HOIQqIz+QZj31W8iDqf.cZN8sSFQiBK+QZj31W8iDqf.m5ixZe5XYc9+Ukr1DuYBTJk.iOYsO0cj43o+woC5n7JpeRd.xD6lmYsuXEF+woC5n7JpeRd.q7GreYKqtJr+woC5n7JpeRd.jp5eEmKFg6c+woC5n7JpeRd.NtrO4vkAnz4+woC5n7JpeRd.MdbVFagDcvM+woC5n7JpeRd.pS5QAG6ifEE+woC5n7JpeRd.dE2LroslFmI+woC5n7JpeRd.d1KOjSqmQfS+Ukr1DuYBTJk.biyomRYTJLI+woC5n7JpeRd.GMMLAxjnI2E+woC5n7JpeRd.u8bv8gqLJPb+woC5n7JpeRd.VOpajE9t9Hj+woC5n7JpeRd.V6J0RnDCUN3+woC5n7JpeRd.xP27sqOJe1c+woC5n7JpeRd.t7M9HOIQqIz+woC5n7JpeRd.cZN8sSFQiBK+woC5n7JpeRd.m5ixZe5XYc9+BRHGE5CuoEE.iOYsO0cj43o+P5l9reCQSos.xD6lmYsuXEF+P5l9reCQSos.q7GreYKqtJr+P5l9reCQSos.jp5eEmKFg6c+P5l9reCQSos.NtrO4vkAnz4+P5l9reCQSos.MdbVFagDcvM+P5l9reCQSos.pS5QAG6ifEE+P5l9reCQSos.dE2LroslFmI+P5l9reCQSos.d1KOjSqmQfS+BRHGE5CuoEE.biyomRYTJLI+P5l9reCQSos.GMMLAxjnI2E+P5l9reCQSos.u8bv8gqLJPb+P5l9reCQSos.VOpajE9t9Hj+P5l9reCQSos.V6J0RnDCUN3+P5l9reCQSos.xP27sqOJe1c+P5l9reCQSos.t7M9HOIQqIz+P5l9reCQSos.cZN8sSFQiBK+P5l9reCQSos.m5ixZe5XYc9+B6VDLZxyo3D.iOYsO0cj43o+DtmsvisQUha.xD6lmYsuXEF+DtmsvisQUha.jp5eEmKFg6c+DtmsvisQUha.q7GreYKqtJr+DtmsvisQUha.NtrO4vkAnz4+DtmsvisQUha.MdbVFagDcvM+DtmsvisQUha.pS5QAG6ifEE+DtmsvisQUha.dE2LroslFmI+DtmsvisQUha.d1KOjSqmQfS+QAOzptxkcKo.iOYsO0cj43o+P0Ytk0RKmbJ.xD6lmYsuXEF+P0Ytk0RKmbJ.q7GreYKqtJr+P0Ytk0RKmbJ.jp5eEmKFg6c+P0Ytk0RKmbJ.NtrO4vkAnz4+P0Ytk0RKmbJ.MdbVFagDcvM+P0Ytk0RKmbJ.pS5QAG6ifEE+P0Ytk0RKmbJ.dE2LroslFmI+P0Ytk0RKmbJ.d1KOjSqmQfS+QAOzptxkcKo.biyomRYTJLI+P0Ytk0RKmbJ.GMMLAxjnI2E+P0Ytk0RKmbJ.u8bv8gqLJPb+P0Ytk0RKmbJ.VOpajE9t9Hj+P0Ytk0RKmbJ.V6J0RnDCUN3+P0Ytk0RKmbJ.xP27sqOJe1c+P0Ytk0RKmbJ.t7M9HOIQqIz+P0Ytk0RKmbJ.cZN8sSFQiBK+P0Ytk0RKmbJ.m5ixZe5XYc9+nKWJJob5k61.iOYsO0cj43o+kv9nGOpOXM0.xD6lmYsuXEF+kv9nGOpOXM0.q7GreYKqtJr+kv9nGOpOXM0.jp5eEmKFg6c+kv9nGOpOXM0.NtrO4vkAnz4+kv9nGOpOXM0.MdbVFagDcvM+kv9nGOpOXM0.pS5QAG6ifEE+kv9nGOpOXM0.dE2LroslFmI+kv9nGOpOXM0.d1KOjSqmQfS+nKWJJob5k61.biyomRYTJLI+kv9nGOpOXM0.GMMLAxjnI2E+kv9nGOpOXM0.u8bv8gqLJPb+kv9nGOpOXM0.VOpajE9t9Hj+kv9nGOpOXM0.V6J0RnDCUN3+kv9nGOpOXM0.xP27sqOJe1c+kv9nGOpOXM0.t7M9HOIQqIz+kv9nGOpOXM0.cZN8sSFQiBK+kv9nGOpOXM0.m5ixZe5XYc9+ZvMY5WUwGPd.iOYsO0cj43o+Mx6a0AMHygn.xD6lmYsuXEF+Mx6a0AMHygn.q7GreYKqtJr+Mx6a0AMHygn.jp5eEmKFg6c+Mx6a0AMHygn.NtrO4vkAnz4+Mx6a0AMHygn.MdbVFagDcvM+Mx6a0AMHygn.pS5QAG6ifEE+Mx6a0AMHygn.dE2LroslFmI+Mx6a0AMHygn.d1KOjSqmQfS+ZvMY5WUwGPd.biyomRYTJLI+Mx6a0AMHygn.GMMLAxjnI2E+Mx6a0AMHygn.u8bv8gqLJPb+Mx6a0AMHygn.VOpajE9t9Hj+Mx6a0AMHygn.V6J0RnDCUN3+Mx6a0AMHygn.xP27sqOJe1c+Mx6a0AMHygn.t7M9HOIQqIz+Mx6a0AMHygn.cZN8sSFQiBK+Mx6a0AMHygn.m5ixZe5XYc9+VC7ohsuT2ym.iOYsO0cj43o+qsjP4WtWNeM.xD6lmYsuXEF+qsjP4WtWNeM.q7GreYKqtJr+qsjP4WtWNeM.jp5eEmKFg6c+qsjP4WtWNeM.NtrO4vkAnz4+qsjP4WtWNeM.MdbVFagDcvM+qsjP4WtWNeM.pS5QAG6ifEE+qsjP4WtWNeM.dE2LroslFmI+qsjP4WtWNeM.d1KOjSqmQfS+VC7ohsuT2ym.biyomRYTJLI+qsjP4WtWNeM.GMMLAxjnI2E+qsjP4WtWNeM.u8bv8gqLJPb+qsjP4WtWNeM.VOpajE9t9Hj+qsjP4WtWNeM.V6J0RnDCUN3+qsjP4WtWNeM.xP27sqOJe1c+qsjP4WtWNeM.t7M9HOIQqIz+qsjP4WtWNeM.cZN8sSFQiBK+qsjP4WtWNeM.m5ixZe5XYc9+cc3K8H4rV5y.iOYsO0cj43o+yQwGoCoEz6n.xD6lmYsuXEF+yQwGoCoEz6n.q7GreYKqtJr+yQwGoCoEz6n.jp5eEmKFg6c+yQwGoCoEz6n.NtrO4vkAnz4+yQwGoCoEz6n.MdbVFagDcvM+yQwGoCoEz6n.pS5QAG6ifEE+yQwGoCoEz6n.dE2LroslFmI+yQwGoCoEz6n.d1KOjSqmQfS+cc3K8H4rV5y.biyomRYTJLI+yQwGoCoEz6n.GMMLAxjnI2E+yQwGoCoEz6n.u8bv8gqLJPb+yQwGoCoEz6n.VOpajE9t9Hj+yQwGoCoEz6n.V6J0RnDCUN3+yQwGoCoEz6n.xP27sqOJe1c+yQwGoCoEz6n.t7M9HOIQqIz+yQwGoCoEz6n.cZN8sSFQiBK+yQwGoCoEz6n.m5ixZe5XYc9+Yspq2ZarstT.iOYsO0cj43o+oXVvdpkoOpQ.xD6lmYsuXEF+oXVvdpkoOpQ.q7GreYKqtJr+oXVvdpkoOpQ.jp5eEmKFg6c+oXVvdpkoOpQ.NtrO4vkAnz4+oXVvdpkoOpQ.MdbVFagDcvM+oXVvdpkoOpQ.pS5QAG6ifEE+oXVvdpkoOpQ.dE2LroslFmI+oXVvdpkoOpQ.d1KOjSqmQfS+Yspq2ZarstT.biyomRYTJLI+oXVvdpkoOpQ.GMMLAxjnI2E+oXVvdpkoOpQ.u8bv8gqLJPb+oXVvdpkoOpQ.VOpajE9t9Hj+oXVvdpkoOpQ.V6J0RnDCUN3+oXVvdpkoOpQ.xP27sqOJe1c+oXVvdpkoOpQ.t7M9HOIQqIz+oXVvdpkoOpQ.cZN8sSFQiBK+oXVvdpkoOpQ.m5ixZe5XYc9+oQLO71Qsp1e.iOYsO0cj43o+JxWv1puiWhd.xD6lmYsuXEF+JxWv1puiWhd.q7GreYKqtJr+JxWv1puiWhd.jp5eEmKFg6c+JxWv1puiWhd.NtrO4vkAnz4+JxWv1puiWhd.MdbVFagDcvM+JxWv1puiWhd.pS5QAG6ifEE+JxWv1puiWhd.dE2LroslFmI+JxWv1puiWhd.d1KOjSqmQfS+oQLO71Qsp1e.biyomRYTJLI+JxWv1puiWhd.GMMLAxjnI2E+JxWv1puiWhd.u8bv8gqLJPb+JxWv1puiWhd.VOpajE9t9Hj+JxWv1puiWhd.V6J0RnDCUN3+JxWv1puiWhd.xP27sqOJe1c+JxWv1puiWhd.t7M9HOIQqIz+JxWv1puiWhd.cZN8sSFQiBK+JxWv1puiWhd.m5ixZe5XYc9"},
+{ dxName: "146", dxId: "UROqXtz4l0L.qlprr8RvGRX+UROqXtz4l0L.Bmnh0pn7Wyh+UROqXtz4l0L.GweI6PQcSuA+UROqXtz4l0L.UZJ3ufiwuZX+UROqXtz4l0L.K9oz7QsOX9y+UROqXtz4l0L.uWKSMAog0DK+UROqXtz4l0L.hT6vOD6u3aJ+UROqXtz4l0L.XY4AUaQXb8N+UROqXtz4l0L.E9P7UuT7XZx+UROqXtz4l0L.Xzn4EkzgqnN+UROqXtz4l0L.xst6skw6Jis+UROqXtz4l0L.eJd6lKrVOD9+UROqXtz4l0L.lsbQcMAkjnS+UROqXtz4l0L.J2WRoGiWl0h+UROqXtz4l0L.rIUg2B7XPVQ+UROqXtz4l0L.Vio8Jj3chhH+zo6Ze69zqfN.phPiDAEIlh1+zo6Ze69zqfN.P609nIO6VuH+zja1VSMWp8m.qlprr8RvGRX+zja1VSMWp8m.Bmnh0pn7Wyh+zja1VSMWp8m.GweI6PQcSuA+zja1VSMWp8m.UZJ3ufiwuZX+zja1VSMWp8m.K9oz7QsOX9y+zja1VSMWp8m.uWKSMAog0DK+zja1VSMWp8m.hT6vOD6u3aJ+zja1VSMWp8m.XY4AUaQXb8N+zja1VSMWp8m.E9P7UuT7XZx+zja1VSMWp8m.Xzn4EkzgqnN+zja1VSMWp8m.xst6skw6Jis+zja1VSMWp8m.eJd6lKrVOD9+zja1VSMWp8m.lsbQcMAkjnS+zja1VSMWp8m.J2WRoGiWl0h+zja1VSMWp8m.rIUg2B7XPVQ+zja1VSMWp8m.Vio8Jj3chhH+OahuAK2pDw4.phPiDAEIlh1+OahuAK2pDw4.P609nIO6VuH+Fd69CR15Kb7.qlprr8RvGRX+Fd69CR15Kb7.Bmnh0pn7Wyh+Fd69CR15Kb7.GweI6PQcSuA+Fd69CR15Kb7.UZJ3ufiwuZX+Fd69CR15Kb7.K9oz7QsOX9y+Fd69CR15Kb7.uWKSMAog0DK+Fd69CR15Kb7.hT6vOD6u3aJ+Fd69CR15Kb7.XY4AUaQXb8N+Fd69CR15Kb7.E9P7UuT7XZx+Fd69CR15Kb7.Xzn4EkzgqnN+Fd69CR15Kb7.xst6skw6Jis+Fd69CR15Kb7.eJd6lKrVOD9+Fd69CR15Kb7.lsbQcMAkjnS+Fd69CR15Kb7.J2WRoGiWl0h+Fd69CR15Kb7.rIUg2B7XPVQ+Fd69CR15Kb7.Vio8Jj3chhH+afb4YLhynr7.phPiDAEIlh1+afb4YLhynr7.P609nIO6VuH+QZj31W8iDqf.qlprr8RvGRX+QZj31W8iDqf.Bmnh0pn7Wyh+QZj31W8iDqf.GweI6PQcSuA+QZj31W8iDqf.UZJ3ufiwuZX+QZj31W8iDqf.K9oz7QsOX9y+QZj31W8iDqf.uWKSMAog0DK+QZj31W8iDqf.hT6vOD6u3aJ+QZj31W8iDqf.XY4AUaQXb8N+QZj31W8iDqf.E9P7UuT7XZx+QZj31W8iDqf.Xzn4EkzgqnN+QZj31W8iDqf.xst6skw6Jis+QZj31W8iDqf.eJd6lKrVOD9+QZj31W8iDqf.lsbQcMAkjnS+QZj31W8iDqf.J2WRoGiWl0h+QZj31W8iDqf.rIUg2B7XPVQ+QZj31W8iDqf.Vio8Jj3chhH+by6ApBm8Oly.AWFHAFYJTph+PQtpE5jOFjV.AWFHAFYJTph+DPimQ948Cdl.qlprr8RvGRX+DPimQ948Cdl.Bmnh0pn7Wyh+DPimQ948Cdl.GweI6PQcSuA+DPimQ948Cdl.UZJ3ufiwuZX+DPimQ948Cdl.K9oz7QsOX9y+DPimQ948Cdl.uWKSMAog0DK+DPimQ948Cdl.hT6vOD6u3aJ+DPimQ948Cdl.XY4AUaQXb8N+DPimQ948Cdl.u8bv8gqLJPb+DPimQ948Cdl.VOpajE9t9Hj+DPimQ948Cdl.V6J0RnDCUN3+DPimQ948Cdl.xP27sqOJe1c+DPimQ948Cdl.t7M9HOIQqIz+DPimQ948Cdl.cZN8sSFQiBK+DPimQ948Cdl.m5ixZe5XYc9+kOKsWjtHA36.AWFHAFYJTph+RL6zDOxipUf.qlprr8RvGRX+RL6zDOxipUf.Bmnh0pn7Wyh+RL6zDOxipUf.GweI6PQcSuA+RL6zDOxipUf.UZJ3ufiwuZX+RL6zDOxipUf.K9oz7QsOX9y+RL6zDOxipUf.uWKSMAog0DK+RL6zDOxipUf.hT6vOD6u3aJ+RL6zDOxipUf.XY4AUaQXb8N+uDaZi3Xte0e.AWFHAFYJTph+RL6zDOxipUf.Xzn4EkzgqnN+RL6zDOxipUf.xst6skw6Jis+RL6zDOxipUf.eJd6lKrVOD9+RL6zDOxipUf.lsbQcMAkjnS+RL6zDOxipUf.J2WRoGiWl0h+RL6zDOxipUf.rIUg2B7XPVQ+RL6zDOxipUf.Vio8Jj3chhH+Ukr1DuYBTJk.phPiDAEIlh1+woC5n7JpeRd.qlprr8RvGRX+woC5n7JpeRd.Bmnh0pn7Wyh+woC5n7JpeRd.GweI6PQcSuA+woC5n7JpeRd.UZJ3ufiwuZX+woC5n7JpeRd.K9oz7QsOX9y+woC5n7JpeRd.uWKSMAog0DK+woC5n7JpeRd.hT6vOD6u3aJ+woC5n7JpeRd.XY4AUaQXb8N+Ukr1DuYBTJk.P609nIO6VuH+woC5n7JpeRd.E9P7UuT7XZx+woC5n7JpeRd.Xzn4EkzgqnN+woC5n7JpeRd.xst6skw6Jis+woC5n7JpeRd.eJd6lKrVOD9+woC5n7JpeRd.lsbQcMAkjnS+woC5n7JpeRd.J2WRoGiWl0h+woC5n7JpeRd.rIUg2B7XPVQ+woC5n7JpeRd.Vio8Jj3chhH+BRHGE5CuoEE.phPiDAEIlh1+P5l9reCQSos.qlprr8RvGRX+P5l9reCQSos.Bmnh0pn7Wyh+P5l9reCQSos.GweI6PQcSuA+P5l9reCQSos.UZJ3ufiwuZX+P5l9reCQSos.K9oz7QsOX9y+P5l9reCQSos.uWKSMAog0DK+P5l9reCQSos.hT6vOD6u3aJ+P5l9reCQSos.XY4AUaQXb8N+BRHGE5CuoEE.P609nIO6VuH+P5l9reCQSos.E9P7UuT7XZx+P5l9reCQSos.Xzn4EkzgqnN+P5l9reCQSos.xst6skw6Jis+P5l9reCQSos.eJd6lKrVOD9+P5l9reCQSos.lsbQcMAkjnS+P5l9reCQSos.J2WRoGiWl0h+P5l9reCQSos.rIUg2B7XPVQ+P5l9reCQSos.Vio8Jj3chhH+B6VDLZxyo3D.phPiDAEIlh1+DtmsvisQUha.qlprr8RvGRX+DtmsvisQUha.Bmnh0pn7Wyh+DtmsvisQUha.GweI6PQcSuA+DtmsvisQUha.UZJ3ufiwuZX+DtmsvisQUha.K9oz7QsOX9y+DtmsvisQUha.uWKSMAog0DK+DtmsvisQUha.hT6vOD6u3aJ+DtmsvisQUha.XY4AUaQXb8N+QAOzptxkcKo.phPiDAEIlh1+P0Ytk0RKmbJ.qlprr8RvGRX+P0Ytk0RKmbJ.Bmnh0pn7Wyh+P0Ytk0RKmbJ.GweI6PQcSuA+P0Ytk0RKmbJ.UZJ3ufiwuZX+P0Ytk0RKmbJ.K9oz7QsOX9y+P0Ytk0RKmbJ.uWKSMAog0DK+P0Ytk0RKmbJ.hT6vOD6u3aJ+P0Ytk0RKmbJ.XY4AUaQXb8N+B6VDLZxyo3D.P609nIO6VuH+DtmsvisQUha.E9P7UuT7XZx+DtmsvisQUha.Xzn4EkzgqnN+DtmsvisQUha.xst6skw6Jis+DtmsvisQUha.eJd6lKrVOD9+DtmsvisQUha.lsbQcMAkjnS+DtmsvisQUha.J2WRoGiWl0h+DtmsvisQUha.rIUg2B7XPVQ+DtmsvisQUha.Vio8Jj3chhH+nKWJJob5k61.phPiDAEIlh1+kv9nGOpOXM0.qlprr8RvGRX+kv9nGOpOXM0.Bmnh0pn7Wyh+kv9nGOpOXM0.GweI6PQcSuA+kv9nGOpOXM0.UZJ3ufiwuZX+kv9nGOpOXM0.K9oz7QsOX9y+kv9nGOpOXM0.uWKSMAog0DK+kv9nGOpOXM0.hT6vOD6u3aJ+kv9nGOpOXM0.XY4AUaQXb8N+nKWJJob5k61.P609nIO6VuH+kv9nGOpOXM0.E9P7UuT7XZx+kv9nGOpOXM0.Xzn4EkzgqnN+kv9nGOpOXM0.xst6skw6Jis+kv9nGOpOXM0.eJd6lKrVOD9+kv9nGOpOXM0.lsbQcMAkjnS+kv9nGOpOXM0.J2WRoGiWl0h+kv9nGOpOXM0.rIUg2B7XPVQ+kv9nGOpOXM0.Vio8Jj3chhH+ZvMY5WUwGPd.phPiDAEIlh1+Mx6a0AMHygn.qlprr8RvGRX+Mx6a0AMHygn.Bmnh0pn7Wyh+Mx6a0AMHygn.GweI6PQcSuA+Mx6a0AMHygn.UZJ3ufiwuZX+Mx6a0AMHygn.K9oz7QsOX9y+Mx6a0AMHygn.uWKSMAog0DK+Mx6a0AMHygn.hT6vOD6u3aJ+Mx6a0AMHygn.XY4AUaQXb8N+ZvMY5WUwGPd.P609nIO6VuH+Mx6a0AMHygn.E9P7UuT7XZx+Mx6a0AMHygn.Xzn4EkzgqnN+Mx6a0AMHygn.xst6skw6Jis+Mx6a0AMHygn.eJd6lKrVOD9+Mx6a0AMHygn.lsbQcMAkjnS+Mx6a0AMHygn.J2WRoGiWl0h+Mx6a0AMHygn.rIUg2B7XPVQ+Mx6a0AMHygn.Vio8Jj3chhH+VC7ohsuT2ym.phPiDAEIlh1+qsjP4WtWNeM.qlprr8RvGRX+qsjP4WtWNeM.Bmnh0pn7Wyh+qsjP4WtWNeM.GweI6PQcSuA+qsjP4WtWNeM.UZJ3ufiwuZX+qsjP4WtWNeM.K9oz7QsOX9y+qsjP4WtWNeM.uWKSMAog0DK+qsjP4WtWNeM.hT6vOD6u3aJ+qsjP4WtWNeM.XY4AUaQXb8N+VC7ohsuT2ym.P609nIO6VuH+qsjP4WtWNeM.E9P7UuT7XZx+qsjP4WtWNeM.Xzn4EkzgqnN+qsjP4WtWNeM.xst6skw6Jis+qsjP4WtWNeM.eJd6lKrVOD9+qsjP4WtWNeM.lsbQcMAkjnS+qsjP4WtWNeM.J2WRoGiWl0h+qsjP4WtWNeM.rIUg2B7XPVQ+qsjP4WtWNeM.Vio8Jj3chhH+cc3K8H4rV5y.phPiDAEIlh1+yQwGoCoEz6n.qlprr8RvGRX+yQwGoCoEz6n.Bmnh0pn7Wyh+yQwGoCoEz6n.GweI6PQcSuA+yQwGoCoEz6n.UZJ3ufiwuZX+yQwGoCoEz6n.K9oz7QsOX9y+yQwGoCoEz6n.uWKSMAog0DK+yQwGoCoEz6n.hT6vOD6u3aJ+yQwGoCoEz6n.XY4AUaQXb8N+cc3K8H4rV5y.P609nIO6VuH+yQwGoCoEz6n.E9P7UuT7XZx+yQwGoCoEz6n.Xzn4EkzgqnN+yQwGoCoEz6n.xst6skw6Jis+yQwGoCoEz6n.eJd6lKrVOD9+yQwGoCoEz6n.lsbQcMAkjnS+yQwGoCoEz6n.J2WRoGiWl0h+yQwGoCoEz6n.rIUg2B7XPVQ+yQwGoCoEz6n.Vio8Jj3chhH+Yspq2ZarstT.phPiDAEIlh1+oXVvdpkoOpQ.qlprr8RvGRX+oXVvdpkoOpQ.Bmnh0pn7Wyh+oXVvdpkoOpQ.GweI6PQcSuA+oXVvdpkoOpQ.UZJ3ufiwuZX+oXVvdpkoOpQ.K9oz7QsOX9y+oXVvdpkoOpQ.uWKSMAog0DK+oXVvdpkoOpQ.hT6vOD6u3aJ+oXVvdpkoOpQ.XY4AUaQXb8N+Yspq2ZarstT.P609nIO6VuH+oXVvdpkoOpQ.E9P7UuT7XZx+oXVvdpkoOpQ.Xzn4EkzgqnN+oXVvdpkoOpQ.xst6skw6Jis+oXVvdpkoOpQ.eJd6lKrVOD9+oXVvdpkoOpQ.lsbQcMAkjnS+oXVvdpkoOpQ.J2WRoGiWl0h+oXVvdpkoOpQ.rIUg2B7XPVQ+oXVvdpkoOpQ.Vio8Jj3chhH+oQLO71Qsp1e.phPiDAEIlh1+JxWv1puiWhd.qlprr8RvGRX+JxWv1puiWhd.Bmnh0pn7Wyh+JxWv1puiWhd.GweI6PQcSuA+JxWv1puiWhd.UZJ3ufiwuZX+JxWv1puiWhd.K9oz7QsOX9y+JxWv1puiWhd.uWKSMAog0DK+JxWv1puiWhd.hT6vOD6u3aJ+JxWv1puiWhd.XY4AUaQXb8N+oQLO71Qsp1e.P609nIO6VuH+JxWv1puiWhd.E9P7UuT7XZx+JxWv1puiWhd.Xzn4EkzgqnN+JxWv1puiWhd.xst6skw6Jis+JxWv1puiWhd.eJd6lKrVOD9+JxWv1puiWhd.lsbQcMAkjnS+JxWv1puiWhd.J2WRoGiWl0h+JxWv1puiWhd.rIUg2B7XPVQ+JxWv1puiWhd.Vio8Jj3chhH"},
+{ dxName: "147", dxId: "OQo3vMLMozg.TVKsg3FE6Ox+OQo3vMLMozg.KgEdissejtN+OQo3vMLMozg.qy8hh5TKmAw+OQo3vMLMozg.DqjeIm3wnAz+N3QS8dseYgK.TVKsg3FE6Ox+N3QS8dseYgK.KgEdissejtN+N3QS8dseYgK.qy8hh5TKmAw+N3QS8dseYgK.DqjeIm3wnAz+pCIgAYbtdcD.TVKsg3FE6Ox+pCIgAYbtdcD.KgEdissejtN+pCIgAYbtdcD.qy8hh5TKmAw+pCIgAYbtdcD.DqjeIm3wnAz+Hr8AuSy4YKS.TVKsg3FE6Ox+Hr8AuSy4YKS.KgEdissejtN+Hr8AuSy4YKS.qy8hh5TKmAw+Hr8AuSy4YKS.DqjeIm3wnAz+VpUGS0bfeMz.TVKsg3FE6Ox+VpUGS0bfeMz.KgEdissejtN+VpUGS0bfeMz.qy8hh5TKmAw+VpUGS0bfeMz.DqjeIm3wnAz+NxYhMBENJnt.TVKsg3FE6Ox+NxYhMBENJnt.KgEdissejtN+NxYhMBENJnt.qy8hh5TKmAw+NxYhMBENJnt.DqjeIm3wnAz+aJ2iu7DSTE3.TVKsg3FE6Ox+aJ2iu7DSTE3.KgEdissejtN+aJ2iu7DSTE3.qy8hh5TKmAw+aJ2iu7DSTE3.DqjeIm3wnAz+CmD9190sTk3.TVKsg3FE6Ox+CmD9190sTk3.KgEdissejtN+CmD9190sTk3.qy8hh5TKmAw+CmD9190sTk3.DqjeIm3wnAz+W5gQjYOpiMz.TVKsg3FE6Ox+W5gQjYOpiMz.KgEdissejtN+W5gQjYOpiMz.qy8hh5TKmAw+W5gQjYOpiMz.DqjeIm3wnAz+EEfp3VGHuII.TVKsg3FE6Ox+EEfp3VGHuII.KgEdissejtN+EEfp3VGHuII.qy8hh5TKmAw+EEfp3VGHuII.DqjeIm3wnAz+kX15I1Xgw3K.TVKsg3FE6Ox+kX15I1Xgw3K.KgEdissejtN+kX15I1Xgw3K.qy8hh5TKmAw+kX15I1Xgw3K.DqjeIm3wnAz+XIq5kSZFIxc.TVKsg3FE6Ox+XIq5kSZFIxc.KgEdissejtN+XIq5kSZFIxc.qy8hh5TKmAw+XIq5kSZFIxc.DqjeIm3wnAz+tYjYIQMBOWg.TVKsg3FE6Ox+tYjYIQMBOWg.KgEdissejtN+tYjYIQMBOWg.qy8hh5TKmAw+tYjYIQMBOWg.DqjeIm3wnAz+YaCaSx5WgeP.TVKsg3FE6Ox+YaCaSx5WgeP.KgEdissejtN+YaCaSx5WgeP.qy8hh5TKmAw+YaCaSx5WgeP.DqjeIm3wnAz+NCn69WVzGmS.TVKsg3FE6Ox+NCn69WVzGmS.KgEdissejtN+NCn69WVzGmS.qy8hh5TKmAw+NCn69WVzGmS.DqjeIm3wnAz+ecJ1sFcbOaw.TVKsg3FE6Ox+ecJ1sFcbOaw.KgEdissejtN+ecJ1sFcbOaw.qy8hh5TKmAw+ecJ1sFcbOaw.DqjeIm3wnAz"},
+
+				];
+
+
+    // data <table><body> id
+    var showTable = "showingTable";
+var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+
+    function arraySorting(a, b){
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    $(document).ready( function(){
+        $(".hideInPrint").hide();
+        $("#btnExport").click(function(e) {
+            window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+            e.preventDefault();
+        });
+
+
+        if(selOrgUnitLevel == 2 || selOrgUnitLevel == 3 || selOrgUnitLevel == 4) {
+
+            document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+            document.getElementById('period').innerHTML = getPeriod(gotPeriod);
+
+            $.each(tableDX, function () {
+                var deUIDs = this.dxId.split("+");
+                $.each(deUIDs, function (i) {
+                    dxUIDs.push([deUIDs[i].split(".")[0], deUIDs[i].split(".")[1]])
+                });
+            });
+
+            if(selOrgUnitLevel == 2){
+                $.each(orgUnitChildren, function(idx, curr_Val){
+                    circlesArray.push([curr_Val.id, curr_Val.name]);
+                });
+                circlesArray.sort(arraySorting);
+            }
+            //console.log(dxUIDs);
+
+            // getting all the hospital ids and names in to one array
+            var hospUrl = "../api/organisationUnitGroups/S57GNhlxPe7.json?fields=organisationUnits[id,name,path]&includeDescendants=true";
+            $.get(hospUrl, function (hospitalJSON) {
+
+                // get all districts to an array
+                var districtUrl = "../api/organisationUnitGroups/CXswpFTMKVB.json?fields=organisationUnits[id,name,path]&includeDescendants=true";
+
+                $.get(districtUrl, function (districtJSON) {
+
+                    // select the district
+                    $.each(districtJSON.organisationUnits, function (i, curr_district) {
+                        var parentCircleID = curr_district.path.split("/")[3];
+                        districtsArray.push([curr_district.id, curr_district.name, parentCircleID]);
+                    });
+                    districtsArray.sort(arraySorting);
+                });
+                // getting all the orgUnitIDs into one array
+                var orgUnitUrl = "../api/organisationUnits/" + orgUnit.id + ".json?fields=[id]&includeDescendants=true";
+
+                $.get(orgUnitUrl, function (orgUnitJSON) {
+
+                    var alertMsg = 0;
+
+                    // cross checking the hospitalArray and orgUnitArray to find specific Hospitals for a Circle and find the district for that using path
+                    $.each(hospitalJSON.organisationUnits, function (i, curr_hospVal) {
+                        $.each(orgUnitJSON.organisationUnits, function (j, curr_orgUnitVal) {
+                            if (curr_hospVal.id == curr_orgUnitVal.id) {
+                                var parentDistrictID = curr_hospVal.path.split("/")[4];
+                                hospitalsArray.push([curr_hospVal.id, curr_hospVal.name, parentDistrictID]);
+                                alertMsg = 1;
+                                return false; // breaking the inner each loop if id is found
+                            }
+                        });
+                    });
+
+                    hospitalsArray.sort(arraySorting);
+                    // calling loadData() for each district to populate the table with data
+                    loadData();
+
+                    if (alertMsg == 0) {
+                        alert(orgUnit.name + " doesn't have hospiitals registered!!");
+                        window.history.back();
+                    }
+                });
+            });
+        }
+        else {
+            alert(" Please select State, Circle or District as an organisation Unit");
+            window.history.back();
+        }
+    });
+
+    // function for load table data
+    function loadData(){
+        var hospitalUIDs = "";
+        $.each(hospitalsArray, function (j) {
+            hospitalUIDs += hospitalsArray[j][0] + ";";
+        });
+
+        var deUIDs = "";
+        $.each(dxUIDs, function (idx) {
+            if (deUIDs.search(dxUIDs[idx][0]) < 0) {
+                deUIDs += dxUIDs[idx][0] + ";";
+            }
+        });
+
+        var dataUrl = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=ou:" + hospitalUIDs + "&dimension=co&filter=pe:" + period;
+        $.get(dataUrl, function(json){
+            dataJsonObj = json;
+            loadTable();
+        });
+    }
+
+    // function for load table
+    function loadTable(){
+        if(selOrgUnitLevel == 2){
+            var htmlReport = "";
+            var calcData_CirclesArray = [];
+
+            // generates the HTML report
+            $("#" + showTable + " > tbody").html("");
+
+
+            $.each(circlesArray, function(x){
+                var circlesDistrictArray = [];
+                var calcData_districtsArray = [];
+
+                $.each(districtsArray, function (index) {
+                    if(districtsArray[index][2] == circlesArray[x][0]) {
+                        var hasHospitals = false;
+                        $.each(hospitalsArray, function (i) {
+                            if (hospitalsArray[i][2] == districtsArray[index][0]) {
+                                hasHospitals = true;
+                            }
+                        });
+
+                        if (hasHospitals == true) {
+                            var districtID = districtsArray[index][0];
+                            var districtHospitalsArray = [];
+                            var districtName = "";
+                            var dataValuesArray = [];
+
+                            // gets the current district name to a variable for future usage
+                            $.each(districtsArray, function (i) {
+                                if (districtsArray[i][0] == districtID) {
+                                    districtName = districtsArray[i][1];
+                                    return false;
+                                }
+                            });
+
+                            // gets current district's hospitals to an array
+                            $.each(hospitalsArray, function (i) {
+                                if (hospitalsArray[i][2] == districtID) {
+                                    districtHospitalsArray.push([hospitalsArray[i][0], hospitalsArray[i][1]])
+                                }
+                            });
+
+                            // data rows
+                            $.each(districtHospitalsArray, function (i) {
+                                htmlReport += "<tr>";
+                                htmlReport += "<td align='center' colspan='1'><strong>" + (sNo + 1) + "</strong></td>";
+                                htmlReport += "<td align='left' colspan='1'>" + districtHospitalsArray[i][1] + "</td>";
+
+                                var value = 0;
+                                $.each(tableDX, function (j) {
+                                    var cellValue = 0;
+                                var ids = tableDX[j].dxId.split("+");
+                            //console.log("length = " + length);
+
+                            for (var x = 0; x < ids.length; x++) {
+                             
+                                    
+                                        cellValue += parseInt(getCellValue(ids[x].split(".")[0], districtHospitalsArray[i][0],ids[x].split(".")[1]));
+                                   
+                              
+                                //if(tableDX[j].dxId.search(dxUIDs[]))
+                                //console.log("Cell value " + cellValue);
+                            }
+                                    dataValuesArray.push(cellValue);
+
+                                    //calculating total of the row values
+                                   // value += parseFloat(cellValue);
+
+                                    htmlReport += "<td align='center'>" + cellValue + "</td>";
+                                });
+                                // for displaying total
+                               // htmlReport += "<td align='center'><Strong>" + ((value.toString() == 'NaN') ? "-" : value) + "</Strong></td>";
+                               // dataValuesArray.push(value);
+                                htmlReport += "</tr>";
+                                sNo++;
+                            });
+
+                            // final row of the district (calculated district total)
+                            htmlReport += "<tr bgcolor='#cdfbc3'>";
+                            htmlReport += "<td align='left' colspan='2' ><strong>" + districtName + " Total" + "</strong></td>"
+
+                            var calcValuesArray = [];
+                            //note: (tableDX.length) is to calculate the total values
+                            for (var j = 0; j < tableDX.length; j++) {
+                                var calcValue = loadCalculatedData(j, dataValuesArray, districtHospitalsArray);
+                                htmlReport += "<td align='center'><Strong>" + ((calcValue == "NaN") ? "-" : calcValue) + "</Strong></td>";
+                                calcValuesArray.push(calcValue);
+                            }
+
+                            // add calculated data for a specific district to an array for further calculations
+                            $.each(calcValuesArray, function (i) {
+                                calcData_districtsArray.push([calcValuesArray[i]]);
+                            });
+
+                            htmlReport += "</tr>";
+                        }
+                    }
+                });
+                // load final rows of circles
+                htmlReport += "<tr bgcolor='#bcdf7e'>";
+
+                $.each(districtsArray, function (i) {
+                    var hasHospitals = false;
+                    $.each(hospitalsArray, function (j) {
+                        if (hospitalsArray[j][2] == districtsArray[i][0]) {
+                            hasHospitals = true;
+                            return false;
+                        }
+                    });
+                    if(hasHospitals == true) {
+                        if (districtsArray[i][2] == circlesArray[x][0]) {
+                            circlesDistrictArray.push([districtsArray[i][0]]);
+                        }
+                    }
+                });
+
+                var calculatedValueArray = [];
+                htmlReport += "<td colspan='7'><Strong>" + circlesArray[x][1] + " Total" + "</Strong></td>";
+                for (var j = 0; j < tableDX.length; j++) {
+                    var calcValue = loadCalculatedDataFinal(j, circlesDistrictArray, calcData_districtsArray);
+                    htmlReport += "<td align='center'><Strong>" + ((calcValue == "NaN") ? "-" : calcValue) + "</Strong></td>";
+                    calculatedValueArray.push(calcValue);
+                }
+
+                // add calculated data for a specific district to an array for further calculations
+                $.each(calculatedValueArray, function (i) {
+                    calcData_CirclesArray.push([calculatedValueArray[i]]);
+                });
+                htmlReport += "</tr>";
+
+            });
+            // load final row of state
+            htmlReport += "<tr bgcolor='#9ac54e'>";
+
+            htmlReport += "<td colspan='7'><Strong>" + orgUnit.name + " State Total" + "</Strong></td>";
+            for (var j = 0; j < tableDX.length; j++) {
+                var calcValue = loadCalculatedDataFinal(j, circlesArray, calcData_CirclesArray);
+                htmlReport += "<td align='center'><Strong>" + ((calcValue == "NaN") ? "-" : calcValue) + "</Strong></td>";
+
+            }
+            // show report
+            $("#" + showTable).append(htmlReport);
+            hideLoad();
+        }
+        else if(selOrgUnitLevel == 3 || selOrgUnitLevel == 4) {
+            var htmlReport = "";
+            var orgUnit_districtArray = [];
+            var calcData_districtsArray = [];
+
+            // to check whether the selected orgUnit is a circle or district
+            var isOnlyDistrict = false;
+            $.each(districtsArray, function (idx) {
+                if (districtsArray[idx][0] == orgUnit.id) {
+                    isOnlyDistrict = true;
+                    return false;
+                }
+            });
+
+            $.each(districtsArray, function (index) {
+                var hasHospitals = false;
+                $.each(hospitalsArray, function (i) {
+                    if (hospitalsArray[i][2] == districtsArray[index][0]) {
+                        hasHospitals = true;
+                        return false;
+                    }
+                });
+
+                if (hasHospitals == true) {
+                    var districtID = districtsArray[index][0];
+                    var districtHospitalsArray = [];
+                    var districtName = "";
+                    var dataValuesArray = [];
+
+                    // gets the current district name to a variable for future usage
+                    $.each(districtsArray, function (i) {
+                        if (districtsArray[i][0] == districtID) {
+                            districtName = districtsArray[i][1];
+                            return false;
+                        }
+                    });
+
+                    if (isOnlyDistrict == true) {
+                        districtID = orgUnit.id;
+                        districtName = orgUnit.name;
+                    }
+
+                    // gets current district's hospitals to an array
+                    $.each(hospitalsArray, function (i) {
+                        if (hospitalsArray[i][2] == districtID) {
+                            districtHospitalsArray.push([hospitalsArray[i][0], hospitalsArray[i][1]])
+                        }
+                    });
+
+                    // generates the HTML report
+                    $("#" + showTable + " > tbody").html("");
+
+
+                    // data rows
+                    $.each(districtHospitalsArray, function (i) {
+                        htmlReport += "<tr>";
+                        htmlReport += "<td align='center' colspan='1'><strong>" + (sNo + 1) + "</strong></td>";
+                        htmlReport += "<td align='left' colspan='1'>" + districtHospitalsArray[i][1] + "</td>";
+
+                        var value = 0;
+                        $.each(tableDX, function (j) {
+                            var cellValue = 0;
+                           
+							var ids = tableDX[j].dxId.split("+");
+                            //console.log("length = " + length);
+
+                            for (var x = 0; x < ids.length; x++) {
+                             
+                                    
+                                        cellValue += parseInt(getCellValue(ids[x].split(".")[0], districtHospitalsArray[i][0],ids[x].split(".")[1]));
+                                   
+                              
+                                //if(tableDX[j].dxId.search(dxUIDs[]))
+                                //console.log("Cell value " + cellValue);
+                            }
+
+                            dataValuesArray.push(cellValue);
+
+                            //calculating total of the row values
+                           // value += parseFloat(cellValue);
+
+                            htmlReport += "<td align='center'>" + cellValue + "</td>";
+                        });
+                        // for displaying total
+                      //  htmlReport += "<td align='center'><Strong>" + ((value.toString() == 'NaN') ? "-" : value) + "</Strong></td>";
+                      //  dataValuesArray.push(value);
+                        htmlReport += "</tr>";
+                        sNo++;
+                    });
+
+                    // final row of the district (calculated district total)
+                    htmlReport += "<tr bgcolor='#cdfbc3'>";
+                    htmlReport += "<td align='left' colspan='2' ><strong>" + districtName + " Total" + "</strong></td>";
+
+                    var calcValuesArray = [];
+                    //note: (tableDX.length) is to calculate the total values
+                    for (var j = 0; j < tableDX.length; j++) {
+                        var calcValue = loadCalculatedData(j, dataValuesArray, districtHospitalsArray);
+                        htmlReport += "<td align='center'><Strong>" + ((calcValue == "NaN") ? "-" : calcValue) + "</Strong></td>";
+                        calcValuesArray.push(calcValue);
+                    }
+
+                    if (isOnlyDistrict == true) {
+                        htmlReport += "</tr>";
+                        return false;
+                    }
+
+                    // add calculated data for a specific district to an array for further calculations
+                    $.each(calcValuesArray, function (i) {
+                        calcData_districtsArray.push([calcValuesArray[i]]);
+                    });
+
+                    htmlReport += "</tr>";
+                }
+            });
+
+            if (isOnlyDistrict == true) {
+                // show report
+                $("#" + showTable).append(htmlReport);
+                hideLoad();
+            }
+            else {
+                // load final rows
+                htmlReport += "<tr bgcolor='#bcdf7e'>";
+
+                $.each(districtsArray, function (i) {
+                    var hasHospitals = false;
+                    $.each(hospitalsArray, function (j) {
+                        if (hospitalsArray[j][2] == districtsArray[i][0]) {
+                            hasHospitals = true;
+                            return false;
+                        }
+                    });
+                    if(hasHospitals == true){
+                        if (districtsArray[i][2] == orgUnit.id) {
+                            orgUnit_districtArray.push([districtsArray[i][0]]);
+                        }
+                    }
+                });
+
+                htmlReport += "<td colspan='2'><Strong>" + orgUnit.name + " Total" + "</Strong></td>"
+                for (var j = 0; j < tableDX.length; j++) {
+                    var calcValue = loadCalculatedDataFinal(j, orgUnit_districtArray, calcData_districtsArray);
+                    htmlReport += "<td align='center'><Strong>" + ((calcValue == "NaN") ? "-" : calcValue) + "</Strong></td>";
+                }
+                htmlReport += "</tr>";
+
+                // show report
+                $("#" + showTable).append(htmlReport);
+                hideLoad();
+            }
+        }
+        else{
+            alert("Please select State, Circle or District");
+            window.history.back();
+        }
+    }
+
+    // function for calculate data
+    function loadCalculatedData(j,dataValuesArray, districtHospitalsArray){
+        var total;
+        total = parseInt(dataValuesArray[j]);
+        for(var i=0; i < districtHospitalsArray.length - 1; i++){
+            //if(parseFloat(total).toString() != "NaN") {
+                total += parseInt(dataValuesArray[(j + tableDX.length)]);
+            //}
+            j += (tableDX.length);
+        }
+        return parseInt(total);
+    }
+
+    // function for calculate data
+    // Note: Final calculation
+    function loadCalculatedDataFinal(j,orgUnitArray,calcDataArray){
+        var total;
+        total = parseInt(calcDataArray[j]);
+
+        for(var i=0; i < orgUnitArray.length - 1; i++){
+            total += parseInt(calcDataArray[(j + tableDX.length)]);
+            j += (tableDX.length);
+        }
+        return parseInt(total);
+    }
+
+    // function for getting cell values
+    function getCellValue(de, ou, co){
+        var result=0;
+        for (var i=0; i < dataJsonObj.rows.length; i++){
+            if (dataJsonObj.rows[i][0] == de && dataJsonObj.rows[i][1] == co && dataJsonObj.rows[i][2] == ou && dataJsonObj.rows[i][3] != null)
+            {
+                result = dataJsonObj.rows[i][3];
+				break;
+            }
+        }
+        return result;
+    }
+
+    // function to convert periods to more visible info
+    function getPeriod( pr ) {
+        var year = pr.substring(0,4);
+        var month = pr.substring(4,6);
+        var strMonth="";
+
+        if(month=="01" || month=="1") 		strMonth="January";
+        else if(month=="02" || month=="2")	strMonth="February";
+        else if(month=="03" || month=="3")	strMonth="March";
+        else if(month=="04" || month=="4")	strMonth="April";
+        else if(month=="05" || month=="5")	strMonth="May";
+        else if(month=="06" || month=="6")	strMonth="June";
+        else if(month=="07" || month=="7")	strMonth="July";
+        else if(month=="08" || month=="8")	strMonth="August";
+        else if(month=="09" || month=="9")	strMonth="September";
+        else if(month=="10")				strMonth="October";
+        else if(month=="11") 				strMonth="November";
+        else if(month=="12")				strMonth="December";
+
+        return strMonth + " " + year;
+    }
+
+    // function to hide loading animation
+    function hideLoad()
+    {
+        document.getElementById("cover").style.display="none";
+        document.getElementById("loads").style.display="none";
+        //document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow="scroll";
+    }
+
+
+</script>
+
+
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+
+<p><span style="font-size:12px;">
+<style>
+
+	td
+	{
+		padding: 5px 10px;
+		font:Arial, Helvetica, sans-serif;
+	}
+
+	bd
+	{
+		border-style: solid;
+		border-color:#000000;
+	}
+
+	#cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+			.vtext{
+			/*width:1px;
+			height: 50px;
+			-ms-transform: rotate(90deg);
+			-webkit-transform: rotate(90deg);
+			transform: rotate(90deg);
+			border-style: hidden;*/
+	}
+
+</style>
+
+    <div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
+<div id="cover" > </div>
+
+</span></p>
+
+<style>
+    td{
+        border:solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+    }
+
+</style>
+
+<container>
+
+    <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+    <input type="button"  onclick="printContent('printing');" value="Print"/>
+    <input type="button" id="btnExport" value=" Download Excel " />
+
+
+
+    </br></br>
+
+    <div id="printing">
+
+        <div id='state'>
+
+
+            <table width="100%" id="showingTable" border="1" cellspacing="6" cellpadding="4"
+                   style="border-collapse:collapse; border:solid black 2px; font:Arial, Helvetica, sans-serif">
+            <thead >
+		
+			<tr>
+
+            </tr>
+            <td bgcolor="#A9A9A9" colspan="149" style="text-align: center;"><span
+                    style="font-size:20px;"><strong>Output format for Wardwise OPD</strong></span></td>
+            <tr>
+                <td bgcolor="#A9A9A9" colspan="3" style="text-align: center;"><span
+                        style="font-size:14px;"><strong>Circle</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="3" id="orgUnitID" style="text-align: center;"><span
+                        style="font-size:14px;"><strong>&nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="3" style="text-align: center;"><span style="font-size:14px;"><strong>Period
+                    :</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="3" id="period" style="text-align: center;"><span
+                        style="font-size:14px;"><strong>&nbsp;</strong></span></td>
+
+
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+					           <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+					           <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+					              <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+					              <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+					      <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+                <td bgcolor="#A9A9A9" colspan="1" style="text-align: center;"><span style="font-size:14px;"><strong>
+                    &nbsp;</strong></span></td>
+
+            </tr>
+
+            <tr height="25">
+    <td bgcolor="#A9A9A9" rowspan="3" height="108" width="83"><div align="center">Sr.   No.</div></td>
+    <td bgcolor="#A9A9A9" rowspan="3" width="258"><div align="center">Name of Hospital</div></td>
+    <td bgcolor="#A9A9A9" colspan="49" width="6958"><div align="center">New OPD</div></td>
+    <td bgcolor="#00FFFF" colspan="49" width="6906"><div align="center">Old OPD</div></td>
+    <td bgcolor="#A9A9A9" colspan="49" width="7100"><div align="center">Total OPD</div></td>
+  </tr>
+  <tr bgcolor="#A9A9A9" height="22">
+    <td colspan="3" height="22" width="474"><div align="center">General</div></td>
+    <td colspan="3" width="422"><div align="center">Medicine</div></td>
+    <td colspan="3" width="422"><div align="center">Surgery</div></td>
+    <td colspan="3" width="422"><div align="center">Pediatric</div></td>
+    <td colspan="2" width="288"><div align="center">Obst</div></td>
+    <td colspan="2" width="288"><div align="center">Gyn</div></td>
+    <td colspan="3" width="422"><div align="center">Ortho</div></td>
+    <td colspan="3" width="422"><div align="center">TB</div></td>
+    <td colspan="3" width="422"><div align="center">Opthalmic</div></td>
+    <td colspan="3" width="422"><div align="center">Psychiatric</div></td>
+    <td colspan="3" width="422"><div align="center">Dog Bite</div></td>
+    <td colspan="3" width="422"><div align="center">ENT</div></td>
+    <td colspan="3" width="422"><div align="center">Dermatology</div></td>
+    <td colspan="3" width="422"><div align="center">ICTC</div></td>
+    <td colspan="3" width="422"><div align="center">Dental</div></td>
+    <td colspan="3" width="422"><div align="center">AYUSH</div></td>
+    <td colspan="3" width="422"><div align="center">Total</div></td>
+    <td colspan="3" width="422"><div align="center">General</div></td>
+    <td colspan="3" width="422"><div align="center">Medicine</div></td>
+    <td colspan="3" width="422"><div align="center">Surgery</div></td>
+    <td colspan="3" width="422"><div align="center">Pediatric</div></td>
+    <td colspan="2" width="288"><div align="center">Obst</div></td>
+    <td colspan="2" width="288"><div align="center">Gyn</div></td>
+    <td colspan="3" width="422"><div align="center">Ortho</div></td>
+    <td colspan="3" width="422"><div align="center">TB</div></td>
+    <td colspan="3" width="422"><div align="center">Opthalmic</div></td>
+    <td colspan="3" width="422"><div align="center">Psychiatric</div></td>
+    <td colspan="3" width="422"><div align="center">Dog Bite</div></td>
+    <td colspan="3" width="422"><div align="center">ENT</div></td>
+    <td colspan="3" width="422"><div align="center">Dermatology</div></td>
+    <td colspan="3" width="422"><div align="center">ICTC</div></td>
+    <td colspan="3" width="422"><div align="center">Dental</div></td>
+    <td colspan="3" width="422"><div align="center">AYUSH</div></td>
+    <td colspan="3" width="422"><div align="center">Total</div></td>
+    <td colspan="3" width="462"><div align="center">General</div></td>
+    <td colspan="3" width="422"><div align="center">Medicine</div></td>
+    <td colspan="3" width="422"><div align="center">Surgery</div></td>
+    <td colspan="3" width="422"><div align="center">Pediatric</div></td>
+    <td colspan="2" width="288"><div align="center">Obst</div></td>
+    <td colspan="2" width="288"><div align="center">Gyn</div></td>
+    <td colspan="3" width="422"><div align="center">Ortho</div></td>
+    <td colspan="3" width="422"><div align="center">TB</div></td>
+    <td colspan="3" width="422"><div align="center">Opthelmic</div></td>
+    <td colspan="3" width="422"><div align="center">Psychiatric</div></td>
+    <td colspan="3" width="422"><div align="center">Dog Bite</div></td>
+    <td colspan="3" width="422"><div align="center">ENT</div></td>
+    <td colspan="3" width="422"><div align="center">Dermatology</div></td>
+    <td colspan="3" width="422"><div align="center">ICTC</div></td>
+    <td colspan="3" width="470"><div align="center">Dental</div></td>
+    <td colspan="3" width="422"><div align="center">AYUSH</div></td>
+    <td colspan="3" width="528"><div align="center">Total</div></td>
+  </tr>
+  <tr bgcolor="#A9A9A9" height="61">
+    <td height="61" width="166"><div align="center">Male</div></td>
+    <td width="154"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="154"><div align="center">Male</div></td>
+    <td width="154"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="163"><div align="center">Male</div></td>
+    <td width="153"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="134"><div align="center">Male</div></td>
+    <td width="134"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+    <td width="187"><div align="center">Male</div></td>
+    <td width="187"><div align="center">Female</div></td>
+    <td width="154"><div align="center">Transgender</div></td>
+  </tr>
+
+		</tbody>
+		</table>
+  </div>
+    </div>
+</container>

@@ -1,0 +1,1177 @@
+<script type="text/javascript" src="../dhis-web-commons/bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="../dhis-web-commons/bootstrap/css/bootstrap.min.css"/>
+
+<script type="text/javascript">
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+    // array declaration
+    var circleArray = [];
+    var districtsArray = [];
+    var ruralArray = [];
+    var blockArray = [];
+    var PHCArray = [];
+    var SCArray = [];
+    var orgUnitsArray = [];
+
+    var sNo = 0;
+
+    var dataJSONArray = [];
+
+    // UIDs variable declaration
+    var deUIDs = "";
+    var orgUnitUIDs = "";
+
+    // report meta data
+    var reportMetaData = {
+        Construction : {
+            id: "Construction",
+            title: "SC Construction Report",
+            tableDX: [
+                {dxName: "Main SC center building (0-own / 1-rent / 2-other)", dxId: "YMUcAZS5S8h.AWFHAFYJTph"},
+                {dxName: "If Construction on-going then Status (1-Plinth level / 2-Lintel level / 3-Slab level / 4-Other)", dxId: "YsAvElgWRDg.AWFHAFYJTph"},
+                {dxName: "If Construction not on-going then Status (1-No Space / 2-Proposed structure unavailable  / 3-No legel permission / 4-No funds / 5-Other)", dxId: "RH7MdR4wTQj.AWFHAFYJTph"}
+            ]
+        },
+        Performance : {
+            id: "Performance",
+            title: "SC Performance Report",
+            tableDX: [
+                {dxName: "Total out patient (Male)", dxId: "DmvtSvsphCK.AWFHAFYJTph"},
+                {dxName: "Total out patient (Female)", dxId: "iqidNX1A8Os.AWFHAFYJTph"},
+                {dxName: "Total pregnancy", dxId: "hjJK0tGh5jt.AWFHAFYJTph"}
+            ]
+        },
+        HR : {
+            id: "HR",
+            title: "SC HR Report",
+            tableDX: [
+                {dxName: "Female multipurpose worker (1-Yes / 0-No)", dxId: "mbQDaiby4Zv.E6sWHQ5E4rM"},
+                {dxName: "Male multipurpose worker (1-Yes / 0-No)", dxId: "uirghZLuHI7.E6sWHQ5E4rM"},
+                {dxName: "Temporary female nurse (1-Yes / 0-No)", dxId: "ukN1nWqKf8b.E6sWHQ5E4rM"},
+                {dxName: "ANM (NRHM) (1-Yes / 0-No)", dxId: "wNXZJ5cZQ2m.E6sWHQ5E4rM"},
+                {dxName: "Multipurpose worker NRHM (1-Yes / 0-No)", dxId: "ROrijro2LKf.E6sWHQ5E4rM"},
+                {dxName: "ASHA NRHM (1-Yes / 0-No)", dxId: "jIfekbOa4h0.E6sWHQ5E4rM"}
+            ]
+        }
+    };
+
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+
+    $(document).ready( function(){
+
+        $(".hideInPrint").hide();
+        $("#btnExport").click(function(e) {
+            tablesToExcel(['construction_table','performance_table','HR_table'],
+                    ['SC Construction','SC_Performance','SC_HR1'], 'PDE SC Report.xls');
+            e.preventDefault();
+        });
+
+        $.each(reportMetaData, function (i, mData) {
+            var selectedReport_TableDX = mData.tableDX;
+            $.each(selectedReport_TableDX,function(){
+                if(this.dxId.indexOf("+") == -1){
+                    if(this.dxId.indexOf(".") > -1){
+                        deUIDs += this.dxId.split(".")[0] + ";";
+                    }
+                }
+                else {
+                    var UIDs = this.dxId.split("+");
+                    $.each(UIDs, function (idx, uid) {
+                        if(uid.indexOf(".") > -1){
+                            deUIDs += uid.split(".")[0] + ";";
+                        }
+                    });
+                }
+
+            });
+        });
+        var urls = [];
+        // get all the circles into array
+        var url_Circles = "../api/organisationUnits/b3vBdsycgAD.json?fields=children[id,name,path]";
+
+        // get all the districts into array
+        var url_Districts = "../api/organisationUnitGroups/CXswpFTMKVB.json?fields=organisationUnits[id,name,path]";
+
+        // get all the rurals into array
+        var url_Rurals = "../api/organisationUnitGroups/t5X8bNv7x7H.json?fields=organisationUnits[id,name,path]";
+
+        // get all the blocks into array
+        var url_Blocks = "../api/organisationUnitGroups/LP6ZcZQDKXU.json?fields=organisationUnits[id,name,path]";
+
+        // get all the orgUnits for selected orgUnit
+        var url_orgUnits = "../api/organisationUnits/" + orgUnit.id + ".json?fields=id&includeDescendants=true";
+
+        // get all PHC's to array
+        var url_PHC = "../api/organisationUnitGroups/LzDGwjcCNbD.json?fields=organisationUnits[id,name,path]";
+
+        // get all SC's to array
+        var url_SC = "../api/organisationUnitGroups/bYeMmLxh8Xs.json?fields=organisationUnits[id,name,path]";
+
+        if(selOrgUnitLevel == 2){
+            urls.push(url_Circles);
+            urls.push(url_Districts);
+            urls.push(url_Rurals);
+            urls.push(url_Blocks);
+            urls.push(url_PHC);
+            urls.push(url_SC);
+            var ajaxReq = [];
+            //console.info(urls);
+            for (i = 0; i < urls.length; i++) {
+                ajaxReq.push($.ajax(urls[i]));
+            }
+            $.when.apply($, ajaxReq).done(function () {
+                console.log(arguments); //it is an array like object which can be looped*/
+                $.each(arguments, function (i, data) {
+                    //console.log(data); //data is the value returned by each of the ajax requests
+                    if(i == 0){
+                        $.each(data[0].children, function(i, item){
+                            var parentID = item.path.split("/")[2];
+                            circleArray.push([item.id, item.name, parentID])
+                        });
+                        circleArray.sort(arraySorting);
+                    }
+                    else if(i == 1){
+                        $.each(data[0].organisationUnits, function(i, item){
+                            var parentID = item.path.split("/")[3];
+                            districtsArray.push([item.id, item.name, parentID])
+                        });
+                        districtsArray.sort(arraySorting);
+                    }
+                    else if(i == 2){
+                        $.each(data[0].organisationUnits, function(i, item){
+                            var parentID = item.path.split("/")[4];
+                            ruralArray.push([item.id, item.name, parentID])
+                        });
+                        ruralArray.sort(arraySorting);
+                    }
+                    else if(i == 3){
+                        $.each(data[0].organisationUnits, function(i, item){
+                            var parentID = item.path.split("/")[5];
+                            blockArray.push([item.id, item.name, parentID])
+                        });
+                        blockArray.sort(arraySorting);
+                    }
+                    else if(i == 4){
+                        $.each(data[0].organisationUnits, function(i,curr_item){
+                            var parentID = curr_item.path.split("/")[6];
+                            PHCArray.push([curr_item.id, curr_item.name, parentID]);
+                        });
+                        PHCArray.sort(arraySorting);
+                    }
+                    else if(i == 5){
+                        $.each(data[0].organisationUnits, function(i,curr_item){
+                            var parentID = curr_item.path.split("/")[7];
+                            var blockID = curr_item.path.split("/")[6];
+                            var ruralID = curr_item.path.split("/")[5];
+                            var districtID = curr_item.path.split("/")[4];
+                            var circleID = curr_item.path.split("/")[3];
+                            var stateID = curr_item.path.split("/")[2];
+                            SCArray.push([curr_item.id, curr_item.name, parentID, blockID, ruralID, districtID, circleID, stateID]);
+                            orgUnitsArray.push(curr_item.id);
+                            orgUnitUIDs += curr_item.id + ";";
+                        });
+                        SCArray.sort(arraySorting);
+                        loadData();
+                    }
+                });
+            });
+        }
+        else{
+            urls.push(url_Circles);
+            urls.push(url_Districts);
+            urls.push(url_Rurals);
+            urls.push(url_Blocks);
+            urls.push(url_orgUnits);
+            urls.push(url_PHC);
+            urls.push(url_SC);
+            var ajaxReq = [];
+            //console.info(urls);
+            for (i = 0; i < urls.length; i++) {
+                ajaxReq.push($.ajax(urls[i]));
+            }
+
+            $.when.apply($, ajaxReq).done(function () {
+                console.log(arguments); //it is an array like object which can be looped*/
+                $.each(arguments, function (i, data) {
+                    //console.log(data); //data is the value returned by each of the ajax requests
+                    if(i == 0){
+                        $.each(data[0].children, function(i, item){
+                            var parentID = item.path.split("/")[2];
+                            circleArray.push([item.id, item.name, parentID])
+                        });
+                        circleArray.sort(arraySorting);
+                    }
+                    else if(i == 1){
+                        $.each(data[0].organisationUnits, function(i, item){
+                            var parentID = item.path.split("/")[3];
+                            districtsArray.push([item.id, item.name, parentID])
+                        });
+                        districtsArray.sort(arraySorting);
+                    }
+                    else if(i == 2){
+                        $.each(data[0].organisationUnits, function(i, item){
+                            var parentID = item.path.split("/")[4];
+                            ruralArray.push([item.id, item.name, parentID])
+                        });
+                        ruralArray.sort(arraySorting);
+                    }
+                    else if(i == 3){
+                        $.each(data[0].organisationUnits, function(i, item){
+                            var parentID = item.path.split("/")[5];
+                            blockArray.push([item.id, item.name, parentID])
+                        });
+                        blockArray.sort(arraySorting);
+                    }
+                    else if(i == 4){
+                        $.each(data[0].organisationUnits, function(i,item){
+                            orgUnitsArray.push(item.id);
+                            orgUnitUIDs += item.id + ";";
+                        });
+                    }
+                    else if(i == 5){
+                        $.each(data[0].organisationUnits, function(i,curr_item){
+                            var parentID = curr_item.path.split("/")[6];
+                            PHCArray.push([curr_item.id, curr_item.name, parentID]);
+                        });
+                        PHCArray.sort(arraySorting);
+                    }
+                    else if(i == 6){
+                        $.each(data[0].organisationUnits, function(i,curr_item){
+                            var parentID = curr_item.path.split("/")[7];
+                            var blockID = curr_item.path.split("/")[6];
+                            var ruralID = curr_item.path.split("/")[5];
+                            var districtID = curr_item.path.split("/")[4];
+                            var circleID = curr_item.path.split("/")[3];
+                            var stateID = curr_item.path.split("/")[2];
+                            SCArray.push([curr_item.id, curr_item.name, parentID, blockID, ruralID, districtID, circleID, stateID]);
+                            orgUnitUIDs += curr_item.id + ";";
+                        });
+                        SCArray.sort(arraySorting);
+                        loadData();
+                    }
+                });
+            });
+        }
+    });
+
+    function arraySorting(a, b){
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    // function for load table data
+    function loadData(){
+
+        if(orgUnitsArray.length > 100){
+            var noOf_iterations = orgUnitsArray.length / 100;
+            var stepsCount = 0;
+            var urls = [];
+            var ajaxReq = [];
+
+            for(var i = 0; i < noOf_iterations; i++){
+                var orgUnitUIDs = "";
+                for(var j = stepsCount; j < (stepsCount + 100); j++){
+                    if(j == orgUnitsArray.length) break;
+                    else orgUnitUIDs += orgUnitsArray[j] + ";";
+                }
+                urls.push("../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:OU_GROUP-bYeMmLxh8Xs;" + orgUnitUIDs + "&filter=pe:" + period + "&skipMeta=true");
+                stepsCount += 100;
+            }
+            //console.info(urls);
+            for (i = 0; i < urls.length; i++) {
+                ajaxReq.push($.ajax(urls[i]));
+            }
+            //console.info(ajaxReq);
+
+            $.when.apply($, ajaxReq).done(function () {
+                /*console.log(arguments); //it is an array like object which can be looped*/
+                $.each(arguments, function (i, data) {
+                    //console.log(data); //data is the value returned by each of the ajax requests
+                    $.each(data[0].rows, function(j,rowData){
+                        dataJSONArray.push([rowData[0],rowData[1], rowData[2], rowData[3]]);
+                    });
+                });
+                $.each(reportMetaData, function (r, mData) {
+                    loadTable(mData.title, mData.tableDX);
+                });
+                hideLoad();
+            });
+        }
+        else {
+            orgUnitUIDs = "";
+            $.each(orgUnitsArray, function (i,val) {
+                orgUnitUIDs += val + ";";
+            });
+            var dataUrl = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:OU_GROUP-bYeMmLxh8Xs;" + orgUnitUIDs + "&filter=pe:" + period + "&skipMeta=true";
+            $.get(dataUrl, function (json) {
+                $.each(json.rows, function(j,rowData){
+                    dataJSONArray.push([rowData[0],rowData[1], rowData[2], rowData[3]]);
+                });
+                $.each(reportMetaData, function (r, mData) {
+                    loadTable(mData.title, mData.tableDX);
+                });
+                hideLoad();
+            });
+        }
+    }
+
+    // function for load table
+    function loadTable(selectedReport, selectedReport_TableDX){
+        var htmlReportHeader = "";
+        var hierarchyColumns = [];
+        var colspanValue = 0;
+        switch (selOrgUnitLevel){
+            case 2: {
+                hierarchyColumns.push("Circle","District","Rural","Block","PHC","SC");
+                colspanValue = selectedReport_TableDX.length + 7;
+                break;
+            }
+            case 3: {
+                hierarchyColumns.push("District","Rural","Block","PHC","SC");
+                colspanValue = selectedReport_TableDX.length + 6;
+                break;
+            }
+            case 4: {
+                hierarchyColumns.push("Rural","Block","PHC","SC");
+                colspanValue = selectedReport_TableDX.length + 5;
+                break;
+            }
+            case 5: {
+                hierarchyColumns.push("Block","PHC","SC");
+                colspanValue = selectedReport_TableDX.length + 4;
+                break;
+            }
+            case 6: {
+                hierarchyColumns.push("PHC","SC");
+                colspanValue = selectedReport_TableDX.length + 3;
+                break;
+            }
+            case 7: {
+                hierarchyColumns.push("SC");
+                colspanValue = selectedReport_TableDX.length + 2;
+            }
+            default:{
+                break;
+            }
+        }
+
+        sNo = 0;
+
+        // generates the HTML report
+        // Note: table header
+
+        htmlReportHeader +=   "<tr><td bgcolor='#c5c5c5' style='text-align: center; font-size: 17px; font-weight: bold;' height='40px' colspan='" + colspanValue + "'>PDE SC Report</td></tr>";
+        htmlReportHeader +=   "<tr bgcolor='#d4d4d4' style='text-align: center;'>";
+        htmlReportHeader +=       "<td style='text-align: left; font-weight: bold;'>Selected Org Unit:&nbsp;</td>";
+        htmlReportHeader +=       "<td style='text-align: left; font-weight: bold;' bgcolor='#f1f1f1'>" + orgUnit.name + "</td>";
+        htmlReportHeader +=       "<td style='text-align: right; font-weight: bold;'>Period:&nbsp;&nbsp;</td>";
+        htmlReportHeader +=       "<td style='text-align: left; font-weight: bold;' bgcolor='#f1f1f1'>" + getPeriod(gotPeriod) + "</td>";
+        htmlReportHeader +=       "<td style='text-align: left; font-weight: bold;' colspan='" + (colspanValue - 4) + "'>&nbsp;</td>";
+        htmlReportHeader +=   "</tr>";
+        htmlReportHeader +=   "<tr bgcolor='#e3e3e3' style='text-align: center;'>";
+        htmlReportHeader +=     "<td style='font-weight: bold;'> SNo </td>";
+        $.each(hierarchyColumns, function (i, name) {
+            htmlReportHeader += "<td style='font-weight: bold;'>" + name + "</td>";
+        });
+        $.each(selectedReport_TableDX, function (i, column) {
+            htmlReportHeader += "<td style='font-weight: bold;'>" + column.dxName + "</td>";
+        });
+        htmlReportHeader +=   "</tr>";
+
+        // generates the HTML report
+        // Note: table data
+        var htmlReportBody = showTableData(selectedReport_TableDX);
+        switch (selectedReport){
+            case "SC Construction Report": {
+                $("#construction_table > thead").append(htmlReportHeader);
+                $("#construction_table > tbody").append(htmlReportBody);
+                break;
+            }
+            case "SC Performance Report": {
+                $("#performance_table > thead").append(htmlReportHeader);
+                $("#performance_table > tbody").append(htmlReportBody);
+                break;
+            }
+            case "SC HR Report": {
+                $("#HR_table > thead").append(htmlReportHeader);
+                $("#HR_table > tbody").append(htmlReportBody);
+                break;
+            }
+        }
+    }
+
+    // function for show all data of the table
+    function showTableData(selectedReport_TableDX){
+        var htmlReport = "";
+        sNo = 0;
+		        if(selOrgUnitLevel == 8){ // SC is selected
+           alert("Please select a Circle/District/Rural/Block/PHC");
+            window.history.back();
+        }
+        if(selOrgUnitLevel == 7){ // PHC is selected
+            var hasSCs = false;
+            $.each(SCArray, function (scID, sc) {
+                if(sc[2] == orgUnit.id){
+                    hasSCs = true;
+                    return false;
+                }
+            });
+            if(hasSCs == true){
+                $.each(SCArray, function (scID, sc) {
+                    if(sc[2] == orgUnit.id) {
+                        htmlReport += "<tr>";
+                        htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                        htmlReport += "<td>" + sc[1] + "</td>";
+                        $.each(selectedReport_TableDX, function (idx, de) {
+                            htmlReport += "<td style='text-align: center;'>" + getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], sc[0]) + "</td>";
+                        });
+                        htmlReport += "</tr>";
+                        sNo++;
+                    }
+                });
+            }
+            else{
+                alert(orgUnit.name + " doesn't contain SCs");
+                windows.history.back();
+            }
+        }
+        else if(selOrgUnitLevel == 6){ // Block is selected
+            var hasSCs = false;
+            $.each(SCArray, function (scID, sc) {
+                if(sc[3] == orgUnit.id){
+                    hasSCs = true;
+                    return false;
+                }
+            });
+            if(hasSCs == true) {
+                $.each(PHCArray, function (phcID, phc) {
+                    if(phc[2] == orgUnit.id){
+                        var flagPHC = false;
+                        $.each(SCArray, function (scID, sc) {
+                            if(sc[2] == phc[[0]]) {
+                                htmlReport += "<tr>";
+                                htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                if (flagPHC == false) {
+                                    htmlReport += "<td>" + phc[1] + "</td>";
+                                    flagPHC = true;
+                                }
+                                else{
+                                    htmlReport += "<td>&nbsp;</td>";
+                                }
+                                htmlReport += "<td>" + sc[1] + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    htmlReport += "<td style='text-align: center;'>" + getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], sc[0]) + "</td>";
+                                });
+                                htmlReport += "</tr>";
+                                sNo++;
+                            }
+                        });
+                    }
+                });
+            }
+            else{
+                alert(orgUnit.name + " doesn't contain SCs");
+                windows.history.back();
+            }
+        }
+        else if(selOrgUnitLevel == 5){ // rural is selected
+            var hasSCs = false;
+            $.each(SCArray, function (scID, sc) {
+                if(sc[4] == orgUnit.id){
+                    hasSCs = true;
+                    return false;
+                }
+            });
+            if(hasSCs == true){
+                $.each(blockArray, function (blockID, block) {
+                    // check whether the block is in selected rural area
+                    if(block[2] == orgUnit.id){
+                        var flagBlock = false;
+                        $.each(PHCArray, function (phcID, phc) {
+                            if(phc[2] == block[0]){
+                                var flagPHC = false;
+                                $.each(SCArray, function (scID, sc) {
+                                    if(sc[2] == phc[[0]]) {
+                                        htmlReport += "<tr>";
+                                        htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                        if(flagBlock == false){
+                                            if (flagPHC == false) {
+                                                htmlReport += "<td>" + block[1] + "</td>";
+                                                htmlReport += "<td>" + phc[1] + "</td>";
+                                                flagBlock = true;
+                                                flagPHC = true;
+                                            }
+                                        }
+                                        else {
+                                            if(flagPHC == false){
+                                                htmlReport += "<td>&nbsp;</td>";
+                                                htmlReport += "<td>" + phc[1] + "</td>";
+                                                flagPHC = true;
+                                            }
+                                            else {
+                                                htmlReport += "<td>&nbsp;</td>";
+                                                htmlReport += "<td>&nbsp;</td>";
+                                            }
+                                        }
+                                        htmlReport += "<td>" + sc[1] + "</td>";
+                                        $.each(selectedReport_TableDX, function (idx, de) {
+                                            htmlReport += "<td style='text-align: center;'>" + getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], sc[0]) + "</td>";
+                                        });
+                                        htmlReport += "</tr>";
+                                        sNo++;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            else{
+                alert(orgUnit.name + " doesn't contain SCs");
+                windows.history.back();
+            }
+        }
+        else if(selOrgUnitLevel == 4){ // district is selected
+            var hasSCs = false;
+            $.each(SCArray, function (scID, sc) {
+                if(sc[5] == orgUnit.id){
+                    hasSCs = true;
+                    return false;
+                }
+            });
+            if(hasSCs == true){
+                $.each(ruralArray, function (ruralID, rural) {
+                    // check whether the rural is in selected district
+                    if(rural[2] == orgUnit.id){
+                        var flagRural = false;
+                        $.each(blockArray, function (blockID, block) {
+                            // check whether the block is in selected rural area
+                            if(block[2] == rural[0]){
+                                var flagBlock = false;
+                                $.each(PHCArray, function (phcID, phc) {
+                                    if(phc[2] == block[0]){
+                                        var flagPHC = false;
+                                        $.each(SCArray, function (scID, sc) {
+                                            if(sc[2] == phc[[0]]) {
+                                                htmlReport += "<tr>";
+                                                htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                                if(flagRural == false){
+                                                    if (flagBlock == false) {
+                                                        if (flagPHC == false) {
+                                                            htmlReport += "<td>" + rural[1] + "</td>";
+                                                            htmlReport += "<td>" + block[1] + "</td>";
+                                                            htmlReport += "<td>" + phc[1] + "</td>";
+                                                            flagRural = true;
+                                                            flagBlock = true;
+                                                            flagPHC = true;
+                                                        }
+                                                    }
+                                                }
+                                                else {
+                                                    if(flagBlock == false){
+                                                        if (flagPHC == false) {
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>" + block[1] + "</td>";
+                                                            htmlReport += "<td>" + phc[1] + "</td>";
+                                                            flagBlock = true;
+                                                            flagPHC = true;
+                                                        }
+                                                    }
+                                                    else {
+                                                        if (flagPHC == false) {
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>" + phc[1] + "</td>";
+                                                            flagPHC = true;
+                                                        }
+                                                        else {
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                        }
+                                                    }
+                                                }
+                                                htmlReport += "<td>" + sc[1] + "</td>";
+                                                $.each(selectedReport_TableDX, function (idx, de) {
+                                                    htmlReport += "<td style='text-align: center;'>" + getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], sc[0]) + "</td>";
+                                                });
+                                                htmlReport += "</tr>";
+                                                sNo++;
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            else{
+                alert("This " + orgUnit.name + " doesn't contain SCs");
+                window.history.back();
+            }
+        }
+        else if(selOrgUnitLevel == 3){
+            var hasSCs = false;
+            $.each(SCArray, function (scID, sc) {
+                if(sc[6] == orgUnit.id){
+                    hasSCs = true;
+                    return false;
+                }
+            });
+            if(hasSCs == true){
+                $.each(districtsArray, function (districtID, district) {
+                    // check whether the district is in selected circle
+                    if (district[2] == orgUnit.id) {
+                        var flagDistrict = false;
+                        $.each(ruralArray, function (ruralID, rural) {
+                            // check whether the rural is in selected district
+                            if(rural[2] == district[0]){
+                                var flagRural = false;
+                                $.each(blockArray, function (blockID, block) {
+                                    // check whether the block is in selected rural area
+                                    if(block[2] == rural[0]){
+                                        var flagBlock = false;
+                                        $.each(PHCArray, function (phcID, phc) {
+                                            if(phc[2] == block[0]){
+                                                var flagPHC = false;
+                                                $.each(SCArray, function (scID, sc) {
+                                                    if(sc[2] == phc[[0]]) {
+                                                        htmlReport += "<tr>";
+                                                        htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                                        if(flagDistrict == false){
+                                                            if(flagRural == false){
+                                                                if (flagBlock == false) {
+                                                                    if (flagPHC == false) {
+                                                                        htmlReport += "<td>" + district[1] + "</td>";
+                                                                        htmlReport += "<td>" + rural[1] + "</td>";
+                                                                        htmlReport += "<td>" + block[1] + "</td>";
+                                                                        htmlReport += "<td>" + phc[1] + "</td>";
+                                                                        flagDistrict = true;
+                                                                        flagRural = true;
+                                                                        flagBlock = true;
+                                                                        flagPHC = true;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        else {
+                                                            if(flagRural == false){
+                                                                if (flagBlock == false) {
+                                                                    if (flagPHC == false) {
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>" + rural[1] + "</td>";
+                                                                        htmlReport += "<td>" + block[1] + "</td>";
+                                                                        htmlReport += "<td>" + phc[1] + "</td>";
+                                                                        flagRural = true;
+                                                                        flagBlock = true;
+                                                                        flagPHC = true;
+                                                                    }
+                                                                }
+                                                            }
+                                                            else {
+                                                                if (flagBlock == false) {
+                                                                    if (flagPHC == false) {
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>" + block[1] + "</td>";
+                                                                        htmlReport += "<td>" + phc[1] + "</td>";
+                                                                        flagBlock = true;
+                                                                        flagPHC = true;
+                                                                    }
+                                                                }
+                                                                else {
+                                                                    if (flagPHC == false) {
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>" + phc[1] + "</td>";
+                                                                        flagPHC = true;
+                                                                    }
+                                                                    else {
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                        htmlReport += "<td>&nbsp;</td>";
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        htmlReport += "<td>" + sc[1] + "</td>";
+                                                        $.each(selectedReport_TableDX, function (idx, de) {
+                                                            htmlReport += "<td style='text-align: center;'>" + getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], sc[0]) + "</td>";
+                                                        });
+                                                        htmlReport += "</tr>";
+                                                        sNo++;
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            else{
+                alert("This " + orgUnit.name + " doesn't contain SCs");
+                window.history.back();
+            }
+        }
+        else if(selOrgUnitLevel == 2){
+            var hasSCs = false;
+            $.each(SCArray, function (scID, sc) {
+                if(sc[7] == orgUnit.id){
+                    hasSCs = true;
+                    return false;
+                }
+            });
+            if(hasSCs == true){
+                $.each(circleArray, function (circleID, circle) {
+                    // check whether the circle is in selected state
+                    if(circle[2] == orgUnit.id){
+                        var flagCircle = false;
+                        $.each(districtsArray, function (districtID, district) {
+                            // check whether the district is in selected circle
+                            if (district[2] == circle[0]) {
+                                var flagDistrict = false;
+                                $.each(ruralArray, function (ruralID, rural) {
+                                    // check whether the rural is in selected district
+                                    if(rural[2] == district[0]){
+                                        var flagRural = false;
+                                        $.each(blockArray, function (blockID, block) {
+                                            // check whether the block is in selected rural area
+                                            if(block[2] == rural[0]){
+                                                var flagBlock = false;
+                                                $.each(PHCArray, function (phcID, phc) {
+                                                    if(phc[2] == block[0]){
+                                                        var flagPHC = false;
+                                                        $.each(SCArray, function (scID, sc) {
+                                                            if(sc[2] == phc[[0]]) {
+                                                                htmlReport += "<tr>";
+                                                                htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                                                if(flagCircle == false){
+                                                                    if (flagDistrict == false) {
+                                                                        if (flagRural == false) {
+                                                                            if (flagBlock == false) {
+                                                                                if (flagPHC == false) {
+                                                                                    htmlReport += "<td>" + circle[1] + "</td>";
+                                                                                    htmlReport += "<td>" + district[1] + "</td>";
+                                                                                    htmlReport += "<td>" + rural[1] + "</td>";
+                                                                                    htmlReport += "<td>" + block[1] + "</td>";
+                                                                                    htmlReport += "<td>" + phc[1] + "</td>";
+                                                                                    flagCircle = true;
+                                                                                    flagDistrict = true;
+                                                                                    flagRural = true;
+                                                                                    flagBlock = true;
+                                                                                    flagPHC = true;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    if (flagDistrict == false) {
+                                                                        if (flagRural == false) {
+                                                                            if (flagBlock == false) {
+                                                                                if (flagPHC == false) {
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>" + district[1] + "</td>";
+                                                                                    htmlReport += "<td>" + rural[1] + "</td>";
+                                                                                    htmlReport += "<td>" + block[1] + "</td>";
+                                                                                    htmlReport += "<td>" + phc[1] + "</td>";
+                                                                                    flagDistrict = true;
+                                                                                    flagRural = true;
+                                                                                    flagBlock = true;
+                                                                                    flagPHC = true;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    else {
+                                                                        if (flagRural == false) {
+                                                                            if (flagBlock == false) {
+                                                                                if (flagPHC == false) {
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>" + rural[1] + "</td>";
+                                                                                    htmlReport += "<td>" + block[1] + "</td>";
+                                                                                    htmlReport += "<td>" + phc[1] + "</td>";
+                                                                                    flagRural = true;
+                                                                                    flagBlock = true;
+                                                                                    flagPHC = true;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        else {
+                                                                            if (flagBlock == false) {
+                                                                                if (flagPHC == false) {
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>" + block[1] + "</td>";
+                                                                                    htmlReport += "<td>" + phc[1] + "</td>";
+                                                                                    flagBlock = true;
+                                                                                    flagPHC = true;
+                                                                                }
+                                                                            }
+                                                                            else {
+                                                                                if (flagPHC == false) {
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>" + phc[1] + "</td>";
+                                                                                    flagPHC = true;
+                                                                                }
+                                                                                else {
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                    htmlReport += "<td>&nbsp;</td>";
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                                htmlReport += "<td>" + sc[1] + "</td>";
+                                                                $.each(selectedReport_TableDX, function (idx, de) {
+                                                                    htmlReport += "<td style='text-align: center;'>" + getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], sc[0]) + "</td>";
+                                                                });
+                                                                htmlReport += "</tr>";
+                                                                sNo++;
+                                                            }
+                                                        });
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            else{
+                alert("This " + orgUnit.name + " doesn't contain SCs");
+                window.history.back();
+            }
+        }
+        return htmlReport;
+    }
+
+    // function for getting cell values
+    function getCellValue(de, cocID, ou){
+        var result=0;
+        for (var i=0; i < dataJSONArray.length; i++){
+            if (dataJSONArray[i][0] == de && dataJSONArray[i][1] == cocID && dataJSONArray[i][2] == ou && dataJSONArray[i][3] != null )
+            {
+                result = dataJSONArray[i][3];
+            }
+        }
+        return parseInt(result);
+    }
+
+    // function for calculate data
+    function calculateValues(gridArray, tableDX_idx){
+        var total = 0;
+        $.each(gridArray, function (idx, value) {
+            total += value[tableDX_idx];
+        });
+        return total;
+    }
+
+    // function to convert periods to more visible info
+    function getPeriod( pr ) {
+        var year = pr.substring(0,4);
+        var month = pr.substring(4,6);
+        var strMonth="";
+
+        if(month=="01" || month=="1") 		strMonth="January";
+        else if(month=="02" || month=="2")	strMonth="February";
+        else if(month=="03" || month=="3")	strMonth="March";
+        else if(month=="04" || month=="4")	strMonth="April";
+        else if(month=="05" || month=="5")	strMonth="May";
+        else if(month=="06" || month=="6")	strMonth="June";
+        else if(month=="07" || month=="7")	strMonth="July";
+        else if(month=="08" || month=="8")	strMonth="August";
+        else if(month=="09" || month=="9")	strMonth="September";
+        else if(month=="10")				strMonth="October";
+        else if(month=="11") 				strMonth="November";
+        else if(month=="12")				strMonth="December";
+
+        return strMonth + " " + year;
+    }
+
+    // function to hide loading animation
+    function hideLoad() {
+        document.getElementById("cover").style.display="none";
+        document.getElementById("loads").style.display="none";
+        //document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow="scroll";
+    }
+
+    function showLoad()
+    {
+        document.getElementById("cover").style.display="block";
+        document.getElementById("loads").style.display="block";
+        //document.getElementById("loading").style.display="visible";
+        document.getElementsByTagName("body")[0].style.overflow="visible";
+        //alert( "inside showload method" );
+
+    }
+</script>
+
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<script type="text/javascript">
+    // JavaScript source code
+    // Reports Excel Import: Include this in the 'report'.html as a script.
+    var tablesToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,', tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' + '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>ThaiND</Author><Created>{created}</Created></DocumentProperties>' + '<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s64"> <Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Center" ss:Indent="0" ss:Rotate="90"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /> </Style> </Styles>' + '{worksheets}</Workbook>', tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="150"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/>{rows}</Table></Worksheet>', tmplCellXML = '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>', base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+
+        return function (tables, wsnames, wbname) {
+            var ctx = "";
+            var workbookXML = "";
+            var worksheetsXML = "";
+            var rowsXML = "";
+
+            for (var i = 0; i < tables.length; i++) {
+
+                if (!tables[i].nodeType)
+                    tables[i] = document.getElementById(tables[i]);
+
+                for (var j = 0; j < tables[i].rows.length; j++) {
+                    rowsXML += '<Row>'; for (var k = 0; k < tables[i].rows[j].cells.length; k++) {
+
+                        var cols = tables[i].rows[j].cells[k].getAttribute("colspan");
+                        var rws = tables[i].rows[j].cells[k].getAttribute("rowspan");
+                        var styl = tables[i].rows[j].cells[k].getAttribute("bgcolor");
+                        var styl2 = tables[i].rows[j].getAttribute("bgcolor");
+                        var cls = tables[i].rows[j].cells[k].getAttribute("class");
+
+                        var dataType = 'String';
+                        var dataValue = tables[i].rows[j].cells[k].innerHTML;
+                        var typeD = "";
+                        var parsed = parseInt(dataValue);
+
+                        if (parsed == dataValue) {
+                            typeD = "Number";
+                        }
+                        else {
+                            typeD = "String";
+                        }
+
+
+
+                        if (styl2) {
+                            if (cols) {
+                                if (cls == "aso") {
+                                    ctx = { data: dataValue, mrg: cols - 1, sid: "s64", dtype: typeD };
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                                else {
+                                    ctx = { data: dataValue, mrg: cols - 1, sid: "s22", dtype: typeD };
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                            }
+
+                            else {
+                                if (cls == "aso") {
+                                    ctx = { data: dataValue, mrg: 0, sid: "s64", dtype: typeD };
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                                else {
+                                    ctx = { data: dataValue, mrg: 0, sid: "s22", dtype: typeD };
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                            }
+                        }
+
+                        else if (styl) {
+                            if (cols) {
+                                ctx = { data: dataValue, mrg: cols - 1, sid: "s21", dtype: typeD };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+
+                            else {
+                                ctx = { data: dataValue, mrg: 0, sid: "s21", dtype: typeD };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                        }
+
+                        else {
+                            if (cols) {
+                                ctx = { data: dataValue, mrg: cols - 1, sid: "Default", dtype: typeD };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+
+                            else {
+                                ctx = { data: dataValue, mrg: 0, sid: "Default", dtype: typeD };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+
+                        }
+
+                    }
+                    rowsXML += '</Row>'
+                }
+                ctx = { rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i };
+                worksheetsXML += format(tmplWorksheetXML, ctx);
+                rowsXML = "";
+            }
+
+            ctx = { created: (new Date()).getTime(), worksheets: worksheetsXML };
+            workbookXML = format(tmplWorkbookXML, ctx);
+
+            //console.log(workbookXML);
+
+            var link = document.createElement("A");
+            link.href = uri + base64(workbookXML);
+            link.download = wbname || 'Workbook.xls';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    })();
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width:1px;
+                    height: 50px;
+                    -ms-transform: rotate(-90deg);
+                    -webkit-transform: rotate(-90deg);
+                    transform: rotate(-90deg);
+                    border-style: solid;
+                }
+
+            </style>
+            <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+<div id="cover"></div>
+
+</span></p>
+
+<input type="button" id="btnBack" class="btn btn-default btn-sm" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+<input type="button" class="btn btn-default btn-sm" onclick="printContent('printing');" value="Print"/>
+<input type="button" class="btn btn-default btn-sm" id="btnExport" value=" Download Excel " />
+
+<br><br>
+
+<div id="printing">
+    <div id='state'>
+        <div>
+            <br>
+            <ul class="nav nav-tabs" style="font-size: 14px;">
+                <li class="active"><a data-toggle="tab" href="#construction_tab">Construction</a></li>
+                <li><a data-toggle="tab" href="#performance_tab">Performance</a></li>
+                <li><a data-toggle="tab" href="#HR_tab">HR</a></li>
+            </ul>
+            <div class="tab-content">
+                <div id="construction_tab" class="tab-pane fade in active">
+                    <br>
+                    <table id="construction_table" class="table table-bordered table-condensed table-hover" border="1" cellspacing="6" cellpadding="4" width="100%"
+                           style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div id="performance_tab" class="tab-pane fade">
+                    <br>
+                    <table id="performance_table" class="table table-bordered table-condensed table-hover" border="1" cellspacing="6" cellpadding="4" width="100%"
+                           style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div id="HR_tab" class="tab-pane fade">
+                    <br>
+                    <table id="HR_table" class="table table-bordered table-condensed table-hover" border="1" cellspacing="6" cellpadding="4" width="100%"
+                           style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

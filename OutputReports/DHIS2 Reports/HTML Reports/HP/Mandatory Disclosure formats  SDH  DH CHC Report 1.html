@@ -1,0 +1,602 @@
+
+<script>
+	var periods = dhis2.report.periods;
+	var period = periods[0];
+	var orgUnit = dhis2.report.organisationUnit;
+	//var circlesID=[];
+	//var districtsID[
+	var hospitalsID=[];
+	var orgUnitUIDs = "";
+	//var dHospitalGroup ='KMOeA5Z9Xxu';
+	var index1=0;
+	var index2=0;
+	var index3=0;
+
+
+	var districtIDs=[];
+	var districtNames=[];
+
+	var hospitalIDs=[];
+	var hospitalNames=[];
+	var dxUIDs = [];
+	//Two arrays to keep the name and ID's of relevant hospital groups in a circle
+	var orgNames=[];
+	var orgIDs=[];
+	var deUIDs = "";
+	//var noOfCircles;
+
+	var orgUnitChildren;
+	//two variables to keep total of organisation unit children and no of hospitals
+	var noOfHospitals;
+	var noOfOrgUnitChildren;
+	var noOfDistricts;
+	//var districtCircle=[];
+	var districtCircle = [];
+	var hospitalDistrict=[];
+
+	var noOfHospitalss;
+
+	var tableDX = [
+		{ dxName: "1", dxId: "YqnMcG8aR3J-M2qwONgzdom" },
+		{ dxName: "2", dxId: "CpjkYQ3R0Xe-M2qwONgzdom" },
+		{ dxName: "3", dxId: "p4phCHet1oc-M2qwONgzdom" },
+
+		{ dxName: "4", dxId: "yw0lRvgyRun-M2qwONgzdom_OdJ4ij4Gau2-M2qwONgzdom" },
+		{ dxName: "5", dxId: "eRz3hoW1LTK-M2qwONgzdom_FTHS9Bzc9Jf-M2qwONgzdom" },
+
+		{ dxName: "6", dxId: "IGIF3J7WPI3-M2qwONgzdom_Vf6VduSLx97-M2qwONgzdom" },
+		{ dxName: "7", dxId: "NxIXYZOiybh-M2qwONgzdom_ZMSlRCIluFp-M2qwONgzdom" },
+
+		{ dxName: "8", dxId: "cZ4BA4NaDHb-M2qwONgzdom" },
+		{ dxName: "9", dxId: "We2lSlHGnFc-M2qwONgzdom" },
+
+		{ dxName: "10", dxId: "M3klVph6mGa-M2qwONgzdom" },
+		{ dxName: "11", dxId: "O5auS9Le3XG-M2qwONgzdom" },
+
+		{ dxName: "12", dxId: "AyvCbiKbRzg-M2qwONgzdom_OeRlPy2md2V-M2qwONgzdom" },
+		{ dxName: "13", dxId: "B1CS3ez1ou8-M2qwONgzdom_Xy7Dx5fyoP1-M2qwONgzdom" },
+		{ dxName: "14", dxId: "m4qAQUAp9Ha-M2qwONgzdom_crqTv4cXoVj-M2qwONgzdom" },
+		{ dxName: "15", dxId: "WVIMRqRPipm-M2qwONgzdom_CGt8AFfD3mk-M2qwONgzdom" },
+
+		{ dxName: "16", dxId: "o1tfA9BdGe9-M2qwONgzdom" },
+		{ dxName: "17", dxId: "HpgcmvYP2qh-M2qwONgzdom" },
+
+		{ dxName: "18", dxId: "dv97Qq9srbb-M2qwONgzdom" },
+
+		{ dxName: "19", dxId: "p15nPZuTd6Z-M2qwONgzdom"},
+
+		{ dxName: "20", dxId: "wHH68DfxvMI-M2qwONgzdom" },
+		{ dxName: "21", dxId: "VVMyRXSGQ4s-M2qwONgzdom" },
+		{ dxName: "22", dxId: "MaLlZ5Qd8SN-M2qwONgzdom_lhz1M5fgukN-M2qwONgzdom_uCBoLSSztvv-M2qwONgzdom_zPRW7WDO7Jt-M2qwONgzdom_ACvECbp5P04-M2qwONgzdom_IV4dRFeuz9n-M2qwONgzdom_P35Vskeoxwq-M2qwONgzdom" },
+
+		{ dxName: "23", dxId: "o8tFPAeO2P4-M2qwONgzdom" },
+
+
+	];
+
+	var windowUrl = window.location.href;
+	var params = windowUrl.split('=');
+	var gotPeriod=params[2].toString().substring(0, 6);
+
+
+
+
+	jQuery( document ).ready( function(){
+		$(".hideInPrint").hide();
+		document.getElementById('orgUnitID').innerHTML=orgUnit.name;
+		document.getElementById('peID').innerHTML = getPeriod(period);
+		// document.getElementById('peID2').innerHTML = getPeriod(gotPeriod);
+
+		//make a string of DE ID's
+		$.each(tableDX, function (i) {
+			var d = this.dxId.split("_");
+			$.each(d, function (i) {
+				if ($.inArray(d[i].split("-")[0], dxUIDs) == -1) {
+					dxUIDs.push(d[i].split("-")[0]);
+					deUIDs += d[i].split("-")[0] + ";";
+				}
+			});
+		});
+
+		$("#btnExport").click(function(e) {
+			window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+			e.preventDefault();
+		});
+		// retrieve all organisation units of a selection
+		var orgUrl="../api/organisationUnits/"+orgUnit.id+".json?fields=id&includeDescendants=true";
+		$.get(orgUrl,function(json){
+			noOfOrgUnitChildren=json.organisationUnits.length;
+			//circle(json);
+			district(json);
+			hospitals(json);
+		});
+	});
+
+
+
+	function district(json1){
+		var disUrl="../api/organisationUnitGroups/gcxCZ7vm2dN.json?fields=organisationUnits[id,name,path]";
+		$.get(disUrl,function(json){
+			var districts=json;
+			noOfDistricts=districts.organisationUnits.length;
+			compare2(json1,districts);
+		});
+	}
+
+	function compare2(json1,json2){
+		for(var i=0; i<noOfOrgUnitChildren ;i++){
+
+			for(var j=0;j<noOfDistricts;j++){
+
+
+				if (json1.organisationUnits[i].id == json2.organisationUnits[j].id) {
+					//console.log("ggg");
+					//districtCircle[index2] = json2.organisationUnits[j].path.split("/")[3];
+					//corporationDistrict[index] = json2.organisationUnits[j].path.split("/")[4];
+					districtIDs[index2] = json2.organisationUnits[j].id;
+					districtNames[index2] = json2.organisationUnits[j].name;
+					orgUnitUIDs += json2.organisationUnits[j].id + ";";
+					index2++;
+					//console.log(orgUnitUIDs);
+				}
+			}
+		}
+		if(districtIDs.length==0){
+
+				alert("Selected Facility is not an Intervention of Circle/District");
+				window.history.back();
+
+		}
+	}
+
+	function hospitals(json1){
+		var hosUrl="../api/organisationUnitGroups/vH6p1RqM07D.json?fields=organisationUnits[id,name,path]";
+		$.get(hosUrl,function(json){
+			var hospitals=json;
+			noOfHospitalss=hospitals.organisationUnits.length;
+			compare3(json1,hospitals);
+		});
+	}
+
+
+	function compare3(json1,json2){
+		for(var i=0; i<noOfOrgUnitChildren ;i++){
+
+			for(var j=0;j<noOfHospitalss;j++){
+
+
+				if(json1.organisationUnits[i].id==json2.organisationUnits[j].id){
+					//console.log("kkk");
+					hospitalDistrict[index3]=json2.organisationUnits[j].path.split("/")[3];
+					hospitalIDs[index3]=json2.organisationUnits[j].id;
+					hospitalNames[index3]=json2.organisationUnits[j].name;
+					orgUnitUIDs+=json2.organisationUnits[j].id+";";
+					index3++;
+					console.log(orgUnitUIDs);
+				}
+			}
+		}
+
+		console.log(hospitalIDs);
+
+		if(hospitalIDs.length==0){
+			{
+				alert("Selected Facility is not having any hospitals");
+				window.history.back();
+			}
+		}
+
+		else{
+			loadData(orgUnitUIDs);
+		}
+	}
+
+	//function to set the selected dates.
+	function getPeriod( pr )
+	{
+		var year = pr.substring(0,4);
+		var month = pr.substring(4,6);
+		var strMonth="";
+
+		if(month=="01" || month=="1") 		strMonth="January";
+		else if(month=="02" || month=="2")	strMonth="February";
+		else if(month=="03" || month=="3")	strMonth="March";
+		else if(month=="04" || month=="4")	strMonth="April";
+		else if(month=="05" || month=="5")	strMonth="May";
+		else if(month=="06" || month=="6")	strMonth="June";
+		else if(month=="07" || month=="7")	strMonth="July";
+		else if(month=="08" || month=="8")	strMonth="August";
+		else if(month=="09" || month=="9")	strMonth="September";
+		else if(month=="10")				strMonth="October";
+		else if(month=="11") 				strMonth="November";
+		else if(month=="12")				strMonth="December";
+
+		return strMonth + " " +year;
+	}
+
+	//to check whether there are hospital groups available in a given circle
+	function validateReport()
+	{
+		alert("Selected Facility is not in Intervention Hospital Group");
+		window.history.back();
+
+	}
+
+	function loadData(orgUnitUIDs){
+		//console.log(orgUnitUIDs);
+
+		//console.log(orgNames);
+		//console.log(orgIDs);
+		var url = "../api/analytics.json?dimension=dx:"+ deUIDs +"&dimension=ou:"+ orgUnitUIDs +"&dimension=co&dimension=pe:"+period;
+
+		$.get(url, function(json)
+		{
+
+
+			var jsonData1 = json;
+			//console.log( jsonData1 );
+
+			loadReport( jsonData1);
+		});
+
+	}
+	//show report
+	function loadReport(json) {
+		var htmlReport="";
+		var index4 = 0;
+		htmlReport+="<tbody>";
+
+
+		for (var j = 0; j < districtIDs.length; j++) {
+
+				htmlReport+="<tr>";
+
+
+				for (var k = 0; k < hospitalDistrict.length; k++) {
+					if (districtIDs[j] == hospitalDistrict[k]) {
+						console.log(districtNames[j]);
+						console.log(hospitalNames[k]);
+						$("#showingTable > tbody").html("");
+						//console.log(districtNames[j]);
+
+
+						htmlReport+="<td  align='left' colspan ='1' >"+districtNames[j]+"</td>";
+						
+						htmlReport+="<td  align='left' colspan ='1' >"+hospitalNames[k]+"</td>";
+						var aaa = getValueForCategoryOptionCombo( json, tableDX[0].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ aaa +"</td>";
+
+						var bbb = getValueForCategoryOptionCombo( json, tableDX[1].dxId, hospitalIDs[k],gotPeriod );
+						htmlReport+="<td align='center'>"+ bbb +"</td>";
+
+						var ccc = getValueForCategoryOptionCombo( json, tableDX[2].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ ccc +"</td>";
+
+						var noUID1="NA";
+						htmlReport+="<td align='center'>"+ noUID1 +"</td>";
+
+						var noUID2="NA";
+						htmlReport+="<td align='center'>"+ noUID2 +"</td>";
+
+						var noUID3="NA";
+						htmlReport+="<td align='center'>"+ noUID3 +"</td>";
+
+						var d = getValueForCategoryOptionCombo( json, tableDX[3].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ d +"</td>";
+
+						var e = getValueForCategoryOptionCombo( json, tableDX[4].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ e +"</td>";
+
+						htmlReport+="<td align='center'>"+ (d+e) +"</td>";
+
+						var noUID4="NA";
+						htmlReport+="<td align='center'>"+ noUID4 +"</td>";
+
+						var noUID5="NA";
+						htmlReport+="<td align='center'>"+ noUID5 +"</td>";
+
+
+
+						var f = getValueForCategoryOptionCombo( json, tableDX[5].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ f +"</td>";
+
+						var g = getValueForCategoryOptionCombo( json, tableDX[6].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ g +"</td>";
+
+						htmlReport+="<td align='center'>"+ (f+g) +"</td>";
+
+
+						var h = getValueForCategoryOptionCombo( json, tableDX[7].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ h +"</td>";
+
+						var ii = getValueForCategoryOptionCombo( json, tableDX[8].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ ii +"</td>";
+
+						htmlReport+="<td align='center'>"+ (h+ii) +"</td>";
+
+
+						var noUID6="NA";
+						htmlReport+="<td align='center'>"+ noUID6 +"</td>";
+
+
+						var jj = getValueForCategoryOptionCombo( json, tableDX[9].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ jj +"</td>";
+
+						var kk = getValueForCategoryOptionCombo( json, tableDX[10].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ kk +"</td>";
+
+						htmlReport+="<td align='center'>"+ (jj+kk) +"</td>";
+
+
+						var noUID7="NA";
+						htmlReport+="<td align='center'>"+ noUID7 +"</td>";
+
+						var l = getValueForCategoryOptionCombo( json, tableDX[11].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ l +"</td>";
+
+						var m = getValueForCategoryOptionCombo( json, tableDX[12].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ m +"</td>";
+
+						var n = getValueForCategoryOptionCombo( json, tableDX[13].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ n +"</td>";
+
+						var o = getValueForCategoryOptionCombo( json, tableDX[14].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ o +"</td>";
+
+						htmlReport+="<td align='center'>"+ (l+m+n+o) +"</td>";
+
+
+						var p = getValueForCategoryOptionCombo( json, tableDX[15].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ p +"</td>";
+
+						var q = getValueForCategoryOptionCombo( json, tableDX[16].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ q +"</td>";
+
+						htmlReport+="<td align='center'>"+ (p+q) +"</td>";
+
+
+						var r = getValueForCategoryOptionCombo( json, tableDX[17].dxId, hospitalIDs[k],gotPeriod);
+						var re="";
+						if(r==0){
+							re="No";
+						}else{
+							re="Yes"
+						}
+
+						htmlReport+="<td align='center'>"+ re +"</td>";
+
+						var s = getValueForCategoryOptionCombo( json, tableDX[18].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ s +"</td>";
+
+						var noUID8="NA";
+						htmlReport+="<td align='center'>"+ noUID8 +"</td>";
+
+						htmlReport+="<td align='center'>"+ s +"</td>";
+
+						var t = getValueForCategoryOptionCombo( json, tableDX[19].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ t +"</td>";
+
+						var u = getValueForCategoryOptionCombo( json, tableDX[20].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ u +"</td>";
+
+						var v = getValueForCategoryOptionCombo( json, tableDX[21].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ v +"</td>";
+
+
+						htmlReport+="<td align='center'>"+ (t+u+v) +"</td>";
+
+						var noUID9="NA";
+						htmlReport+="<td align='center'>"+ noUID9 +"</td>";
+
+
+						var w = getValueForCategoryOptionCombo( json, tableDX[22].dxId, hospitalIDs[k],gotPeriod);
+						htmlReport+="<td align='center'>"+ w +"</td>";
+
+						var noUID10="NA";
+						htmlReport+="<td align='center'>"+ noUID10 +"</td>";
+
+
+
+						index4++;
+						htmlReport+="</tr>";
+
+
+						//$("#showingTable").append( htmlReport );
+						//hideLoad();
+					}
+				}
+
+				htmlReport+="</tr>";
+
+			}
+		htmlReport+="</tbody>";
+
+
+		$("#showingTable").append(htmlReport);
+		hideLoad();
+
+	}
+	//retrieve value for category options
+	function getValueForCategoryOptionCombo( json,del,orgUnit,pe)
+	{
+		var coc;
+		var de;
+		var result = 0;
+		var d = del.split("_");
+		$.each(d, function (i) {
+		
+			de = (d[i].split("-")[0]);
+			coc = (d[i].split("-")[1]);
+		
+		for (var i=0; i < json.rows.length; i++){
+			if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][3] == pe && json.rows[i][4] != null )
+			{
+				result+=parseInt(json.rows[i][4]);
+				break;
+			}
+			
+		}
+		
+		});
+		return result;
+	}
+
+	function hideLoad()
+	{
+		document.getElementById("cover").style.display="none";
+		document.getElementById("loads").style.display="none";
+		//document.getElementById("loading").style.display="none";
+		document.getElementsByTagName("body")[0].style.overflow="scroll";
+	}
+
+
+</script>
+
+<!-- download script ------------------------------------------------------
+		--------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------- -->
+
+<script type="text/javascript">
+	function printContent(el){
+		var restorepage = document.body.innerHTML;
+		var printcontent = document.getElementById(el).innerHTML;
+		document.body.innerHTML = printcontent;
+		window.print();
+		document.body.innerHTML = restorepage;
+	}
+</script>
+
+<p><span style="font-size:12px;">
+<style>
+
+	td
+	{
+		padding: 5px 10px;
+		font:Arial, Helvetica, sans-serif;
+	}
+
+	bd
+	{
+		border-style: solid;
+		border-color:#000000;
+	}
+
+	#cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+	#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+	#loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+	.vtext{
+		/*width:1px;
+        height: 50px;
+        -ms-transform: rotate(90deg);
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg);
+        border-style: hidden;*/
+	}
+
+</style>
+<div id="loads" > <p id="loading" align="center">Reports Loading... Please Wait...</p></div>
+<div id="cover" > </div>
+
+</span></p>
+
+<style>
+	td{
+		border:solid black 1px;
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 13px;
+	}
+
+</style>
+
+<div>
+    <tr>
+        <td>
+            <input type="button" id="btnBack" class="btn btn-warning" value=" Goto Report Selection Page"
+                   onclick="location.href='../dhis-web-reports/periodWiseprogressReportAnalyser.action'"/>
+            <input type="button" class="btn btn-primary" onclick="printContent('printing');" value="Print"/>
+            <input type="button" class="btn btn-success" id="btnExport" value=" Download Excel "/>
+        </td>
+    </tr>
+</div>
+
+<br/>
+
+<div id="printing">
+    <div id='state'>
+        <table id='showingTable' cellsapcing='6' cellpadding='4' border='1' width='80%'
+               style='border-collapse: collapse; font-size: 14px;'>
+
+		<thead>
+	<tr>
+		<td colspan=43 height="37" align="center" valign=middle bgcolor="#C0C0C0"><b><font size=4>Mandatory Disclosure Formats SDH DH CHC Report</font></b></td>
+		</tr>
+	<tr  align="center" valign=middle bgcolor="#C0C0C0">
+		<td colspan=3 height="37"><b>Facility:<br></b></td>
+		<td colspan=23 id="orgUnitID"><br></td>
+		<td colspan=3 ><b>Period</b></td>
+		<td colspan=23 id="peID"><br></td>
+	</tr>
+	<tr  align="center" valign=middle bgcolor="#C0C0C0">
+		<td colspan=2 height="85"><b>Facility Details <br></b></td>
+		<td colspan=6 align="center"><b>Out Patient's Department ( OPD ) </b></td>
+		<td colspan=5 align="center"><b>In-Patient Department (IPD)</b></td>
+		<td colspan=3 align="center"><b>Delivery conducted</b></td>
+		<td colspan=3 align="center"><b>IUCDs inserted</b></td>
+		<td ><b>IUCD insertions / Month</b></td>
+		<td colspan=3 align="center"><b>MTPs conducted</b></td>
+		<td ><b>MTPs conducted / Month</b></td>
+		<td colspan=5 align="center"><b>Sterilisations conducted</b></td>
+		<td colspan=3 align="center"><b>Operations conducted</b></td>
+		<td rowspan=2 ><b><font face="Arial">Is Blood Storage Unit / Blood Bank functional? (Yes)</b></td>
+		<td colspan=3 ><b>Blood Transfusions</b></td>
+		<td colspan=4 ><b>Laboratory Test</b></td>
+		<td rowspan=2 ><b>Laboratory tests done per month</b></td>
+		<td rowspan=2 ><b>X-ray Machine Avaialble Yes/No</b></td>
+		<td rowspan=2 ><b><font face="Arial">If available, No.of X-rays done</b></td>
+	</tr>
+	<tr  align="center" valign=middle bgcolor="#C0C0C0">
+		<td height="68" ><b>District</b></td>
+		<td ><b>Name of Facility</b></td>
+		<td ><b>ANC Clinic</b></td>
+		<td ><b>AYUSH OPD</b></td>
+		<td ><b>General OPD</b></td>
+		<td ><b>Total OPD for the quarter</b></td>
+		<td ><b>Average OPD/day</b></td>
+		<td ><b>Monthly OPD per 10,000 Population = (Total OPD for the quarter/3)*(10000 / Population covered by facility)</b></td>
+		<td ><b>Male Indoor</b></td>
+		<td ><b>Female Indoor</b></td>
+		<td ><b>Total Indoor<br> ( Male + Female )</b></td>
+		<td ><b>Average indoor per day</b></td>
+		<td ><b>Average indoor per bed per month</b></td>
+		<td ><b>Normal Deliveries</b></td>
+		<td ><b>C-Section Deliveries</b></td>
+		<td ><b>Total Deliveries</b></td>
+		<td ><b>Removal </b></td>
+		<td ><b>Post Partum</b></td>
+		<td ><b>Total</b></td>
+		<td ><b><br></b></td>
+		<td ><b>1st trimester</b></td>
+		<td ><b>2nd trimester</b></td>
+		<td ><b>Total</b></td>
+		<td ><b><br></b></td>
+		<td ><b>Vasectomy / NSV</b></td>
+		<td ><b>Laparoscopic</b></td>
+		<td ><b>Minilap post partum</b></td>
+		<td ><b>Other Minilap</b></td>
+		<td ><b>TOTAL</b></td>
+		<td ><b>Minor Operations</b></td>
+		<td ><b>Major Operation</b></td>
+		<td ><b>Total Operations</b></td>
+		<td ><b>No. of patients receiving blood transfusion - pregnancy and delivery related</b></td>
+		<td ><b>No. of patients receiving blood transfution - other cases</b></td>
+		<td ><b>TOTAL no. of patients receiving blood transfution</b></td>
+		<td ><b>Haemoglobin</b></td>
+		<td ><b>Malaria</b></td>
+		<td ><b>Others</b></td>
+		<td ><b>Total Laboratory tests</b></td>
+		</tr>
+	</thead>
+
+</table>
+</div>
+</div>

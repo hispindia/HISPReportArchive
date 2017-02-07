@@ -1,0 +1,1621 @@
+<script type="text/javascript" src="../dhis-web-commons/bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="../dhis-web-commons/bootstrap/css/bootstrap.min.css"/>
+
+<script type="text/javascript">
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+    // array declaration
+    var circleArray = [];
+    var districtsArray = [];
+    var ruralArray = [];
+    var blockArray = [];
+    var PHCArray = [];
+    var orgUnitsArray = [];
+    var PHCsInSelOrgUnit_Array = [];
+
+    var sNo = 0;
+
+    // jsonObj
+    var dataJsonObj;
+    var dataJSONArray = [];
+
+    // data <table><body> id
+    var showTable = "dataTable";
+
+
+    // UIDs variable declaration
+    var deUIDs = "";
+    var orgUnitUIDs = "";
+
+    // report meta data
+    var reportMetaData = {
+        Performance: {
+            id: "Performance",
+            title: "Performance Report",
+            tableDX: [
+                {
+                    dxName: "OPD Attendance Children Male",
+                    dxId: "ok7JhRhU7DE.IpsDbhE9D6B"
+                },
+                {
+                    dxName: "OPD Attendance Children Female",
+                    dxId: "jjPKpj6WfQZ.J0JnLvS5Zgi"
+                },
+                {dxName: "OPD Attendance Adolescent Male", dxId: "ok7JhRhU7DE.oj9PhdUuA86"},
+                {dxName: "OPD Attendance Adolescent Female", dxId: "jjPKpj6WfQZ.PaLgosz0hHs"},
+                {
+                    dxName: "OPD Attendance Adult Male",
+                    dxId: "ok7JhRhU7DE.EflPPXvGLbC+ok7JhRhU7DE.YId7D6NQ4y3+YHT8VRl2Mv1.AWFHAFYJTph"
+                },
+                {
+                    dxName: "OPD Attendance Adult Female",
+                    dxId: "MqsX8bOGmX2.AWFHAFYJTph+jjPKpj6WfQZ.FAn9HsXyx2j+jjPKpj6WfQZ.wkjXmE9pHuH"
+                },
+                {
+                    dxName: "OPD Attendance Transgender",
+                    dxId: "LsIW9Q0wHHk.bXeM0AKexyX+LsIW9Q0wHHk.pfDtn0s4m5N+LsIW9Q0wHHk.UpmCvwlTrtX+LsIW9Q0wHHk.TEPZcS8HiVW"
+                },
+                {
+                    dxName: "Total OPD",
+                    dxId: "ok7JhRhU7DE.EflPPXvGLbC+ok7JhRhU7DE.YId7D6NQ4y3+YHT8VRl2Mv1.AWFHAFYJTph+t1AU8KhAdZq.AWFHAFYJTph+ok7JhRhU7DE.oj9PhdUuA86+ok7JhRhU7DE.IpsDbhE9D6B+Akl2ItBvS9f.AWFHAFYJTph+jjPKpj6WfQZ.PaLgosz0hHs+jjPKpj6WfQZ.J0JnLvS5Zgi+ok7JhRhU7DE.oj9PhdUuA86+jjPKpj6WfQZ.PaLgosz0hHs+MqsX8bOGmX2.AWFHAFYJTph+jjPKpj6WfQZ.FAn9HsXyx2j+jjPKpj6WfQZ.wkjXmE9pHuH+LsIW9Q0wHHk.bXeM0AKexyX+LsIW9Q0wHHk.pfDtn0s4m5N+LsIW9Q0wHHk.UpmCvwlTrtX+LsIW9Q0wHHk.TEPZcS8HiVW"
+                },
+                {dxName: "IPD Admission Adult Male", dxId: "aTyfAiKi5Ln.AWFHAFYJTph"},
+                {dxName: "IPD Admission Adult Female", dxId: "Yv7sbBYpyMv.AWFHAFYJTph"},
+                {dxName: "IPD Admission Children Male", dxId: "ywBkr3Q5Ick.AWFHAFYJTph"},
+                {dxName: "IPD Admission Children Female", dxId: "NNIxAoiMeOh.AWFHAFYJTph"},
+                {dxName: "Deliveries conducted at PHC", dxId: "hs7sZCsRyD1.AWFHAFYJTph"},
+                {dxName: "Total Number of DLC Examination", dxId: "E7DNuivoEIo.AWFHAFYJTph"},
+                {dxName: "Total Number of Sputum examination", dxId: "it671XXZTtq.AWFHAFYJTph"},
+                {dxName: "Total Number of TLC Examination", dxId: "uCjYgae29JB.AWFHAFYJTph"},
+                {dxName: "Total Number of Stool Sample checked", dxId: "t7btzHQVsuZ.AWFHAFYJTph"},
+                {dxName: "Total Number of Urine Sample checked", dxId: "LLurR7NqkKV.AWFHAFYJTph"},
+                {dxName: "Total test for Hb", dxId: "h2HCSi2WYHv.AWFHAFYJTph"},
+                {dxName: "Widals test positive", dxId: "n7b6bmofrtR.AWFHAFYJTph"},
+                {dxName: "VDRL  tested Male positive", dxId: "Ok7tI5gBXBD.AWFHAFYJTph"},
+                {dxName: "VDRL tested Female non ANC positive", dxId: "wKm565krbDt.AWFHAFYJTph"},
+                {dxName: "ANC VDRL tested positive", dxId: "HIgHpm60l5f.AWFHAFYJTph"},
+                {dxName: "Total Number of Dog Bite cases", dxId: "nNEfJqgVoG8.AWFHAFYJTph"},
+                {dxName: "Deaths due to Dog Bite", dxId: "Flof4RAM6X4.AWFHAFYJTph"},
+                {dxName: "Total Number of Snake Bite cases", dxId: "sTN8i7qjB9z.AWFHAFYJTph"},
+                {dxName: "Deaths due to Snake Bite", dxId: "dhkNfuMDeC2.AWFHAFYJTph"},
+                {dxName: "Total Number of Postmortem done Adult", dxId: "ndxeXdMSuC2.AWFHAFYJTph"},
+                {dxName: "Total Number of Postmortem done Children", dxId: "rBNBayL0O6J.AWFHAFYJTph"},
+                {dxName: "Total Number of Medico Legal Cases Adult", dxId: "xxbbN7uiONi.AWFHAFYJTph"},
+                {dxName: "Total Number of Medico Legal Cases Children", dxId: "ruK5eiTS7G5.AWFHAFYJTph"}
+            ]
+        },
+        Instruments: {
+            id: "Instruments",
+            title: "Instruments Report",
+            tableDX: [
+                {dxName: "Total No.of Stethoscope Available in working condition", dxId: "wRhA9aHJrd3.AWFHAFYJTph"},
+                {dxName: "Total No.of B.P. Apparatus Available in working condition", dxId: "B9Km2ycNvYb.pReqIk008du"},
+                {dxName: "Total No.of Thermometer Available in working condition", dxId: "PVrjqoyuvuN.AWFHAFYJTph"},
+                {dxName: "Total No.of IV Stand Available in working condition", dxId: "VHI7ebxCyUE.AWFHAFYJTph"},
+                {dxName: "Total no.of IV Set Available in working condition", dxId: "Zi4AgQF29L0.AWFHAFYJTph"},
+                {dxName: "Total Functional Radiant Warmer available", dxId: "L5iflIGdKXQ.pReqIk008du"},
+                {dxName: "Total FunctionalPhoto TherapyUnit available", dxId: "ShNDNrQ8geE.pReqIk008du"},
+                {dxName: "Total Functional Adult Resuscitation ", dxId: "ZAUtpeGV0H0.pReqIk008du"},
+                {dxName: "Total Functional Child Resuscitation ", dxId: "Xem7B4pKca5.pReqIk008du"},
+                {dxName: "Total Functional Microscope available", dxId: "C5A4A0Nj3x2.pReqIk008du"},
+
+                {
+                    dxName: "Total no.of Weighing Machine (Adult) Available in working condition",
+                    dxId: "mpOn2x0ziZj.pReqIk008du"
+                },
+                {
+                    dxName: "Total no. of Weighing Machine (Pediatric) Available in working condition",
+                    dxId: "sMOyuwYaRlt.pReqIk008du"
+                },
+                {dxName: "Total no.of Tubectomy Set Available in working condition", dxId: "EoBKPwxhaSb.AWFHAFYJTph"},
+                {dxName: "Total no.of Vasectomy Set Available in working condition", dxId: "IAiJUT8FqRa.AWFHAFYJTph"},
+                {dxName: "Total no.of IUD Set Available in working condition", dxId: "pOU9f9hpf1k.AWFHAFYJTph"},
+                {dxName: "Total no.of MTP Set Available in working condition", dxId: "spXnQ4DjscG.AWFHAFYJTph"},
+                {dxName: "Total no.of Delivery Set Available in working condition", dxId: "xnRW5pLyxzH.AWFHAFYJTph"},
+                {dxName: "Total no.of Venisection Set Available in working condition", dxId: "RCoTVydeHXS.AWFHAFYJTph"},
+                {dxName: "Total no. of Suturing Set Available in working condition", dxId: "X8dHjCbz3NO.AWFHAFYJTph"},
+                {dxName: "Total no.of Post Mortem Set Available in working condition", dxId: "OEnJA3qiyf3.AWFHAFYJTph"},
+                {
+                    dxName: "Total no.of Oxygen Cylinder with Accessories Available in working condition",
+                    dxId: "pxijw5qTwzH.AWFHAFYJTph"
+                },
+                {
+                    dxName: "Total no.of Ambu Bag (Adult) Available in working condition",
+                    dxId: "Bhy30H0p8Vn.AWFHAFYJTph"
+                },
+                {
+                    dxName: "Total no.of Ambu Bag (Pediatric) Available in working condition",
+                    dxId: "aO0u1Kjy0IQ.AWFHAFYJTph"
+                },
+                {
+                    dxName: "Total no.of Suction Machine (Foot / Hand Operated) Available in working condition",
+                    dxId: "CQ9QsT6dJZw.AWFHAFYJTph"
+                },
+                {
+                    dxName: "Total no.of Suction Machine (Electric  Operated) Available in working condition",
+                    dxId: "IfNpH9T2VS0.AWFHAFYJTph"
+                }
+            ]
+        },
+        Construction: {
+            id: "Construction",
+            title: "Construction Report",
+            tableDX: [
+                {dxName: "PHC Main Building (Own=0 / Rented=1 / Other=2)", dxId: "YMUcAZS5S8h.AWFHAFYJTph"},
+                {dxName: "PHC Main Building Construction on-going (Yes-1 / No-0)", dxId: "YsAvElgWRDg.AWFHAFYJTph"},
+                {dxName: "If construction on-going then status (Plinth-1 / Lintel-2 / Slab-3 / Minor works remaining-4)", dxId: "XSaJ32OsWVM.AWFHAFYJTph"},
+                {dxName: "If construction not on-going then status (No land-1 / No plan estimate-2 / No admin approve-3 / No grants-4 / Other-5)", dxId: "RH7MdR4wTQj.AWFHAFYJTph"},
+                {dxName: "PHC Staff Quarters  Available  (Yes=1 / No = 0)", dxId: "LfPMQtxNaSA.AWFHAFYJTph"},
+                {dxName: "Medical Officers 1 (Yes=1 / No = 0)", dxId: "MycSGGSYfVB.AWFHAFYJTph"},
+                {dxName: "Medical Officers 2 (Yes=1 / No = 0)", dxId: "jtQXoTgc3v5.AWFHAFYJTph"},
+                {dxName: "Health Assistant Male (Yes=1 / No = 0)", dxId: "qspdUFut5RE.AWFHAFYJTph"},
+                {dxName: "Health Assistant Female (Yes=1 / No = 0)  ", dxId: "jB5X2AGSXBT.AWFHAFYJTph"},
+                {dxName: "Auxilliary Nurse Midwife (Yes=1 / No = 0)", dxId: "UjEVgG9WSvU.AWFHAFYJTph"},
+                {dxName: "Others(Yes=1 / No = 0)", dxId: "fSSgjJuuv6I.AWFHAFYJTph"},
+                {dxName: "PHC Staff Quarters Construction on-going ", dxId: "Hu8C83rTXGg.AWFHAFYJTph"},
+                {dxName: "If construction on-going then status", dxId: "kb8ozsV28rs.AWFHAFYJTph"},
+                {dxName: "If construction not on-going then status", dxId: "wK8eAEnL4JM.AWFHAFYJTph"}
+            ]
+        },
+        HR: {
+            id: "HR",
+            title: "HR Report",
+            tableDX: [
+                {dxName: "Medical Officer I(Yes-1 / No-0)", dxId: "R4e2SVFP4f4.AWFHAFYJTph"},
+                {dxName: "Medical Officer II(Yes-1 / No-0)", dxId: "OnHruu7oOWI.AWFHAFYJTph"},
+                {dxName: "Health Assistant Male I(Yes-1 / No-0)", dxId: "ChLCwetWDdZ.AWFHAFYJTph"},
+                {dxName: "Health Assistant Male II(Yes-1 / No-0)", dxId: "IvhXMlK4c0q.AWFHAFYJTph"},
+                {dxName: "Health Assistant Female(Yes-1 / No-0)", dxId: "WOalYzv3scW.AWFHAFYJTph"},
+                {dxName: "Auxilliary Nurse Midwife(Yes-1 / No-0)", dxId: "upkPcLMh0Uc.AWFHAFYJTph"},
+                {dxName: "Laboratory(Yes-1 / No-0)", dxId: "udDGgUMb8fC.AWFHAFYJTph"},
+                {dxName: "Pharmacy Officer(Yes-1 / No-0)", dxId: "RIFZ7ZwrXoP.AWFHAFYJTph"},
+                {dxName: "Jr.Clerk(Yes-1 / No-0)", dxId: "m1bbySfkQic.AWFHAFYJTph"},
+                {dxName: "Driver (Regular)(Yes-1 / No-0)", dxId: "ByBYqFnTie4.AWFHAFYJTph"},
+                {dxName: "Sweeper (Regular)(Yes-1 / No-0)", dxId: "n5isOsdkLou.AWFHAFYJTph"},
+                {dxName: "Female Attendant(Yes-1 / No-0)", dxId: "SB4qESiBKR7.AWFHAFYJTph"},
+                {dxName: "Male Attendant I(Yes-1 / No-0)", dxId: "WHqmujR22bt.AWFHAFYJTph"},
+                {dxName: "Male Attendant II(Yes-1 / No-0)", dxId: "Op9lOW1CCcU.AWFHAFYJTph"},
+                {dxName: "Male Attendant III(Yes-1 / No-0)", dxId: "gyg6OG8s4ER.AWFHAFYJTph"},
+                {dxName: "Driver (Contractual)(Yes-1 / No-0)", dxId: "XnnQH2AZaKQ.AWFHAFYJTph"},
+                {dxName: "Sweeper (Contractual)(Yes-1 / No-0)", dxId: "FPrlp45OWrm.AWFHAFYJTph"},
+                {dxName: "Staff Nurse (Contractual)(Yes-1 / No-0)", dxId: "SigI2mSKlJn.AWFHAFYJTph"},
+                {dxName: "Laboratory Techanician (Contractual)(Yes-1 / No-0)", dxId: "RWWQNnnledf.AWFHAFYJTph"},
+                {dxName: "Pharmacist (Contractual)(Yes-1 / No-0)", dxId: "JItqvkE9aiE.AWFHAFYJTph"}
+            ]
+        },
+        Facility: {
+            id: "Facility",
+            title: "Facility Report",
+            tableDX: [
+                {dxName: "Functional Operation Theatre available(Yes-1 / No-0)", dxId: "Q9vMLbrmp6Y.AWFHAFYJTph"},
+                {dxName: "Functional Labour room available(Yes-1 / No-0)", dxId: "dq4MIdoqA9Q.AWFHAFYJTph"},
+                {dxName: "Functional Laboratory available(Yes-1 / No-0)", dxId: "Z33WLfxhZSc.AWFHAFYJTph"},
+                {dxName: "Medical Store available(Yes-1 / No-0)", dxId: "qIoOVkMpXAH.AWFHAFYJTph"},
+                {dxName: "Functional Post Mortem room available(Yes-1 / No-0)", dxId: "dHuZSDdTZCC.AWFHAFYJTph"},
+                {dxName: "Male Ward available(Yes-1 / No-0)", dxId: "UEQisxkjZKl.AWFHAFYJTph"},
+                {dxName: "Female Ward available(Yes-1 / No-0)", dxId: "KdSeR7KWBzx.AWFHAFYJTph"},
+                {dxName: "Gents Toilet available(Yes-1 / No-0)", dxId: "eaNHyxTcH9B.AWFHAFYJTph"},
+                {dxName: "Ladies Toilet available(Yes-1 / No-0)", dxId: "zER1C30aWIL.AWFHAFYJTph"},
+                {dxName: "Adequate Water Supply to PHC available(Yes-1 / No-0)", dxId: "Rlf9sodMcQQ.AWFHAFYJTph"},
+                {dxName: "Functional Telephone available(Yes-1 / No-0)", dxId: "eyrWd5KTPy2.AWFHAFYJTph"},
+                {dxName: "Functional Computer available(Yes-1 / No-0)", dxId: "EZObPNLZvp9.AWFHAFYJTph"},
+                {dxName: "Internet available(Yes-1 / No-0)", dxId: "SP6k09I22rK.AWFHAFYJTph"},
+                {dxName: "Functional Generator available(Yes-1 / No-0)", dxId: "WgujqMoXF7f.AWFHAFYJTph"},
+                {dxName: "Functional Invertor available(Yes-1 / No-0)", dxId: "GQkT64pWFmX.AWFHAFYJTph"},
+                {
+                    dxName: "Functional Solar Water Heater System available(Yes-1 / No-0)",
+                    dxId: "yc202zLEz10.AWFHAFYJTph"
+                },
+                {dxName: "Functional Solar Back-Up System available(Yes-1 / No-0)", dxId: "BxRjLROrmdz.AWFHAFYJTph"},
+                {dxName: "Functional ILR available(Yes-1 / No-0)", dxId: "TXA4PjqNZea.AWFHAFYJTph"},
+                {dxName: "Functional Deep Freezer available(Yes-1 / No-0)", dxId: "AOFiDikQhwf.AWFHAFYJTph"},
+                {dxName: "Functional Auto-clave Machine available(Yes-1 / No-0)", dxId: "fiAOyxsdakH.AWFHAFYJTph"},
+                {dxName: "Functional Deep Burial Pit available(Yes-1 / No-0)", dxId: "KPA9oCoLC2J.pReqIk008du"},
+                {
+                    dxName: "Central Treatment Biomedical Waste Disposal Facility Available(Yes-1 / No-0)",
+                    dxId: "yMXLplKyYCW.pReqIk008du"
+                },
+                {
+                    dxName: "Functional Vehicle for transport of Patient available(Yes-1 / No-0)",
+                    dxId: "UFgoHHGFRfj.AWFHAFYJTph"
+                }
+            ]
+        }
+    };
+
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+
+    $(document).ready(function () {
+
+        $(".hideInPrint").hide();
+        $("#btnExport").click(function(e) {
+            tablesToExcel(['Performance_table','Instruments_table','Construction_table','HR_table', 'Facility_table'],
+                    ['Performance','Instruments','Construction','HR','Facility'], 'PDE PHC Report.xls');
+            e.preventDefault();
+        });
+
+        $.each(reportMetaData, function (i, report) {
+            var selectedReport_TableDX = report.tableDX;
+           // if (report.id == "Performance" || report.id == "Instruments"  || report.id == "Constructions" ||  report.id == "HR") {
+                $.each(selectedReport_TableDX, function () {
+                    if (this.dxId.indexOf("+") == -1) {
+                        if (this.dxId.indexOf(".") > -1) {
+                            deUIDs += this.dxId.split(".")[0] + ";";
+                        }
+                    }
+                    else {
+                        var UIDs = this.dxId.split("+");
+                        $.each(UIDs, function (idx, uid) {
+                            if (uid.indexOf(".") > -1) {
+                                deUIDs += uid.split(".")[0] + ";";
+                            }
+                        });
+                    }
+                });
+           // }
+        });
+
+        var urls = [];
+        // get all the circles into array
+        var url_Circles = "../api/organisationUnits/b3vBdsycgAD.json?fields=children[id,name,path]";
+
+        // get all the districts into array
+        var url_Districts = "../api/organisationUnitGroups/CXswpFTMKVB.json?fields=organisationUnits[id,name,path]";
+
+        // get all the rurals into array
+        var url_Rurals = "../api/organisationUnitGroups/t5X8bNv7x7H.json?fields=organisationUnits[id,name,path]";
+
+        // get all the blocks into array
+        var url_Blocks = "../api/organisationUnitGroups/LP6ZcZQDKXU.json?fields=organisationUnits[id,name,path]";
+
+        // get all the orgUnits for selected orgUnit
+        var url_orgUnits = "../api/organisationUnits/" + orgUnit.id + ".json?fields=id&includeDescendants=true";
+
+        // get all PHC's to array
+        var url_PHC = "../api/organisationUnitGroups/LzDGwjcCNbD.json?fields=organisationUnits[id,name,path]";
+
+        if (selOrgUnitLevel == 2) {
+            urls.push(url_Circles);
+            urls.push(url_Districts);
+            urls.push(url_Rurals);
+            urls.push(url_Blocks);
+            urls.push(url_PHC);
+            var ajaxReq = [];
+            //console.info(urls);
+            for (i = 0; i < urls.length; i++) {
+                ajaxReq.push($.ajax(urls[i]));
+            }
+            $.when.apply($, ajaxReq).done(function () {
+                console.log(arguments); //it is an array like object which can be looped*/
+                $.each(arguments, function (i, data) {
+                    //console.log(data); //data is the value returned by each of the ajax requests
+                    if (i == 0) {
+                        $.each(data[0].children, function (i, item) {
+                            var parentID = item.path.split("/")[2];
+                            circleArray.push([item.id, item.name, parentID])
+                        });
+                        circleArray.sort(arraySorting);
+                    }
+                    else if (i == 1) {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            var parentID = item.path.split("/")[3];
+                            districtsArray.push([item.id, item.name, parentID])
+                        });
+                        districtsArray.sort(arraySorting);
+                    }
+                    else if (i == 2) {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            var parentID = item.path.split("/")[4];
+                            ruralArray.push([item.id, item.name, parentID])
+                        });
+                        ruralArray.sort(arraySorting);
+                    }
+                    else if (i == 3) {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            var parentID = item.path.split("/")[5];
+                            blockArray.push([item.id, item.name, parentID])
+                        });
+                        blockArray.sort(arraySorting);
+                    }
+                    else if (i == 4) {
+                        $.each(data[0].organisationUnits, function (i, curr_item) {
+                            var parentID = curr_item.path.split("/")[6];
+                            var ruralID = curr_item.path.split("/")[5];
+                            var districtID = curr_item.path.split("/")[4];
+                            var circleID = curr_item.path.split("/")[3];
+                            var stateID = curr_item.path.split("/")[2];
+                            PHCArray.push([curr_item.id, curr_item.name, parentID, ruralID, districtID, circleID, stateID]);
+                            orgUnitUIDs += curr_item.id + ";";
+                        });
+                        PHCArray.sort(arraySorting);
+                    }
+                });
+                $.each(PHCArray, function (j, phc) {
+                    PHCsInSelOrgUnit_Array.push(phc[0]);
+                });
+                PHCsInSelOrgUnit_Array.sort(arraySorting);
+                loadData("Performance");
+            });
+        }
+        else {
+            urls.push(url_Circles);
+            urls.push(url_Districts);
+            urls.push(url_Rurals);
+            urls.push(url_Blocks);
+            urls.push(url_orgUnits);
+            urls.push(url_PHC);
+            var ajaxReq = [];
+            //console.info(urls);
+            for (i = 0; i < urls.length; i++) {
+                ajaxReq.push($.ajax(urls[i]));
+            }
+
+            $.when.apply($, ajaxReq).done(function () {
+                console.log(arguments); //it is an array like object which can be looped*/
+                $.each(arguments, function (i, data) {
+                    //console.log(data); //data is the value returned by each of the ajax requests
+                    if (i == 0) {
+                        $.each(data[0].children, function (i, item) {
+                            var parentID = item.path.split("/")[2];
+                            circleArray.push([item.id, item.name, parentID])
+                        });
+                        circleArray.sort(arraySorting);
+                    }
+                    else if (i == 1) {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            var parentID = item.path.split("/")[3];
+                            districtsArray.push([item.id, item.name, parentID])
+                        });
+                        districtsArray.sort(arraySorting);
+                    }
+                    else if (i == 2) {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            var parentID = item.path.split("/")[4];
+                            ruralArray.push([item.id, item.name, parentID])
+                        });
+                        ruralArray.sort(arraySorting);
+                    }
+                    else if (i == 3) {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            var parentID = item.path.split("/")[5];
+                            blockArray.push([item.id, item.name, parentID])
+                        });
+                        blockArray.sort(arraySorting);
+                    }
+                    else if (i == 4) {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            orgUnitsArray.push(item.id);
+                            orgUnitUIDs += item.id + ";";
+                        });
+                    }
+                    else if (i == 5) {
+                        $.each(data[0].organisationUnits, function (i, curr_item) {
+                            var parentID = curr_item.path.split("/")[6];
+                            var ruralID = curr_item.path.split("/")[5];
+                            var districtID = curr_item.path.split("/")[4];
+                            var circleID = curr_item.path.split("/")[3];
+                            var stateID = curr_item.path.split("/")[2];
+                            PHCArray.push([curr_item.id, curr_item.name, parentID, ruralID, districtID, circleID, stateID]);
+                        });
+                        PHCArray.sort(arraySorting);
+                    }
+                });
+                $.each(orgUnitsArray, function (idx, ou) {
+                    $.each(PHCArray, function (a, phc) {
+                        if (phc[0] == ou) {
+                            PHCsInSelOrgUnit_Array.push(ou);
+                        }
+                    });
+                });
+                PHCsInSelOrgUnit_Array.sort(arraySorting);
+                loadData("Performance");
+            });
+        }
+    });
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    // function for load table data
+    function loadData() {
+        if (PHCsInSelOrgUnit_Array.length > 50) {
+            var noOf_iterations = PHCsInSelOrgUnit_Array.length / 50;
+            var stepsCount = 0;
+            var urls = [];
+            var ajaxReq = [];
+
+            for (var i = 0; i < noOf_iterations; i++) {
+                var orgUnitUIDs = "";
+                for (var j = stepsCount; j < (stepsCount + 50); j++) {
+                    if (j == PHCsInSelOrgUnit_Array.length) break;
+                    else orgUnitUIDs += PHCsInSelOrgUnit_Array[j] + ";";
+                }
+                urls.push("../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:" + orgUnitUIDs + "&filter=pe:" + period + "&skipMeta=true&aggregateData=false");
+                stepsCount += 50;
+            }
+            //console.info(urls);
+            for (i = 0; i < urls.length; i++) {
+                ajaxReq.push($.ajax(urls[i]));
+            }
+            //console.info(ajaxReq);
+
+            $.when.apply($, ajaxReq).done(function () {
+                /*console.log(arguments); //it is an array like object which can be looped*/
+                $.each(arguments, function (i, data) {
+                    //console.log(data); //data is the value returned by each of the ajax requests
+                    $.each(data[0].rows, function (j, rowData) {
+                        dataJSONArray.push([rowData[0], rowData[1], rowData[2], rowData[3]]);
+                    });
+                });
+                //console.log(dataJSONArray);
+                loadData_Values();
+            });
+        }
+        else {
+            orgUnitUIDs = "";
+            $.each(PHCsInSelOrgUnit_Array, function (i, val) {
+                orgUnitUIDs += val + ";";
+            });
+            var dataUrl = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:" + orgUnitUIDs + "&filter=pe:" + period + "&skipMeta=true";
+            $.get(dataUrl, function (json) {
+                $.each(json.rows, function (j, rowData) {
+                    dataJSONArray.push([rowData[0], rowData[1], rowData[2], rowData[3]]);
+                });
+                loadData_Values();
+            });
+        }
+    }
+
+    function loadData_Values() {
+        if (PHCsInSelOrgUnit_Array.length > 50) {
+            var noOf_iterations = PHCsInSelOrgUnit_Array.length / 50;
+            var stepsCount = 0;
+            var urls = [];
+            var ajaxReq = [];
+
+            for (var i = 0; i < noOf_iterations; i++) {
+                var orgUnitUIDs = "";
+                for (var j = stepsCount; j < (stepsCount + 50); j++) {
+                    if (j == PHCsInSelOrgUnit_Array.length) break;
+                    else orgUnitUIDs += "orgUnit=" + PHCsInSelOrgUnit_Array[j] + "&";
+                }
+                urls.push("../api/dataValueSets.json?dataSet=R44yab8q3US&" + orgUnitUIDs + "period=" + period);
+                stepsCount += 50;
+            }
+            //console.info(urls);
+            for (i = 0; i < urls.length; i++) {
+                ajaxReq.push($.ajax(urls[i]));
+            }
+            //console.info(ajaxReq);
+
+            $.when.apply($, ajaxReq).done(function () {
+                /*console.log(arguments); //it is an array like object which can be looped*/
+                $.each(arguments, function (i, data) {
+                    //console.log(data); //data is the value returned by each of the ajax requests
+                    if(typeof data[0].dataValues != "undefined") {
+                        $.each(data[0].dataValues, function (j, rowData) {
+                            dataJSONArray.push([rowData.dataElement, rowData.categoryOptionCombo, rowData.orgUnit, rowData.value]);
+                        });
+                    }
+                });
+                //console.log(dataJSONArray);
+                $.each(reportMetaData, function (r, mData) {
+                    loadTable(mData.id, mData.tableDX);
+                });
+                hideLoad();
+            });
+        }
+        else {
+            orgUnitUIDs = "";
+            $.each(PHCsInSelOrgUnit_Array, function (i, val) {
+                orgUnitUIDs += "orgUnit=" + val + "&";
+            });
+            dataUrl = "../api/dataValueSets.json?dataSet=R44yab8q3US&" + orgUnitUIDs + "period=" + period;
+            $.get(dataUrl, function (json) {
+                if(typeof json.dataValues != "undefined") {
+                    $.each(json.dataValues, function (j, rowData) {
+                        dataJSONArray.push([rowData.dataElement, rowData.categoryOptionCombo, rowData.orgUnit, rowData.value]);
+                    });
+                }
+                $.each(reportMetaData, function (r, mData) {
+                    loadTable(mData.id, mData.tableDX);
+                });
+                hideLoad();
+            });
+        }
+    }
+    // function for load table
+    function loadTable(selectedReport, selectedReport_TableDX) {
+        showLoad();
+        var htmlReportHeader = "";
+        var hierarchyColumns = [];
+        var colspanValue = 0;
+        switch (selOrgUnitLevel) {
+            case 2:
+            {
+                hierarchyColumns.push("Circle", "District", "Rural", "Block", "PHC");
+                colspanValue = selectedReport_TableDX.length + 6;
+                break;
+            }
+            case 3:
+            {
+                hierarchyColumns.push("District", "Rural", "Block", "PHC");
+                colspanValue = selectedReport_TableDX.length + 5;
+                break;
+            }
+            case 4:
+            {
+                hierarchyColumns.push("Rural", "Block", "PHC");
+                colspanValue = selectedReport_TableDX.length + 4;
+                break;
+            }
+            case 5:
+            {
+                hierarchyColumns.push("Block", "PHC");
+                colspanValue = selectedReport_TableDX.length + 3;
+                break;
+            }
+            case 6:
+            {
+                hierarchyColumns.push("PHC");
+                colspanValue = selectedReport_TableDX.length + 2;
+                break;
+            }
+			case 7:
+            {
+                alert("Not Applicable");
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+
+        sNo = 0;
+
+        // generates the HTML report
+        // Note: table header
+        $("#" + selectedReport + "_table > thead").html("");
+
+        htmlReportHeader += "<tr><td bgcolor='#c5c5c5' style='text-align: center; font-size: 16px; font-weight: bold;' height='40px' colspan='" + colspanValue + "'>PDE PHC Report - " + selectedReport + "</td></tr>";
+        htmlReportHeader += "<tr>";
+        htmlReportHeader += "<td style='text-align: left; font-weight: bold;' bgcolor='#d4d4d4'>Selected Org Unit:&nbsp;</td>";
+        htmlReportHeader += "<td style='text-align: left; font-weight: bold;' bgcolor='#f1f1f1'>" + orgUnit.name + "</td>";
+        htmlReportHeader += "<td style='text-align: right; font-weight: bold;' bgcolor='#d4d4d4'>Period:&nbsp;&nbsp;</td>";
+        htmlReportHeader += "<td style='text-align: left; font-weight: bold;' bgcolor='#f1f1f1'>" + getPeriod(gotPeriod) + "</td>";
+        htmlReportHeader += "<td style='text-align: left; font-weight: bold;' bgcolor='#d4d4d4' colspan='" + (colspanValue - 4) + "'>&nbsp;</td>";
+        htmlReportHeader += "</tr>";
+        htmlReportHeader += "<tr>";
+        htmlReportHeader += "<td style='font-weight: bold; text-align: center;' bgcolor='#e3e3e3'> SNo </td>";
+        $.each(hierarchyColumns, function (i, name) {
+            htmlReportHeader += "<td style='font-weight: bold; text-align: center;' bgcolor='#e3e3e3'>" + name + "</td>";
+        });
+        $.each(selectedReport_TableDX, function (i, column) {
+            htmlReportHeader += "<td style='font-weight: bold; text-align: center;' bgcolor='#e3e3e3'>" + column.dxName + "</td>";
+        });
+        htmlReportHeader += "</tr>";
+
+        $("#" + selectedReport + "_table > thead").append(htmlReportHeader);
+
+        // generates the HTML report
+        // Note: table data
+        var htmlReportBody = showTableData(selectedReport, selectedReport_TableDX);
+        $("#" + selectedReport + "_table > tbody").append(htmlReportBody);
+        $("#" + selectedReport + "_table > thead > tr > td").css("vertical-align", "middle");
+        $("#" + selectedReport + "_table > tbody > tr > td").css("vertical-align", "middle");
+        hideLoad();
+    }
+
+    // function for show all data of the table
+    function showTableData(selectedReport, selectedReport_TableDX) {
+        var htmlReport = "";
+        sNo = 0;
+		if(selOrgUnitLevel == 8){ // SC is selected
+           alert("Please select a Circle/District/Rural/Block");
+            window.history.back();
+        }
+		
+		if(selOrgUnitLevel == 7){ // PHC is selected
+           alert("Please select a Circle/District/Rural/Block");
+            window.history.back();
+        }
+        if (selOrgUnitLevel == 6) { // selected orgUnit is a Block
+            var hasPHCs = false;
+            $.each(PHCArray, function (phcID, phc) {
+                if (phc[2] == orgUnit.id) {
+                    hasPHCs = true;
+                    return false;
+                }
+            });
+            if (hasPHCs == true) {
+                var gridValuesForBlock = [];
+                $.each(PHCArray, function (phcID, phc) {
+                    if (phc[2] == orgUnit.id) {
+                        var rowValues = [];
+                        htmlReport += "<tr>";
+                        htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                        htmlReport += "<td width='40%'>" + phc[1] + "</td>";
+                        $.each(selectedReport_TableDX, function (idx, de) {
+                            var cellValue = 0;
+                           // if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                                if (de.dxId.indexOf("+") == -1) {
+                                    cellValue = parseInt(getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]));
+                                    htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                }
+                                else {
+                                    var uids = de.dxId.split("+");
+                                    $.each(uids, function (id, uid) {
+                                        cellValue += parseInt(getCellValue(uid.split(".")[0], uid.split(".")[1], phc[0]));
+                                    });
+                                    htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                }
+                                rowValues.push(cellValue);
+                          //  }
+                           /* else{
+                                cellValue = getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]);
+                                if (cellValue == "true") {
+                                    cellValue = "1";
+                                } else if (cellValue == "false") {
+                                    cellValue = "0";
+                                }
+                                htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                            }*/
+                        });
+                        htmlReport += "</tr>";
+                        gridValuesForBlock.push(rowValues);
+                        sNo++;
+                    }
+                });
+              //  if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                    htmlReport += "<tr>";
+                    htmlReport += "<td colspan='2' style='font-weight: bold;'>" + orgUnit.name + " Total" + "</td>";
+                    $.each(selectedReport_TableDX, function (idx, de) {
+                        var total = calculateValues(gridValuesForBlock, idx);
+                        htmlReport += "<td style='text-align: center; font-weight: bold;'>" + total + "</td>";
+                    });
+                    htmlReport += "</tr>";
+               // }
+            }
+            else {
+                alert(orgUnit.name + " doesn't contain PHCs");
+                windows.history.back();
+            }
+        }
+        else if (selOrgUnitLevel == 5) { // selected orgUnit is a Rural
+            var hasPHCs = false;
+            $.each(PHCArray, function (phcID, phc) {
+                // check if the selected rural has PHCs or not
+                if (phc[3] == orgUnit.id) {
+                    hasPHCs = true;
+                    return false;
+                }
+            });
+            if (hasPHCs == true) {
+                var gridValuesForRural = [];
+                $.each(blockArray, function (blockID, block) {
+                    // check whether the block is in selected rural area
+                    if (block[2] == orgUnit.id) {
+                        var flagBlock = false;
+                        var gridValuesForBlock = [];
+                        var rowTotalValuesOfBlock = [];
+                        $.each(PHCArray, function (phcID, phc) {
+                            if (phc[2] == block[0]) {
+                                var rowValues = [];
+                                htmlReport += "<tr>";
+                                htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                if (flagBlock == false) {
+                                    htmlReport += "<td>" + block[1] + "</td>";
+                                    flagBlock = true;
+                                }
+                                else {
+                                    htmlReport += "<td>&nbsp;</td>";
+                                }
+                                htmlReport += "<td width='40%'>" + phc[1] + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    var cellValue = 0;
+                                 //   if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                                        if (de.dxId.indexOf("+") == -1) {
+                                            cellValue = parseInt(getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]));
+                                            htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                        }
+                                        else {
+                                            var uids = de.dxId.split("+");
+                                            $.each(uids, function (id, uid) {
+                                                cellValue += parseInt(getCellValue(uid.split(".")[0], uid.split(".")[1], phc[0]));
+                                            });
+                                            htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                        }
+                                        rowValues.push(cellValue);
+                                  //  }
+                                   /* else{
+                                        cellValue = getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]);
+                                        if (cellValue == "true") {
+                                            cellValue = "1";
+                                        } else if (cellValue == "false") {
+                                            cellValue = "0";
+                                        }
+                                        htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                    }*/
+                                });
+                                htmlReport += "</tr>";
+                                gridValuesForBlock.push(rowValues);
+                                sNo++;
+                            }
+                        });
+                      //  if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                            var blockHasPHCs = false;
+                            $.each(PHCArray, function (phcID, phc) {
+                                // check if the block has PHCs or not
+                                if (phc[2] == block[0]) {
+                                    blockHasPHCs = true;
+                                    return false;
+                                }
+                            });
+                            if (blockHasPHCs == true) {
+                                htmlReport += "<tr>";
+                                htmlReport += "<td colspan='3' style='font-weight: bold; background-color: #e3e3e3'>" + block[1] + " Total" + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    var total = calculateValues(gridValuesForBlock, idx);
+                                    htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #e3e3e3;'>" + total + "</td>";
+                                    rowTotalValuesOfBlock.push(total);
+                                });
+                                htmlReport += "</tr>";
+                                gridValuesForRural.push(rowTotalValuesOfBlock);
+                            }
+                       // }
+                    }
+                });
+               // if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                    htmlReport += "<tr>";
+                    htmlReport += "<td colspan='3' style='font-weight: bold; background-color: #d4d4d4'>" + orgUnit.name + " Total" + "</td>";
+                    $.each(selectedReport_TableDX, function (idx, de) {
+                        var total = calculateValues(gridValuesForRural, idx);
+                        htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d4d4d4;'>" + total + "</td>";
+                    });
+                    htmlReport += "</tr>";
+              //  }
+            }
+        }
+        else if (selOrgUnitLevel == 4) { // selected orgUnit is a District
+            var hasPHCs = false;
+            $.each(PHCArray, function (phcID, phc) {
+                // check if the selected district has PHCs or not
+                if (phc[4] == orgUnit.id) {
+                    hasPHCs = true;
+                    return false;
+                }
+            });
+            if (hasPHCs == true) {
+                var gridValuesForDistrict = [];
+                $.each(ruralArray, function (ruralID, rural) {
+                    // check whether the rural is in selected district
+                    if (rural[2] == orgUnit.id) {
+                        var flagRural = false;
+                        var gridValuesForRural = [];
+                        var rowTotalValuesOfRural = [];
+                        $.each(blockArray, function (blockID, block) {
+                            // check whether the block is in selected rural area
+                            if (block[2] == rural[0]) {
+                                var flagBlock = false;
+                                var gridValuesForBlock = [];
+                                var rowTotalValuesOfBlock = [];
+                                $.each(PHCArray, function (phcID, phc) {
+                                    if (phc[2] == block[0]) {
+                                        var rowValues = [];
+                                        htmlReport += "<tr>";
+                                        htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                        if (flagRural == false) {
+                                            htmlReport += "<td>" + rural[1] + "</td>";
+                                            flagRural = true;
+                                            if (flagBlock == false) {
+                                                htmlReport += "<td>" + block[1] + "</td>";
+                                                flagBlock = true;
+                                            }
+                                        }
+                                        else if (flagBlock == false) {
+                                            htmlReport += "<td>&nbsp;</td>";
+                                            htmlReport += "<td>" + block[1] + "</td>";
+                                            flagBlock = true;
+                                        }
+                                        else {
+                                            htmlReport += "<td>&nbsp;</td>";
+                                            htmlReport += "<td>&nbsp;</td>";
+                                        }
+                                        htmlReport += "<td width='40%'>" + phc[1] + "</td>";
+                                        $.each(selectedReport_TableDX, function (idx, de) {
+                                            var cellValue = 0;
+                                            //if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                                                if (de.dxId.indexOf("+") == -1) {
+                                                    cellValue = parseInt(getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]));
+                                                    htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                                }
+                                                else {
+                                                    var uids = de.dxId.split("+");
+                                                    $.each(uids, function (id, uid) {
+                                                        cellValue += parseInt(getCellValue(uid.split(".")[0], uid.split(".")[1], phc[0]));
+                                                    });
+                                                    htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                                }
+                                                rowValues.push(cellValue);
+                                           // }
+                                         /*   else{
+                                                cellValue = getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]);
+                                                if (cellValue == "true") {
+                                                    cellValue = "1";
+                                                } else if (cellValue == "false") {
+                                                    cellValue = "0";
+                                                }
+                                                htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                            }*/
+                                        });
+                                        htmlReport += "</tr>";
+                                        gridValuesForBlock.push(rowValues);
+                                        sNo++;
+                                    }
+                                });
+                                //htmlReport += "<tr>";
+                                //htmlReport +=   "<td colspan='4' style='font-weight: bold; background-color: #d6f4c3'>" + block[1] + " Total" + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    var total = calculateValues(gridValuesForBlock, idx);
+                                    //htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d6f4c3;'>" + total + "</td>";
+                                    rowTotalValuesOfBlock.push(total);
+                                });
+                                //htmlReport += "</tr>";
+                                gridValuesForRural.push(rowTotalValuesOfBlock);
+                            }
+                        });
+                        //if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                            var ruralHasPHCs = false;
+                            $.each(PHCArray, function (phcID, phc) {
+                                // check if the rural has PHCs or not
+                                if (phc[3] == rural[0]) {
+                                    ruralHasPHCs = true;
+                                    return false;
+                                }
+                            });
+                            if (ruralHasPHCs == true) {
+                                htmlReport += "<tr>";
+                                htmlReport += "<td colspan='4' style='font-weight: bold; background-color: #e3e3e3'>" + rural[1] + " Total" + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    var total = calculateValues(gridValuesForRural, idx);
+                                    htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #e3e3e3;'>" + total + "</td>";
+                                    rowTotalValuesOfRural.push(total);
+                                });
+                                htmlReport += "</tr>";
+                                gridValuesForDistrict.push(rowTotalValuesOfRural);
+                            }
+                       // }
+                    }
+                });
+               // if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                    htmlReport += "<tr>";
+                    htmlReport += "<td colspan='4' style='font-weight: bold; background-color: #d4d4d4'>" + orgUnit.name + " Total" + "</td>";
+                    $.each(selectedReport_TableDX, function (idx, de) {
+                        var total = calculateValues(gridValuesForDistrict, idx);
+                        htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d4d4d4;'>" + total + "</td>";
+                    });
+                    htmlReport += "</tr>";
+              //  }
+            }
+            else {
+                alert("This " + orgUnit.name + " doesn't contain PHCs");
+                window.history.back();
+            }
+        }
+        else if (selOrgUnitLevel == 3) { // selected orgUnit is a Circle
+            var hasPHCs = false;
+            $.each(PHCArray, function (phcID, phc) {
+                // check if the selected district has PHCs or not
+                if (phc[5] == orgUnit.id) {
+                    hasPHCs = true;
+                    return false;
+                }
+            });
+            if (hasPHCs == true) {
+                var gridValuesForCircle = [];
+                $.each(districtsArray, function (districtID, district) {
+                    // check whether the district is in selected circle
+                    if (district[2] == orgUnit.id) {
+                        var flagDistrict = false;
+                        var gridValuesForDistrict = [];
+                        var rowTotalValuesOfDistrict = [];
+                        $.each(ruralArray, function (ruralID, rural) {
+                            // check whether the rural is in selected district
+                            if (rural[2] == district[0]) {
+                                var flagRural = false;
+                                var gridValuesForRural = [];
+                                var rowTotalValuesOfRural = [];
+                                $.each(blockArray, function (blockID, block) {
+                                    // check whether the block is in selected rural area
+                                    if (block[2] == rural[0]) {
+                                        var flagBlock = false;
+                                        var gridValuesForBlock = [];
+                                        var rowTotalValuesOfBlock = [];
+                                        $.each(PHCArray, function (phcID, phc) {
+                                            if (phc[2] == block[0]) {
+                                                var rowValues = [];
+                                                htmlReport += "<tr>";
+                                                htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                                if (flagDistrict == false) {
+                                                    htmlReport += "<td>" + district[1] + "</td>";
+                                                    flagDistrict = true;
+                                                    if (flagRural == false) {
+                                                        htmlReport += "<td>" + rural[1] + "</td>";
+                                                        flagRural = true;
+                                                        if (flagBlock == false) {
+                                                            htmlReport += "<td>" + block[1] + "</td>";
+                                                            flagBlock = true;
+                                                        }
+                                                    }
+                                                }
+                                                else if (flagRural == false) {
+                                                    htmlReport += "<td>&nbsp;</td>";
+                                                    htmlReport += "<td>" + rural[1] + "</td>";
+                                                    flagRural = true;
+                                                    if (flagBlock == false) {
+                                                        htmlReport += "<td>" + block[1] + "</td>";
+                                                        flagBlock = true;
+                                                    }
+                                                }
+                                                else if (flagBlock == false) {
+                                                    htmlReport += "<td>&nbsp;</td>";
+                                                    htmlReport += "<td>&nbsp;</td>";
+                                                    htmlReport += "<td>" + block[1] + "</td>";
+                                                    flagBlock = true;
+                                                }
+                                                else {
+                                                    htmlReport += "<td>&nbsp;</td>";
+                                                    htmlReport += "<td>&nbsp;</td>";
+                                                    htmlReport += "<td>&nbsp;</td>";
+                                                }
+                                                htmlReport += "<td width='40%'>" + phc[1] + "</td>";
+                                                $.each(selectedReport_TableDX, function (idx, de) {
+                                                    var cellValue = 0;
+                                                   // if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                                                        if (de.dxId.indexOf("+") == -1) {
+                                                            cellValue = parseInt(getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]));
+                                                            htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                                        }
+                                                        else {
+                                                            var uids = de.dxId.split("+");
+                                                            $.each(uids, function (id, uid) {
+                                                                cellValue += parseInt(getCellValue(uid.split(".")[0], uid.split(".")[1], phc[0]));
+                                                            });
+                                                            htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                                        }
+                                                        rowValues.push(cellValue);
+                                                  //  }
+                                                   /* else{
+                                                        cellValue = getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]);
+                                                        if (cellValue == "true") {
+                                                            cellValue = "1";
+                                                        } else if (cellValue == "false") {
+                                                            cellValue = "0";
+                                                        }
+                                                        htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                                    }*/
+                                                });
+                                                htmlReport += "</tr>";
+                                                gridValuesForBlock.push(rowValues);
+                                                sNo++;
+                                            }
+                                        });
+                                        //htmlReport += "<tr>";
+                                        //htmlReport +=   "<td colspan='4' style='font-weight: bold; background-color: #d6f4c3'>" + block[1] + " Total" + "</td>";
+                                        $.each(selectedReport_TableDX, function (idx, de) {
+                                            var total = calculateValues(gridValuesForBlock, idx);
+                                            //htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d6f4c3;'>" + total + "</td>";
+                                            rowTotalValuesOfBlock.push(total);
+                                        });
+                                        //htmlReport += "</tr>";
+                                        gridValuesForRural.push(rowTotalValuesOfBlock);
+                                    }
+                                });
+                                //htmlReport += "<tr>";
+                                //htmlReport +=   "<td colspan='4' style='font-weight: bold; background-color: #d4d4d4'>" + rural[1] + " Total" + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    var total = calculateValues(gridValuesForRural, idx);
+                                    //htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d4d4d4;'>" + total + "</td>";
+                                    rowTotalValuesOfRural.push(total);
+                                });
+                                //htmlReport += "</tr>";
+                                gridValuesForDistrict.push(rowTotalValuesOfRural);
+                            }
+                        });
+                        //if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                            var districtHasPHCs = false;
+                            $.each(PHCArray, function (phcID, phc) {
+                                // check if the district has PHCs or not
+                                if (phc[4] == district[0]) {
+                                    districtHasPHCs = true;
+                                    return false;
+                                }
+                            });
+                            if (districtHasPHCs == true) {
+                                htmlReport += "<tr>";
+                                htmlReport += "<td colspan='5' style='font-weight: bold; background-color: #e3e3e3'>" + district[1] + " Total" + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    var total = calculateValues(gridValuesForDistrict, idx);
+                                    htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #e3e3e3;'>" + total + "</td>";
+                                    rowTotalValuesOfDistrict.push(total);
+                                });
+                                htmlReport += "</tr>";
+                                gridValuesForCircle.push(rowTotalValuesOfDistrict);
+                            }
+                      //  }
+                    }
+                });
+               // if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                    htmlReport += "<tr>";
+                    htmlReport += "<td colspan='5' style='font-weight: bold; background-color: #d4d4d4'>" + orgUnit.name + " Total" + "</td>";
+                    $.each(selectedReport_TableDX, function (idx, de) {
+                        var total = calculateValues(gridValuesForCircle, idx);
+                        htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d4d4d4;'>" + total + "</td>";
+                    });
+                    htmlReport += "</tr>";
+               // }
+            }
+        }
+        else if (selOrgUnitLevel == 2) { // selected orgUnit is State
+            var hasPHCs = false;
+            $.each(PHCArray, function (phcID, phc) {
+                // check if the selected district has PHCs or not
+                if (phc[6] == orgUnit.id) {
+                    hasPHCs = true;
+                    return false;
+                }
+            });
+            if (hasPHCs == true) {
+                var gridValuesForState = [];
+                $.each(circleArray, function (circleID, circle) {
+                    // check whether the circle is in selected state
+                    if (circle[2] == orgUnit.id) {
+                        var flagCircle = false;
+                        var gridValuesForCircle = [];
+                        var rowTotalValuesOfCircle = [];
+                        $.each(districtsArray, function (districtID, district) {
+                            // check whether the district is in selected circle
+                            if (district[2] == circle[0]) {
+                                var flagDistrict = false;
+                                var gridValuesForDistrict = [];
+                                var rowTotalValuesOfDistrict = [];
+                                $.each(ruralArray, function (ruralID, rural) {
+                                    // check whether the rural is in selected district
+                                    if (rural[2] == district[0]) {
+                                        var flagRural = false;
+                                        var gridValuesForRural = [];
+                                        var rowTotalValuesOfRural = [];
+                                        $.each(blockArray, function (blockID, block) {
+                                            // check whether the block is in selected rural area
+                                            if (block[2] == rural[0]) {
+                                                var flagBlock = false;
+                                                var gridValuesForBlock = [];
+                                                var rowTotalValuesOfBlock = [];
+                                                $.each(PHCArray, function (phcID, phc) {
+                                                    if (phc[2] == block[0]) {
+                                                        var rowValues = [];
+                                                        htmlReport += "<tr>";
+                                                        htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                                                        if (flagCircle == false) {
+                                                            htmlReport += "<td>" + circle[1] + "</td>";
+                                                            flagCircle = true;
+                                                            if (flagDistrict == false) {
+                                                                htmlReport += "<td>" + district[1] + "</td>";
+                                                                flagDistrict = true;
+                                                                if (flagRural == false) {
+                                                                    htmlReport += "<td>" + rural[1] + "</td>";
+                                                                    flagRural = true;
+                                                                    if (flagBlock == false) {
+                                                                        htmlReport += "<td>" + block[1] + "</td>";
+                                                                        flagBlock = true;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        else if (flagDistrict == false) {
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>" + district[1] + "</td>";
+                                                            flagDistrict = true;
+                                                            if (flagRural == false) {
+                                                                htmlReport += "<td>" + rural[1] + "</td>";
+                                                                flagRural = true;
+                                                                if (flagBlock == false) {
+                                                                    htmlReport += "<td>" + block[1] + "</td>";
+                                                                    flagBlock = true;
+                                                                }
+                                                            }
+                                                        }
+                                                        else if (flagRural == false) {
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>" + rural[1] + "</td>";
+                                                            flagRural = true;
+                                                            if (flagBlock == false) {
+                                                                htmlReport += "<td>" + block[1] + "</td>";
+                                                                flagBlock = true;
+                                                            }
+                                                        }
+                                                        else if (flagBlock == false) {
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>" + block[1] + "</td>";
+                                                            flagBlock = true;
+                                                        }
+                                                        else {
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                            htmlReport += "<td>&nbsp;</td>";
+                                                        }
+                                                        htmlReport += "<td width='40%'>" + phc[1] + "</td>";
+                                                        $.each(selectedReport_TableDX, function (idx, de) {
+                                                            var cellValue = 0;
+                                                           // if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                                                                if (de.dxId.indexOf("+") == -1) {
+                                                                    cellValue = parseInt(getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]));
+                                                                    htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                                                }
+                                                                else {
+                                                                    var uids = de.dxId.split("+");
+                                                                    $.each(uids, function (id, uid) {
+                                                                        cellValue += parseInt(getCellValue(uid.split(".")[0], uid.split(".")[1], phc[0]));
+                                                                    });
+                                                                    htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                                                }
+                                                                rowValues.push(cellValue);
+                                                          //  }
+                                                           /* else{
+                                                                cellValue = getCellValue(de.dxId.split(".")[0], de.dxId.split(".")[1], phc[0]);
+                                                                if (cellValue == "true") {
+                                                                    cellValue = "1";
+                                                                } else if (cellValue == "false") {
+                                                                    cellValue = "0";
+                                                                }
+                                                                htmlReport += "<td style='text-align: center;'>" + cellValue + "</td>";
+                                                            }*/
+                                                        });
+                                                        htmlReport += "</tr>";
+                                                        gridValuesForBlock.push(rowValues);
+                                                        sNo++;
+                                                    }
+                                                });
+                                                //htmlReport += "<tr>";
+                                                //htmlReport +=   "<td colspan='4' style='font-weight: bold; background-color: #d6f4c3'>" + block[1] + " Total" + "</td>";
+                                                $.each(selectedReport_TableDX, function (idx, de) {
+                                                    var total = calculateValues(gridValuesForBlock, idx);
+                                                    //htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d6f4c3;'>" + total + "</td>";
+                                                    rowTotalValuesOfBlock.push(total);
+                                                });
+                                                //htmlReport += "</tr>";
+                                                gridValuesForRural.push(rowTotalValuesOfBlock);
+                                            }
+                                        });
+                                        //htmlReport += "<tr>";
+                                        //htmlReport +=   "<td colspan='4' style='font-weight: bold; background-color: #d4d4d4'>" + rural[1] + " Total" + "</td>";
+                                        $.each(selectedReport_TableDX, function (idx, de) {
+                                            var total = calculateValues(gridValuesForRural, idx);
+                                            //htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d4d4d4;'>" + total + "</td>";
+                                            rowTotalValuesOfRural.push(total);
+                                        });
+                                        //htmlReport += "</tr>";
+                                        gridValuesForDistrict.push(rowTotalValuesOfRural);
+                                    }
+                                });
+                                //htmlReport += "<tr>";
+                                //htmlReport +=   "<td colspan='5' style='font-weight: bold; background-color: #afe38f'>" + district[1] + " Total" + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    var total = calculateValues(gridValuesForDistrict, idx);
+                                    //htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #afe38f;'>" + total + "</td>";
+                                    rowTotalValuesOfDistrict.push(total);
+                                });
+                                //htmlReport += "</tr>";
+                                gridValuesForCircle.push(rowTotalValuesOfDistrict);
+                            }
+                        });
+                        //if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                            var circleHasPHCs = false;
+                            $.each(PHCArray, function (phcID, phc) {
+                                // check if the circle has PHCs or not
+                                if (phc[5] == circle[0]) {
+                                    circleHasPHCs = true;
+                                    return false;
+                                }
+                            });
+                            if (circleHasPHCs == true) {
+                                htmlReport += "<tr>";
+                                htmlReport += "<td colspan='6' style='font-weight: bold; background-color: #e3e3e3'>" + circle[1] + " Total" + "</td>";
+                                $.each(selectedReport_TableDX, function (idx, de) {
+                                    var total = calculateValues(gridValuesForCircle, idx);
+                                    htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #e3e3e3;'>" + total + "</td>";
+                                    rowTotalValuesOfCircle.push(total);
+                                });
+                                htmlReport += "</tr>";
+                                gridValuesForState.push(rowTotalValuesOfCircle);
+                            }
+                        //}
+                    }
+                });
+                //if (selectedReport == "Performance" || selectedReport == "Instruments") {
+                    htmlReport += "<tr>";
+                    htmlReport += "<td colspan='6' style='font-weight: bold; background-color: #d4d4d4'>" + orgUnit.name + " Total" + "</td>";
+                    $.each(selectedReport_TableDX, function (idx, de) {
+                        var total = calculateValues(gridValuesForState, idx);
+                        htmlReport += "<td style='text-align: center; font-weight: bold; background-color: #d4d4d4;'>" + total + "</td>";
+                    });
+                    htmlReport += "</tr>";
+                //}
+            }
+        }
+        return htmlReport;
+    }
+
+    // function for getting cell values
+    function getCellValue(de, cocID, ou) {
+        var result = 0;
+        for (var i = 0; i < dataJSONArray.length; i++) {
+            if (dataJSONArray[i][0] == de && dataJSONArray[i][1] == cocID && dataJSONArray[i][2] == ou && dataJSONArray[i][3] != null) {
+                result = dataJSONArray[i][3];
+            }
+        }
+        return result;
+    }
+
+    // function for calculate data
+    function calculateValues(gridArray, tableDX_idx) {
+        var total = 0;
+        $.each(gridArray, function (idx, value) {
+            total += value[tableDX_idx];
+        });
+        return total;
+    }
+
+    // function to convert periods to more visible info
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+    // function to hide loading animation
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+        //document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+
+    function showLoad() {
+        document.getElementById("cover").style.display = "block";
+        document.getElementById("loads").style.display = "block";
+        //document.getElementById("loading").style.display="visible";
+        document.getElementsByTagName("body")[0].style.overflow = "visible";
+        //alert( "inside showload method" );
+
+    }
+</script>
+
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<script type="text/javascript">
+    // JavaScript source code
+    // Reports Excel Import: Include this in the 'report'.html as a script.
+
+    function convert(dataURI) {
+        // convert base64 to raw binary data held in a string
+        // doesn't handle URLEncoded DataURIs
+        var byteString;
+        if (dataURI.split(',')[0].indexOf('base64') >= 0)
+            byteString = atob(dataURI.split(',')[1]);
+        else
+            byteString = unescape(dataURI.split(',')[1]);
+        // separate out the mime component
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+        // write the bytes of the string to an ArrayBuffer
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+
+        // write the ArrayBuffer to a blob, and you're done
+        return new Blob([ab], {type: mimeString});
+    }
+
+    var tablesToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,', tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' + '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>DHIS_mh220</Author><Created>{created}</Created></DocumentProperties>' + '<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s64"> <Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Center" ss:Indent="0" ss:Rotate="90"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /> </Style> </Styles>' + '{worksheets}</Workbook>', tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="150"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/>{rows}</Table></Worksheet>', tmplCellXML = '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>', base64 = function (s) {
+            return window.btoa(unescape(encodeURIComponent(s)))
+        }
+                , format = function (s, c) {
+            return s.replace(/{(\w+)}/g, function (m, p) {
+                return c[p];
+            })
+        }
+
+        return function (tables, wsnames, wbname) {
+            var ctx = "";
+            var workbookXML = "";
+            var worksheetsXML = "";
+            var rowsXML = "";
+
+            for (var i = 0; i < tables.length; i++) {
+
+                if (!tables[i].nodeType)
+                    tables[i] = document.getElementById(tables[i]);
+
+                for (var j = 0; j < tables[i].rows.length; j++) {
+                    rowsXML += '<Row>';
+                    for (var k = 0; k < tables[i].rows[j].cells.length; k++) {
+
+                        var cols = tables[i].rows[j].cells[k].getAttribute("colspan");
+                        var rws = tables[i].rows[j].cells[k].getAttribute("rowspan");
+                        var styl = tables[i].rows[j].cells[k].getAttribute("bgcolor");
+                        var styl2 = tables[i].rows[j].getAttribute("bgcolor");
+                        var cls = tables[i].rows[j].cells[k].getAttribute("class");
+
+                        var dataType = 'String';
+                        var dataValue = tables[i].rows[j].cells[k].innerHTML;
+                        var typeD = "";
+                        var parsed = parseInt(dataValue);
+
+                        if (parsed == dataValue) {
+                            typeD = "Number";
+                        }
+                        else {
+                            typeD = "String";
+                        }
+
+
+                        if (styl2) {
+                            if (cols) {
+                                if (cls == "aso") {
+                                    ctx = {data: dataValue, mrg: cols - 1, sid: "s64", dtype: typeD};
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                                else {
+                                    ctx = {data: dataValue, mrg: cols - 1, sid: "s22", dtype: typeD};
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                            }
+
+                            else {
+                                if (cls == "aso") {
+                                    ctx = {data: dataValue, mrg: 0, sid: "s64", dtype: typeD};
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                                else {
+                                    ctx = {data: dataValue, mrg: 0, sid: "s22", dtype: typeD};
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                            }
+                        }
+
+                        else if (styl) {
+                            if (cols) {
+                                ctx = {data: dataValue, mrg: cols - 1, sid: "s21", dtype: typeD};
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+
+                            else {
+                                ctx = {data: dataValue, mrg: 0, sid: "s21", dtype: typeD};
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                        }
+
+                        else {
+                            if (cols) {
+                                ctx = {data: dataValue, mrg: cols - 1, sid: "Default", dtype: typeD};
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+
+                            else {
+                                ctx = {data: dataValue, mrg: 0, sid: "Default", dtype: typeD};
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+
+                        }
+
+                    }
+                    rowsXML += '</Row>'
+                }
+                ctx = {rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i};
+                worksheetsXML += format(tmplWorksheetXML, ctx);
+                rowsXML = "";
+            }
+
+            ctx = {created: (new Date()).getTime(), worksheets: worksheetsXML};
+            workbookXML = format(tmplWorkbookXML, ctx);
+
+            //console.log(workbookXML);
+
+            var link = document.createElement("A");
+            var blobUrl = URL.createObjectURL(convert(uri + base64(workbookXML)));
+            link.href = blobUrl;
+            link.download = wbname || 'Workbook.xls';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    })();
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width: 1px;
+                    height: 50px;
+                    -ms-transform: rotate(-90deg);
+                    -webkit-transform: rotate(-90deg);
+                    transform: rotate(-90deg);
+                    border-style: solid;
+                }
+
+            </style>
+            <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+<div id="cover"></div>
+
+</span></p>
+
+<input type="button" id="btnBack" class="btn btn-default btn-sm" value=" Goto Report Selection Page"
+       onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+<input type="button" class="btn btn-default btn-sm" onclick="printContent('printing');" value="Print"/>
+<input type="button" class="btn btn-default btn-sm" id="btnExport" value=" Download Excel "/>
+
+<br><br>
+
+<div id="printing">
+    <div id='state'>
+        <div>
+            <br>
+            <ul class="nav nav-tabs" style="font-size: 14px;">
+                <li class="active"><a data-toggle="tab" href="#Performance_tab">Performance</a></li>
+                <li><a data-toggle="tab" href="#Instruments_tab">Instruments</a></li>
+                <li><a data-toggle="tab" href="#Construction_tab">Construction</a></li>
+                <li><a data-toggle="tab" href="#HR_tab">HR</a></li>
+                <li><a data-toggle="tab" href="#Facility_tab">Facility</a></li>
+            </ul>
+            <div class="tab-content">
+                <div id="Performance_tab" class="tab-pane fade in active">
+                    <br>
+                    <table id="Performance_table" class="table table-bordered table-condensed table-hover table-striped" border="1" cellspacing="6" cellpadding="4" width="100%"
+                           style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div id="Instruments_tab" class="tab-pane fade">
+                    <br>
+                    <table id="Instruments_table" class="table table-bordered table-condensed table-hover table-striped" border="1" cellspacing="6" cellpadding="4" width="100%"
+                           style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div id="Construction_tab" class="tab-pane fade">
+                    <br>
+                    <table id="Construction_table" class="table table-bordered table-condensed table-hover table-striped" border="1" cellspacing="6" cellpadding="4" width="100%"
+                           style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div id="HR_tab" class="tab-pane fade">
+                    <br>
+                    <table id="HR_table" class="table table-bordered table-condensed table-hover table-striped" border="1" cellspacing="6" cellpadding="4" width="100%"
+                           style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div id="Facility_tab" class="tab-pane fade">
+                    <br>
+                    <table id="Facility_table" class="table table-bordered table-condensed table-hover table-striped" border="1" cellspacing="6" cellpadding="4" width="100%"
+                           style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,3043 @@
+<script>
+    var dxUIDs = [];
+    var deUIDs = "";
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var IDs = [];
+    var progressIDs = [];
+    var deIDs = [];
+    var totIDs = [];
+    var deUIDsString = "";
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotPeriod = params[2];
+    var gotPeriode = params[2];
+    var gotOrg = params[3];
+    var coUID = [];
+    var periodStr;
+    var arrayPeriod = [];
+
+
+    jQuery(document).ready(function () {
+
+        if (dhis2.report.organisationUnitHierarchy.length == 3) {
+            $(".hideInPrint").hide();
+            document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+            document.getElementById('peID').innerHTML = getPeriod(period);
+            // document.getElementById('peID2').innerHTML = getPeriod(gotPeriod);
+
+
+            $("#btnExport").click(function (e) {
+                window.open('data:application/vnd.ms-excel,' + encodeURIComponent($('#printing').html()));
+                e.preventDefault();
+            });
+
+
+            $("#dataTable > tbody").find("td").each(function (i, td) {
+
+                if (td.id != "") {
+                    IDs.push(td.id);
+                }
+
+            });
+            for (var a = 0; a < IDs.length; a++) {
+                if (IDs[a].indexOf('_') !== -1) {
+                    deIDs.push(IDs[a]);
+                }
+
+                else {
+                    progressIDs.push(IDs[a]);
+                }
+            }
+
+            $.each(deIDs, function (i) {
+                var d = this.split("+");
+                $.each(d, function (i) {
+
+                    if ($.inArray(d[i].split("_")[0], dxUIDs) == -1) {
+                        dxUIDs.push(d[i].split("_")[0]);
+                        deUIDs += d[i].split("_")[0] + ";";
+                    }
+
+                });
+            });
+            console.log(deIDs);
+            console.log(totIDs);
+            console.log(progressIDs);
+            getPeriodString();
+            loadData();
+        }
+        else {
+            alert("Please Select a District");
+            window.history.back();
+        }
+
+
+    });
+    function getPeriodString() {
+        var year = gotPeriod.substr(0, 4);
+        var month = gotPeriod.substring(4, 6);
+        if (month == 01 || month == 02 || month == 03) {
+            var year2 = parseInt(year) - 1;
+            var yearS = year2.toString();
+            if (month == 1) {
+                periodStr = yearS + "04" + ";" + yearS + "05" + ";" + yearS + "06" + ";" + yearS + "07" + ";" + yearS + "08" + ";" + yearS + "09" + ";" + yearS + "10" + ";" + yearS + "11" + ";" + yearS + "12" + ";" + year + "01";
+            }
+            if (month == 2) {
+                periodStr = yearS + "04" + ";" + yearS + "05" + ";" + yearS + "06" + ";" + yearS + "07" + ";" + yearS + "08" + ";" + yearS + "09" + ";" + yearS + "10" + ";" + yearS + "11" + ";" + yearS + "12" + ";" + year + "01" + ";" + year + "02";
+            }
+            if (month == 3) {
+                periodStr = yearS + "04" + ";" + yearS + "05" + ";" + yearS + "06" + ";" + yearS + "07" + ";" + yearS + "08" + ";" + yearS + "09" + ";" + yearS + "10" + ";" + yearS + "11" + ";" + yearS + "12" + ";" + year + "01" + ";" + year + "02" + ";" + year + "03";
+            }
+        }
+
+        else {
+            if (month == 4) {
+                periodStr = year + "04";
+            }
+            if (month == 5) {
+                periodStr = year + "04" + ";" + year + "05";
+            }
+            if (month == 6) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06";
+            }
+            if (month == 7) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07";
+            }
+            if (month == 8) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08";
+            }
+            if (month == 9) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08" + ";" + year + "09";
+            }
+            if (month == 10) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08" + ";" + year + "09" + ";" + year + "10";
+            }
+            if (month == 11) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08" + ";" + year + "09" + ";" + year + "10" + ";" + year + "11";
+            }
+            if (month == 12) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08" + ";" + year + "09" + ";" + year + "10" + ";" + year + "11" + ";" + year + "12";
+            }
+
+
+        }
+        arrayPeriod = periodStr.split(';');
+
+    }
+
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+    function loadData() {
+        var url = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:" + orgUnit.id + "&dimension=pe:" + periodStr;
+        $.get(url, function (json) {
+            var jsonData = json;
+            loadReport(jsonData);
+        });
+
+    }
+
+
+    function loadReport(json) {
+        var val;
+        var proVal;
+        var balance;
+        var recived;
+        var unusable;
+        var distributed;
+        var total;
+        for (var a = 0; a < IDs.length; a++) {
+
+            if (IDs[a].indexOf('_') !== -1) {
+                val = getValueForCategoryOptionCombo(json, IDs[a], orgUnit.id, period);
+                document.getElementById(IDs[a]).innerHTML = val;
+            }
+
+
+            else if (IDs[a].indexOf('-') !== -1) {
+                val = getValueForCategoryOptionCombo2(json, IDs[a], orgUnit.id, arrayPeriod);
+                document.getElementById(IDs[a]).innerHTML = val;
+            }
+
+
+            else {
+                balance = parseInt(document.getElementById(IDs[a - 4]).innerHTML);
+                recived = parseInt(document.getElementById(IDs[a - 3]).innerHTML);
+                unusable = parseInt(document.getElementById(IDs[a - 2]).innerHTML);
+                distributed = parseInt(document.getElementById(IDs[a - 1]).innerHTML);
+                total = balance + recived - unusable - distributed;
+                document.getElementById(IDs[a]).innerHTML = total;
+            }
+
+
+        }
+        hideLoad();
+    }
+
+
+    function getValueForCategoryOptionCombo(json, dx, orgUnit, period) {
+        var coc;
+        var de;
+        var result = 0;
+        var d = dx.split(".");
+        $.each(d, function (i) {
+            de = (d[i].split("_")[0]);
+            coc = d[i].split("_")[1];
+            for (var i = 0; i < json.rows.length; i++) {
+                if (json.rows[i][0] == de && json.rows[i][1] == coc && json.rows[i][2] == orgUnit && json.rows[i][3] == period && json.rows[i][4] != null) {
+                    result += parseInt(json.rows[i][4]);
+                }
+            }
+        });
+
+
+        return parseFloat(result);
+    }
+
+    function getValueForCategoryOptionCombo2(json, dx, orgUnit, period) {
+        var coc;
+        var de;
+        var result = 0;
+        var d = dx.split("+");
+        $.each(d, function (i) {
+            de = (d[i].split("-")[0]);
+            coc = d[i].split("-")[1];
+            for (var j = 0; j < period.length; j++) {
+
+                for (var i = 0; i < json.rows.length; i++) {
+
+                    if (json.rows[i][0] == de && json.rows[i][1] == coc && json.rows[i][2] == orgUnit && json.rows[i][3] == period[j] && json.rows[i][4] != null) {
+                        result += parseInt(json.rows[i][4]);
+                    }
+                }
+            }
+        });
+
+        return parseFloat(result);
+    }
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+        document.getElementById("loading").style.display = "none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+</script>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+<style>
+    #cover {
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 5;
+        width: 100%;
+        height: 100%;
+    }
+
+    #loads {
+        height: 100px;
+        width: 500px;
+        position: fixed;
+        z-index: 10;
+        margin: 0 auto;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -250px;
+        background: #999;
+        border: 5px solid #cccccc;
+        text-align = center;
+        border-radius: 5px;
+    }
+
+    #loading {
+        width: 400px;
+        font-size: 20px;
+        font-family: verdana;
+        font-weight: bolder;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin: 0 auto;
+        margin-top: -8px;
+        margin-left: -200px;
+    }
+
+</style>
+<style>
+
+    td {
+        text-align: center;
+        border: solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        padding: 5px;
+    }
+
+    tbody > tr > td:nth-child(3) {
+        text-align: left;
+    }
+</style>
+
+<p><span style="font-size:20px; align-content: center">
+<div id="loads"><p id="loading" align="center">Reports Loading... Please Wait...</p></div>
+<div id="cover"></div>
+</span></p>
+
+<input type="button" id="btnBack" value=" Goto Report Selection Page"
+       onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+<input type="button" onclick="printContent('printing');" value="Print"/>
+<input type="button" id="btnExport" value=" Download Excel "/>
+
+
+</br></br>
+
+<div id="printing">
+
+    <div id='state'>
+
+        <table id="dataTable" border="1" cellspacing="6" cellpadding="4"
+               style="border-collapse:collapse; border:solid black 2px; font:Arial, Helvetica, sans-serif">
+            <thead>
+            <tr>
+            <thead>
+            <tr style="text-align: center;font-size: 15px">
+                <td style="font-size:15px;" bgcolor="#a9a9a9" colspan="13"><b>Ministry of Health & Family Welfare</b>
+                </td>
+            </tr>
+            <tr style="text-align: center;font-size: 15px">
+                <td style="font-size:15px;" bgcolor="#a9a9a9" colspan="13"><b>(Monitoring & Evaluation Division)</b>
+                </td>
+            </tr>
+            <tr style="text-align: center;font-size: 15px">
+                <td style="font-size:15px;" bgcolor="#a9a9a9" colspan="13"><b>Monthly Return under NRHM</b></td>
+            </tr>
+
+            <tr style="text-align: center">
+                <td colspan="6"><b>Name of District:</b></td>
+                <td colspan="7" id="orgUnitID"></td>
+            </tr>
+
+            <tr style="text-align: center">
+                <td colspan="6"><b>Reporting Month:</b></td>
+                <td colspan="7" id="peID"></td>
+
+            </tr>
+            </thead>
+            <tbody>
+            <tr style="text-align: center" bgcolor="#ffd700">
+                <td><b>Part A.</b></td>
+                <td colspan="2"><b>REPRODUCTIVE HEALTH</b></td>
+                <td colspan="5"><b>Numbers reported during the month</b></td>
+                <td colspan="5"><b>Cumulative</b></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td>M1</td>
+                <td style="text-align:left" colspan="12"><b>Ante Natal Care Services (ANC)</b></td>
+            </tr>
+            <tr>
+                <td>1.1</td>
+                <td></td>
+                <td><b>Total number of pregnant women Registered for ANC</b></td>
+                <td id="YqnMcG8aR3J_M2qwONgzdom" colspan="5"></td>
+                <td id="YqnMcG8aR3J-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>1.1.1</td>
+                <td>Of which Number registered within first trimester(within 12 weeks)</td>
+                <td id="rE23kNzmz7y_M2qwONgzdom" colspan="5"></td>
+                <td id="rE23kNzmz7y-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>1.2</td>
+                <td></td>
+                <td>New women registered under JSY</td>
+                <td id="n4ha0xX6NPO_M2qwONgzdom" colspan="5"></td>
+                <td id="n4ha0xX6NPO-M2qwONgzdom" colspan="5"></td>
+
+            <tr>
+                <td>1.3</td>
+                <td></td>
+                <td>Number of pregnant women received 3 check ups</td>
+                <td id="zOXoC0O3pxY_M2qwONgzdom" colspan="5"></td>
+                <td id="zOXoC0O3pxY-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>1.4</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of pregnant women given</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>1.4.1</td>
+                <td>TT1</td>
+                <td id="iLquJw3xuO7_M2qwONgzdom" colspan="5"></td>
+                <td id="iLquJw3xuO7-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>1.4.2</td>
+                <td>TT2 or Booster</td>
+                <td id="ZE3STmfZyYR_M2qwONgzdom" colspan="5"></td>
+                <td id="ZE3STmfZyYR-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td>1.5</td>
+                <td></td>
+                <td>Total number of pregnant women given 100 IFA tablets</td>
+                <td id="ko3wt4mHVM8_M2qwONgzdom" colspan="5"></td>
+                <td id="ko3wt4mHVM8-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>1.6</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Pregnant women with Hypertension (BP>140/90)</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>1.6.1</td>
+                <td>New cases detected at institution</td>
+                <td id="m0DOGyNUAQh_M2qwONgzdom" colspan="5"></td>
+                <td id="m0DOGyNUAQh-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>1.6.2</td>
+                <td>Number of eclampsia cases managed during delivery</td>
+                <td id="cyqQL56jQDQ_M2qwONgzdom" colspan="5"></td>
+                <td id="cyqQL56jQDQ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>1.7</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Pregnant women with Anaemia</b></td>
+
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>1.7.1</td>
+                <td>Number having Hb level<11 (tested cases)</td>
+                <td id="chTLe4nLwE9_M2qwONgzdom" colspan="5"></td>
+                <td id="chTLe4nLwE9-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>1.7.2</td>
+                <td>Number having severe anaemia (Hb<7) treated at institution</td>
+                <td id="EAFKMk7PcMh_M2qwONgzdom" colspan="5"></td>
+                <td id="EAFKMk7PcMh-M2qwONgzdom" colspan="5"></td>
+            </tr>
+
+            <tr bgcolor="#90ee90">
+                <td><b>M2</b></td>
+                <td style="text-align:left" colspan="12"><b>Deliveries</b></td>
+
+
+            </tr>
+            <tr>
+                <td>2.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Deliveries conducted at Home</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>2.1.1</td>
+                <td style="text-align:left" colspan="11">Number of Home Deliveries attended by</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>SBA Trained (Doctor/Nurse/ANM)</td>
+                <td id="k0BUIq5IMTF_M2qwONgzdom" colspan="5"></td>
+                <td id="k0BUIq5IMTF-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Non SBA (Trained TBA/Relatives/etc.)</td>
+                <td id="nn54WSEcJJW_M2qwONgzdom" colspan="5"></td>
+                <td id="nn54WSEcJJW-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (b)}</td>
+                <td id="k0BUIq5IMTF_M2qwONgzdom.nn54WSEcJJW_M2qwONgzdom" colspan="5"></td>
+                <td id="k0BUIq5IMTF-M2qwONgzdom+nn54WSEcJJW-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>2.1.2</td>
+                <td>Number of newborns visited within 24 hours of Home Delivery</td>
+                <td id="CApVkL9JiZK_M2qwONgzdom" colspan="5"></td>
+                <td id="CApVkL9JiZK-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>2.1.3</td>
+                <td>Number of mothers paid JSY incentive for Home deliveries</td>
+                <td id="GuGairCeJQj_M2qwONgzdom" colspan="5"></td>
+                <td id="GuGairCeJQj-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>2.2</td>
+                <td></td>
+                <td><b>Deliveries conducted at Public Institutions (Including C-Sections)</b></td>
+                <td id="AukgVumsMDX_M2qwONgzdom.HAFGsptHaLx_M2qwONgzdom.it5GokVG5qb_M2qwONgzdom.Vf6VduSLx97_M2qwONgzdom.IGIF3J7WPI3_M2qwONgzdom.YnRQVlzZ9Mg_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="AukgVumsMDX-M2qwONgzdom+HAFGsptHaLx-M2qwONgzdom+it5GokVG5qb-M2qwONgzdom+Vf6VduSLx97-M2qwONgzdom+IGIF3J7WPI3-M2qwONgzdom+YnRQVlzZ9Mg-M2qwONgzdom"
+                    colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>2.2.1</td>
+                <td>Out of 2.2, Number discharged under 48 hours of delivery</td>
+                <td id="A55QsbcOGdV_M2qwONgzdom" colspan="5"></td>
+                <td id="A55QsbcOGdV-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td> 2.2.2</td>
+                <td style="text-align:left" colspan="11"><strong>Number of cases where JSY incentive paid to</strong>
+                </td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Mothers</td>
+                <td id="x0flFj0d5yd_M2qwONgzdom" colspan="5"></td>
+                <td id="x0flFj0d5yd-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>ASHAs</td>
+                <td id="R5uCMZN32uM_M2qwONgzdom" colspan="5"></td>
+                <td id="R5uCMZN32uM-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td> <!--Mapping Wrong-->
+                <td style="text-align: right">(c)</td>
+                <td>ANM or AWW (only for HPS States)</td>
+                <td id="LrBj906zcFo_M2qwONgzdom" colspan="5"></td>
+                <td id="LrBj906zcFo-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>2.3</td> <!--Mapping Wrong-->
+                <td></td>
+                <td><b>Deliveries conducted at Private Institutions (Including C-Sections)</b></td>
+                <td colspan="5"></td>
+                <td colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>2.3.1</td>
+                <td style="text-align:left" colspan="11">Number of institutional delivery cases where JSY incentive paid
+                    to
+                </td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Mothers</td>
+                <td id="fppW1tsP27r_M2qwONgzdom" colspan="5"></td>
+                <td id="fppW1tsP27r-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>ASHAs</td>
+                <td id="NMuszmg4Occ_M2qwONgzdom" colspan="5"></td>
+                <td id="NMuszmg4Occ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align:right">(c)</td>
+                <td>ANM or AWW (only for HPS States)</td>
+                <td id="Sbtupro9lP1_M2qwONgzdom" colspan="5"></td>
+                <td id="Sbtupro9lP1-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M3</b></td>
+                <td style="text-align:left" colspan="12"><b>Number of Caesarean (C-Section) deliveries performed at </b>
+                </td>
+
+            </tr>
+            <tr>
+                <td>3.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Public facilities</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>3.1.1</td>
+                <td>PHC</td>
+                <td id="oXW5DzoNQBW_M2qwONgzdom" colspan="5"></td>
+                <td id="oXW5DzoNQBW-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>3.1.2</td>
+                <td>CHC</td>
+                <td id="ZMSlRCIluFp_M2qwONgzdom" colspan="5"></td>
+                <td id="ZMSlRCIluFp-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>3.1.3</td>
+                <td>Sub-divisional hospital/District Hospital</td>
+                <td id="NxIXYZOiybh_M2qwONgzdom" colspan="5"></td>
+                <td id="NxIXYZOiybh-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>3.1.4</td>
+                <td>At Other State Owned Public Institutions</td>
+                <td id="pRtQ48AsVKO_M2qwONgzdom" colspan="5"></td>
+                <td id="pRtQ48AsVKO-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(3.1.1) to (3.1.4)}</td>
+                <td id="oXW5DzoNQBW_M2qwONgzdom.ZMSlRCIluFp_M2qwONgzdom.NxIXYZOiybh_M2qwONgzdom.pRtQ48AsVKO_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="oXW5DzoNQBW-M2qwONgzdom+ZMSlRCIluFp-M2qwONgzdom+NxIXYZOiybh-M2qwONgzdom+pRtQ48AsVKO-M2qwONgzdom"
+                    colspan="5"></td>
+            </tr>
+            <tr>
+                <td>3.2</td>
+                <td></td>
+                <td style="text-align:left"><b>Private facilities</b></td>
+                <td id="PuEXNgjjUr5_M2qwONgzdom" colspan="5"></td>
+                <td id="PuEXNgjjUr5-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M4</b></td>
+                <td style="text-align:left" colspan="12"><b>Pregnancy outcome & weight of new-born</b></td>
+            </tr>
+            <tr>
+                <td>4.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11">Pregnancy Outcome (in number)</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>4.1.1</td>
+                <td style="text-align:left" colspan="11"><b>Live Birth</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="gU3vTTWhp43_M2qwONgzdom" colspan="5"></td>
+                <td id="gU3vTTWhp43-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+                <td id="Wmeny7kOqV3_M2qwONgzdom" colspan="5"></td>
+                <td id="Wmeny7kOqV3-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total ({a} + {b})</td>
+                <td id="gU3vTTWhp43_M2qwONgzdom.Wmeny7kOqV3_M2qwONgzdom" colspan="5"></td>
+                <td id="gU3vTTWhp43-M2qwONgzdom+Wmeny7kOqV3-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>4.1.2</td>
+                <td>Still Birth</td>
+                <td id="c3TKx9dDLXi_M2qwONgzdom" colspan="5"></td>
+                <td id="c3TKx9dDLXi-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>4.1.3</td>
+                <td>Abortion (spontaneous/induced)</td>
+                <td id="B8jjQvIvAXA_M2qwONgzdom" colspan="5"></td>
+                <td id="B8jjQvIvAXA-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>4.2</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Details of Newborn children weighed</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>4.2.1</td>
+                <td>Number of Newborns weighed at birth</td>
+                <td id="KHslMm6kvRR_M2qwONgzdom+r60HixnVjdH_M2qwONgzdom" colspan="5"></td>
+                <td id="KHslMm6kvRR-M2qwONgzdom+r60HixnVjdH-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>4.2.2</td>
+                <td>Number of Newborns having weight less than 2.5 kg</td>
+                <td id="FICRLHFjuy3_M2qwONgzdom+D8tOBm1uS6m_M2qwONgzdom+wGaTZoOIEJr_M2qwONgzdom+SpAKoe14EZj_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="FICRLHFjuy3-M2qwONgzdom+D8tOBm1uS6m-M2qwONgzdom+wGaTZoOIEJr-M2qwONgzdom+SpAKoe14EZj-M2qwONgzdom"
+                    colspan="5"></td>
+            </tr>
+            <tr>
+                <td>4.3</td>
+                <td></td>
+                <td>Number of Newborns breast fed within 1 hour of birth</td>
+                <td id="p5zoJdFj4TG_M2qwONgzdom+qCP9x1TEjmM_M2qwONgzdom" colspan="5"></td>
+                <td id="p5zoJdFj4TG-M2qwONgzdom+qCP9x1TEjmM-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M5</b></td>
+                <td style="text-align:left" colspan="12"><b>Complicated pregnancies</b></td>
+
+            </tr>
+            <tr>
+                <td>5.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11">Number of cases of pregnant women with Obstetric Complications
+                    and attended at <b>Public</b>
+                    facilities
+                </td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>5.1.1</td>
+                <td>PHC</td>
+                <td id="C9CaYqaC9VO_M2qwONgzdom" colspan="5"></td>
+                <td id="C9CaYqaC9VO-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>5.1.2</td>
+                <td>CHC</td>
+                <td id="uMWY8slEn63_M2qwONgzdom" colspan="5"></td>
+                <td id="uMWY8slEn63-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>5.1.3</td>
+                <td>Sub-divisional hospital/District Hospital</td>
+                <td id="l02F9H2CvMB_M2qwONgzdom" colspan="5"></td>
+                <td id="l02F9H2CvMB-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>5.1.4</td>
+                <td colspan="1">At Other State Owned <b>Public</b> Institutions</td>
+                <td id="unyGpi8fxcW_M2qwONgzdom" colspan="5"></td>
+                <td id="unyGpi8fxcW-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(5.1.1) to (5.1.4)}</td>
+                <td id="C9CaYqaC9VO_M2qwONgzdom.uMWY8slEn63_M2qwONgzdom.l02F9H2CvMB_M2qwONgzdom.unyGpi8fxcW_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="C9CaYqaC9VO-M2qwONgzdom+uMWY8slEn63-M2qwONgzdom+l02F9H2CvMB-M2qwONgzdom+unyGpi8fxcW-M2qwONgzdom"
+                    colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td>5.2</td>
+                <td></td>
+                <td><b>Number of cases of pregnant women with Obstetric Complications and attended at Private
+                    facilities</b>
+                </td>
+                <td id="aFINSmilAhA_M2qwONgzdom" colspan="5"></td>
+                <td id="aFINSmilAhA-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>5.3</td>
+                <td></td>
+                <td style="text-align:left" colspan="11">Number of Complicated pregnancies treated with</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>5.3.1</td>
+                <td>IV antibiotics</td>
+                <td id="o62dBI8rGP7_M2qwONgzdom" colspan="5"></td>
+                <td id="o62dBI8rGP7-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>5.3.2</td>
+                <td>IV antihypertensive/Magsulph injection</td>
+                <td id="ymq15usaOvC_M2qwONgzdom" colspan="5"></td>
+                <td id="ymq15usaOvC-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>5.3.3</td>
+                <td>IV Oxytocis</td>
+                <td id="rrGNzMdYuMS_M2qwONgzdom" colspan="5"></td>
+                <td id="rrGNzMdYuMS-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>5.3.4</td>
+                <td>Blood Transfusion</td>
+                <td id="p15nPZuTd6Z_M2qwONgzdom" colspan="5"></td>
+                <td id="p15nPZuTd6Z-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M6</b></td>
+                <td style="text-align:left" colspan="12"><b>Post - Natal Care</b></td>
+
+            </tr>
+            <tr>
+                <td>6.1</td>
+                <td></td>
+                <td>Women receiving post partum check-up within 48 hours after delivery</td>
+                <td id="fSdkBmUaN3i_M2qwONgzdom" colspan="5"></td>
+                <td id="fSdkBmUaN3i-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>6.2</td>
+                <td></td>
+                <td>Women getting a post partum check up between 48 hours and 14 days</td>
+                <td id="Z2GkcDeSl9i_M2qwONgzdom" colspan="5"></td>
+                <td id="Z2GkcDeSl9i-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>6.3</td>
+                <td></td>
+                <td>PNC maternal complications attended</td>
+                <td id="ViIkklM2kzP_M2qwONgzdom" colspan="5"></td>
+                <td id="ViIkklM2kzP-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M7</b></td>
+                <td style="text-align:left" colspan="12"><b>Medical Termination of Pregnancy (MTP</b>)</td>
+
+            </tr>
+            <tr>
+                <td>7.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of MTPs conducted at Public Institutions</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>7.1.1</td>
+                <td>Up to 12 weeks of pregnancy</td>
+                <td id="M3klVph6mGa_M2qwONgzdom" colspan="5"></td>
+                <td id="M3klVph6mGa-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>7.1.2</td>
+                <td>More than 12 weeks of pregnancy</td>
+                <td id="O5auS9Le3XG_M2qwONgzdom" colspan="5"></td>
+                <td id="O5auS9Le3XG-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(7.1.1) to (7.1.2)}</td>
+                <td id="M3klVph6mGa_M2qwONgzdom.O5auS9Le3XG_M2qwONgzdom" colspan="5"></td>
+                <td id="M3klVph6mGa-M2qwONgzdom+O5auS9Le3XG-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>7.2</td>
+                <td></td>
+                <td>Number of MTPs conducted at Private Facilities</td>
+                <td id="wquxWTfdQZF_M2qwONgzdom" colspan="5"></td>
+                <td id="wquxWTfdQZF-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M8</b></td>
+                <td style="text-align:left" colspan="12"><b>RTI/STI Cases</b></td>
+
+            </tr>
+            <tr>
+                <td>8.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of new RTI/STI for which treatment initiated</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="dWgLHgHQjJ3_M2qwONgzdom" colspan="5"></td>
+                <td id="dWgLHgHQjJ3-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+                <td id="q1SPLteZ0e6_M2qwONgzdom" colspan="5"></td>
+                <td id="q1SPLteZ0e6-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (b)}</td>
+                <td id="dWgLHgHQjJ3_M2qwONgzdom.q1SPLteZ0e6_M2qwONgzdom" colspan="5"></td>
+                <td id="dWgLHgHQjJ3-M2qwONgzdom+q1SPLteZ0e6-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>8.2</td>
+                <td></td>
+                <td>Number of wet mount tests conducted</td>
+                <td id="dzNgioxaOAY_M2qwONgzdom" colspan="5"></td>
+                <td id="dzNgioxaOAY-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M9</b></td>
+                <td style="text-align:left" colspan="12"><b>Family Planning</b></td>
+
+            </tr>
+            <tr>
+                <td>9.01</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of NSV/Conventional Vasectomy conducted</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.1.1</td>
+                <td style="text-align:left" colspan="11">At Public facilities</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>At PHCs</td>
+                <td id="PNWnVx8UXPF_M2qwONgzdom" colspan="5"></td>
+                <td id="PNWnVx8UXPF-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>At CHCs</td>
+                <td id="OeRlPy2md2V_M2qwONgzdom" colspan="5"></td>
+                <td id="OeRlPy2md2V-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c)</td>
+                <td>At Sub-divisional hospitals/ District Hospitals</td>
+                <td id="AyvCbiKbRzg_M2qwONgzdom" colspan="5"></td>
+                <td id="AyvCbiKbRzg-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(d)</td>
+                <td>At Other State Owned Public Institutions</td>
+                <td id="SlsEtvTRL94_M2qwONgzdom" colspan="5"></td>
+                <td id="SlsEtvTRL94-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (d)}</td>
+                <td id="PNWnVx8UXPF_M2qwONgzdom.OeRlPy2md2V_M2qwONgzdom.AyvCbiKbRzg_M2qwONgzdom.SlsEtvTRL94_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="PNWnVx8UXPF-M2qwONgzdom+OeRlPy2md2V-M2qwONgzdom+AyvCbiKbRzg-M2qwONgzdom+SlsEtvTRL94-M2qwONgzdom"
+                    colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.1.2</td>
+                <td>At Private facilities</td>
+                <td id="ytVGfXAarvN_M2qwONgzdom" colspan="5"></td>
+                <td id="ytVGfXAarvN-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td>9.02</td>
+                <td></td>
+                <td colspan="1"><b>Number of Laparoscopic sterilizations conducted</b></td>
+                <td id="kUs5fC0q31X_uUQDv26JuYM" colspan="5"></td>
+                <td id="kUs5fC0q31X-uUQDv26JuYM" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.2.1</td>
+                <td style="text-align:left" colspan="11">At Public facilities</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>At PHCs</td>
+                <td id="bLbXicuSUgE_M2qwONgzdom" colspan="5"></td>
+                <td id="bLbXicuSUgE-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>At CHCs</td>
+                <td id="Xy7Dx5fyoP1_M2qwONgzdom" colspan="5"></td>
+                <td id="Xy7Dx5fyoP1-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c)</td>
+                <td>At Sub-divisional hospitals/ District Hospitals</td>
+                <td id="B1CS3ez1ou8_M2qwONgzdom" colspan="5"></td>
+                <td id="B1CS3ez1ou8-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(d)</td>
+                <td>At Other State Owned Public Institutions</td>
+                <td id="grXaG5sb7Uh_M2qwONgzdom" colspan="5"></td>
+                <td id="grXaG5sb7Uh-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (d)}</td>
+                <td id="bLbXicuSUgE_M2qwONgzdom.Xy7Dx5fyoP1_M2qwONgzdom.B1CS3ez1ou8_M2qwONgzdom.grXaG5sb7Uh_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="bLbXicuSUgE-M2qwONgzdom+Xy7Dx5fyoP1-M2qwONgzdom+B1CS3ez1ou8-M2qwONgzdom+grXaG5sb7Uh-M2qwONgzdom"
+                    colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.2.2</td>
+                <td>At Private facilities</td>
+                <td id="zLNCbwUqnGW_M2qwONgzdom" colspan="5"></td>
+                <td id="zLNCbwUqnGW-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.03</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of Mini-lap (other than post-partum) sterilizations
+                    conducted</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.3.1</td>
+                <td style="text-align:left" colspan="11">At Public facilities</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>At PHCs</td>
+                <td id="TuelPKLfQam_M2qwONgzdom" colspan="5"></td>
+                <td id="TuelPKLfQam-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>At CHCs</td>
+                <td id="CGt8AFfD3mk_M2qwONgzdom" colspan="5"></td>
+                <td id="CGt8AFfD3mk-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c)</td>
+                <td>At Sub-divisional hospitals/ District Hospitals</td>
+                <td id="WVIMRqRPipm_M2qwONgzdom" colspan="5"></td>
+                <td id="WVIMRqRPipm-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(d)</td>
+                <td>At Other State Owned Public Institutions</td>
+                <td id="vrd9mnyNDlB_M2qwONgzdom" colspan="5"></td>
+                <td id="vrd9mnyNDlB-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (d)}</td>
+                <td id="TuelPKLfQam_M2qwONgzdom.CGt8AFfD3mk_M2qwONgzdom.WVIMRqRPipm_M2qwONgzdom.vrd9mnyNDlB_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="TuelPKLfQam-M2qwONgzdom+CGt8AFfD3mk-M2qwONgzdom+WVIMRqRPipm-M2qwONgzdom+vrd9mnyNDlB-M2qwONgzdom"
+                    colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.3.2</td>
+                <td>At Private facilities</td>
+                <td id="fWQRwkKqXTB_M2qwONgzdom" colspan="5"></td>
+                <td id="fWQRwkKqXTB-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.04</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of Minilap Post-Partum (within 7 days of delivery)
+                    sterilizations conducted</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.4.1</td>
+                <td style="text-align:left" colspan="11">Public facilities</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>At PHCs</td>
+                <td id="XA1w2BunkEr_M2qwONgzdom" colspan="5"></td>
+                <td id="XA1w2BunkEr-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>At CHCs</td>
+                <td id="crqTv4cXoVj_M2qwONgzdom" colspan="5"></td>
+                <td id="crqTv4cXoVj-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c)</td>
+                <td>At Sub-divisional hospitals/ District Hospitals</td>
+                <td id="m4qAQUAp9Ha_M2qwONgzdom" colspan="5"></td>
+                <td id="m4qAQUAp9Ha-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(d)</td>
+                <td>At Other State Owned Public Institutions</td>
+                <td id="sME3NF07EU9_M2qwONgzdom" colspan="5"></td>
+                <td id="sME3NF07EU9-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (d)}</td>
+                <td id="XA1w2BunkEr_M2qwONgzdom.crqTv4cXoVj_M2qwONgzdom.m4qAQUAp9Ha_M2qwONgzdom.sME3NF07EU9_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="XA1w2BunkEr-M2qwONgzdom+crqTv4cXoVj-M2qwONgzdom+m4qAQUAp9Ha-M2qwONgzdom+sME3NF07EU9-M2qwONgzdom"
+                    colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.4.2</td>
+                <td>Private facilities</td>
+                <td id="ahy3IBcpFiZ_M2qwONgzdom" colspan="5"></td>
+                <td id="ahy3IBcpFiZ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.05</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of IUCD Insertions</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.5.1</td>
+                <td style="text-align:left   " colspan="11">Public facilities</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>At Sub-Centres</td>
+                <td id="qGw31kmOBqX_M2qwONgzdom" colspan="5"></td>
+                <td id="qGw31kmOBqX-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>At PHCs</td>
+                <td id="CBqTcciIYa7_M2qwONgzdom" colspan="5"></td>
+                <td id="CBqTcciIYa7-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c)</td>
+                <td>At CHCs</td>
+                <td id="RyoEGIR0zrA_M2qwONgzdom" colspan="5"></td>
+                <td id="RyoEGIR0zrA-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(d)</td>
+                <td>At Sub-divisional hospitals/ District Hospitals</td>
+                <td id="JtUbHZWjgP7_M2qwONgzdom" colspan="5"></td>
+                <td id="JtUbHZWjgP7-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(e)</td>
+                <td>At Other State Owned Public Institutions</td>
+                <td id="fCWHjG3MrG9_M2qwONgzdom" colspan="5"></td>
+                <td id="fCWHjG3MrG9-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (e)}</td>
+                <td id="qGw31kmOBqX_M2qwONgzdom.CBqTcciIYa7_M2qwONgzdom.RyoEGIR0zrA_M2qwONgzdom.JtUbHZWjgP7_M2qwONgzdom.fCWHjG3MrG9_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="qGw31kmOBqX-M2qwONgzdom+CBqTcciIYa7-M2qwONgzdom+RyoEGIR0zrA-M2qwONgzdom+JtUbHZWjgP7-M2qwONgzdom+fCWHjG3MrG9-M2qwONgzdom"
+                    colspan="5"></td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>9.5.2</td>
+                <td>Private facilities</td>
+                <td id="Lc7g2lmGXbt_M2qwONgzdom" colspan="5"></td>
+                <td id="Lc7g2lmGXbt-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.06</td>
+                <td></td>
+                <td>Number of IUCD removals</td>
+                <td id="cZ4BA4NaDHb_M2qwONgzdom" colspan="5"></td>
+                <td id="cZ4BA4NaDHb-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.07</td>
+                <td></td>
+                <td>Number of Oral Pills cycles distributed</td>
+                <td id="vT2BB8doV0L_M2qwONgzdom" colspan="5"></td>
+                <td id="vT2BB8doV0L-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.08</td>
+                <td></td>
+                <td>Number of Condom pieces distributed</td>
+                <td id="fiSkLEBO0RY_M2qwONgzdom" colspan="5"></td>
+                <td id="fiSkLEBO0RY-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.09</td>
+                <td></td>
+                <td>Number of Centchroman (weekly) pills given</td>
+                <td id="BLx7yA8AXAD_M2qwONgzdom" colspan="5"></td>
+                <td id="BLx7yA8AXAD-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.10</td>
+                <td></td>
+                <td>Number of Emergency Contraceptive Pills distributed</td>
+                <td id="XERzKWQqGNa_M2qwONgzdom" colspan="5"></td>
+                <td id="XERzKWQqGNa-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.11</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Quality in sterilization services</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.11.1</td>
+                <td style="text-align:left" colspan="11">Number of <b>complications</b> following sterilization</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="UR5FZWngNcQ_M2qwONgzdom" colspan="5"></td>
+                <td id="UR5FZWngNcQ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+                <td id="uipyF8tHnIq_M2qwONgzdom" colspan="5"></td>
+                <td id="uipyF8tHnIq-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.11.2</td>
+                <td style="text-align:left" colspan="11">Number of <b>failures</b> following sterilization</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="IMNefm4Amdw_M2qwONgzdom" colspan="5"></td>
+                <td id="IMNefm4Amdw-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+                <td id="DKd1yE2fkWB_M2qwONgzdom" colspan="5"></td>
+                <td id="DKd1yE2fkWB-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>9.11.3</td>
+                <td style="text-align:left" colspan="11">Number of <b>deaths</b> following sterilization</td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="A7u4PsUxp7B_M1MrbiHaImE" colspan="5"></td>
+                <td id="A7u4PsUxp7B-M1MrbiHaImE" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+                <td id="A7u4PsUxp7B_dvEFXDwOJQy" colspan="5"></td>
+                <td id="A7u4PsUxp7B-dvEFXDwOJQy" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>9.12</td>
+                <td></td>
+                <td>Number of Institutions having NSV trained doctors</td>
+                <td id="jbWRHlESJFF_M2qwONgzdom" colspan="5"></td>
+                <td id="jbWRHlESJFF-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M10</b></td>
+                <td style="text-align:left" colspan="12"><b>CHILD IMMUNIZATION</b></td>
+
+
+            </tr>
+            <tr>
+                <td>10.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of Infants 0 to 11 months old who received the
+                    following:</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.01</td>
+                <td>BCG</td>
+                <td id="BzPhRfomdQZ_M2qwONgzdom" colspan="5"></td>
+                <td id="BzPhRfomdQZ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.02</td>
+                <td>DPT1</td>
+                <td id="TsZEllpsR4r_M2qwONgzdom" colspan="5"></td>
+                <td id="TsZEllpsR4r-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.03</td>
+                <td>DPT2</td>
+                <td id="r8K3Up53Ymw_M2qwONgzdom" colspan="5"></td>
+                <td id="r8K3Up53Ymw-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.04</td>
+                <td>DPT3</td>
+                <td id="bTZWnGHDURE_M2qwONgzdom" colspan="5"></td>
+                <td id="bTZWnGHDURE-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.05</td>
+                <td>OPV 0 (Birth Dose)</td>
+                <td id="jKxaNGvVyqI_M2qwONgzdom" colspan="5"></td>
+                <td id="jKxaNGvVyqI-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.06</td>
+                <td>OPV1</td>
+                <td id="lyWS18ztEiq_M2qwONgzdom" colspan="5"></td>
+                <td id="lyWS18ztEiq-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.07</td>
+                <td>OPV2</td>
+                <td id="JEtR8u8OYa2_M2qwONgzdom" colspan="5"></td>
+                <td id="JEtR8u8OYa2-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.08</td>
+                <td>OPV 3</td>
+                <td id="BJyPxgU3gOp_M2qwONgzdom" colspan="5"></td>
+                <td id="BJyPxgU3gOp-M2qwONgzdom" colspan="5"></td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>10.1.09</td>
+                <td>Hepatitis-B1</td>
+                <td id="sLPEnKAczYT_M2qwONgzdom" colspan="5"></td>
+                <td id="sLPEnKAczYT-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.10</td>
+                <td>Hepatitis-B2</td>
+                <td id="dgb9nbFX4Qd_M2qwONgzdom" colspan="5"></td>
+                <td id="dgb9nbFX4Qd-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.11</td>
+                <td>Hepatitis-B3</td>
+                <td id="iRU6pU7XmrO_M2qwONgzdom" colspan="5"></td>
+                <td id="iRU6pU7XmrO-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.1.12</td>
+                <td>Measles</td>
+                <td id="JEXYOjNi4Gk_M2qwONgzdom" colspan="5"></td>
+                <td id="JEXYOjNi4Gk-M2qwONgzdom" colspan="5"></td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>10.1.13</td>
+                <td style="text-align:left" colspan="11">Total number of children aged between 9 and 11 months who have
+                    been <b>fully
+                        immunised</b>
+                    (BCG+DPT123/pentavalent123+OPV123+Measles) during the month
+                </td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="DHIgg0wm3NP_M2qwONgzdom" colspan="5"></td>
+                <td id="DHIgg0wm3NP-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+                <td id="fLUD5e2IpaQ_M2qwONgzdom" colspan="5"></td>
+                <td id="fLUD5e2IpaQ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (b)}</td>
+                <td id="DHIgg0wm3NP_M2qwONgzdom.fLUD5e2IpaQ_M2qwONgzdom" colspan="5"></td>
+                <td id="DHIgg0wm3NP-M2qwONgzdom+fLUD5e2IpaQ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>10.2</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of children more than 16 months who received the
+                    following</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.2.1</td>
+                <td>DPT Booster</td>
+                <td id="n7NJX6eGtLY_M2qwONgzdom" colspan="5"></td>
+                <td id="n7NJX6eGtLY-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.2.2</td>
+                <td>OPV Booster</td>
+                <td id="FApNtk8ZSpo_M2qwONgzdom" colspan="5"></td>
+                <td id="FApNtk8ZSpo-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.2.3</td>
+                <td>Measles, Mumps, Rubella (MMR) Vaccine</td>
+                <td id="F1mVCxxssHH_M2qwONgzdom" colspan="5"></td>
+                <td id="F1mVCxxssHH-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>10.3</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Immunisation Status</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.3.1</td>
+                <td style="text-align:left" colspan="11">Total number of children aged between <b>12 and 23 months</b>
+                    who have been <b>fully
+                        immunised</b>
+                </td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="lPjeU37zySl_M2qwONgzdom" colspan="5"></td>
+                <td id="lPjeU37zySl-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+                <td id="xQdloISTc60_M2qwONgzdom" colspan="5"></td>
+                <td id="xQdloISTc60-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (b)}</td>
+                <td id="lPjeU37zySl_M2qwONgzdom.xQdloISTc60_M2qwONgzdom" colspan="5"></td>
+                <td id="lPjeU37zySl-M2qwONgzdom+xQdloISTc60-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.3.2</td>
+                <td>Children more than 5 years given DPT5/DT5</td>
+                <td id="aI49OUxq1GH_M2qwONgzdom" colspan="5"></td>
+                <td id="aI49OUxq1GH-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.3.3</td>
+                <td>Children more than 10 years given TT10</td>
+                <td id="S5GtyC2y5D7_M2qwONgzdom" colspan="5"></td>
+                <td id="S5GtyC2y5D7-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.3.4</td>
+                <td>Children more than 16 years given TT16</td>
+                <td id="YXHF8pERC4p_M2qwONgzdom" colspan="5"></td>
+                <td id="YXHF8pERC4p-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.3.5</td>
+                <td style="text-align:left" colspan="11"><b>Adverse Event Following Immunisation (AEFI)</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Abscess</td>
+                <td id="ijtTs5wuuwQ_M2qwONgzdom" colspan="5"></td>
+                <td id="ijtTs5wuuwQ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Death</td>
+                <td id="DwCNX2nozZL_M1MrbiHaImE.DwCNX2nozZL_dvEFXDwOJQy.SlNs7tk1VpI_M1MrbiHaImE.SlNs7tk1VpI_dvEFXDwOJQy.eZjAZvaNPoC_M1MrbiHaImE.eZjAZvaNPoC_dvEFXDwOJQy.h40lJSXJ1l6_M1MrbiHaImE.h40lJSXJ1l6_dvEFXDwOJQy.iynn3Cdfdmd_M1MrbiHaImE.iynn3Cdfdmd_dvEFXDwOJQy.mj9W4r0KL7a_M2qwONgzdom"
+                    colspan="5"></td>
+                <td id="DwCNX2nozZL_M1MrbiHaImE+DwCNX2nozZL-dvEFXDwOJQy+SlNs7tk1VpI-M1MrbiHaImE+SlNs7tk1VpI-dvEFXDwOJQy+eZjAZvaNPoC-M1MrbiHaImE+eZjAZvaNPoC-dvEFXDwOJQy+h40lJSXJ1l6-M1MrbiHaImE+h40lJSXJ1l6-dvEFXDwOJQy+iynn3Cdfdmd-M1MrbiHaImE+iynn3Cdfdmd-dvEFXDwOJQy+mj9W4r0KL7a-M2qwONgzdom"
+                    colspan="5"></td>
+
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c)</td>
+                <td>Others</td>
+                <td id="OdO0lw7O0oE_M2qwONgzdom" colspan="5"></td>
+                <td id="OdO0lw7O0oE-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>10.4</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Number of Immunisation sessions during the month</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.4.1</td>
+                <td>Planned</td>
+                <td id="Eynr9atdSsg_M2qwONgzdom" colspan="5"></td>
+                <td id="Eynr9atdSsg-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>10.4.2</td>
+                <td>Held</td>
+                <td id="o16daVy4oAq_M2qwONgzdom" colspan="5"></td>
+                <td id="o16daVy4oAq-M2qwONgzdom" colspan="5"></td>
+            <tr>
+                <td></td>
+                <td>10.4.3</td>
+                <td>Number of sessions where ASHAs were present</td>
+                <td id="g2AqQHlhGTO_M2qwONgzdom" colspan="5"></td>
+                <td id="g2AqQHlhGTO-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>10.5</td>
+                <td></td>
+                <td colspan="1"><b>Others {Japanese Encephalitis (JE) etc. Please Specify}</b></td>
+                <td id="IgQWUjluI8g_M2qwONgzdom" colspan="5"></td>
+                <td id="IgQWUjluI8g-M2qwONgzdom" colspan="5"></td>
+            </tr>
+
+            <tr bgcolor="#90ee90">
+                <td><b>M11</b></td>
+                <td style="text-align:left" colspan="12"><b>Number of Vitamin A doses</b></td>
+
+            </tr>
+            <tr>
+                <td>11.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Administered between 9 months and 5 years</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>11.1.1</td>
+                <td>Dose-1</td>
+                <td id="n4urAIXq5Ft_M2qwONgzdom" colspan="5"></td>
+                <td id="n4urAIXq5Ft-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>11.1.2</td>
+                <td>Dose-5</td>
+                <td id="PTIvCd2Krps_M2qwONgzdom" colspan="5"></td>
+                <td id="PTIvCd2Krps-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>11.1.3</td>
+                <td>Dose-9</td>
+                <td id="GhHnj8N6oqg_M2qwONgzdom" colspan="5"></td>
+                <td id="GhHnj8N6oqg-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M12</b></td>
+                <td style="text-align:left" colspan="12"><b>Number of cases of Childhood Diseases reported during the
+                    month (0-5 years)</b></td>
+
+            </tr>
+            <tr>
+                <td>12.1</td>
+                <td></td>
+                <td>Diphtheria</td>
+                <td id="XaUdwom3m3W_M2qwONgzdom" colspan="5"></td>
+                <td id="XaUdwom3m3W-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>12.2</td>
+                <td></td>
+                <td>Pertussis</td>
+                <td id="JTyl5AJCNUO_M2qwONgzdom" colspan="5"></td>
+                <td id="JTyl5AJCNUO-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>12.3</td>
+                <td></td>
+                <td>Tetanus Neonatorum</td>
+                <td id="wVSa3auHREo_M2qwONgzdom" colspan="5"></td>
+                <td id="wVSa3auHREo-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td>12.4</td>
+                <td></td>
+                <td>Tetanus others</td>
+                <td id="I3GTgQ4EkHz_M2qwONgzdom" colspan="5"></td>
+                <td id="I3GTgQ4EkHz-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>12.5</td>
+                <td></td>
+                <td>Polio</td>
+                <td id="dQXVs6eCXxX_M2qwONgzdom" colspan="5"></td>
+                <td id="dQXVs6eCXxX-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>12.6</td>
+                <td></td>
+                <td>Measles</td>
+                <td id="dOswsXdmWgf_M2qwONgzdom" colspan="5"></td>
+                <td id="dOswsXdmWgf-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>12.7</td>
+                <td></td>
+                <td>Diarrhoea and dehydration</td>
+                <td id="IopkwEkMRHH_M2qwONgzdom" colspan="5"></td>
+                <td id="IopkwEkMRHH-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>12.8</td>
+                <td></td>
+                <td>Malaria</td>
+                <td id="r49BXPMDM19_M2qwONgzdom" colspan="5"></td>
+                <td id="r49BXPMDM19-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>12.9</td>
+                <td></td>
+                <td>Number admitted with Respiratory Infections</td>
+                <td id="gEKzKqmTR9U_M2qwONgzdom" colspan="5"></td>
+                <td id="gEKzKqmTR9U-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#ffd700">
+                <td><b>Part B.</b></td>
+                <td style="text-align:left" colspan="12"><b>Other Programmes</b></td>
+
+
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M13</b></td>
+                <td style="text-align:left" colspan="12"><b>Blindness Control Programme</b></td>
+
+
+            </tr>
+            <tr>
+                <td>13.1</td>
+                <td></td>
+                <td>Number of patients operated for cataract</td>
+                <td id="UgvyoAxIrIi_M2qwONgzdom" colspan="5"></td>
+                <td id="UgvyoAxIrIi-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>13.2</td>
+                <td></td>
+                <td>Number of Intraocular Lens(IOL) implantations</td>
+                <td id="juRXCV8tIdy_M2qwONgzdom" colspan="5"></td>
+                <td id="juRXCV8tIdy-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>13.3</td>
+                <td></td>
+                <td>Number of school children detected with Refractive errors</td>
+                <td id="GKPqyxBGbkz_M2qwONgzdom" colspan="5"></td>
+                <td id="GKPqyxBGbkz-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>13.4</td>
+                <td></td>
+                <td>Number of children provided free glasses</td>
+                <td id="ru8cSRpvBYq_M2qwONgzdom" colspan="5"></td>
+                <td id="ru8cSRpvBYq-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>13.5</td>
+                <td></td>
+                <td>Number of eyes collected</td>
+                <td id="Wzwgy3W4aK7_M2qwONgzdom" colspan="5"></td>
+                <td id="Wzwgy3W4aK7-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>13.6</td>
+                <td></td>
+                <td>Number of eyes utilised</td>
+                <td id="owaZqgvl88M_M2qwONgzdom" colspan="5"></td>
+                <td id="owaZqgvl88M-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#ffd700">
+                <td>Part C.</td>
+                <td style="text-align:left" colspan="12">Health Facility Services</td>
+
+
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M14</b></td>
+                <td style="text-align:left" colspan="12"><b>Patient Services</b></td>
+
+
+            </tr>
+            <tr>
+                <td>14.01</td>
+                <td></td>
+                <td>Number of CHC/ SDH/ DH functioning as an FRU</td>
+                <td id="kmNJBGXGtSy_M2qwONgzdom" colspan="5"></td>
+                <td id="kmNJBGXGtSy-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.02</td>
+                <td></td>
+                <td>Number of PHCs functioning 24X7 (3 Staff Nurses)</td>
+                <td id="x1JSYUNvYoZ_M2qwONgzdom" colspan="5"></td>
+                <td id="x1JSYUNvYoZ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.03</td>
+                <td></td>
+                <td>Number of Anganwadi centres reported to have conducted VHNDs</td>
+                <td id="USzQSFcpPbm_M2qwONgzdom" colspan="5"></td>
+                <td id="USzQSFcpPbm-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.04</td>
+                <td></td>
+                <td>Number of facilities having a Rogi Kalyan Samiti</td>
+                <td id="pEEimRX3Foh_M2qwONgzdom" colspan="5"></td>
+                <td id="pEEimRX3Foh-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.05</td>
+                <td></td>
+                <td>Number of RKS meetings held during the month</td>
+                <td id="bmBA1JcOfxU_M2qwONgzdom" colspan="5"></td>
+                <td id="bmBA1JcOfxU-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.06</td>
+                <td></td>
+                <td>Number of facilities having Ambulance services (Assured Referral Services) available</td>
+                <td id="lVRej7gvWS6_M2qwONgzdom" colspan="5"></td>
+                <td id="lVRej7gvWS6-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.07</td>
+                <td></td>
+                <td>Total Number of times the Ambulance was used for transporting patients during the month</td>
+                <td id="L5XoZYLJj6H_M2qwONgzdom" colspan="5"></td>
+                <td id="L5XoZYLJj6H-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.08</td>
+                <td></td>
+                <td>Number of Institutions having operational Sick New Born and Child Care Units</td>
+                <td id="W9TNMnd5cEQ_M2qwONgzdom" colspan="5"></td>
+                <td id="W9TNMnd5cEQ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.09</td>
+                <td></td>
+                <td>Number of functional Laparoscopes in CHC/SDH/DH</td>
+                <td id="gQbHBW8NHRb_M2qwONgzdom" colspan="5"></td>
+                <td id="gQbHBW8NHRb-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.10</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Inpatients</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>14.10.1</td>
+                <td><b>Admissions</b></td>
+                <td colspan="2" bgcolor="#90ee90" style="text-align: center"><b>Children (< 19 yrs)</b></td>
+                <td colspan="3" bgcolor="#90ee90" style="text-align: center"><b>Adults</b></td>
+                <td colspan="2" bgcolor="#90ee90" style="text-align: center"><b>Children (< 19 yrs)</b></td>
+                <td colspan="3" bgcolor="#90ee90" style="text-align: center"><b>Adults</b></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+
+                <td id="yw0lRvgyRun_M2qwONgzdom" colspan="2"></td>
+                <td id="OdJ4ij4Gau2_M2qwONgzdom" colspan="3"></td>
+                <td id="yw0lRvgyRun-M2qwONgzdom" colspan="2"></td>
+                <td id="OdJ4ij4Gau2-M2qwONgzdom" colspan="3"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+
+                <td id="eRz3hoW1LTK_M2qwONgzdom" colspan="2"></td>
+                <td id="FTHS9Bzc9Jf_M2qwONgzdom" colspan="3"></td>
+                <td id="eRz3hoW1LTK-M2qwONgzdom" colspan="2"></td>
+                <td id="FTHS9Bzc9Jf-M2qwONgzdom" colspan="3"></td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (b)}</td>
+                <td id="yw0lRvgyRun_M2qwONgzdom.eRz3hoW1LTK_M2qwONgzdom" colspan="2"></td>
+                <td id="OdJ4ij4Gau2_M2qwONgzdom.FTHS9Bzc9Jf_M2qwONgzdom" colspan="3"></td>
+                <td id="yw0lRvgyRun-M2qwONgzdom+eRz3hoW1LTK-M2qwONgzdom" colspan="2"></td>
+                <td id="OdJ4ij4Gau2-M2qwONgzdom+FTHS9Bzc9Jf-M2qwONgzdom" colspan="3"></td>
+            </tr>
+
+            <tr>
+                <td>14.10.2</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Deaths</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="QfhW9j63o98_M2qwONgzdom" colspan="5"></td>
+                <td id="QfhW9j63o98-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female</td>
+                <td id="FKlKkJ93fso_M2qwONgzdom" colspan="5"></td>
+                <td id="FKlKkJ93fso-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (b)}</td>
+                <td id="QfhW9j63o98_M2qwONgzdom.FKlKkJ93fso_M2qwONgzdom" colspan="5"></td>
+                <td id="QfhW9j63o98-M2qwONgzdom+FKlKkJ93fso-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.11</td>
+                <td></td>
+                <td><b>In-Patient Head Count at midnight</b></td>
+                <td id="UQfS3qDhiTI_M2qwONgzdom" colspan="5"></td>
+                <td id="UQfS3qDhiTI-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.12</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Outpatients</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>14.12.1</td>
+                <td>OPD attendance (All)</td>
+                <td id="p4phCHet1oc_M2qwONgzdom" colspan="5"></td>
+                <td id="p4phCHet1oc-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.13</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Operation Theatre</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>14.13.1</td>
+                <td>Operation major (General and spinal anaesthesia)</td>
+                <td id="HpgcmvYP2qh_M2qwONgzdom" colspan="5"></td>
+                <td id="HpgcmvYP2qh-M2qwONgzdom" colspan="5"></td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>14.13.2</td>
+                <td>Operation minor (No or local anaesthesia)</td>
+                <td id="o1tfA9BdGe9_M2qwONgzdom" colspan="5"></td>
+                <td id="o1tfA9BdGe9-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>14.14</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Others (Include other services like Dental, Ophthalmology ,
+                    AYUSH etc.)</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>14.14.1</td>
+                <td>AYUSH</td>
+                <td id="CpjkYQ3R0Xe_M2qwONgzdom" colspan="5"></td>
+                <td id="CpjkYQ3R0Xe-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>14.14.2</td>
+                <td>Dental Procedures</td>
+                <td id="dsuYwZxrNX2_M2qwONgzdom" colspan="5"></td>
+                <td id="dsuYwZxrNX2-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>14.14.3</td>
+                <td>Adolescent counselling services</td>
+                <td id="dD7Q5vKhKHd_M2qwONgzdom" colspan="5"></td>
+                <td id="dD7Q5vKhKHd-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M15</b></td>
+                <td style="text-align:left" colspan="12"><b>Laboratory Testing</b></td>
+
+            </tr>
+            <tr>
+                <td>15.1</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Laboratory Test Details</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>15.1.1</td>
+                <td style="text-align:left" colspan="11"><b>Hb Tests conducted</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Number of Hb tests conducted</td>
+                <td id="wHH68DfxvMI_M2qwONgzdom" colspan="5"></td>
+                <td id="wHH68DfxvMIM2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td> Of which number having Hb < 7 mg</td>
+                <td id="GYGwcMDfGkq_M2qwONgzdom" colspan="5"></td>
+                <td id="GYGwcMDfGkq-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>15.1.2</td>
+                <td><b>HIV tests conducted</b></td>
+                <td colspan="2" bgcolor="#90ee90" style="text-align: center"><b>Number tested</b></td>
+                <td colspan="3" bgcolor="#90ee90" style="text-align: center"><b>Numbers Positive</b></td>
+                <td colspan="2" bgcolor="#90ee90" style="text-align: center"><b>Number tested</b></td>
+                <td colspan="3" bgcolor="#90ee90" style="text-align: center"><b>Numbers Positive</b></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="MaLlZ5Qd8SN_M2qwONgzdom" colspan="2"></td>
+                <td id="nZZefGYSLQn_M2qwONgzdom" colspan="3"></td>
+                <td id="MaLlZ5Qd8SN-M2qwONgzdom" colspan="2"></td>
+                <td id="nZZefGYSLQn-M2qwONgzdom" colspan="3"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female-Non ANC</td>
+                <td id="u1citzcONhu_M2qwONgzdom" colspan="2"></td>
+                <td id="lhz1M5fgukN_M2qwONgzdom" colspan="3"></td>
+                <td id="u1citzcONhu-M2qwONgzdom" colspan="2"></td>
+                <td id="lhz1M5fgukN-M2qwONgzdom" colspan="3"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c)</td>
+                <td>Female with ANC</td>
+                <td id="uCBoLSSztvv_M2qwONgzdom" colspan="2"></td>
+                <td id="Bedon5W9B5l_M2qwONgzdom" colspan="3"></td>
+                <td id="uCBoLSSztvv-M2qwONgzdom" colspan="2"></td>
+                <td id="Bedon5W9B5l-M2qwONgzdom" colspan="3"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (c)}</td>
+                <td id="MaLlZ5Qd8SN_M2qwONgzdom.u1citzcONhu_M2qwONgzdom.uCBoLSSztvv_M2qwONgzdom" colspan="2"></td>
+                <td id="nZZefGYSLQn_M2qwONgzdom.lhz1M5fgukN_M2qwONgzdom.Bedon5W9B5l_M2qwONgzdom" colspan="3"></td>
+                <td id="MaLlZ5Qd8SN-M2qwONgzdom+u1citzcONhu-M2qwONgzdom+uCBoLSSztvv-M2qwONgzdom" colspan="2"></td>
+                <td id="nZZefGYSLQn-M2qwONgzdom+lhz1M5fgukN-M2qwONgzdom+Bedon5W9B5l-M2qwONgzdom" colspan="3"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td colspan="5" bgcolor="#90ee90" style="text-align: center"><b>Numbers tested</b></td>
+                <td colspan="5" bgcolor="#90ee90" style="text-align: center"><b>Numbers tested</b></td>
+
+            </tr>
+            <tr>
+                <td>15.2</td>
+                <td></td>
+                <td><b>Widal tests conducted</b></td>
+                <td id="zPRW7WDO7Jt9_M2qwONgzdom" colspan="5"></td>
+                <td id="zPRW7WDO7Jt9-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>15.3</td>
+                <td style="text-align:left" colspan="12"><b>VDRL tests conducted</b></td>
+
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Male</td>
+                <td id="ACvECbp5P04_M2qwONgzdom" colspan="5"></td>
+                <td id="ACvECbp5P04-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Female-Non ANC</td>
+                <td id="IV4dRFeuz9n_M2qwONgzdom" colspan="5"></td>
+                <td id="IV4dRFeuz9n-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c)</td>
+                <td>Female with ANC</td>
+                <td id="P35Vskeoxwq_M2qwONgzdom" colspan="5"></td>
+                <td id="P35Vskeoxwq-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Total {(a) to (c)}</td>
+                <td id="P35Vskeoxwq_M2qwONgzdom.ACvECbp5P04_M2qwONgzdom.IV4dRFeuz9n_M2qwONgzdom" colspan="5"></td>
+                <td id="P35Vskeoxwq-M2qwONgzdom+ACvECbp5P04-M2qwONgzdom+IV4dRFeuz9n-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>15.4</td>
+                <td></td>
+                <td><b>Malaria tests conducted</b></td>
+                <td colspan="5" bgcolor="#90ee90" style="text-align: center"><b>Numbers</b></td>
+                <td colspan="5" bgcolor="#90ee90" style="text-align: center"><b>Numbers</b></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>15.4.1</td>
+                <td>Blood smears examined</td>
+                <td id="VVMyRXSGQ4s_M2qwONgzdom" colspan="5"></td>
+                <td id="VVMyRXSGQ4s-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>15.4.2</td>
+                <td>Plasmodium Vivax test positive</td>
+                <td id="sCYI4u9rMaZ_M2qwONgzdom" colspan="5"></td>
+                <td id="sCYI4u9rMaZ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>15.4.3</td>
+                <td>Plasmodium Falciparum test positive</td>
+                <td id="U5QK77mxhFN_M2qwONgzdom" colspan="5"></td>
+                <td id="U5QK77mxhFN-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr bgcolor="#ffd700">
+                <td><b>Part D.</b></td>
+                <td colspan="12"><b>Monthly Inventory Status</b></td>
+
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M16</b></td>
+                <td></td>
+                <td><b>Stock Position (During the month)</b></td>
+                <td><b>Balance from Previous month</b></td>
+                <td><b>Stocks received</b></td>
+                <td><b>Unusable stock</b></td>
+                <td><b>Stock Distributed</b></td>
+                <td><b>Total Stock</b></td>
+                <td><b>Balance from Previous month</b></td>
+                <td><b>Stocks received</b></td>
+                <td><b>Unusable stock</b></td>
+                <td><b>Stock Distributed</b></td>
+                <td><b>Total Stock</b></td>
+            </tr>
+            <tr>
+                <td>16.1</td>
+                <td></td>
+                <td colspan="11"><b>Vaccines</b></td>
+
+            <tr>
+                <td></td>
+                <td>16.1.1</td>
+                <td>DPT</td>
+                <td id="Hd5t7MRWhZr_SyORSVjZ5h9"></td>
+                <td id="Hd5t7MRWhZr_oA6fWhdhVz7"></td>
+                <td id="Hd5t7MRWhZr_OMPft1fmCfv"></td>
+                <td id="Hd5t7MRWhZr_rk9Z8jqsZvk"></td>
+                <td id="tot1"></td>
+                <td id="Hd5t7MRWhZr-SyORSVjZ5h9"></td>
+                <td id="Hd5t7MRWhZr-oA6fWhdhVz7"></td>
+                <td id="Hd5t7MRWhZr-OMPft1fmCfv"></td>
+                <td id="Hd5t7MRWhZr-rk9Z8jqsZvk"></td>
+                <td id="tot2"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.1.2</td>
+                <td>OPV</td>
+                <td id="VEX5F9vq2jx_SyORSVjZ5h9"></td>
+                <td id="VEX5F9vq2jx_oA6fWhdhVz7"></td>
+                <td id="VEX5F9vq2jx_OMPft1fmCfv"></td>
+                <td id="VEX5F9vq2jx_rk9Z8jqsZvk"></td>
+                <td id="tot3"></td>
+                <td id="VEX5F9vq2jx-SyORSVjZ5h9"></td>
+                <td id="VEX5F9vq2jx-oA6fWhdhVz7"></td>
+                <td id="VEX5F9vq2jx-OMPft1fmCfv"></td>
+                <td id="VEX5F9vq2jx-rk9Z8jqsZvk"></td>
+                <td id="tot4"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.1.3</td>
+                <td>TT</td>
+                <td id="NNa6Rj6Je6R_SyORSVjZ5h9"></td>
+                <td id="NNa6Rj6Je6R_oA6fWhdhVz7"></td>
+                <td id="NNa6Rj6Je6R_OMPft1fmCfv"></td>
+                <td id="NNa6Rj6Je6R_rk9Z8jqsZvk"></td>
+                <td id="tot5"></td>
+                <td id="NNa6Rj6Je6R-SyORSVjZ5h9"></td>
+                <td id="NNa6Rj6Je6R-oA6fWhdhVz7"></td>
+                <td id="NNa6Rj6Je6R-OMPft1fmCfv"></td>
+                <td id="NNa6Rj6Je6R-rk9Z8jqsZvk"></td>
+                <td id="tot6"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.1.4</td>
+                <td>DT</td>
+                <td id="YoIyYlz4dJN_SyORSVjZ5h9"></td>
+                <td id="YoIyYlz4dJN_oA6fWhdhVz7"></td>
+                <td id="YoIyYlz4dJN_OMPft1fmCfv"></td>
+                <td id="YoIyYlz4dJN_rk9Z8jqsZvk"></td>
+                <td id="tot7"></td>
+                <td id="YoIyYlz4dJN-SyORSVjZ5h9"></td>
+                <td id="YoIyYlz4dJN-oA6fWhdhVz7"></td>
+                <td id="YoIyYlz4dJN-OMPft1fmCfv"></td>
+                <td id="YoIyYlz4dJN-rk9Z8jqsZvk"></td>
+                <td id="tot8"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.1.5</td>
+                <td>BCG</td>
+                <td id="Tb0XS8kqZus_SyORSVjZ5h9"></td>
+                <td id="Tb0XS8kqZus_oA6fWhdhVz7"></td>
+                <td id="Tb0XS8kqZus_OMPft1fmCfv"></td>
+                <td id="Tb0XS8kqZus_rk9Z8jqsZvk"></td>
+                <td id="tot11"></td>
+                <td id="Tb0XS8kqZus-SyORSVjZ5h9"></td>
+                <td id="Tb0XS8kqZus-oA6fWhdhVz7"></td>
+                <td id="Tb0XS8kqZus-OMPft1fmCfv"></td>
+                <td id="Tb0XS8kqZus-rk9Z8jqsZvk"></td>
+                <td id="tot12"></td>
+
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>16.1.6</td>
+                <td>Measles</td>
+                <td id="oB2xb6wgTqa_SyORSVjZ5h9"></td>
+                <td id="oB2xb6wgTqa_oA6fWhdhVz7"></td>
+                <td id="oB2xb6wgTqa_OMPft1fmCfv"></td>
+                <td id="oB2xb6wgTqa_rk9Z8jqsZvk"></td>
+                <td id="tot9"></td>
+                <td id="oB2xb6wgTqa-SyORSVjZ5h9"></td>
+                <td id="oB2xb6wgTqa-oA6fWhdhVz7"></td>
+                <td id="oB2xb6wgTqa-OMPft1fmCfv"></td>
+                <td id="oB2xb6wgTqa-rk9Z8jqsZvk"></td>
+                <td id="tot10"></td>
+
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>16.1.7</td>
+                <td>JE</td>
+                <td id="JXdjImpOwHn_SyORSVjZ5h9"></td>
+                <td id="JXdjImpOwHn_oA6fWhdhVz7"></td>
+                <td id="JXdjImpOwHn_OMPft1fmCfv"></td>
+                <td id="JXdjImpOwHn_rk9Z8jqsZvk"></td>
+                <td id="tot13"></td>
+                <td id="JXdjImpOwHn-SyORSVjZ5h9"></td>
+                <td id="JXdjImpOwHn-oA6fWhdhVz7"></td>
+                <td id="JXdjImpOwHn-OMPft1fmCfv"></td>
+                <td id="JXdjImpOwHn-rk9Z8jqsZvk"></td>
+                <td id="tot14"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.1.8</td>
+                <td>Hepatitis B</td>
+                <td id="U2sx5YDGLpn_SyORSVjZ5h9"></td>
+                <td id="U2sx5YDGLpn_oA6fWhdhVz7"></td>
+                <td id="U2sx5YDGLpn_OMPft1fmCfv"></td>
+                <td id="U2sx5YDGLpn_rk9Z8jqsZvk"></td>
+                <td id="tot15"></td>
+                <td id="U2sx5YDGLpn-SyORSVjZ5h9"></td>
+                <td id="U2sx5YDGLpn-oA6fWhdhVz7"></td>
+                <td id="U2sx5YDGLpn-OMPft1fmCfv"></td>
+                <td id="U2sx5YDGLpn-rk9Z8jqsZvk"></td>
+                <td id="tot16"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.2.1</td>
+                <td>IUCD 380 A</td>
+                <td id="ILhl5jjM37F_SyORSVjZ5h9"></td>
+                <td id="ILhl5jjM37F_oA6fWhdhVz7"></td>
+                <td id="ILhl5jjM37F_OMPft1fmCfv"></td>
+                <td id="ILhl5jjM37F_rk9Z8jqsZvk"></td>
+                <td id="tot17"></td>
+                <td id="ILhl5jjM37F-SyORSVjZ5h9"></td>
+                <td id="ILhl5jjM37F-oA6fWhdhVz7"></td>
+                <td id="ILhl5jjM37F-OMPft1fmCfv"></td>
+                <td id="ILhl5jjM37F-rk9Z8jqsZvk"></td>
+                <td id="tot18"></td>
+
+            </tr>
+            <tr>
+                <td>16.2</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Family Planning</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.2.2</td>
+                <td>Condoms</td>
+                <td id="y1rQTd58ofx_SyORSVjZ5h9"></td>
+                <td id="y1rQTd58ofx_oA6fWhdhVz7"></td>
+                <td id="y1rQTd58ofx_OMPft1fmCfv"></td>
+                <td id="y1rQTd58ofx_rk9Z8jqsZvk"></td>
+                <td id="tot19"></td>
+                <td id="y1rQTd58ofx-SyORSVjZ5h9"></td>
+                <td id="y1rQTd58ofx-oA6fWhdhVz7"></td>
+                <td id="y1rQTd58ofx-OMPft1fmCfv"></td>
+                <td id="y1rQTd58ofx-rk9Z8jqsZvk"></td>
+                <td id="tot20"></td>
+
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>16.2.3</td>
+                <td>Oral Contraceptive</td>
+                <td id="Q81m2tAnDuA_SyORSVjZ5h9"></td>
+                <td id="Q81m2tAnDuA_oA6fWhdhVz7"></td>
+                <td id="Q81m2tAnDuA_OMPft1fmCfv"></td>
+                <td id="Q81m2tAnDuA_rk9Z8jqsZvk"></td>
+                <td id="tot21"></td>
+                <td id="Q81m2tAnDuA-SyORSVjZ5h9"></td>
+                <td id="Q81m2tAnDuA-oA6fWhdhVz7"></td>
+                <td id="Q81m2tAnDuA-OMPft1fmCfv"></td>
+                <td id="Q81m2tAnDuA-rk9Z8jqsZvk"></td>
+                <td id="tot22"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.2.4</td>
+                <td>Emergency Contraceptive Pills</td>
+                <td id="N8tNgvEKah9_SyORSVjZ5h9"></td>
+                <td id="N8tNgvEKah9_oA6fWhdhVz7"></td>
+                <td id="N8tNgvEKah9_OMPft1fmCfv"></td>
+                <td id="N8tNgvEKah9_rk9Z8jqsZvk"></td>
+                <td id="tot23"></td>
+                <td id="N8tNgvEKah9-SyORSVjZ5h9"></td>
+                <td id="N8tNgvEKah9-oA6fWhdhVz7"></td>
+                <td id="N8tNgvEKah9-OMPft1fmCfv"></td>
+                <td id="N8tNgvEKah9-rk9Z8jqsZvk"></td>
+                <td id="tot24"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.2.5</td>
+                <td>Tubal rings</td>
+                <td id="RksNAxQMkCV_SyORSVjZ5h9"></td>
+                <td id="RksNAxQMkCV_oA6fWhdhVz7"></td>
+                <td id="RksNAxQMkCV_OMPft1fmCfv"></td>
+                <td id="RksNAxQMkCV_rk9Z8jqsZvk"></td>
+                <td id="tot25"></td>
+                <td id="RksNAxQMkCV-SyORSVjZ5h9"></td>
+                <td id="RksNAxQMkCV-oA6fWhdhVz7"></td>
+                <td id="RksNAxQMkCV-OMPft1fmCfv"></td>
+                <td id="RksNAxQMkCV-rk9Z8jqsZvk"></td>
+                <td id="tot26"></td>
+
+            </tr>
+            <tr>
+                <td>16.3</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Other Items</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.01</td>
+                <td>Injection Oxytocin</td>
+                <td id="P0oruZVSKoD_SyORSVjZ5h9"></td>
+                <td id="P0oruZVSKoD_oA6fWhdhVz7"></td>
+                <td id="P0oruZVSKoD_OMPft1fmCfv"></td>
+                <td id="P0oruZVSKoD_rk9Z8jqsZvk"></td>
+                <td id="tot27"></td>
+
+                <td id="P0oruZVSKoD-SyORSVjZ5h9"></td>
+                <td id="P0oruZVSKoD-oA6fWhdhVz7"></td>
+                <td id="P0oruZVSKoD-OMPft1fmCfv"></td>
+                <td id="P0oruZVSKoD-rk9Z8jqsZvk"></td>
+                <td id="tot28"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.02</td>
+                <td>Gloves</td>
+                <td id="BpmFwtTtWTb_SyORSVjZ5h9"></td>
+                <td id="BpmFwtTtWTb_oA6fWhdhVz7"></td>
+                <td id="BpmFwtTtWTb_OMPft1fmCfv"></td>
+                <td id="BpmFwtTtWTb_rk9Z8jqsZvk"></td>
+                <td id="tot29"></td>
+                <td id="BpmFwtTtWTb-SyORSVjZ5h9"></td>
+                <td id="BpmFwtTtWTb-oA6fWhdhVz7"></td>
+                <td id="BpmFwtTtWTb-OMPft1fmCfv"></td>
+                <td id="BpmFwtTtWTb-rk9Z8jqsZvk"></td>
+                <td id="tot30"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.03</td>
+                <td>MVA Syringes</td>
+                <td id="pvSVl5SQVUf_SyORSVjZ5h9"></td>
+                <td id="pvSVl5SQVUf_oA6fWhdhVz7"></td>
+                <td id="pvSVl5SQVUf_OMPft1fmCfv"></td>
+                <td id="pvSVl5SQVUf_rk9Z8jqsZvk"></td>
+                <td id="tot31"></td>
+                <td id="pvSVl5SQVUf-SyORSVjZ5h9"></td>
+                <td id="pvSVl5SQVUf-oA6fWhdhVz7"></td>
+                <td id="pvSVl5SQVUf-OMPft1fmCfv"></td>
+                <td id="pvSVl5SQVUf-rk9Z8jqsZvk"></td>
+                <td id="tot32"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.04</td>
+                <td>Tab. Fluconazole</td>
+                <td id="RBTjrp8yPp6_SyORSVjZ5h9"></td>
+                <td id="RBTjrp8yPp6_oA6fWhdhVz7"></td>
+                <td id="RBTjrp8yPp6_OMPft1fmCfv"></td>
+                <td id="RBTjrp8yPp6_rk9Z8jqsZvk"></td>
+                <td id="tot33"></td>
+                <td id="RBTjrp8yPp6-SyORSVjZ5h9"></td>
+                <td id="RBTjrp8yPp6-oA6fWhdhVz7"></td>
+                <td id="RBTjrp8yPp6-OMPft1fmCfv"></td>
+                <td id="RBTjrp8yPp6-rk9Z8jqsZvk"></td>
+                <td id="tot34"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.05</td>
+                <td>Blood Transfusion sets</td>
+                <td id="rhVcQiBi2a7_SyORSVjZ5h9"></td>
+                <td id="rhVcQiBi2a7_oA6fWhdhVz7"></td>
+                <td id="rhVcQiBi2a7_OMPft1fmCfv"></td>
+                <td id="rhVcQiBi2a7_rk9Z8jqsZvk"></td>
+                <td id="tot35"></td>
+                <td id="rhVcQiBi2a7-SyORSVjZ5h9"></td>
+                <td id="rhVcQiBi2a7-oA6fWhdhVz7"></td>
+                <td id="rhVcQiBi2a7-OMPft1fmCfv"></td>
+                <td id="rhVcQiBi2a7-rk9Z8jqsZvk"></td>
+                <td id="tot36"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.06</td>
+                <td>Gluteraldehyde 2%</td>
+                <td id="FeWH4EvOFRc_SyORSVjZ5h9"></td>
+                <td id="FeWH4EvOFRc_oA6fWhdhVz7"></td>
+                <td id="FeWH4EvOFRc_OMPft1fmCfv"></td>
+                <td id="FeWH4EvOFRc_rk9Z8jqsZvk"></td>
+                <td id="tot37"></td>
+                <td id="FeWH4EvOFRc-SyORSVjZ5h9"></td>
+                <td id="FeWH4EvOFRc-oA6fWhdhVz7"></td>
+                <td id="FeWH4EvOFRc-OMPft1fmCfv"></td>
+                <td id="FeWH4EvOFRc-rk9Z8jqsZvk"></td>
+                <td id="tot38"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.07</td>
+                <td>IFA tablets</td>
+                <td id="R05HI6CkRal_SyORSVjZ5h9"></td>
+                <td id="R05HI6CkRal_oA6fWhdhVz7"></td>
+                <td id="R05HI6CkRal_OMPft1fmCfv"></td>
+                <td id="R05HI6CkRal_rk9Z8jqsZvk"></td>
+                <td id="tot39"></td>
+                <td id="R05HI6CkRal-SyORSVjZ5h9"></td>
+                <td id="R05HI6CkRal-oA6fWhdhVz7"></td>
+                <td id="R05HI6CkRal-OMPft1fmCfv"></td>
+                <td id="R05HI6CkRal-rk9Z8jqsZvk"></td>
+                <td id="tot40"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.08</td>
+                <td>IFA Syrup (Paediatric)</td>
+                <td id="fd84jI1tdEl_SyORSVjZ5h9"></td>
+                <td id="fd84jI1tdEl_oA6fWhdhVz7"></td>
+                <td id="fd84jI1tdEl_OMPft1fmCfv"></td>
+                <td id="fd84jI1tdEl_rk9Z8jqsZvk"></td>
+                <td id="tot414"></td>
+                <td id="fd84jI1tdEl-SyORSVjZ5h9"></td>
+                <td id="fd84jI1tdEl-oA6fWhdhVz7"></td>
+                <td id="fd84jI1tdEl-OMPft1fmCfv"></td>
+                <td id="fd84jI1tdEl-rk9Z8jqsZvk"></td>
+                <td id="tot42"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.09</td>
+                <td>Paediatrics Antibiotics (Cotrimaxozole and Injectable Gentamicin)</td>
+                <td id="Decu8fefqAp_SyORSVjZ5h9"></td>
+                <td id="Decu8fefqAp_oA6fWhdhVz7"></td>
+                <td id="Decu8fefqAp_OMPft1fmCfv"></td>
+                <td id="Decu8fefqAp_rk9Z8jqsZvk"></td>
+                <td id="tot43"></td>
+                <td id="Decu8fefqAp-SyORSVjZ5h9"></td>
+                <td id="Decu8fefqAp-oA6fWhdhVz7"></td>
+                <td id="Decu8fefqAp-OMPft1fmCfv"></td>
+                <td id="Decu8fefqAp-rk9Z8jqsZvk"></td>
+                <td id="tot44"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.10</td>
+                <td>Vitamin A solution</td>
+                <td id="h9w3TLjejNz_SyORSVjZ5h9"></td>
+                <td id="h9w3TLjejNz_oA6fWhdhVz7"></td>
+                <td id="h9w3TLjejNz_OMPft1fmCfv"></td>
+                <td id="h9w3TLjejNz_rk9Z8jqsZvk"></td>
+                <td id="tot75"></td>
+                <td id="h9w3TLjejNz-SyORSVjZ5h9"></td>
+                <td id="h9w3TLjejNz-oA6fWhdhVz7"></td>
+                <td id="h9w3TLjejNz-OMPft1fmCfv"></td>
+                <td id="h9w3TLjejNz-rk9Z8jqsZvk"></td>
+                <td id="tot46"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.3.11</td>
+                <td>ORS (New WHO)</td>
+                <td id="R8fQQQTfJf8.SyORSVjZ5h9"></td>
+                <td id="R8fQQQTfJf8_BL5XLuUgQLN"></td>
+                <td id="R8fQQQTfJf8_AAz5mXH6nKy"></td>
+                <td id="R8fQQQTfJf8_a915YmmXQB3"></td>
+                <td id="tot47"></td>
+                <td id="R8fQQQTfJf8-SyORSVjZ5h9"></td>
+                <td id="R8fQQQTfJf8-oA6fWhdhVz7"></td>
+                <td id="R8fQQQTfJf8-OMPft1fmCfv"></td>
+                <td id="R8fQQQTfJf8-rk9Z8jqsZvk"></td>
+                <td id="tot785"></td>
+
+            </tr>
+            <tr>
+                <td>16.4</td>
+                <td></td>
+                <td style="text-align:left" colspan="11"><b>Syringes</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.4.1</td>
+                <td>0.1 ml (AD)</td>
+                <td id="zzpLg1IbfVf_SyORSVjZ5h9"></td>
+                <td id="zzpLg1IbfVf_oA6fWhdhVz7"></td>
+                <td id="zzpLg1IbfVf_OMPft1fmCfv"></td>
+                <td id="zzpLg1IbfVf_rk9Z8jqsZvk"></td>
+                <td id="tot50"></td>
+                <td id="zzpLg1IbfVf-SyORSVjZ5h9"></td>
+                <td id="zzpLg1IbfVf-oA6fWhdhVz7"></td>
+                <td id="zzpLg1IbfVf-OMPft1fmCfv"></td>
+                <td id="zzpLg1IbfVf-rk9Z8jqsZvk"></td>
+                <td id="tot52"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>16.4.2</td>
+                <td>0.5 ml (AD)</td>
+                <td id="GO7OBeQq2Np_SyORSVjZ5h9"></td>
+                <td id="GO7OBeQq2Np_oA6fWhdhVz7"></td>
+                <td id="GO7OBeQq2Np_OMPft1fmCfv"></td>
+                <td id="GO7OBeQq2Np_rk9Z8jqsZvk"></td>
+                <td id="tot54"></td>
+                <td id="GO7OBeQq2Np-SyORSVjZ5h9"></td>
+                <td id="GO7OBeQq2Np-oA6fWhdhVz7"></td>
+                <td id="GO7OBeQq2Np-OMPft1fmCfv"></td>
+                <td id="GO7OBeQq2Np-rk9Z8jqsZvk"></td>
+                <td id="tot55"></td>
+            <tr>
+                <td></td>
+                <td>16.4.3</td>
+                <td>5.0 ml (Disposable)</td>
+                <td id="ls8VqwLHq5o_SyORSVjZ5h9"></td>
+                <td id="ls8VqwLHq5o_oA6fWhdhVz7"></td>
+                <td id="ls8VqwLHq5o_OMPft1fmCfv"></td>
+                <td id="ls8VqwLHq5o_rk9Z8jqsZvk"></td>
+                <td id="tot56"></td>
+                <td id="ls8VqwLHq5o-SyORSVjZ5h9"></td>
+                <td id="ls8VqwLHq5o-oA6fWhdhVz7"></td>
+                <td id="ls8VqwLHq5o-OMPft1fmCfv"></td>
+                <td id="ls8VqwLHq5o-rk9Z8jqsZvk"></td>
+                <td id="tot57"></td>
+
+            </tr>
+            <tr bgcolor="#ffd700">
+                <td><b>Part E.</b></td>
+                <td style="text-align:left" colspan="12"><b>Mortality Details</b></td>
+            </tr>
+            <tr bgcolor="#90ee90">
+                <td><b>M17</b></td>
+                <td style="text-align:left" colspan="12"><b>Details of deaths reported during the month with probable
+                    causes:</b></td>
+            </tr>
+            <tr>
+                <td>17.1</td>
+                <td></td>
+                <td colspan="1">Infant deaths within 24 hrs of birth</td>
+                <td id="zPA3YV1eNBf_M2qwONgzdom+yM1LC5Flp72_M2qwONgzdom" colspan="5"></td>
+                <td id="zPA3YV1eNBf-M2qwONgzdom+yM1LC5Flp72-M2qwONgzdom" colspan="6"></td>
+
+            </tr>
+            <tr style="text-align: center">
+                <td><b>17.2</b></td>
+                <td></td>
+                <td bgcolor="#8fbc8f"><b>Infant Deaths up to 4 weeks by cause</b></td>
+                <td colspan="2" bgcolor="#8fbc8f"><b>Up to 1 Weeks of Birth</b></td>
+                <td colspan="2" bgcolor="#8fbc8f" colspan='2'><b>Between 1 week & 4 weeks of birth</b></td>
+                <td bgcolor="#8fbc8f"><b>Total</b></td>
+
+                <td colspan="2" bgcolor="#8fbc8f"><b>Up to 1 Weeks of Birth</b></td>
+                <td colspan="2" bgcolor="#8fbc8f" colspan='2'><b>Between 1 week & 4 weeks of birth</b></td>
+                <td bgcolor="#8fbc8f"><b>Total</b></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.2.1</td>
+                <td>Sepsis</td>
+                <td id="uxbBwdFOASk_dvEFXDwOJQy+uxbBwdFOASk_M1MrbiHaImE+ow1GuAwzwqp_dvEFXDwOJQy+ow1GuAwzwqp_M1MrbiHaImE"
+                    colspan="2"></td>
+                <td id="vcSfhlSQtaW_dvEFXDwOJQy+vcSfhlSQtaW_M1MrbiHaImE" colspan='2'></td>
+                <td id="NLJM6NiBQlY_Qn9nHSBeXV3+NLJM6NiBQlY_PaX12ypLm1d+BhcgpBQEQH0_Qn9nHSBeXV3+BhcgpBQEQH0_PaX12ypLm1d+F2LB2pIgbrR_Qn9nHSBeXV3+F2LB2pIgbrR_PaX12ypLm1d"></td>
+                <td id="uxbBwdFOASk-dvEFXDwOJQy+uxbBwdFOASk-M1MrbiHaImE+ow1GuAwzwqp-dvEFXDwOJQy+ow1GuAwzwqp-M1MrbiHaImE"
+                    colspan="2"></td>
+                <td id="vcSfhlSQtaW-dvEFXDwOJQy+vcSfhlSQtaW-M1MrbiHaImE" colspan='2'></td>
+                <td id="NLJM6NiBQlY-Qn9nHSBeXV3+NLJM6NiBQlY-PaX12ypLm1d+BhcgpBQEQH0-Qn9nHSBeXV3+BhcgpBQEQH0-PaX12ypLm1d+F2LB2pIgbrR-Qn9nHSBeXV3+F2LB2pIgbrR-PaX12ypLm1d"></td>
+
+            <tr>
+                <td></td>
+                <td>17.2.2</td>
+                <td>Asphyxia</td>
+                <td id="lWcesm4MPTG_dvEFXDwOJQy+lWcesm4MPTG_M1MrbiHaImE+WXR5F65AS2C_dvEFXDwOJQy+WXR5F65AS2C_M1MrbiHaImE"
+                    colspan="2"></td>
+                <td id="PBkWwtYluO4_dvEFXDwOJQy+PBkWwtYluO4_M1MrbiHaImE" colspan='2'></td>
+                <td id="PBkWwtYluO4_dvEFXDwOJQy+PBkWwtYluO4_M1MrbiHaImE+lWcesm4MPTG_dvEFXDwOJQy+lWcesm4MPTG_M1MrbiHaImE+WXR5F65AS2C_dvEFXDwOJQy+WXR5F65AS2C_M1MrbiHaImE"></td>
+                <td id="lWcesm4MPTG-dvEFXDwOJQy+lWcesm4MPTG-M1MrbiHaImE+WXR5F65AS2C-dvEFXDwOJQy+WXR5F65AS2C-M1MrbiHaImE"
+                    colspan="2"></td>
+                <td id="PBkWwtYluO4-dvEFXDwOJQy+PBkWwtYluO4-M1MrbiHaImE" colspan='2'></td>
+                <td id="PBkWwtYluO4-dvEFXDwOJQy+PBkWwtYluO4-M1MrbiHaImE+lWcesm4MPTG-dvEFXDwOJQy+lWcesm4MPTG-M1MrbiHaImE+WXR5F65AS2C-dvEFXDwOJQy+WXR5F65AS2C-M1MrbiHaImE"></td>
+
+            <tr>
+                <td></td>
+                <td>17.2.3</td>
+                <td>LBW</td>
+                <td id="uJDSPsLw5Eg_dvEFXDwOJQy+uJDSPsLw5Eg_M1MrbiHaImE+yHg1K48fDGx_dvEFXDwOJQy+yHg1K48fDGx_M1MrbiHaImE"
+                    colspan="2"></td>
+                <td id="jqeo3IqERBo_dvEFXDwOJQy+jqeo3IqERBo_M1MrbiHaImE" colspan='2'></td>
+                <td id="jqeo3IqERBo_dvEFXDwOJQy+jqeo3IqERBo_M1MrbiHaImE+uJDSPsLw5Eg_dvEFXDwOJQy+uJDSPsLw5Eg_M1MrbiHaImE+yHg1K48fDGx_dvEFXDwOJQy+yHg1K48fDGx_M1MrbiHaImE"></td>
+                <td id="uJDSPsLw5Eg-dvEFXDwOJQy+uJDSPsLw5Eg-M1MrbiHaImE+yHg1K48fDGx-dvEFXDwOJQy+yHg1K48fDGx-M1MrbiHaImE"
+                    colspan="2"></td>
+                <td id="jqeo3IqERBo-dvEFXDwOJQy+jqeo3IqERBo-M1MrbiHaImE" colspan='2'></td>
+                <td id="jqeo3IqERBo-dvEFXDwOJQy+jqeo3IqERBo-M1MrbiHaImE+uJDSPsLw5Eg-dvEFXDwOJQy+uJDSPsLw5Eg-M1MrbiHaImE+yHg1K48fDGx-dvEFXDwOJQy+yHg1K48fDGx-M1MrbiHaImE"></td>
+
+            <tr>
+                <td></td>
+                <td>17.2.4</td>
+                <td>Others</td>
+                <td id="lAlfEypdTUX_dvEFXDwOJQy+lAlfEypdTUX_M1MrbiHaImE+cMoAZimw4Wt_dvEFXDwOJQy+cMoAZimw4Wt_M1MrbiHaImE"
+                    colspan="2"></td>
+                <td id="m1qz47rloLv_dvEFXDwOJQy+m1qz47rloLv_M1MrbiHaImE" colspan='2'></td>
+                <td id="lAlfEypdTUX_dvEFXDwOJQy+lAlfEypdTUX_M1MrbiHaImE+cMoAZimw4Wt_dvEFXDwOJQy+cMoAZimw4Wt_M1MrbiHaImE+m1qz47rloLv_dvEFXDwOJQy+m1qz47rloLv_M1MrbiHaImE"></td>
+                <td id="lAlfEypdTUX-dvEFXDwOJQy+lAlfEypdTUX-M1MrbiHaImE+cMoAZimw4Wt-dvEFXDwOJQy+cMoAZimw4Wt-M1MrbiHaImE"
+                    colspan="2"></td>
+                <td id="m1qz47rloLv-dvEFXDwOJQy+m1qz47rloLv-M1MrbiHaImE" colspan='2'></td>
+                <td id="lAlfEypdTUX-dvEFXDwOJQy+lAlfEypdTUX-M1MrbiHaImE+cMoAZimw4Wt-dvEFXDwOJQy+cMoAZimw4Wt-M1MrbiHaImE+m1qz47rloLv-dvEFXDwOJQy+m1qz47rloLv-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr style="text-align: center">
+                <td>17.3</td>
+                <td></td>
+                <td bgcolor="#8fbc8f"><b>Infant/Child Deaths up to 5 years by cause</b></td>
+                <td colspan="2" bgcolor="#8fbc8f"><b>Between 1 month and 11 months'</b></td>
+                <td colspan="2" bgcolor="#8fbc8f" colspan="2"><b>Between 1 year & 5 years</b></td>
+                <td bgcolor="#8fbc8f"><b>Total</b></td>
+                <td colspan="2" bgcolor="#8fbc8f"><b>Between 1 month and 11 months'</b></td>
+                <td colspan="2" bgcolor="#8fbc8f" colspan="2"><b>Between 1 year & 5 years</b></td>
+                <td bgcolor="#8fbc8f"><b>Total</b></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.3.1</td>
+                <td>Pneumonia</td>
+                <td id="IUO4ufFaj1H_dvEFXDwOJQy.IUO4ufFaj1H_M1MrbiHaImE" colspan="2"></td>
+                <td id="XqbipWlzJAD_dvEFXDwOJQy.XqbipWlzJAD_M1MrbiHaImE" colspan='2'></td>
+                <td id="IUO4ufFaj1H_dvEFXDwOJQy.IUO4ufFaj1H_M1MrbiHaImE.XqbipWlzJAD_dvEFXDwOJQy.XqbipWlzJAD_M1MrbiHaImE"></td>
+                <td id="IUO4ufFaj1H-dvEFXDwOJQy+IUO4ufFaj1H-M1MrbiHaImE" colspan="2"></td>
+                <td id="XqbipWlzJAD-dvEFXDwOJQy+XqbipWlzJAD-M1MrbiHaImE" colspan='2'></td>
+                <td id="IUO4ufFaj1H-dvEFXDwOJQy+IUO4ufFaj1H-M1MrbiHaImE+XqbipWlzJAD-dvEFXDwOJQy+XqbipWlzJAD-M1MrbiHaImE"></td>
+
+            <tr>
+                <td></td>
+                <td>17.3.2</td>
+                <td>Diarrhoea</td>
+                <td id="sTQHhIj9PI9-dvEFXDwOJQy+sTQHhIj9PI9-M1MrbiHaImE" colspan="2"></td>
+                <td id="e7xxHy7eFbw-dvEFXDwOJQy+e7xxHy7eFbw-M1MrbiHaImE" colspan='2'></td>
+                <td id="e7xxHy7eFbw-dvEFXDwOJQy+e7xxHy7eFbw-M1MrbiHaImE+sTQHhIj9PI9-dvEFXDwOJQy+sTQHhIj9PI9-M1MrbiHaImE"></td>
+                <td id="sTQHhIj9PI9_dvEFXDwOJQy.sTQHhIj9PI9_M1MrbiHaImE" colspan="2"></td>
+                <td id="e7xxHy7eFbw_dvEFXDwOJQy.e7xxHy7eFbw_M1MrbiHaImE" colspan='2'></td>
+                <td id="e7xxHy7eFbw_dvEFXDwOJQy.e7xxHy7eFbw_M1MrbiHaImE.sTQHhIj9PI9_dvEFXDwOJQy.sTQHhIj9PI9_M1MrbiHaImE"></td>
+
+            <tr>
+                <td></td>
+                <td>17.3.3</td>
+                <td>Fever related</td>
+                <td id="epotkw0AEiv_dvEFXDwOJQy.epotkw0AEiv_M1MrbiHaImE" colspan="2"></td>
+                <td id="Gxg9ExzPFEv_dvEFXDwOJQy.Gxg9ExzPFEv_M1MrbiHaImE" colspan='2'></td>
+                <td id="epotkw0AEiv_dvEFXDwOJQy.epotkw0AEiv_M1MrbiHaImE.Gxg9ExzPFEv_dvEFXDwOJQy.Gxg9ExzPFEv_M1MrbiHaImE"></td>
+                <td id="epotkw0AEiv-dvEFXDwOJQy+epotkw0AEiv-M1MrbiHaImE" colspan="2"></td>
+                <td id="Gxg9ExzPFEv-dvEFXDwOJQy+Gxg9ExzPFEv-M1MrbiHaImE" colspan='2'></td>
+                <td id="epotkw0AEiv-dvEFXDwOJQy+epotkw0AEiv-M1MrbiHaImE+Gxg9ExzPFEv-dvEFXDwOJQy+Gxg9ExzPFEv-M1MrbiHaImE"></td>
+
+            <tr>
+                <td></td>
+                <td>17.3.4</td>
+                <td>Measles</td>
+                <td id="mpZ4ROVxhLj_dvEFXDwOJQy.mpZ4ROVxhLj_M1MrbiHaImE" colspan="2"></td>
+                <td id="t3vhkcdQmbF_dvEFXDwOJQy.t3vhkcdQmbF_M1MrbiHaImE" colspan='2'></td>
+                <td id="mpZ4ROVxhLj_dvEFXDwOJQy.mpZ4ROVxhLj_M1MrbiHaImE.t3vhkcdQmbF_dvEFXDwOJQy.t3vhkcdQmbF_M1MrbiHaImE"></td>
+                <td id="mpZ4ROVxhLj-dvEFXDwOJQy+mpZ4ROVxhLj-M1MrbiHaImE" colspan="2"></td>
+                <td id="t3vhkcdQmbF-dvEFXDwOJQy+t3vhkcdQmbF-M1MrbiHaImE" colspan='2'></td>
+                <td id="mpZ4ROVxhLj-dvEFXDwOJQy+mpZ4ROVxhLj-M1MrbiHaImE+t3vhkcdQmbF-dvEFXDwOJQy+t3vhkcdQmbF-M1MrbiHaImE"></td>
+
+            <tr>
+                <td></td>
+                <td>17.3.5</td>
+                <td>Others</td>
+                <td id="DPYFu1re9SJ_dvEFXDwOJQy.DPYFu1re9SJ_M1MrbiHaImE" colspan="2"></td>
+                <td id="Mw4XHaXegvq_dvEFXDwOJQy.Mw4XHaXegvq_M1MrbiHaImE" colspan='2'></td>
+                <td id="Mw4XHaXegvq_dvEFXDwOJQy.Mw4XHaXegvq_M1MrbiHaImE.DPYFu1re9SJ_dvEFXDwOJQy.DPYFu1re9SJ_M1MrbiHaImE"></td>
+                <td id="DPYFu1re9SJ-dvEFXDwOJQy+DPYFu1re9SJ-M1MrbiHaImE" colspan="2"></td>
+                <td id="Mw4XHaXegvq-dvEFXDwOJQy+Mw4XHaXegvq-M1MrbiHaImE" colspan='2'></td>
+                <td id="Mw4XHaXegvq-dvEFXDwOJQy+Mw4XHaXegvq-M1MrbiHaImE+DPYFu1re9SJ-dvEFXDwOJQy+DPYFu1re9SJ-M1MrbiHaImE"></td>
+
+            <tr style="text-align: center">
+                <td>17.4</td>
+                <td></td>
+                <td bgcolor="#8fbc8f"><b>Adolescent/Adult deaths by cause</b></td>
+                <td colspan="2" bgcolor="#8fbc8f"><b>6-14 yrs</b></td>
+                <td bgcolor="#8fbc8f"><b>15-55 yrs.</b></td>
+                <td bgcolor="#8fbc8f"><b>Above 55 yrs.</b></td>
+                <td bgcolor="#8fbc8f"><b>Total</b></td>
+                <td colspan="2" bgcolor="#8fbc8f"><b>6-14 yrs</b></td>
+                <td bgcolor="#8fbc8f"><b>15-55 yrs.</b></td>
+                <td bgcolor="#8fbc8f"><b>Above 55 yrs.</b></td>
+                <td bgcolor="#8fbc8f"><b>Total</b></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.01</td>
+                <td>Diarrhoeal diseases</td>
+                <td id="a54TWo1DKhJ_dvEFXDwOJQy.a54TWo1DKhJ_M1MrbiHaImE" colspan="2"></td>
+                <td id="XP2zMq79u5i_dvEFXDwOJQy.XP2zMq79u5i_M1MrbiHaImE"></td>
+                <td id="Ctk2h2Rs1e6_dvEFXDwOJQy.Ctk2h2Rs1e6_M1MrbiHaImE"></td>
+                <td id="Ctk2h2Rs1e6_dvEFXDwOJQy.Ctk2h2Rs1e6_M1MrbiHaImE.XP2zMq79u5i_dvEFXDwOJQy.XP2zMq79u5i_M1MrbiHaImEa54TWo1DKhJ_dvEFXDwOJQy.a54TWo1DKhJ_M1MrbiHaImE"></td>
+                <td id="L2nlT7E6Kr4-Qn9nHSBeXV3+L2nlT7E6Kr4-PaX12ypLm1d" colspan="2"></td>
+                <td id="VmjklkPhGaA-Qn9nHSBeXV3+VmjklkPhGaA-PaX12ypLm1d"></td>
+                <td id="imiWtEvnbTo-Qn9nHSBeXV3+imiWtEvnbTo-PaX12ypLm1d"></td>
+                <td id="L2nlT7E6Kr4-Qn9nHSBeXV3+L2nlT7E6Kr4-PaX12ypLm1d+VmjklkPhGaA-Qn9nHSBeXV3+VmjklkPhGaA-PaX12ypLm1d+imiWtEvnbTo-Qn9nHSBeXV3+imiWtEvnbTo-PaX12ypLm1d"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.02</td>
+                <td>Tuberculosis</td>
+                <td id="obupxe16How_dvEFXDwOJQy.obupxe16How_M1MrbiHaImE" colspan="2"></td>
+                <td id="cDMXxHSa4nW_dvEFXDwOJQy.cDMXxHSa4nW_M1MrbiHaImE"></td>
+                <td id="kNRS15DjKa2_dvEFXDwOJQy.kNRS15DjKa2_M1MrbiHaImE"></td>
+                <td id="obupxe16How_dvEFXDwOJQy.obupxe16How_M1MrbiHaImE.cDMXxHSa4nW_dvEFXDwOJQy.cDMXxHSa4nW_M1MrbiHaImE.kNRS15DjKa2_dvEFXDwOJQy.kNRS15DjKa2_M1MrbiHaImE"></td>
+                <td id="obupxe16How-dvEFXDwOJQy+obupxe16How-M1MrbiHaImE" colspan="2"></td>
+                <td id="cDMXxHSa4nW-dvEFXDwOJQy+cDMXxHSa4nW-M1MrbiHaImE"></td>
+                <td id="kNRS15DjKa2-dvEFXDwOJQy+kNRS15DjKa2-M1MrbiHaImE"></td>
+                <td id="obupxe16How-dvEFXDwOJQy+obupxe16How-M1MrbiHaImE+cDMXxHSa4nW-dvEFXDwOJQy+cDMXxHSa4nW-M1MrbiHaImE+kNRS15DjKa2-dvEFXDwOJQy+kNRS15DjKa2-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.03</td>
+                <td>Respiratory diseases including infections (other than TB)</td>
+                <td id="i9Sp7G1G7Oy_dvEFXDwOJQy.i9Sp7G1G7Oy_M1MrbiHaImE" colspan="2"></td>
+                <td id="lpBruPrr2n5_dvEFXDwOJQy.lpBruPrr2n5_M1MrbiHaImE"></td>
+                <td id="nHOJKwWhU09_dvEFXDwOJQy.nHOJKwWhU09_M1MrbiHaImE"></td>
+                <td id="i9Sp7G1G7Oy_dvEFXDwOJQy.i9Sp7G1G7Oy_M1MrbiHaImE.lpBruPrr2n5_dvEFXDwOJQy.lpBruPrr2n5_M1MrbiHaImE.nHOJKwWhU09_dvEFXDwOJQy.nHOJKwWhU09_M1MrbiHaImE"></td>
+                <td id="i9Sp7G1G7Oy-dvEFXDwOJQy+i9Sp7G1G7Oy-M1MrbiHaImE" colspan="2"></td>
+                <td id="lpBruPrr2n5-dvEFXDwOJQy+lpBruPrr2n5-M1MrbiHaImE"></td>
+                <td id="nHOJKwWhU09-dvEFXDwOJQy+nHOJKwWhU09-M1MrbiHaImE"></td>
+                <td id="i9Sp7G1G7Oy-dvEFXDwOJQy+i9Sp7G1G7Oy-M1MrbiHaImE+lpBruPrr2n5-dvEFXDwOJQy+lpBruPrr2n5-M1MrbiHaImE+nHOJKwWhU09-dvEFXDwOJQy+nHOJKwWhU09-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.04</td>
+                <td>Malaria</td>
+                <td id="lmihk8myisE_dvEFXDwOJQy.lmihk8myisE_M1MrbiHaImE" colspan="2"></td>
+                <td id="sINfxKhk9zf_dvEFXDwOJQy.sINfxKhk9zf_M1MrbiHaImE"></td>
+                <td id="AK6J9Rr0jx5_dvEFXDwOJQy.AK6J9Rr0jx5_M1MrbiHaImE"></td>
+                <td id="lmihk8myisE_dvEFXDwOJQy.lmihk8myisE_M1MrbiHaImE.sINfxKhk9zf_dvEFXDwOJQy.sINfxKhk9zf_M1MrbiHaImE.AK6J9Rr0jx5_dvEFXDwOJQy.AK6J9Rr0jx5_M1MrbiHaImE"></td>
+                <td id="lmihk8myisE-dvEFXDwOJQy+lmihk8myisE-M1MrbiHaImE" colspan="2"></td>
+                <td id="sINfxKhk9zf-dvEFXDwOJQy+sINfxKhk9zf-M1MrbiHaImE"></td>
+                <td id="AK6J9Rr0jx5-dvEFXDwOJQy+AK6J9Rr0jx5-M1MrbiHaImE"></td>
+                <td id="lmihk8myisE-dvEFXDwOJQy+lmihk8myisE-M1MrbiHaImE+sINfxKhk9zf-dvEFXDwOJQy+sINfxKhk9zf-M1MrbiHaImE+AK6J9Rr0jx5-dvEFXDwOJQy+AK6J9Rr0jx5-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.05</td>
+                <td>Other Fever Related</td>
+                <td id="cyAZ31egUII_dvEFXDwOJQy.cyAZ31egUII_M1MrbiHaImE" colspan="2"></td>
+                <td id="sxbV5JZY5Jq_dvEFXDwOJQy.sxbV5JZY5Jq_M1MrbiHaImE"></td>
+                <td id="kKRULUdClES_dvEFXDwOJQy.kKRULUdClES_M1MrbiHaImE"></td>
+                <td id="cyAZ31egUII_dvEFXDwOJQy.cyAZ31egUII_M1MrbiHaImE.sxbV5JZY5Jq_dvEFXDwOJQy.sxbV5JZY5Jq_M1MrbiHaImE.kKRULUdClES_dvEFXDwOJQy.kKRULUdClES_M1MrbiHaImE"></td>
+                <td id="cyAZ31egUII-dvEFXDwOJQy+cyAZ31egUII-M1MrbiHaImE" colspan="2"></td>
+                <td id="sxbV5JZY5Jq-dvEFXDwOJQy+sxbV5JZY5Jq-M1MrbiHaImE"></td>
+                <td id="kKRULUdClES-dvEFXDwOJQy+kKRULUdClES-M1MrbiHaImE"></td>
+                <td id="cyAZ31egUII-dvEFXDwOJQy+cyAZ31egUII-M1MrbiHaImE+sxbV5JZY5Jq-dvEFXDwOJQy+sxbV5JZY5Jq-M1MrbiHaImE+kKRULUdClES-dvEFXDwOJQy+kKRULUdClES-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.06</td>
+                <td>HIV/AIDS</td>
+                <td id="qooXTfCDeBt_dvEFXDwOJQy.qooXTfCDeBt_M1MrbiHaImE" colspan="2"></td>
+                <td id="aRwQyh83qNa_dvEFXDwOJQy.aRwQyh83qNa_M1MrbiHaImE"></td>
+                <td id="DSsOf2EMhRf_dvEFXDwOJQy.DSsOf2EMhRf_M1MrbiHaImE"></td>
+                <td id="qooXTfCDeBt_dvEFXDwOJQy.qooXTfCDeBt_M1MrbiHaImE.DSsOf2EMhRf_dvEFXDwOJQy.DSsOf2EMhRf_M1MrbiHaImE.aRwQyh83qNa_dvEFXDwOJQy.aRwQyh83qNa_M1MrbiHaImE "></td>
+                <td id="qooXTfCDeBt-dvEFXDwOJQy+qooXTfCDeBt-M1MrbiHaImE" colspan="2"></td>
+                <td id="aRwQyh83qNa-dvEFXDwOJQy+aRwQyh83qNa-M1MrbiHaImE"></td>
+                <td id="DSsOf2EMhRf-dvEFXDwOJQy+DSsOf2EMhRf-M1MrbiHaImE"></td>
+                <td id="qooXTfCDeBt-dvEFXDwOJQy+qooXTfCDeBt-M1MrbiHaImE+DSsOf2EMhRf-dvEFXDwOJQy+DSsOf2EMhRf-M1MrbiHaImE+aRwQyh83qNa-dvEFXDwOJQy+aRwQyh83qNa-M1MrbiHaImE "></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.07</td>
+                <td>Heart disease/Hypertension related</td>
+                <td id="FVgIOPbYm9f_dvEFXDwOJQy.FVgIOPbYm9f_M1MrbiHaImE" colspan="2"></td>
+                <td id="YafKIrenBmd_dvEFXDwOJQy.YafKIrenBmd_M1MrbiHaImE"></td>
+                <td id="zg80DAvb4UL_dvEFXDwOJQy.zg80DAvb4UL_M1MrbiHaImE"></td>
+                <td id="zg80DAvb4UL_dvEFXDwOJQy.zg80DAvb4UL_M1MrbiHaImE.YafKIrenBmd_dvEFXDwOJQy.YafKIrenBmd_M1MrbiHaImE.FVgIOPbYm9f_dvEFXDwOJQy.FVgIOPbYm9f_M1MrbiHaImE"></td>
+                <td id="FVgIOPbYm9f-dvEFXDwOJQy+FVgIOPbYm9f-M1MrbiHaImE" colspan="2"></td>
+                <td id="YafKIrenBmd-dvEFXDwOJQy+YafKIrenBmd-M1MrbiHaImE"></td>
+                <td id="zg80DAvb4UL-dvEFXDwOJQy+zg80DAvb4UL-M1MrbiHaImE"></td>
+                <td id="zg80DAvb4UL-dvEFXDwOJQy+zg80DAvb4UL-M1MrbiHaImE+YafKIrenBmd-dvEFXDwOJQy+YafKIrenBmd-M1MrbiHaImE+FVgIOPbYm9f-dvEFXDwOJQy+FVgIOPbYm9f-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.08</td>
+                <td>Neurological disease including strokes</td>
+                <td id="kAAEIin3MS1_dvEFXDwOJQy.kAAEIin3MS1_M1MrbiHaImE" colspan="2"></td>
+                <td id="NYyKhRuQLEY_dvEFXDwOJQy.NYyKhRuQLEY_M1MrbiHaImE"></td>
+                <td id="nO9z3RmIgmH_dvEFXDwOJQy.nO9z3RmIgmH_M1MrbiHaImE"></td>
+                <td id="kAAEIin3MS1_dvEFXDwOJQy.kAAEIin3MS1_M1MrbiHaImE.NYyKhRuQLEY_dvEFXDwOJQy.NYyKhRuQLEY_M1MrbiHaImE.nO9z3RmIgmH_dvEFXDwOJQy.nO9z3RmIgmH_M1MrbiHaImE"></td>
+                <td id="kAAEIin3MS1-dvEFXDwOJQy+kAAEIin3MS1-M1MrbiHaImE" colspan="2"></td>
+                <td id="NYyKhRuQLEY-dvEFXDwOJQy+NYyKhRuQLEY-M1MrbiHaImE"></td>
+                <td id="nO9z3RmIgmH-dvEFXDwOJQy+nO9z3RmIgmH-M1MrbiHaImE"></td>
+                <td id="kAAEIin3MS1-dvEFXDwOJQy+kAAEIin3MS1-M1MrbiHaImE+NYyKhRuQLEY-dvEFXDwOJQy+NYyKhRuQLEY-M1MrbiHaImE+nO9z3RmIgmH-dvEFXDwOJQy+nO9z3RmIgmH-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr style="text-align: center">
+                <td></td>
+                <td>17.4.09</td>
+                <td style="text-align:left" style="text-align: left" colspan="11"><b>Maternal Deaths</b></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td><b>Abortion</b></td>
+                <td id="MRsXEvwH5EX_M2qwONgzdom" colspan="5"></td>
+                <td id="MRsXEvwH5EX-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td><b>Obstructed/prolonged labour</b></td>
+                <td id="n8M7J3zVm82_M2qwONgzdom" colspan="5"></td>
+                <td id="n8M7J3zVm82-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td>
+                <td style="text-align: right">(c )</td>
+                <td><b>Severe hypertesnion/fits</b></td>
+                <td id="lmZ0FWXftEo_M2qwONgzdom.KsdchxmNOJJ_M2qwONgzdom" colspan="5"></td>
+                <td id="lmZ0FWXftEo-M2qwONgzdom+KsdchxmNOJJ-M2qwONgzdom" colspan="5"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(d)</td>
+                <td><b> Bleeding</b></td>
+                <td id="li9MsSywHNA_M2qwONgzdom.dV74wV2Pzng_M2qwONgzdom" colspan="5"></td>
+                <td id="li9MsSywHNA-M2qwONgzdom+dV74wV2Pzng-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(e)</td>
+                <td><b>High fever</b></td>
+                <td id="YjZqYXqSZw5_M2qwONgzdom.wqIFjyzO89R_M2qwONgzdom" colspan="5"></td>
+                <td id="YjZqYXqSZw5-M2qwONgzdom+wqIFjyzO89R-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(f)</td>
+                <td> Other Causes (including causes not known)</td>
+                <td id="R0wJPxTHS1S_M2qwONgzdom" colspan="5"></td>
+                <td id="R0wJPxTHS1S-M2qwONgzdom" colspan="5"></td>
+
+            </tr>
+
+            <tr>
+                <td></td>
+                <td>17.4.10</td>
+                <td>Trauma/Accidents/Burn cases</td>
+                <td id="ouyMODhkMRo_dvEFXDwOJQy.ouyMODhkMRo_M1MrbiHaImE" colspan="2"></td>
+                <td id="k5i8NO6eb77_dvEFXDwOJQy.k5i8NO6eb77_M1MrbiHaImE"></td>
+                <td id="zfc1hu8R7py_dvEFXDwOJQy.zfc1hu8R7py_M1MrbiHaImE"></td>
+                <td id="ouyMODhkMRo_dvEFXDwOJQy.ouyMODhkMRo_M1MrbiHaImE.k5i8NO6eb77_dvEFXDwOJQy.k5i8NO6eb77_M1MrbiHaImE.zfc1hu8R7py_dvEFXDwOJQy.zfc1hu8R7py_M1MrbiHaImE"></td>
+                <td id="ouyMODhkMRo-dvEFXDwOJQy+ouyMODhkMRo-M1MrbiHaImE" colspan="2"></td>
+                <td id="k5i8NO6eb77-dvEFXDwOJQy+k5i8NO6eb77-M1MrbiHaImE"></td>
+                <td id="zfc1hu8R7py-dvEFXDwOJQy+zfc1hu8R7py-M1MrbiHaImE"></td>
+                <td id="ouyMODhkMRo-dvEFXDwOJQy+ouyMODhkMRo-M1MrbiHaImE+k5i8NO6eb77-dvEFXDwOJQy+k5i8NO6eb77-M1MrbiHaImE+zfc1hu8R7py-dvEFXDwOJQy+zfc1hu8R7py-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.11</td>
+                <td>Suicide</td>
+
+                <td id="dGq89cYPpIW_dvEFXDwOJQy.dGq89cYPpIW_M1MrbiHaImE" colspan="2"></td>
+                <td id="hnp71e8jQgL_dvEFXDwOJQy.hnp71e8jQgL_M1MrbiHaImE"></td>
+                <td id="rtVVrJ8ICYU_dvEFXDwOJQy.rtVVrJ8ICYU_M1MrbiHaImE"></td>
+                <td id="dGq89cYPpIW_dvEFXDwOJQy.dGq89cYPpIW_M1MrbiHaImE.hnp71e8jQgL_dvEFXDwOJQy.hnp71e8jQgL_M1MrbiHaImE.rtVVrJ8ICYU_dvEFXDwOJQy.rtVVrJ8ICYU_M1MrbiHaImE"></td>
+                <td id="dGq89cYPpIW-dvEFXDwOJQy+dGq89cYPpIW-M1MrbiHaImE" colspan="2"></td>
+                <td id="hnp71e8jQgL-dvEFXDwOJQy+hnp71e8jQgL-M1MrbiHaImE"></td>
+                <td id="rtVVrJ8ICYU-dvEFXDwOJQy+rtVVrJ8ICYU-M1MrbiHaImE"></td>
+                <td id="dGq89cYPpIW-dvEFXDwOJQy+dGq89cYPpIW-M1MrbiHaImE+hnp71e8jQgL-dvEFXDwOJQy+hnp71e8jQgL-M1MrbiHaImE+rtVVrJ8ICYU-dvEFXDwOJQy+rtVVrJ8ICYU-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.12</td>
+                <td>Animal bites and stings</td>
+                <td id="kOfWacXkLYq_dvEFXDwOJQy.kOfWacXkLYq_M1MrbiHaImE" colspan="2"></td>
+                <td id="kld8wz2wZYk_dvEFXDwOJQy.kld8wz2wZYk_M1MrbiHaImE"></td>
+                <td id="FcGDq7ceZu7_dvEFXDwOJQy.FcGDq7ceZu7_M1MrbiHaImE"></td>
+                <td id="kOfWacXkLYq_dvEFXDwOJQy.kOfWacXkLYq_M1MrbiHaImE.kld8wz2wZYk_dvEFXDwOJQy.kld8wz2wZYk_M1MrbiHaImE.FcGDq7ceZu7_dvEFXDwOJQy.FcGDq7ceZu7_M1MrbiHaImE"></td>
+                <td id="kOfWacXkLYq-dvEFXDwOJQy+kOfWacXkLYq-M1MrbiHaImE" colspan="2"></td>
+                <td id="kld8wz2wZYk-dvEFXDwOJQy+kld8wz2wZYk-M1MrbiHaImE"></td>
+                <td id="FcGDq7ceZu7-dvEFXDwOJQy+FcGDq7ceZu7-M1MrbiHaImE"></td>
+                <td id="kOfWacXkLYq-dvEFXDwOJQy+kOfWacXkLYq-M1MrbiHaImE+kld8wz2wZYk-dvEFXDwOJQy+kld8wz2wZYk-M1MrbiHaImE+FcGDq7ceZu7-dvEFXDwOJQy+FcGDq7ceZu7-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td>17.4.13</td>
+                <td style="text-align:left" colspan="11"><b>Other Diseases</b></td>
+
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(a)</td>
+                <td>Known Acute Disease</td>
+                <td id="zKT9kaelKrh_dvEFXDwOJQy.zKT9kaelKrh_M1MrbiHaImE" colspan="2"></td>
+                <td id="nEi7sZMiwzU_dvEFXDwOJQy.nEi7sZMiwzU_M1MrbiHaImE"></td>
+                <td id="BMh0V9ZLGxA_dvEFXDwOJQy.BMh0V9ZLGxA_M1MrbiHaImE"></td>
+                <td id="zKT9kaelKrh_dvEFXDwOJQy.zKT9kaelKrh_M1MrbiHaImE.nEi7sZMiwzU_dvEFXDwOJQy.nEi7sZMiwzU_M1MrbiHaImE.BMh0V9ZLGxA_dvEFXDwOJQy.BMh0V9ZLGxA_M1MrbiHaImE"></td>
+                <td id="zKT9kaelKrh-dvEFXDwOJQy+zKT9kaelKrh-M1MrbiHaImE" colspan="2"></td>
+                <td id="nEi7sZMiwzU-dvEFXDwOJQy+nEi7sZMiwzU-M1MrbiHaImE"></td>
+                <td id="BMh0V9ZLGxA-dvEFXDwOJQy+BMh0V9ZLGxA-M1MrbiHaImE"></td>
+                <td id="zKT9kaelKrh-dvEFXDwOJQy+zKT9kaelKrh-M1MrbiHaImE+nEi7sZMiwzU-dvEFXDwOJQy+nEi7sZMiwzU-M1MrbiHaImE+BMh0V9ZLGxA-dvEFXDwOJQy+BMh0V9ZLGxA-M1MrbiHaImE"></td>
+
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(b)</td>
+                <td>Known Chronic Disease</td>
+                <td id="GqZSBbKS0ga_dvEFXDwOJQy.GqZSBbKS0ga_M1MrbiHaImE" colspan="2"></td>
+                <td id="nUu6Te7XJAl_dvEFXDwOJQy.nUu6Te7XJAl_M1MrbiHaImE"></td>
+                <td id="cP3hTb5yPE9_dvEFXDwOJQy.cP3hTb5yPE9_M1MrbiHaImE"></td>
+                <td id="GqZSBbKS0ga_dvEFXDwOJQy.GqZSBbKS0ga_M1MrbiHaImE.nUu6Te7XJAl_dvEFXDwOJQy.nUu6Te7XJAl_M1MrbiHaImE.cP3hTb5yPE9_dvEFXDwOJQy.cP3hTb5yPE9_M1MrbiHaImE"></td>
+                <td id="GqZSBbKS0ga-dvEFXDwOJQy+GqZSBbKS0ga-M1MrbiHaImE" colspan="2"></td>
+                <td id="nUu6Te7XJAl-dvEFXDwOJQy+nUu6Te7XJAl-M1MrbiHaImE"></td>
+                <td id="cP3hTb5yPE9-dvEFXDwOJQy+cP3hTb5yPE9-M1MrbiHaImE"></td>
+                <td id="GqZSBbKS0ga-dvEFXDwOJQy+GqZSBbKS0ga-M1MrbiHaImE+nUu6Te7XJAl-dvEFXDwOJQy+nUu6Te7XJAl-M1MrbiHaImE+cP3hTb5yPE9-dvEFXDwOJQy+cP3hTb5yPE9-M1MrbiHaImE"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right">(c )</td>
+                <td>Causes not known</td>
+                <td colspan="2" id="uPr1FY4uuLq_dvEFXDwOJQy.uPr1FY4uuLq_M1MrbiHaImE"></td>
+                <td id="CMjeF939HQU_dvEFXDwOJQy.CMjeF939HQU_M1MrbiHaImE"></td>
+                <td id="d9TFSmhknfA_dvEFXDwOJQy.d9TFSmhknfA_M1MrbiHaImE"></td>
+                <td id="uPr1FY4uuLq_dvEFXDwOJQy.uPr1FY4uuLq_M1MrbiHaImE.CMjeF939HQU_dvEFXDwOJQy.CMjeF939HQU_M1MrbiHaImE.d9TFSmhknfA_dvEFXDwOJQy.d9TFSmhknfA_M1MrbiHaImE"></td>
+                <td colspan="2" id="uPr1FY4uuLq-dvEFXDwOJQy+uPr1FY4uuLq-M1MrbiHaImE"></td>
+                <td id="CMjeF939HQU-dvEFXDwOJQy+CMjeF939HQU-M1MrbiHaImE"></td>
+                <td id="d9TFSmhknfA-dvEFXDwOJQy+d9TFSmhknfA-M1MrbiHaImE"></td>
+                <td id="uPr1FY4uuLq-dvEFXDwOJQy+uPr1FY4uuLq-M1MrbiHaImE+CMjeF939HQU-dvEFXDwOJQy+CMjeF939HQU-M1MrbiHaImE+d9TFSmhknfA-dvEFXDwOJQy+d9TFSmhknfA-M1MrbiHaImE"></td>
+
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
+</div>

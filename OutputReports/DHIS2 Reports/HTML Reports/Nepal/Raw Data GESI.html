@@ -1,0 +1,2125 @@
+<script type="text/javascript">
+	var directDownload=true;
+	var periods = dhis2.report.periods;
+	var period = periods[0];
+	
+	var orgUnit = dhis2.report.organisationUnit;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+	var periodArray = [];
+	var ArrStringDEs = ["gt1TS2c2AXS;HWOXhR9Mhkp","CwVdkWrutXx;K007woueuZ8;hBHUG15MsYM","mvQ46z3S0rq;ucHb8wpAfiw","L1zynH1cgD4;FoD4v6iwBwo","zvWNCbZkl2c;VJ4guFBIdnb"];
+	var stringDEs = "";
+	var arrayDEs = stringDEs.split(";");
+	var stringCOCs = "Dj0rmsKZiLJ;xS4ElXqiXoA;XsYqOrbvA7e;FxNqmZfHgEO;m7XVRi1qT1J;vAdaNYgYRX3;EJv9IPWeCTb;gsOm9pEBion;fYKzBP3njcE;zJQ0xbEoQJI;GyhEtL13JfA;fKYuaCH0OuA";
+	var arrayCOCs = stringCOCs.split(";");
+
+	var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;JM8keEP4z6r;mtNeiqIynwj;UcN4jZjv9Oo";
+	var url = window.location.href;
+	var params = url.split('=');
+	var gotOrg=params[3];
+	////stringOrgGroups+=";"+gotOrg;
+	var arrOrgGroups = stringOrgGroups.split(";");
+	var uidGroupSet = "BXJjJYo3MjI";
+	var stt=0; 
+	var load=1;
+	var tableIDs=["datavalue1","datavalue2","datavalue3","datavalue4","datavalue5"];
+	var iteration = -1;
+	var rep=[false,false,false,false,false];
+	var gotPeriod=params[2];
+	var jsonGroup, jsonNepal, jsonDistricts;
+	//*******************************************************************************************************************************
+	//*******************************************************************************************************************************
+
+	
+	//var gotPeriodEnd = fourMonths[params[4]];
+	var rtype=params[4];
+	jQuery( document ).ready( function(){
+		console.log(periods);
+		console.log(orgUnit);	
+		
+		$(".tab_content").hide();
+		$(".tab_content:first").show(); 
+		
+		//alert(rtype);
+		if(rtype>1)
+		generateFourMonths();
+		getJson();
+		loadall(0);
+		
+			$("ul.tabs li").click(function() {
+			$("ul.tabs li").removeClass("active");
+			$(this).addClass("active");
+			$(".tab_content").hide();
+			var activeTab = $(this).attr("rel"); 
+			$("#"+activeTab).fadeIn(); 
+			}); 
+	});
+	
+				function hideLoad()
+				{
+					document.getElementById("cover").style.display="none";
+					document.getElementById("loads").style.display="none";
+					//document.getElementById("loading").style.display="none";
+					document.getElementsByTagName("body")[0].style.overflow="scroll";
+				}
+
+//get period *************************************************************
+		var fourMonths=[];
+        
+		function getPeriod()
+		{
+			if(rtype>1)
+			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[params[4]-1]);
+			
+			else			
+			return getPeriodTitle(gotPeriod);
+		}
+
+		function getPeriodTitle(pr)
+		{
+			var year = pr.substring(0,4);
+			var month = pr.substring(4,6);
+			var strMonth="";
+			
+			if(month=="01" || month=="1")
+				strMonth="Baishakh";
+			else if(month=="02" || month=="2")
+				strMonth="Jestha";
+			else if(month=="03" || month=="3")
+				strMonth="Ashadh";
+			else if(month=="04" || month=="4")
+				strMonth="Shrawan";
+			else if(month=="05" || month=="5")
+				strMonth="Bhadra";
+			else if(month=="06" || month=="6")
+				strMonth="Ashwin";
+			else if(month=="07" || month=="7")
+				strMonth="Kartik";
+			else if(month=="08" || month=="8")
+				strMonth="Mangsir";
+			else if(month=="09" || month=="9")
+				strMonth="Poush";
+			else if(month=="10")
+				strMonth="Magh";
+			else if(month=="11")
+				strMonth="Falgun";
+			else if(month=="12")
+				strMonth="Chaitra";
+			
+			return strMonth + " " +year;
+		}
+
+		function generateFourMonths()
+		{
+			var n=params[4];
+			gotPeriod = gotPeriod.substring(0,6);
+			var year = gotPeriod.substring(0,4);
+			var month = gotPeriod.substring(4,6);	
+			fourMonths[0]=gotPeriod;
+			gotPeriod+=";";
+			for(var y=1; y<n; y++)
+			{
+				if(month<12)
+				{
+					month++;
+				}
+				else
+				{
+					month=1;
+					year++;
+				}
+				if(month<10)
+				month="0"+month;
+				fourMonths[y]=year+""+month;
+				gotPeriod+=fourMonths[y]+";";
+				
+			}
+			
+		}
+	
+//************************************************************************
+
+
+		function loadall(t)
+		{
+			load=1;
+			stt=0;
+			
+			iteration=t;
+			if(!rep[t])
+			{				
+				currentTableID=tableIDs[iteration];	
+				rep[t]=true;
+			}								
+		}
+
+//*********************************************************************************
+//********************************************************************************
+		function getJson()
+		{
+			for(var c=0; c<ArrStringDEs.length;c++)
+			stringDEs=stringDEs+ArrStringDEs[c]+";";
+							
+			arrayDEs=stringDEs.split(";");
+			
+			//getting json for org groups
+			$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+				//alert(jsonGroup);
+				jsonGroup=json;
+				//sum(jsonGroup);
+				getParentJson();
+			});
+		}
+		
+		function getParentJson()
+		{
+			var ouid=orgUnit.id;
+			$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+ouid+"&filter=pe:"+gotPeriod,function(json){
+				//printChildren(jsonNepal,"Region");
+				jsonNepal=json;
+				getAllDistricts(0);
+			});
+		}
+		
+		var i=0;
+		function getAllDistricts(d)
+		{
+			//getting json for regions' districts, 5 means 5 regions, namely central, western etc
+				//alert(orgUnitChildrens.length);
+				if(orgUnit.id=="cCTQiGkKcTk")
+				{
+					if(d<orgUnitChildrens.length)
+					{
+						if(0<orgUnitChildrens.length)
+						{					
+							var rOrder=["fNWuOzDCRSZ","SgKEcvFdUDb","pbVS1HW9NrY","TyDBQRJzkBw","z5ZOAH5rBFu"];
+							var orguid=rOrder[d];
+							//alert(orguid);
+							$.get("../api/organisationUnits/"+orguid+".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents",function(json)
+							{
+								
+								stringOrgChild(json);
+								if(i==4)
+								{
+									//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+period);
+									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+gotPeriod,function(json){
+										
+										jsonDistricts=json;
+										printAll();
+										hideLoad();
+									});
+								}
+								i++;
+								
+								if(i<5)
+									getAllDistricts(i);								
+							});
+						}								
+					}
+				}
+				else if(orgUnitChildrens.length!=0)
+				{
+							$.get("../api/organisationUnits/"+orgUnit.id+".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents",function(json)
+							{
+								
+									stringOrgChild(json);
+									//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+period);
+									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+gotPeriod,function(json){
+										
+										jsonDistricts=json;
+										printAll();
+										hideLoad();
+									});						
+							});
+				}
+		}
+//**************************************************************************************************************
+//**************************************************************************************************************
+	function printAll()
+	{
+		for(var c=0; c<ArrStringDEs.length;c++)
+		{
+			iteration=c;
+			currentTableID=tableIDs[iteration];	
+			//alert(jsonGroup+"...."+jsonNepal+"......"+jsonDistricts);
+			sum(jsonGroup);
+			printChildren(jsonNepal,"Region");
+			printChildren(jsonDistricts,dCodes);
+		}
+		if(directDownload == true && iteration == 4)
+		tablesToExcel(['datavalue1','datavalue2','datavalue3','datavalue4','datavalue5'], ['GESI 1','GESI 2','GESI 3','GESI 4','GESI 5'], 'Raw Data GESI.xls'); 
+
+	}
+//**********************************************************************************
+//*************************storeChildren*****************************************
+		var dIDs="";
+		var	dCodes="";
+		var s=0;
+		var isFirst=true;
+		
+		function storeChildren(disId,disCode)
+		{			
+			if(isFirst)
+			{
+				dIDs=disId+";";
+				dCodes=disCode+";";
+				isFirst=false;
+			}
+			else
+			{
+				dIDs=dIDs+disId+";";
+				dCodes=dCodes+disCode+";";
+			}
+			s++;
+			
+			//alert(dCodes);
+		}
+
+///********************************************************************************
+
+//***************************sorting***********************************
+			var ChildCount=0;
+			var childrens=[];
+			var allCodes=[];
+			var regionsLoaded=0;
+
+ function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+		function stringOrgChild(json)
+		{
+				var stringOrg = "";
+				var stringCode = "";
+				
+				ChildCount=0;
+				childrens=[];
+				
+				json.children.forEach(function(child)
+				{
+					//console.log(child);	
+					var childID=child.id;
+					var childCode=child.code;
+					childrens.push([childID,childCode]);
+					childrens.sort(arraySorting);
+					ChildCount++;
+				});
+				
+				sortChildren();
+				//alert(ChildCount);
+				
+				for(var f=0; f<ChildCount; f++)
+				{
+					var childID=childrens[f][0];
+					var childCode=childrens[f][1];
+					stringOrg+=childID+";";
+					stringCode+=childCode+";";					
+				}
+				
+					stringOrg+=json.id;
+					stringCode+="Region";
+				storeChildren(stringOrg,stringCode);
+		}
+
+
+		function sortChildren()
+		{
+			for(var u=0;u<ChildCount;u++)
+			{
+				for(var k=0; k<ChildCount-1; k++)
+				{
+					if(parseInt(childrens[k][1])>parseInt(childrens[k+1][1]))
+					{
+						var tempID=childrens[k][0];
+						var tempCode=childrens[k][1];
+						
+						childrens[k][1]=childrens[k+1][1];
+						childrens[k][0]=childrens[k+1][0];
+						childrens[k+1][1]=tempCode;
+						childrens[k+1][0]=tempID;
+					}
+				}
+			}
+		}
+//******************************************************************		
+</script>
+	<style>
+		.ylw
+		{
+			background:#ffff99;
+		}
+		
+		.gray
+		{
+			background:#ccc;
+		}
+	</style>
+<script>
+function sum(json)
+{
+		var t=0;
+		var htmlReport="";
+		if(iteration==0)
+		{
+			arrOrgGroups.forEach(function(OrgGroup){
+			
+			//bg color and title******************************************************************************************
+			var cl="";
+			var fnt="";
+			var clr="";
+			if(t%2==0)
+				clr="ylw";
+			else
+				clr="gray";
+				
+				fnt="font-weight:bolder;";
+			t++;
+			htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+			
+			
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.names[OrgGroup]+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.names[OrgGroup];
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',OrgGroup, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'Dj0rmsKZiLJ');
+			 var a_14=getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'xS4ElXqiXoA');
+			 var a_15=getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'XsYqOrbvA7e');
+			 var a_16=getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'FxNqmZfHgEO');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'm7XVRi1qT1J');
+			var a_18= getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'vAdaNYgYRX3');
+			var a_19= getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'EJv9IPWeCTb');
+			var a_20 =getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'gsOm9pEBion');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'fYKzBP3njcE');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'zJQ0xbEoQJI');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'GyhEtL13JfA');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',OrgGroup, 'fKYuaCH0OuA');
+			 
+			 
+			 htmlReport+="<td align='center'  class='a'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'  class='b'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'  class='c'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'  class='d'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'  class='e'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'  class='f'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'  class='g'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'  class='h'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'  class='i'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'  class='j'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'  class='k'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'  class='l'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'  class='m'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'  class='n'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'  class='o'>"+( a_13)+"</td>";			 
+			 htmlReport+="<td align='center'  class='p'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'  class='q'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'  class='r'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'  class='s'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'  class='t'>"+ ( a_18)+"</td>";
+			 htmlReport+="<td align='center'  class='u'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'  class='v'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'  class='w'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'  class='x'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'  class='y'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'  class='z'>"+( a_24)+"</td>";			 
+			 htmlReport+="<td align='center'  class='aa'>"+( a_15 + a_17 + a_19  + a_21 + a_23 + a_13)+"</td>";
+			 htmlReport+="<td align='center'  class='bb'>"+( a_14 + a_16 + a_18  + a_20 + a_22 + a_24)+"</td>";
+
+			htmlReport+="</tr>";
+			});
+
+		}
+		else if(iteration==1)
+		{
+			arrOrgGroups.forEach(function(OrgGroup){
+			//bg color and title******************************************************************************************
+			var cl="";
+			var fnt="";
+			var clr="";
+			if(t%2==0)
+				clr="ylw";
+			else
+				clr="gray";
+				
+				fnt="font-weight:bolder;";
+			t++;
+			htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+			
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.names[OrgGroup]+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.names[OrgGroup];
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+			
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',OrgGroup, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'K007woueuZ8',OrgGroup, 'L9U3tI7WNAn');
+			 var a_14=getValueForCategoryOptionCombo(json, 'K007woueuZ8',OrgGroup, 'zLIKmL6CLOz');
+			 var a_15=getValueForCategoryOptionCombo(json, 'K007woueuZ8',OrgGroup, 'axo8zRiLkg8');
+			 var a_16=getValueForCategoryOptionCombo(json, 'K007woueuZ8',OrgGroup, 'aiXiO0KW5kz');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'K007woueuZ8',OrgGroup, 'IVNBUxSkGoO');
+			var a_18= getValueForCategoryOptionCombo(json, 'K007woueuZ8',OrgGroup, 'H3AfizhoVk2');
+			var a_19= getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',OrgGroup, 'L9U3tI7WNAn');
+			var a_20 =getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',OrgGroup, 'zLIKmL6CLOz');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',OrgGroup, 'axo8zRiLkg8');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',OrgGroup, 'aiXiO0KW5kz');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',OrgGroup, 'IVNBUxSkGoO');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',OrgGroup, 'H3AfizhoVk2');
+			 
+			 
+			 htmlReport+="<td align='center' class='a'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center' class='b'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center' class='c'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center' class='d'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center' class='e'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center' class='f'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center' class='g'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center' class='h'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center' class='i'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center' class='j'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center' class='k'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center' class='l'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center' class='m'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center' class='n'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center' class='o'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center' class='p'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center' class='q'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center' class='r'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center' class='s'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center' class='t'>"+ ( a_18)+"</td>";
+			  htmlReport+="<td align='center' class='u'>"+( a_13 + a_14 + a_15  + a_16 + a_17 + a_18)+"</td>";
+			 htmlReport+="<td align='center' class='v'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center' class='w'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center' class='x'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center' class='y'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center' class='z'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center' class='aa'>"+( a_24)+"</td>";
+			 
+			 
+			 htmlReport+="<td align='center' class='bb'>"+( a_19 + a_20 + a_21  + a_22 + a_23 + a_24)+"</td>";
+			
+			
+						
+			htmlReport+="</tr>";
+			});
+		}
+		else if(iteration==2)
+		{
+			arrOrgGroups.forEach(function(OrgGroup){
+			//bg color and title******************************************************************************************
+			var cl="";
+			var fnt="";
+			var clr="";
+			if(t%2==0)
+				clr="ylw";
+			else
+				clr="gray";
+				
+				fnt="font-weight:bolder;";
+			t++;
+			htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+			
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.names[OrgGroup]+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.names[OrgGroup];
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+			
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',OrgGroup, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'Dj0rmsKZiLJ');
+			 var a_14=getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'xS4ElXqiXoA');
+			 var a_15=getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'XsYqOrbvA7e');
+			 var a_16=getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'FxNqmZfHgEO');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'm7XVRi1qT1J');
+			var a_18= getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'vAdaNYgYRX3');
+			var a_19= getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'EJv9IPWeCTb');
+			var a_20 =getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'gsOm9pEBion');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'fYKzBP3njcE');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'zJQ0xbEoQJI');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'GyhEtL13JfA');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',OrgGroup, 'fKYuaCH0OuA');
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'>"+ ( a_18)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_24)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+( a_15 + a_17 + a_19  + a_21 + a_23 + a_13)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_14 + a_16 + a_18  + a_20 + a_22 + a_24)+"</td>";
+			
+			
+						
+			htmlReport+="</tr>";
+			});
+		}
+		else if(iteration==3)
+		{
+			arrOrgGroups.forEach(function(OrgGroup){
+			var cl="";
+			var fnt="";
+			var clr="";
+			if(t%2==0)
+				clr="ylw";
+			else
+				clr="gray";
+				
+				fnt="font-weight:bolder;";
+			t++;
+			htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.names[OrgGroup]+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.names[OrgGroup];
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+			
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',OrgGroup, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'Dj0rmsKZiLJ');
+			 var a_14=getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'xS4ElXqiXoA');
+			 var a_15=getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'XsYqOrbvA7e');
+			 var a_16=getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'FxNqmZfHgEO');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'm7XVRi1qT1J');
+			var a_18= getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'vAdaNYgYRX3');
+			var a_19= getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'EJv9IPWeCTb');
+			var a_20 =getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'gsOm9pEBion');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'fYKzBP3njcE');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'zJQ0xbEoQJI');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'GyhEtL13JfA');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',OrgGroup, 'fKYuaCH0OuA');
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'>"+ ( a_18)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_24)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+( a_15 + a_17 + a_19  + a_21 + a_23 + a_13)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_14 + a_16 + a_18  + a_20 + a_22 + a_24)+"</td>";
+			
+			
+						
+			htmlReport+="</tr>";
+			});	
+		}
+		else if(iteration==4)
+		{
+			arrOrgGroups.forEach(function(OrgGroup){
+			//bg color and title******************************************************************************************
+			var cl="";
+			var fnt="";
+			var clr="";
+			if(t%2==0)
+				clr="ylw";
+			else
+				clr="gray";
+				
+				fnt="font-weight:bolder;";
+			t++;
+			htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+			
+			
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.names[OrgGroup]+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.names[OrgGroup];
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+			
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',OrgGroup, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'Dj0rmsKZiLJ');
+			 var a_14=getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'xS4ElXqiXoA');
+			 var a_15=getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'XsYqOrbvA7e');
+			 var a_16=getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'FxNqmZfHgEO');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'm7XVRi1qT1J');
+			var a_18= getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'vAdaNYgYRX3');
+			var a_19= getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'EJv9IPWeCTb');
+			var a_20 =getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'gsOm9pEBion');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'fYKzBP3njcE');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'zJQ0xbEoQJI');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'GyhEtL13JfA');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',OrgGroup, 'fKYuaCH0OuA');
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'>"+ ( a_18)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_24)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+( a_15 + a_17 + a_19  + a_21 + a_23 + a_13)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_14 + a_16 + a_18  + a_20 + a_22 + a_24)+"</td>";
+			
+			
+						
+			htmlReport+="</tr>";
+			});	
+		}
+			
+		var prd="P"+currentTableID;
+							if(document.getElementsByClassName(prd)[0])
+							{
+								var periodTitle=document.getElementsByClassName(prd)[0].innerHTML;
+								document.getElementsByClassName(prd)[0].innerHTML=" "+periodTitle+" : "+getPeriod();
+							}
+							
+							
+							var dte="D"+currentTableID;
+							if(document.getElementsByClassName(dte)[0])
+							var dateTitle=document.getElementsByClassName(dte)[0].innerHTML;
+							var now= new Date();
+							var AmPm = (now.getHours() >= 12) ? "PM" : "AM";
+							var mints=(now.getMinutes()>9) ? now.getMinutes() : "0"+now.getMinutes();
+							var hrs= (now.getHours() >= 12) ? now.getHours()%12 : now.getHours();
+							var dteString= now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear()+" "+hrs+":"+mints+" "+AmPm;
+							if(document.getElementsByClassName(dte)[0])
+							document.getElementsByClassName(dte)[0].innerHTML=dateTitle+" : "+dteString+" ";
+		$("#"+currentTableID).append(htmlReport);
+}
+var ct=0;
+function printChildren(json,disCodes)
+{
+		var htmlReport="";
+		var arrayCodes=disCodes.split(";");
+		
+		//alert(arrayCodes.length);
+		if(iteration==0)
+		{
+			var i=0;
+			json.metaData.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+			
+			
+			
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+			}
+			else
+			{
+				htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.names[child]+"</td>";
+			i++;
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'gt1TS2c2AXS',child, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'Dj0rmsKZiLJ');
+			 var a_14=getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'xS4ElXqiXoA');
+			 var a_15=getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'XsYqOrbvA7e');
+			 var a_16=getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'FxNqmZfHgEO');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'm7XVRi1qT1J');
+			var a_18= getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'vAdaNYgYRX3');
+			var a_19= getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'EJv9IPWeCTb');
+			var a_20 =getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'gsOm9pEBion');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'fYKzBP3njcE');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'zJQ0xbEoQJI');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'GyhEtL13JfA');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'HWOXhR9Mhkp',child, 'fKYuaCH0OuA');
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'>"+ ( a_18)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_24)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+( a_15 + a_17 + a_19  + a_21 + a_23 + a_13)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_14 + a_16 + a_18  + a_20 + a_22 + a_24)+"</td>";
+			htmlReport+="</tr>";	
+			});		
+		}
+		else if(iteration==1)
+		{
+						var i=0;
+			json.metaData.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+			}
+			else
+			{
+				htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.names[child]+"</td>";
+			i++;
+			
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'CwVdkWrutXx',child, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'K007woueuZ8',child, 'L9U3tI7WNAn');
+			 var a_14=getValueForCategoryOptionCombo(json, 'K007woueuZ8',child, 'zLIKmL6CLOz');
+			 var a_15=getValueForCategoryOptionCombo(json, 'K007woueuZ8',child, 'axo8zRiLkg8');
+			 var a_16=getValueForCategoryOptionCombo(json, 'K007woueuZ8',child, 'aiXiO0KW5kz');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'K007woueuZ8',child, 'IVNBUxSkGoO');
+			var a_18= getValueForCategoryOptionCombo(json, 'K007woueuZ8',child, 'H3AfizhoVk2');
+			var a_19= getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',child, 'L9U3tI7WNAn');
+			var a_20 =getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',child, 'zLIKmL6CLOz');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',child, 'axo8zRiLkg8');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',child, 'aiXiO0KW5kz');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',child, 'IVNBUxSkGoO');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'hBHUG15MsYM',child, 'H3AfizhoVk2');
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'>"+ ( a_18)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_13 + a_14 + a_15  + a_16 + a_17 + a_18)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_24)+"</td>";
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_19 + a_20 + a_21  + a_22 + a_23 + a_24)+"</td>";
+			htmlReport+="</tr>";	
+			});		
+		}
+		else if(iteration==2)
+		{
+						var i=0;
+			json.metaData.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+			}
+			else
+			{
+				htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.names[child]+"</td>";
+			i++;
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'mvQ46z3S0rq',child, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'Dj0rmsKZiLJ');
+			 var a_14=getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'xS4ElXqiXoA');
+			 var a_15=getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'XsYqOrbvA7e');
+			 var a_16=getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'FxNqmZfHgEO');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'm7XVRi1qT1J');
+			var a_18= getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'vAdaNYgYRX3');
+			var a_19= getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'EJv9IPWeCTb');
+			var a_20 =getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'gsOm9pEBion');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'fYKzBP3njcE');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'zJQ0xbEoQJI');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'GyhEtL13JfA');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'ucHb8wpAfiw',child, 'fKYuaCH0OuA');
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'>"+ ( a_18)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_24)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+( a_15 + a_17 + a_19  + a_21 + a_23 + a_13)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_14 + a_16 + a_18  + a_20 + a_22 + a_24)+"</td>";
+
+			htmlReport+="</tr>";	
+			});		
+		}
+		else if(iteration==3)
+		{
+						var i=0;
+			json.metaData.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+			}
+			else
+			{
+				htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.names[child]+"</td>";
+			i++;
+			
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'L1zynH1cgD4',child, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'Dj0rmsKZiLJ');
+			 var a_14=getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'xS4ElXqiXoA');
+			 var a_15=getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'XsYqOrbvA7e');
+			 var a_16=getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'FxNqmZfHgEO');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'm7XVRi1qT1J');
+			var a_18= getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'vAdaNYgYRX3');
+			var a_19= getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'EJv9IPWeCTb');
+			var a_20 =getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'gsOm9pEBion');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'fYKzBP3njcE');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'zJQ0xbEoQJI');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'GyhEtL13JfA');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'FoD4v6iwBwo',child, 'fKYuaCH0OuA');
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'>"+ ( a_18)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_24)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+( a_15 + a_17 + a_19  + a_21 + a_23 + a_13)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_14 + a_16 + a_18  + a_20 + a_22 + a_24)+"</td>";
+
+			htmlReport+="</tr>";	
+			});		
+		}
+		else if(iteration==4)
+		{
+						var i=0;
+			json.metaData.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+			}
+			else
+			{
+				htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.names[child]+"</td>";
+			i++;
+			
+			var a_1 = getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'Dj0rmsKZiLJ');
+			var a_2= getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'xS4ElXqiXoA');
+			var a_3= getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'XsYqOrbvA7e');
+			var a_4 =getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'FxNqmZfHgEO');
+			 var a_5 =getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'm7XVRi1qT1J');
+			 var a_6=getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'vAdaNYgYRX3');
+			 var a_7=getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'EJv9IPWeCTb');
+			 var a_8=getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'gsOm9pEBion');
+			 var a_9 = getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'fYKzBP3njcE');
+			var a_10= getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'zJQ0xbEoQJI');
+			var a_11= getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'GyhEtL13JfA');
+			var a_12 =getValueForCategoryOptionCombo(json, 'zvWNCbZkl2c',child, 'fKYuaCH0OuA');
+			 var a_13 =getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'Dj0rmsKZiLJ');
+			 var a_14=getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'xS4ElXqiXoA');
+			 var a_15=getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'XsYqOrbvA7e');
+			 var a_16=getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'FxNqmZfHgEO');
+			 
+			 var a_17 = getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'm7XVRi1qT1J');
+			var a_18= getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'vAdaNYgYRX3');
+			var a_19= getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'EJv9IPWeCTb');
+			var a_20 =getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'gsOm9pEBion');
+			 var a_21 =getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'fYKzBP3njcE');
+			 var a_22 = getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'zJQ0xbEoQJI');
+			 var a_23 = getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'GyhEtL13JfA');
+			 var a_24 = getValueForCategoryOptionCombo(json, 'VJ4guFBIdnb',child, 'fKYuaCH0OuA');
+			 
+			 
+			 htmlReport+="<td align='center'>"+( a_1)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_3)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_4)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_5) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_6)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_7)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_8)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_9) +"</td>";
+			 htmlReport+="<td align='center'>"+( a_10)+"</td>";
+			 htmlReport+="<td align='center'>"+ ( a_11)+ "</td>";
+			 htmlReport+="<td align='center'>"+( a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_1 + a_3 + a_5  + a_7 + a_9 + a_11)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_2 + a_4 + a_6  + a_8 + a_10 + a_12)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_13)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+ ( a_14)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_15)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_16)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_17)+"</td>";
+			  htmlReport+="<td align='center'>"+ ( a_18)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_19)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_20)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_21)+"</td>";
+			  htmlReport+="<td align='center'>"+( a_22)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_23)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_24)+"</td>";
+			 
+			 htmlReport+="<td align='center'>"+( a_15 + a_17 + a_19  + a_21 + a_23 + a_13)+"</td>";
+			 htmlReport+="<td align='center'>"+( a_14 + a_16 + a_18  + a_20 + a_22 + a_24)+"</td>";
+			htmlReport+="</tr>";	
+			});		
+		}
+		
+		$("#"+currentTableID).append(htmlReport);
+			// if(directDownload == true && iteration == 4)
+		//tablesToExcel(['datavalue1','datavalue2','datavalue3','datavalue4','datavalue5'], ['GESI 1','GESI 2','GESI 3','GESI 4','GESI 5'], 'Raw Data GESI.xls'); 
+}
+
+
+//******************************************************************				
+				
+		function getValueSum(json,de,orgGroup){
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][1] == orgGroup && json.rows[i][2]!= null)
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+
+		function getValueForCategoryOptionCombo( json, de, orgUnit, coc )
+		{
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][3] != null )
+				{
+					result+=parseInt(json.rows[i][3]);
+				}
+			}
+			return result;
+		}
+
+		function getValueTotal(json,de){
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][2]!= null)
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+</script>
+
+		<!-- 		<!-- download script ------------------------------------------------------
+		--------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------- -->
+<script type="text/javascript">
+	function convert(dataURI) 
+	{
+		  // convert base64 to raw binary data held in a string
+		  // doesn't handle URLEncoded DataURIs
+		  var byteString;
+		  if (dataURI.split(',')[0].indexOf('base64') >= 0)
+			  byteString = atob(dataURI.split(',')[1]);
+		  else
+			  byteString = unescape(dataURI.split(',')[1]);
+		  // separate out the mime component
+		  var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+		  // write the bytes of the string to an ArrayBuffer
+		  var ab = new ArrayBuffer(byteString.length);
+		  var ia = new Uint8Array(ab);
+		  for (var i = 0; i < byteString.length; i++) {
+			  ia[i] = byteString.charCodeAt(i);
+		  }
+
+		  // write the ArrayBuffer to a blob, and you're done
+		  return new Blob([ab],{type: mimeString});
+	}
+	
+	 var tablesToExcel = (function() {
+    var uri = 'data:application/vnd.ms-excel;base64,'
+    , tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+      + '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>ThaiND</Author><Created>{created}</Created></DocumentProperties>'
+	  +'<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders></Borders><Font ss:Size="8"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s26"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s23"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="0"/></Borders><Font ss:Bold="1"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s24"><Alignment ss:Horizontal="Left" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s28"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s29"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style></Styles>'
+      + '{worksheets}</Workbook>'
+    , tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/>{rows}</Table></Worksheet>'
+	, tmplCellXML = '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>'
+    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+	
+    return function(tables, wsnames, wbname) {
+		var ctx = "";
+		var workbookXML = "";
+		var worksheetsXML = "";
+		var rowsXML = "";
+		
+		for (var i = 0; i < tables.length; i++) 
+		{
+		
+			if (!tables[i].nodeType) 
+			tables[i] = document.getElementById(tables[i]);
+		
+			for (var j = 0; j < tables[i].rows.length; j++) 
+			{
+				rowsXML += '<Row>'
+				for (var k = 0; k < tables[i].rows[j].cells.length; k++) 
+				{
+					
+					var cols=tables[i].rows[j].cells[k].getAttribute("colspan");
+					var rws=tables[i].rows[j].cells[k].getAttribute("rowspan");
+					var styl=tables[i].rows[j].cells[k].getAttribute("bgcolor");
+					var styl2=tables[i].rows[j].getAttribute("bgcolor");
+					var cls=tables[i].rows[j].cells[k].getAttribute("class");
+					var algn=tables[i].rows[j].cells[k].getAttribute("align");
+					var cls2=tables[i].rows[j].getAttribute("class");
+					
+						var dataType = 'String';
+						var dataValue = tables[i].rows[j].cells[k].innerHTML;
+						var typeD="";
+						var parsed=parseInt(dataValue);
+						
+						if (parsed==dataValue)
+						{
+							typeD="Number";
+						}
+						else
+						{
+							typeD="String";
+						}
+					var n;
+						if(cls)
+						{
+							n=cls.indexOf("value"); 
+						}		
+						
+					if(cls=="all2" || n>=0)
+					{
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:"s23",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid: "s23",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else if(cls2=="ylw")
+					{
+						if(k==1&&j>3)
+						var cl="s22";
+						else
+						var cl="s26";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else if(cls2=="gray")
+					{
+						if(k==1&&j>3)
+						var cl="s28";
+						else
+						var cl="s29";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					else if(styl2)
+					{
+						if(k==1&&j>3)
+						var cl="s22";
+						else
+						var cl="s26";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					
+					else if(styl)
+					{
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:"s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+							ctx = {data: dataValue, mrg: 0, sid: "s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else
+					{
+						if(cols)
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+
+						else
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: 0, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: 0, sid: "s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+					
+					}
+					
+				}
+				  rowsXML += '</Row>'
+			}
+			ctx = {rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i};
+			worksheetsXML += format(tmplWorksheetXML, ctx);
+			rowsXML = "";
+      }
+
+		ctx = {created: (new Date()).getTime(), worksheets: worksheetsXML};
+		workbookXML = format(tmplWorkbookXML, ctx);
+
+		console.log(workbookXML);
+
+		var blobUrl = URL.createObjectURL(convert(uri + base64(workbookXML)));
+		var link = document.createElement("A");
+		link.href = blobUrl;
+		//link.href = uri + base64(workbookXML);
+		link.download = wbname || 'Workbook.xls';
+		link.target = '_blank';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+    }
+  })();
+</script>
+<script type="text/javascript">
+$(document).ready(function () {
+   $("input[value=Back]").closest('div').hide();
+});
+</script>
+	<style type="text/css">
+			body
+			{
+				overflow:none;
+			}
+			ul.tabs {
+				margin: 0;
+				padding: 0;
+				float: left;
+				list-style: none;
+				height: 32px;
+				border-bottom: 1px solid #999999;
+				border-left: 1px solid #999999;
+				width: 100%;
+			}
+			ul.tabs li {
+				float: left;
+				margin: 0;
+				cursor: pointer;
+				padding: 0px 21px ;
+				height: 31px;
+				line-height: 31px;
+				border: 1px solid #999999;
+				border-left: none;
+				font-weight: bold;
+				background: #EEEEEE;
+				overflow: hidden;
+				position: relative;
+			}
+			ul.tabs li:hover {
+				background: #CCCCCC;
+			}	
+			ul.tabs li.active{
+				background: #FFFFFF;
+				border-bottom: 1px solid #FFFFFF;
+			}
+			.tab_container {
+				clear: both;
+				float: left; 
+				width: 100%;
+				background: #FFFFFF;
+			}
+			.tab_content {
+				padding: 0;
+				font-size: 1.2em;
+				display: none;
+			}
+			#container {
+				width: 100%;
+				margin: 0 auto;	
+			}
+			
+			.vtext{
+				min-width:40px;
+			}
+			
+			.borders{
+				border-bottom-color:#999999;
+			}
+			
+			.rightborder{
+				border-right-color:#999999;	
+			}
+			
+			.all{
+				font-weight:bolder;
+				padding:4px 5px;
+			}
+			
+			.all td
+			{
+				padding:3px 5px;
+			}
+			.all2{
+				font-weight:bolder;
+				padding:4px 5px;
+				background:#fff;
+				border:0;
+			}
+			#cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+		</style> 
+		<div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
+		<div id="cover" > </div>
+		<!--<input type="button" value="Download all" style="width:140px;" onclick="tablesToExcel(['datavalue1','datavalue2','datavalue3', 'datavalue4','datavalue5',], ['GESI1','GESI2','GESI3','GESI4','GESI5',], 'RAW Data GESI.xls')" id="dwnAll"/>-->
+		<input type="button" value="Reports Home" style="width:140px;" onclick='window.open("http://202.70.86.3:8080/hmisnepal/dhis-web-reporting/generateHtmlReport.action?uid=yz1OQ7Wvpam&", "_self")'/>
+		</br></br>
+		
+		
+		<div id="container">
+
+  <ul class="tabs"> 
+        <li class="active" rel="tab1"> GESI 1</li>
+        <li rel="tab2"  onclick="loadall(1)"> GESI 2</li>
+        <li rel="tab3"  onclick="loadall(2)"> GESI 3</li>
+		<li rel="tab4"  onclick="loadall(3)"> GESI 4</li>
+		<li rel="tab5"  onclick="loadall(4)"> GESI 5</li>
+    </ul>
+
+<div class="tab_container"> 
+
+     <div id="tab1" class="tab_content"> 
+ 
+         <p>
+		 
+		 <!-- report 1 ------------------------------------------------------------------------------------------>
+			<table cellspacing="0" cellpadding="0"  id="datavalue1" border="1"  style="border-collapse:collapse; border-color:#000000;">
+				<tr>
+					<td style="border-color:#999999" class="Pdatavalue1 all2" align="left" colspan="12"> Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue1 all2" align="center" colspan="6"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue1 all2" align="right" colspan="12"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="12"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999"> Disaggregation by Sex & Caste/Ethnicity </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">(Sheet 1 of 5)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="12"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+  
+  <tr class="all" >
+    <td  class="borders" bgcolor="#999999"><div align="center"></div></td>
+    <td  class="borders" bgcolor="#999999"><div align="center" style="width:200px"></div></td>
+    <td  colspan="14" bgcolor="#999999"><div align="center"> Fully Immunized Children </div></td>
+    <td  colspan="14" bgcolor="#999999"><div align="center"> Enroll in CBIMCI Programme </div></td>
+  </tr>
+  <tr class="all" >
+    <td class="borders" align="center" bgcolor="#999999"> OrgUnit Code </td><td style="min-width:200px" class="borders" align="center" bgcolor="#999999"> OrgUnit Name </td><td  colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Brah./Chhetri </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Brah./Chhetri </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+  </tr>
+  <tr class="all" >
+   <td bgcolor="#999999"></td><td bgcolor="#999999"></td> <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+  </tr>
+</table>
+				  
+			
+         </p>
+
+     </div><!-- #tab1 -->
+	 
+     <div id="tab2" class="tab_content"> 
+
+       <p>
+	   
+	   	<!-- report 2 ------------------------------------------------------------------------------------------>
+			<table cellspacing="0" cellpadding="0" id="datavalue2"  border="1"  style="border-collapse:collapse; border-color:#000000;">
+			<tr>
+					<td style="border-color:#999999" class="Pdatavalue2 all2" align="left" colspan="12">Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue2 all2" align="center" colspan="6"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue2 all2" align="right" colspan="12"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="12"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999"> Disaggregation by Sex & Caste/Ethnicity </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">(Sheet 2 of 5)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="12"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+ 
+  <tr class="all" >
+    <td   class="borders" bgcolor="#999999"><div align="center"></div></td>
+    <td   width="200" class="borders" bgcolor="#999999"><div align="center" style="width:200px"></div></td>
+    <td  colspan="14" bgcolor="#999999"><div align="center"> Underweight Children (&lt;2 Year) </div></td>
+    <td colspan="7" bgcolor="#999999"><div align="center"> Institu-tional Delivery </div></td>
+    <td  colspan="7" bgcolor="#999999"><div align="center"> Abortion Cases </div></td>
+  </tr>
+  <tr class="all" >
+    <td class="borders" align="center" bgcolor="#999999"> OrgUnit Code </td><td style="min-width:200px" class="borders" align="center" bgcolor="#999999"> OrgUnit Name </td><td  colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Brah/ Chhetri </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+    <td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Dalits </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Janjati </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Madhesi </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Muslim </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Brah/ Chhetri </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Others </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Total </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Dalits </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Janjati </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Madhesi </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Muslim </div></td>
+    <td class="borders" bgcolor="#999999"><div align="center"> Brah/ Chhetri </div></td>
+    <td  class="borders"bgcolor="#999999"><div align="center"> Others </div></td>
+    <td class="borders" bgcolor="#999999"><div align="center"> Total </div></td>
+  </tr>
+  <tr class="all" >
+    <td bgcolor="#999999"></td><td bgcolor="#999999"></td><td  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+    <td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td><td class="vtext" bgcolor="#999999"></td>
+  </tr>
+</table>
+			
+       </p>
+
+     </div><!-- #tab2 -->
+     <div id="tab3" class="tab_content"> 
+
+       <p>
+	   			<!-- report 3 ------------------------------------------------------------------------------------------>
+			
+			<table cellspacing="0" cellpadding="0" id="datavalue3" width="100%" border="1"  style="border-collapse:collapse; border-color:#000000;">
+			<tr>
+					<td style="border-color:#999999" class="Pdatavalue3 all2" align="left" colspan="12">Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue3 all2" align="center" colspan="6"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue3 all2" align="right" colspan="12"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="12"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999"> Disaggregation by Sex & Caste/Ethnicity </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">(Sheet 3 of 5)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="12"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+				
+				  <tr class="all" >
+					<td  class="borders" bgcolor="#999999"><div align="center" > </div></td>
+					<td  width="200" class="borders" bgcolor="#999999"><div align="center" style="width:200px">  </div></td>
+					<td  colspan="14" bgcolor="#999999"><div align="center"> Outpatient    Cases </div></td>
+					<td  colspan="14" bgcolor="#999999"><div align="center"> Inpatient    Cases </div></td>
+				  </tr>
+				  <tr class="all" >
+				   <td class="borders" align="center" bgcolor="#999999"> OrgUnit Code </td><td style="min-width:200px" class="borders" align="center" bgcolor="#999999"> OrgUnit Name </td><td  colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Brah./Chhetri </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Brah./Chhetri </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+					<td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+				  </tr>
+				  <tr class="all" >
+					<td bgcolor="#999999"></td><td bgcolor="#999999"></td><td  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+					<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				  </tr>
+			</table>
+       </p>
+     </div><!-- #tab3 -->
+		 
+	 <div id="tab4" class="tab_content"> 
+
+       <p>
+	   <!-- report 4 ------------------------------------------------------------------------------------------>
+		<table cellspacing="0" cellpadding="0" id="datavalue4" width="100%" border="1"  style="border-collapse:collapse; border-color:#000000;">
+			<tr>
+					<td style="border-color:#999999" class="Pdatavalue4 all2" align="left" colspan="12">Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue4 all2" align="center" colspan="6"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue4 all2" align="right" colspan="12"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="12"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999"> Disaggregation by Sex & Caste/Ethnicity </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">(Sheet 4 of 5)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="12"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+			
+			 
+			  <tr class="all">
+				<td  class="borders" bgcolor="#999999"><div align="center"> </div></td>
+				<td width="200" class="borders"  bgcolor="#999999"><div align="center" style="width:200px"> </div></td>
+				<td  colspan="14" bgcolor="#999999"><div align="center"> New    HIV+ Cases </div></td>
+				<td colspan="14" bgcolor="#999999"><div align="center"> New    Leprosy Cases </div></td>
+			  </tr>
+			  <tr class="all" >
+				<td class="borders" align="center" bgcolor="#999999"> OrgUnit Code </td><td style="min-width:200px" class="borders" align="center" bgcolor="#999999"> OrgUnit Name </td><td  colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Brah./Chhetri </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Brah./Chhetri </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+			  </tr>
+			  <tr class="all" >
+				<td bgcolor="#999999"></td><td bgcolor="#999999"></td><td  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext"  bgcolor="#999999"><div align="center"> Male </div></td>
+			  </tr>
+		</table>
+	   
+	   </p>
+	</div><!-- #tab4 -->
+	
+	 <div id="tab5" class="tab_content"> 
+
+		<p>
+	   <!-- report 5 ------------------------------------------------------------------------------------------>
+		<table cellspacing="0" cellpadding="0" id="datavalue5"  border="1"  style="border-collapse:collapse; border-color:#000000;">
+				<tr>
+					<td style="border-color:#999999" class="Pdatavalue5 all2" align="left" colspan="12">Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue5 all2" align="center" colspan="6"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue5 all2" align="right" colspan="12"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="12"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999"> Disaggregation by Sex & Caste/Ethnicity </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">(Sheet 5 of 5)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="12"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+			
+			 
+			  <tr class="all">
+				<td  class="borders" bgcolor="#999999"><div align="center"> </div></td>
+				<td style="width:200px" class="borders" bgcolor="#999999"><div align="center" style="width:200px"> </div></td>
+				<td  align="center" colspan="14" bgcolor="#999999">New TB Cases</td>
+				<td  align="center" colspan="14" bgcolor="#999999"><div align="center"> Gender Based Violence </div></td>
+			  </tr>
+			  <tr class="all" >
+				<td class="borders" align="center" bgcolor="#999999"> OrgUnit Code </td><td style="min-width:200px" class="borders" align="center" bgcolor="#999999"> OrgUnit Name </td><td  colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Brah./Chhetri </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Dalits </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Janjati </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Madhesi </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Muslim </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Brah./Chhetri </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Others </div></td>
+				<td colspan="2" bgcolor="#999999"><div align="center"> Total </div></td>
+			  </tr>
+			  <tr class="all" >
+				<td bgcolor="#999999"></td><td bgcolor="#999999"></td><td  bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Female </div></td>
+				<td class="vtext" bgcolor="#999999"><div align="center"> Male </div></td>
+			  </tr>
+		</table>
+	   
+		</p>
+	</div><!-- #tab5 -->
+ </div> <!-- .tab_container --> 
+
+</div> <!-- #container -->
+

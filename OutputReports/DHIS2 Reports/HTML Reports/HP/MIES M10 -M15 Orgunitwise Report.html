@@ -1,0 +1,977 @@
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selectedOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    var tableDX = [];
+    var totalDX = [];
+    var deUIDs = "";
+    var orgUnitChildrenUIds = "";
+    var orgUnitChildrenArray = [];
+    var no_of_orgUnitChildren = 0;
+    var periodsStr = "";
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+   
+    var trIDsArray = [];
+    var deUIDsArray = [];
+    var deUIDsStr = "";
+    var dataJSON;
+    var periodArray = [];
+    var urlParams = url.split('&');
+    var sdParam = "";
+    var edParam = "";
+    // jsonObj
+    // jsonObj
+    var dataJsonObj;
+
+    var showTable = "dataTable";
+    var showRow = "r1";
+
+    $.each(orgUnitChildren, function (i) {
+        orgUnitChildrenArray.push([orgUnitChildren[i].id, orgUnitChildren[i].name]);
+        no_of_orgUnitChildren++;
+    });
+
+    orgUnitChildrenArray.sort(arraySorting);
+
+    $(document).ready(function () {
+	
+	  if (orgUnitChildren.length == 0)
+	{
+	alert("It doenot contain any Orgunit Children.Please select another OrgUnit");
+	window.history.back();
+	}
+
+      else  if (selectedOrgUnitLevel == 2 || selectedOrgUnitLevel == 3 || selectedOrgUnitLevel == 4 || selectedOrgUnitLevel == 5) {
+            $(".hideInPrint").hide();
+            $("#btnExport").click(function (e) {
+                window.open('data:application/vnd.ms-excel,' + encodeURIComponent($('#printing').html()));
+                e.preventDefault();
+            });
+            document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+            document.getElementById('periodID').innerHTML = getPeriod(gotPeriod);
+
+            $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
+                orgUnitChildrenUIds += childOrgUnit[0] + ";";
+            });
+
+              $("#dataTable > tbody").find("tr").each(function (i, tr) {
+            if(tr.id.search("total") == -1){
+                if(tr.id.search("_") == -1){
+                    if(tr.id.search("-") > -1){
+                        if($.inArray(tr.id.split('-')[0], deUIDsArray) == -1){
+                            deUIDsArray.push(tr.id.split('-')[0]);
+                        }
+                        trIDsArray.push(tr.id);
+                    }
+                }else{
+                    var ids = tr.id.split('_');
+                    $.each(ids, function (j,uid) {
+                        if($.inArray(uid.split('-')[0], deUIDsArray) == -1){
+                            deUIDsArray.push(uid.split('-')[0]);
+                        }
+                    });
+                    trIDsArray.push(tr.id);
+                }
+            }else{
+                if(tr.id.search("-") > -1){
+                    trIDsArray.push(tr.id);
+                }
+            }
+        });
+
+        $.each(deUIDsArray, function (i, item) {
+            deUIDsStr += item + ";";
+        });
+
+      $.each(urlParams, function (i, item) {
+            if (item.split("=")[0] == "pe") {
+                sdParam = item.split("=")[1];
+            }
+            else if (item.split("=")[0] == "ed") {
+                edParam = item.split("=")[1];
+            }
+        });
+         edParam = edParam.substring(0,4)+'-'+edParam.substring(4,7);
+		 edParam = edParam.replace(/-/g, "");
+		console.log(edParam);
+		
+		
+	   generateMonthlyPeriods(sdParam, edParam);
+
+    }    loadData();
+    
+	});
+
+    // function for load table data
+    function loadData(){
+        var url = '../api/analytics.json?dimension=dx:' + deUIDsStr + '&dimension=co&dimension=ou:' + orgUnitChildrenUIds + "&dimension=co&filter=pe:" + periodsStr + "&skipMeta=true";
+        $.get(url, function (json) {
+            dataJsonObj = json;
+            loadTable();
+        });
+    
+    }
+
+    function loadTable() {
+        $("#orgUnitID").append(orgUnit.name);
+        $(".heading1 > td").attr('colspan', no_of_orgUnitChildren + 3);
+        $("#periodID").attr('colspan', no_of_orgUnitChildren);
+        $(".rowH1 > td:nth-child(2)").attr('colspan', no_of_orgUnitChildren + 1);
+        $(".rowH2 > td:nth-child(2)").attr('colspan', no_of_orgUnitChildren + 1);
+        $(".rowH3 > td:nth-child(2)").attr('colspan', no_of_orgUnitChildren + 1);
+        $(".rowH1").html();
+		  
+		  $(".rowH1").append("<td>&nbsp</td>");
+            $(".rowH2").append("<td>&nbsp</td>");
+            $(".rowH3").append("<td>&nbsp</td>");
+
+            $(".noUIDs").append("<td>&nbsp</td>");
+
+           
+        var addOrgUnits = "";
+        $("#orgUnits").html();
+        $.each(orgUnitChildrenArray, function (i, child) {
+            addOrgUnits += "<td style='text-align: center'>" + child[1] + "</td>";
+        });
+        $("#tHead4").append(addOrgUnits);
+                $.each(deUIDsArray, function (i, rowID) {
+            var addTdata = "";
+            $("#" + rowID[0] + "-" + rowID[1]).html();
+            $.each(orgUnitChildrenArray, function (j, child) {
+                addTdata += "<td colspan='1' style='text-align: center'>" + getCellValue(rowID[0], child[0], rowID[1]) + "</td>";
+            });
+            $("#" + rowID[0] + "-" + rowID[1]).append(addTdata);
+                      });
+					  
+				$.each(orgUnitChildrenArray, function (j, child) {
+                    $.each(trIDsArray, function (idx, trID) {
+                var cellValue = 0;
+                if(trID.search('total') == -1) {
+                    if (trID.search('_') == -1) {
+                        cellValue = getCellValue(trID.split('-')[0],  child[0], trID.split('-')[1]);
+                    }
+                    else { 
+                        var UIDs = trID.split('_');
+                        $.each(UIDs, function (j, deID) {
+                            cellValue += getCellValue(deID.split('-')[0],child[0],deID.split('-')[1]);
+                        });
+                    }
+                 }
+                else {
+                    var uid = trID.split('_')[0];
+                    cellValue = getCellValue(uid.split('-')[0],child[0],uid.split('-')[1]);
+                }
+                $("#" + trID).append('<td style="text-align: center;">' + cellValue + '</td>');
+            });
+			});
+
+        hideLoad();
+       
+    }
+
+    // function for getting cell values
+    function getCellValue(de, ou, co) {
+        var result = 0;
+        for (var i = 0; i < dataJsonObj.rows.length; i++) {
+            if (dataJsonObj.rows[i][0] == de && dataJsonObj.rows[i][2] == ou && dataJsonObj.rows[i][1] == co && dataJsonObj.rows[i][3] != null) {
+                result = dataJsonObj.rows[i][3];
+            }
+        }
+        return parseInt(result);
+    }
+
+	function generateMonthlyPeriods(sD, eD) {
+        var sDate = new Date(parseInt(sD.substring(0, 4)), parseInt(sD.substring(4, 6)-1));
+        sDate.setDate(1);
+        var eDate = new Date(parseInt(eD.substring(0, 4)), parseInt(eD.substring(4, 6)));
+
+        while (sDate < eDate) {
+            var month = sDate.getMonth() + 1;
+            month = ( month  ) > 9 ? month : "0" + month;
+
+            var dhisDate = sDate.getFullYear() + "" + month;
+            periodsStr = ( periodsStr == "" ) ? dhisDate : ( periodsStr + ";" + dhisDate );
+
+            periodArray.push(dhisDate);
+
+            sDate.setMonth(sDate.getMonth() + 1);
+        }
+    }
+    // function to convert periods to more visible info
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+    // function to hide loading animation
+    
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+        //document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+
+</script>
+
+
+<!-- script for printing ******************************************************************-->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font: Arial, Helvetica, sans-serif;
+                }
+
+
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width: 1px;
+                    height: 50px;
+                    -ms-transform: rotate(90deg);
+                    -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    border-style: hidden;
+                }
+
+            </style>
+    <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+<div id="cover"></div>
+</span></p>
+
+
+<table id="buttonTable">
+    <tr>
+        <td>
+            <input type="button" id="btnBack"  value=" Goto Report Selection Page"
+                   onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+            <input type="button" onclick="printContent('printing');" value="Print"/>
+            <input type="button"  id="btnExport" value=" Download Excel "/>
+        </td>
+    </tr>
+</table>
+
+<br/>
+
+<div id="printing">
+    <div id='state'>
+        <table id='dataTable' cellsapcing='6' cellpadding='4' border='1' width='80%'
+               style='border-collapse: collapse; font-size: 14px;'>
+            <style>
+                .heading1 {
+                    font-weight: bold;
+                    background-color: #c1c1c1;
+                    text-align: center;
+                    font-size: 24px;
+                }
+
+                .heading2 {
+                    font-weight: bold;
+                    background-color: #c1c1c1;
+                    text-align: left;
+                    font-size: 18px;
+                }
+				
+				.tHead4 {
+                    font-weight: bold;
+                    background-color: #c1c1c1;
+                    text-align: left;
+                    font-size: 18px;
+                }
+
+                #periodTitle {
+                    font-weight: bold;
+                    background-color: #f1f1f1;
+                    text-align: center;
+                    font-size: 18px;
+                }
+
+                .rowH1 {
+                    font-weight: bold;
+                    background-color: #c1c1c1;
+                }
+
+                .rowH2 {
+                    font-weight: bold;
+                    background-color: #cae3e7;
+                }
+
+                .rowH3 {
+                    font-weight: bold;
+                    background-color: #e1e1e1;
+                }
+
+                #dataTable > tbody > tr > td:first-child {
+                    text-align: center;
+                }
+            </style>
+            <thead>
+            <tr class="heading1" height="40px">
+                <td colspan="4">Monthly Progress Report</td>
+            </tr>
+            <tr class="heading2">
+                <td>Facility:</td>
+                <td id="orgUnitID">&nbsp;</td>
+                <td>Period:</td>
+                <td id="periodID">&nbsp;</td>
+            </tr>
+             <tr id="tHead4"  >
+			<td colspan="1" >
+			<div align="center" class="style3">S.NO</div>
+			</td>
+			<td width="100%"  colspan="2" >
+			<div align="center" class="style3">Data Element</div>
+			</td>
+			
+		</tr>
+            </thead>
+            <tbody>
+
+            <tr class='rowH2'>
+                <td>M10</td>
+                <td colspan='3'>CHILD IMMUNIZATION</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>10.1</td>
+                <td colspan='3'>Number of Infants 0 to 11 months old who received the following:</td>
+            </tr>
+            <tr id='BzPhRfomdQZ-M2qwONgzdom'>
+                <td>10.1.01</td>
+                <td>BCG</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='TsZEllpsR4r-M2qwONgzdom'>
+                <td>10.1.02</td>
+                <td>DPT1</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='r8K3Up53Ymw-M2qwONgzdom'>
+                <td>10.1.03</td>
+                <td>DPT2</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='bTZWnGHDURE-M2qwONgzdom'>
+                <td>10.1.04</td>
+                <td>DPT3</td>
+                <td>TOTAL</td>
+            </tr>
+
+            <tr id='jKxaNGvVyqI-M2qwONgzdom'>
+                <td>10.1.05</td>
+                <td>OPV 0 (Birth Dose)</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='lyWS18ztEiq-M2qwONgzdom'>
+                <td>10.1.06</td>
+                <td>OPV1</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='JEtR8u8OYa2-M2qwONgzdom'>
+                <td>10.1.07</td>
+                <td>OPV2</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='BJyPxgU3gOp-M2qwONgzdom'>
+                <td>10.1.08</td>
+                <td>OPV3</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='Ybob8LQ72Nu-M2qwONgzdom'>
+                <td>10.1.09</td>
+                <td>Hepatitis-B0</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='sLPEnKAczYT-M2qwONgzdom'>
+                <td>10.1.10</td>
+                <td>Hepatitis-B1</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='dgb9nbFX4Qd-M2qwONgzdom'>
+                <td>10.1.11</td>
+                <td>Hepatitis-B2</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='iRU6pU7XmrO-M2qwONgzdom'>
+                <td>10.1.12</td>
+                <td>Hepatitis-B3</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='JEXYOjNi4Gk-M2qwONgzdom'>
+                <td>10.1.13</td>
+                <td>Measles</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='vQ08xd1B3Yn-M2qwONgzdom'>
+                <td>10.1.14</td>
+                <td>Measles 2nd Dose</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>10.1.13</td>
+                <td colspan='3'>Total number of children aged between 9 and 11 months who have been fully immunised
+                    (BCG+DPT123+OPV123+Measles) during the month
+                </td>
+            </tr>
+            <tr id='DHIgg0wm3NP-M2qwONgzdom'>
+                <td>10.1.13.a</td>
+                <td>Male</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='fLUD5e2IpaQ-M2qwONgzdom'>
+                <td>10.1.13.b</td>
+                <td>Female</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='DHIgg0wm3NP-M2qwONgzdom_fLUD5e2IpaQ-M2qwONgzdom'>
+                <td>10.1.13.c</td>
+                <td>Total {(a) to (b)}</td>
+                <td>TOTAL</td>
+            </tr>
+
+            <tr class='rowH3'>
+                <td>10.2</td>
+                <td colspan='3'>Number of children more than 16 months who received the following</td>
+            </tr>
+            <tr id='n7NJX6eGtLY-M2qwONgzdom'>
+                <td>10.2.1</td>
+                <td>DPT Booster</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='FApNtk8ZSpo-M2qwONgzdom'>
+                <td>10.2.2</td>
+                <td>OPV Booster</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id="F1mVCxxssHH-M2qwONgzdom">
+                <td>10.2.3</td>
+                <td>Measles, Mumps, Rubella (MMR) Vaccine</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>10.3</td>
+                <td colspan='3'>Immunisation Status</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>10.3.1</td>
+                <td colspan='3'>Total number of children aged between 12 and 23 months who have been fully immunised
+                    (BCG+DPT123+OPV123+Measles) during the month
+                </td>
+            </tr>
+            <tr id='lPjeU37zySl-M2qwONgzdom'>
+                <td>10.3.1.a</td>
+                <td>Male</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='xQdloISTc60-M2qwONgzdom'>
+                <td>10.3.1.b</td>
+                <td>Female</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='lPjeU37zySl-M2qwONgzdom_xQdloISTc60-M2qwONgzdom'>
+                <td>10.3.1.c</td>
+                <td>Total {(a) to (b)}</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='aI49OUxq1GH-M2qwONgzdom'>
+                <td>10.3.2</td>
+                <td>Children more than 5 years given DT5</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='S5GtyC2y5D7-M2qwONgzdom'>
+                <td>10.3.3</td>
+                <td>Children more than 10 years given TT10</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='YXHF8pERC4p-M2qwONgzdom'>
+                <td>10.3.4</td>
+                <td>Children more than 16 years given TT16</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>10.3.5</td>
+                <td colspan='3'>Adverse Event Following Immunisation (AEFI)</td>
+            </tr>
+            <tr id='ijtTs5wuuwQ-M2qwONgzdom'>
+                <td>10.3.5.a</td>
+                <td>Abscess</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='DwCNX2nozZL-M1MrbiHaImE_DwCNX2nozZL-dvEFXDwOJQy_SlNs7tk1VpI-M1MrbiHaImE_SlNs7tk1VpI-dvEFXDwOJQy_eZjAZvaNPoC-M1MrbiHaImE_eZjAZvaNPoC-dvEFXDwOJQy_h40lJSXJ1l6-M1MrbiHaImE_h40lJSXJ1l6-dvEFXDwOJQy_iynn3Cdfdmd-M1MrbiHaImE_iynn3Cdfdmd-dvEFXDwOJQy_mj9W4r0KL7a-M2qwONgzdom'>
+                <td>10.3.5.b</td>
+                <td>Death</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='OdO0lw7O0oE-M2qwONgzdom'>
+                <td>10.3.5.c</td>
+                <td>Others</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>10.4</td>
+                <td colspan='3'>Number of Immunisation sessions during the month</td>
+            </tr>
+            <tr id='Eynr9atdSsg-M2qwONgzdom'>
+                <td>10.4.1</td>
+                <td>Planned</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='o16daVy4oAq-M2qwONgzdom'>
+                <td>10.4.2</td>
+                <td>Held</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='g2AqQHlhGTO-M2qwONgzdom'>
+                <td>10.4.3</td>
+                <td>Sessions where ASHAs were present</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH2'>
+                <td>M11</td>
+                <td colspan='3'>Number of Vitamin A doses</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>11.1</td>
+                <td colspan='3'>Administered between 9 months and 5 years</td>
+            </tr>
+            <tr id='n4urAIXq5Ft-M2qwONgzdom'>
+                <td>11.1.1</td>
+                <td>Dose-1</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='PTIvCd2Krps-M2qwONgzdom'>
+                <td>11.1.2</td>
+                <td>Dose-5</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='GhHnj8N6oqg-M2qwONgzdom'>
+                <td>11.1.3</td>
+                <td>Dose-9</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH2'>
+                <td>M12</td>
+                <td colspan='3'>Number of cases of Childhood Diseases reported during the month0-5 years:</td>
+            </tr>
+            <tr id='XaUdwom3m3W-M2qwONgzdom'>
+                <td>12.1</td>
+                <td>Diphtheria</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='JTyl5AJCNUO-M2qwONgzdom'>
+                <td>12.2</td>
+                <td>Pertussis</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='wVSa3auHREo-M2qwONgzdom'>
+                <td>12.3</td>
+                <td>Tetanus Neonatorum</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='I3GTgQ4EkHz-M2qwONgzdom'>
+                <td>12.4</td>
+                <td>Tetanus others</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='dQXVs6eCXxX-M2qwONgzdom'>
+                <td>12.5</td>
+                <td>Polio</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='dOswsXdmWgf-M2qwONgzdom'>
+                <td>12.6</td>
+                <td>Measles</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='IopkwEkMRHH-M2qwONgzdom'>
+                <td>12.7</td>
+                <td>Diarrhoea and dehydration</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='r49BXPMDM19-M2qwONgzdom'>
+                <td>12.8</td>
+                <td>Malaria</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='gEKzKqmTR9U-M2qwONgzdom'>
+                <td>12.9</td>
+                <td>Number admitted with Respiratory Infections</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH1'>
+                <td>Part B</td>
+                <td colspan='3'>Other Programmes</td>
+            </tr>
+            <tr class='rowH2'>
+                <td>M13</td>
+                <td colspan='3'>Blindness Control Programme</td>
+            </tr>
+            <tr id='UgvyoAxIrIi-M2qwONgzdom'>
+                <td>13.1</td>
+                <td>Number of Patients operated for cataract</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='juRXCV8tIdy-M2qwONgzdom'>
+                <td>13.2</td>
+                <td>Number of Intraocular Lens(IOL) implantations</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='GKPqyxBGbkz-M2qwONgzdom'>
+                <td>13.3</td>
+                <td>Number of School children detected with Refractive errors</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='ru8cSRpvBYq-M2qwONgzdom'>
+                <td>13.4</td>
+                <td>Number of children provided free glasses</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='Wzwgy3W4aK7-M2qwONgzdom'>
+                <td>13.5</td>
+                <td>Number of eyes collected</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='owaZqgvl88M-M2qwONgzdom'>
+                <td>13.6</td>
+                <td>Number of eyes utilised</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH1'>
+                <td>Part C</td>
+                <td colspan='3'>Health Facility Services</td>
+            </tr>
+            <tr class='rowH2'>
+                <td>M14</td>
+                <td colspan='3'>Patient Services</td>
+            </tr>
+            <tr id='kmNJBGXGtSy-M2qwONgzdom'>
+                <td>14.01</td>
+                <td>Number of CHC/ SDH/ DH functioning as an FRUs</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='x1JSYUNvYoZ-M2qwONgzdom'>
+                <td>14.02</td>
+                <td>Number of PHCs functioning 24X7 3 Staff Nurses?</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='USzQSFcpPbm-M2qwONgzdom'>
+                <td>14.03</td>
+                <td>Number of Anganwadi centres reported to have conducted VHNDs</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='pEEimRX3Foh-M2qwONgzdom'>
+                <td>14.04</td>
+                <td>Number of facilities having a Rogi Kalyan Samiti</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='bmBA1JcOfxU-M2qwONgzdom'>
+                <td>14.05</td>
+                <td>Number of RKS meetings held during the month</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='lVRej7gvWS6-M2qwONgzdom'>
+                <td>14.06</td>
+                <td>Number of facilities having Ambulance services Assured Referral Services available</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='L5XoZYLJj6H-M2qwONgzdom'>
+                <td>14.07</td>
+                <td>Total Number of times the Ambulance was used for transporting patients during the month</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='W9TNMnd5cEQ-M2qwONgzdom'>
+                <td>14.08</td>
+                <td>Number of Institutions having Operational Sick New Born and Child Care Units</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='gQbHBW8NHRb-M2qwONgzdom'>
+                <td>14.09</td>
+                <td>Number of functional Laproscopes in CHC/SDH/DH</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>14.10</td>
+                <td colspan='3'>Inpatient</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>14.10.1</td>
+                <td colspan='3'>Admissions</td>
+            </tr>
+            <tr id='yw0lRvgyRun-M2qwONgzdom'>
+                <td rowspan='2'>14.10.1.a</td>
+                <td rowspan='2'>Male</td>
+                <td>Children</td>
+            </tr>
+            <tr id='OdJ4ij4Gau2-M2qwONgzdom'>
+                <td style="text-align: left;">Adults</td>
+            </tr>
+            <tr id='eRz3hoW1LTK-M2qwONgzdom'>
+                <td rowspan='2'>14.10.1.b</td>
+                <td rowspan='2'>Female</td>
+                <td>Children</td>
+            </tr>
+            <tr id='FTHS9Bzc9Jf-M2qwONgzdom'>
+                <td style="text-align: left;">Adults</td>
+            </tr>
+            <tr id='yw0lRvgyRun-M2qwONgzdom_eRz3hoW1LTK-M2qwONgzdom'>
+                <td rowspan='2'>14.10.1.c</td>
+                <td rowspan='2'>Total {(a) to (b)}</td>
+                <td>Children</td>
+            </tr>
+            <tr id='OdJ4ij4Gau2-M2qwONgzdom_FTHS9Bzc9Jf-M2qwONgzdom'>
+                <td style="text-align: left;" s>Adults</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>14.10.2</td>
+                <td colspan='3'>Deaths</td>
+            </tr>
+            <tr id='QfhW9j63o98-M2qwONgzdom'>
+                <td>14.10.2.a</td>
+                <td>Male</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='FKlKkJ93fso-M2qwONgzdom'>
+                <td>14.10.2.b</td>
+                <td>Female</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='QfhW9j63o98-M2qwONgzdom_FKlKkJ93fso-M2qwONgzdom'>
+                <td>14.10.2.c</td>
+                <td>Total {(a) to (b)}</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='UQfS3qDhiTI-M2qwONgzdom'>
+                <td>14.11</td>
+                <td>In-Patient Head Count at midnight</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>14.12</td>
+                <td colspan='3'>Outpatient</td>
+            </tr>
+            <tr id='p4phCHet1oc-M2qwONgzdom'>
+                <td>14.12.1</td>
+                <td>OPD attendance (All)</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>14.13</td>
+                <td colspan='3'>Operation Theatre</td>
+            </tr>
+            <tr id='HpgcmvYP2qh-M2qwONgzdom'>
+                <td>14.13.1</td>
+                <td>Operation major (General and spinal anaesthesia)</td>
+                <td>TOTAL</td>
+            </tr>
+
+            <tr id='o1tfA9BdGe9-M2qwONgzdom'>
+                <td>14.13.2</td>
+                <td>Operation minor (No or local anaesthesia)</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>14.14</td>
+                <td colspan='3'>Others (Include other services like Dental, Ophthalmology , AYUSH etc.)</td>
+            </tr>
+            <tr id='CpjkYQ3R0Xe-M2qwONgzdom'>
+                <td>14.14.a</td>
+                <td>AYUSH</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='dsuYwZxrNX2-M2qwONgzdom'>
+                <td>14.14.b</td>
+                <td>Dental Procedures</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='dD7Q5vKhKHd-M2qwONgzdom'>
+                <td>14.14.c</td>
+                <td>Adolescent counselling services</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH2'>
+                <td>M15</td>
+                <td colspan='3'>Laboratory Testing</td>
+            </tr>
+            <tr class="noUIDs">
+                <td>15.1</td>
+                <td>Laboratory Test Details</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr class="noUIDs">
+                <td>15.1.1</td>
+                <td>Hb Tests conducted</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr id='wHH68DfxvMI-M2qwONgzdom'>
+                <td>15.1.1.a</td>
+                <td>Number of Hb tests conducted</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='GYGwcMDfGkq-M2qwONgzdom'>
+                <td>15.1.1.b</td>
+                <td>Of which number having Hb < 7 mg</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>15.1.2</td>
+                <td colspan='3'>HIV tests conducted</td>
+            </tr>
+            <tr id='nZZefGYSLQn-M2qwONgzdom'>
+                <td rowspan='2'>15.1.2.a</td>
+                <td rowspan='2'>Male</td>
+                <td>Number Positive</td>
+            </tr>
+            <tr id='MaLlZ5Qd8SN-M2qwONgzdom'>
+                <td style="text-align: left;">Number tested</td>
+            </tr>
+            <tr id='u1citzcONhu-M2qwONgzdom'>
+                <td rowspan='2'>15.1.2.b</td>
+                <td rowspan='2'>Female-Non ANC</td>
+                <td>Number Positive</td>
+            </tr>
+            <tr id='lhz1M5fgukN-M2qwONgzdom'>
+                <td style="text-align: left;">Number tested</td>
+            </tr>
+            <tr id='Bedon5W9B5l-M2qwONgzdom'>
+                <td rowspan='2'>15.1.2.c</td>
+                <td rowspan='2'>Female with ANC</td>
+                <td>Number Positive</td>
+            </tr>
+            <tr id='uCBoLSSztvv-M2qwONgzdom'>
+                <td style="text-align: left;">Number tested</td>
+            </tr>
+            <tr id='nZZefGYSLQn-M2qwONgzdom_u1citzcONhu-M2qwONgzdom_Bedon5W9B5l-M2qwONgzdom'>
+                <td rowspan='2'>15.1.2.d</td>
+                <td rowspan='2'>Total {(a) to (c)}</td>
+                <td>Number Positive</td>
+            </tr>
+            <tr id='MaLlZ5Qd8SN-M2qwONgzdom_lhz1M5fgukN-M2qwONgzdom_uCBoLSSztvv-M2qwONgzdom'>
+                <td style="text-align: left;">Number tested</td>
+            </tr>
+            <tr id='zPRW7WDO7Jt-M2qwONgzdom'>
+                <td>15.2</td>
+                <td>Widal tests conducted</td>
+                <td>Number tested</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>15.3</td>
+                <td colspan='3'>VDRL tests conducted</td>
+            </tr>
+            <tr id='ACvECbp5P04-M2qwONgzdom'>
+                <td>15.3.a</td>
+                <td>Male</td>
+                <td>Number tested</td>
+            </tr>
+            <tr id='IV4dRFeuz9n-M2qwONgzdom'>
+                <td>15.3.b</td>
+                <td>Female-Non ANC</td>
+                <td>Number tested</td>
+            </tr>
+            <tr id='P35Vskeoxwq-M2qwONgzdom'>
+                <td>15.3.c</td>
+                <td>Female with ANC</td>
+                <td>Number tested</td>
+            </tr>
+            <tr id='ACvECbp5P04-M2qwONgzdom_IV4dRFeuz9n-M2qwONgzdom_P35Vskeoxwq-M2qwONgzdom'>
+                <td>15.3.d</td>
+                <td>Total {(a) to (c)}</td>
+                <td>Number tested</td>
+            </tr>
+            <tr class='rowH3'>
+                <td>15.4</td>
+                <td colspan='3'>Malaria tests conducted</td>
+            </tr>
+            <tr id='VVMyRXSGQ4s-M2qwONgzdom'>
+                <td>15.4.1</td>
+                <td>Blood smears examined</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='sCYI4u9rMaZ-M2qwONgzdom'>
+                <td>15.4.2</td>
+                <td>Plasmodium Vivax test positive</td>
+                <td>TOTAL</td>
+            </tr>
+            <tr id='U5QK77mxhFN-M2qwONgzdom'>
+                <td>15.4.3</td>
+                <td>Plasmodium Falciparum test positive</td>
+                <td>TOTAL</td>
+            </tr>
+           </tbody>
+        </table>
+    </div>
+</div>

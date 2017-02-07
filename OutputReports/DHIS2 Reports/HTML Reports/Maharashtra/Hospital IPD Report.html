@@ -1,0 +1,953 @@
+
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>  
+<script type="text/javascript">
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+    // array declaration
+    var hospitalsArray = [];
+    var districtsArray = [];
+    var circlesArray = [];
+    var dxUIDs = [];
+	var deUIDs = "";
+	var arr=[];
+
+    var sNo = 0;
+
+    // jsonObj
+    var dataJsonObj;
+    // table dx
+    var tableDX = [
+        {dxName: "MedicineM", dxId: "eniRkFWX4t3.ZHkP7Kzsdk8+eniRkFWX4t3.qXkyjeN6Tcg"},
+        {dxName: "MedicineF", dxId: "eniRkFWX4t3.KNOzsHpDaXn+eniRkFWX4t3.NFTGxX99clg"},
+        {dxName: "SurgeryM", dxId: "PG9ektSfQnv.ZHkP7Kzsdk8+PG9ektSfQnv.qXkyjeN6Tcg"},
+        {dxName: "SurgeryF", dxId: "PG9ektSfQnv.KNOzsHpDaXn+PG9ektSfQnv.NFTGxX99clg"},
+        {dxName: "PedeatricsM", dxId: "yphUJtVMzS0.ZHkP7Kzsdk8+yphUJtVMzS0.qXkyjeN6Tcg"},
+        {dxName: "PedeatricsF", dxId: "yphUJtVMzS0.KNOzsHpDaXn+yphUJtVMzS0.NFTGxX99clg"},
+        {dxName: "Obst", dxId: "WSCfv2Uds4p.AWFHAFYJTph+mi5IPrhc9fI.AWFHAFYJTph"},
+        {dxName: "Gyn", dxId: "eUwtrDEH6P1.KNOzsHpDaXn+eUwtrDEH6P1.NFTGxX99clg"},
+        {dxName: "OrthoM", dxId: "YpNBpZFfkJb.ZHkP7Kzsdk8+YpNBpZFfkJb.qXkyjeN6Tcg"},
+        {dxName: "OrthoM", dxId: "YpNBpZFfkJb.KNOzsHpDaXn+YpNBpZFfkJb.NFTGxX99clg"},
+        {dxName: "TB", dxId: "WpciXcJkDlK.ZHkP7Kzsdk8+WpciXcJkDlK.qXkyjeN6Tcg"},
+        {dxName: "TB", dxId: "WpciXcJkDlK.KNOzsHpDaXn+WpciXcJkDlK.NFTGxX99clg"},
+        {dxName: "OPHT", dxId: "VOaqp1IOAiv.ZHkP7Kzsdk8+VOaqp1IOAiv.qXkyjeN6Tcg+SL8fdXDH9XW.ZHkP7Kzsdk8+SL8fdXDH9XW.qXkyjeN6Tcg"},
+        {dxName: "OPHT", dxId: "VOaqp1IOAiv.KNOzsHpDaXn+VOaqp1IOAiv.NFTGxX99clg+SL8fdXDH9XW.KNOzsHpDaXn+SL8fdXDH9XW.NFTGxX99clg"},
+        {dxName: "PsychiatricM", dxId: "G2CVvPSima3.ZHkP7Kzsdk8+G2CVvPSima3.qXkyjeN6Tcg"},
+        {dxName: "PsychiatricF", dxId: "G2CVvPSima3.KNOzsHpDaXn+G2CVvPSima3.NFTGxX99clg"},
+        {dxName: "SNCU/NBSUM", dxId: "Vw10i0STBbM.ZHkP7Kzsdk8+Vw10i0STBbM.qXkyjeN6Tcg"},
+        {dxName: "SNCU/NBSUF", dxId: "Vw10i0STBbM.KNOzsHpDaXn+Vw10i0STBbM.NFTGxX99clg"},
+        {dxName: "ICUM", dxId: "IVBHuDAwwWc.ZHkP7Kzsdk8+IVBHuDAwwWc.qXkyjeN6Tcg"},
+        {dxName: "ICUF", dxId: "IVBHuDAwwWc.KNOzsHpDaXn+IVBHuDAwwWc.NFTGxX99clg"},
+        {dxName: "BURNM", dxId: "xhYdUpOuJ8a.ZHkP7Kzsdk8+xhYdUpOuJ8a.qXkyjeN6Tcg"},
+        {dxName: "BURNF", dxId: "xhYdUpOuJ8a.KNOzsHpDaXn+xhYdUpOuJ8a.NFTGxX99clg"},//
+		{dxName: "NaonM", dxId: "t74IXliuxO9.ZHkP7Kzsdk8+t74IXliuxO9.qXkyjeN6Tcg"},
+        {dxName: "NaonF", dxId: "t74IXliuxO9.KNOzsHpDaXn+t74IXliuxO9.NFTGxX99clg"},
+        {dxName: "DialM", dxId: "jcqiGiN9AN1.ZHkP7Kzsdk8+jcqiGiN9AN1.qXkyjeN6Tcg"},
+        {dxName: "DialF", dxId: "jcqiGiN9AN1.KNOzsHpDaXn+jcqiGiN9AN1.NFTGxX99clg"},
+        {dxName: "Dog BiteM", dxId: "S0LIYSO4y5u.ZHkP7Kzsdk8+S0LIYSO4y5u.qXkyjeN6Tcg"},
+        {dxName: "Dog BiteF", dxId: "S0LIYSO4y5u.KNOzsHpDaXn+S0LIYSO4y5u.NFTGxX99clg"},
+        {dxName: "RabiesM", dxId: "MzzeJbxXotR.ZHkP7Kzsdk8+MzzeJbxXotR.qXkyjeN6Tcg"},
+        {dxName: "RabiesF", dxId: "MzzeJbxXotR.KNOzsHpDaXn+MzzeJbxXotR.NFTGxX99clg"},
+        {dxName: "Snake BiteM", dxId: "XesTBZeQRBi.ZHkP7Kzsdk8+XesTBZeQRBi.qXkyjeN6Tcg"},
+        {dxName: "Snake BiteF", dxId: "XesTBZeQRBi.KNOzsHpDaXn+XesTBZeQRBi.NFTGxX99clg"},
+        {dxName: "PoisoningM", dxId: "cW5ZAFlA2Od.ZHkP7Kzsdk8+cW5ZAFlA2Od.qXkyjeN6Tcg"},
+        {dxName: "PoisoningF", dxId: "cW5ZAFlA2Od.KNOzsHpDaXn+cW5ZAFlA2Od.NFTGxX99clg"},
+        {dxName: "Scorpian StingM", dxId: "kkFJTCCwg6J.ZHkP7Kzsdk8+kkFJTCCwg6J.qXkyjeN6Tcg"},
+        {dxName: "Scorpian StingF", dxId: "kkFJTCCwg6J.KNOzsHpDaXn+kkFJTCCwg6J.NFTGxX99clg"},
+        {dxName: "IsolationM", dxId: "vCMDqFfxpxE.ZHkP7Kzsdk8+vCMDqFfxpxE.qXkyjeN6Tcg"},
+        {dxName: "IsolationF", dxId: "vCMDqFfxpxE.KNOzsHpDaXn+vCMDqFfxpxE.NFTGxX99clg"},
+        {dxName: "EntM", dxId: "zmpPPXsXEwV.ZHkP7Kzsdk8+zmpPPXsXEwV.qXkyjeN6Tcg"},
+        {dxName: "EntF", dxId: "zmpPPXsXEwV.KNOzsHpDaXn+zmpPPXsXEwV.NFTGxX99clg"},
+        {dxName: "DentalM", dxId: "adpSYNolper.ZHkP7Kzsdk8+adpSYNolper.qXkyjeN6Tcg"},
+        {dxName: "DentalF", dxId: "adpSYNolper.KNOzsHpDaXn+adpSYNolper.NFTGxX99clg"},
+        {dxName: "SkinM", dxId: "A21HYuLDB6J.ZHkP7Kzsdk8+A21HYuLDB6J.qXkyjeN6Tcg"},
+        {dxName: "SkinF", dxId: "A21HYuLDB6J.KNOzsHpDaXn+A21HYuLDB6J.NFTGxX99clg"},
+        {dxName: "Other BiteM", dxId: "k7UacINfBBZ.ZHkP7Kzsdk8+k7UacINfBBZ.qXkyjeN6Tcg"},
+        {dxName: "Other BiteF", dxId: "k7UacINfBBZ.KNOzsHpDaXn+k7UacINfBBZ.NFTGxX99clg"},    
+		{dxName: "totalM", dxId: "eniRkFWX4t3.ZHkP7Kzsdk8+eniRkFWX4t3.qXkyjeN6Tcg+PG9ektSfQnv.ZHkP7Kzsdk8+PG9ektSfQnv.qXkyjeN6Tcg+yphUJtVMzS0.ZHkP7Kzsdk8+yphUJtVMzS0.qXkyjeN6Tcg+YpNBpZFfkJb.ZHkP7Kzsdk8+YpNBpZFfkJb.qXkyjeN6Tcg+WpciXcJkDlK.ZHkP7Kzsdk8+WpciXcJkDlK.qXkyjeN6Tcg+VOaqp1IOAiv.ZHkP7Kzsdk8+VOaqp1IOAiv.qXkyjeN6Tcg+SL8fdXDH9XW.ZHkP7Kzsdk8+SL8fdXDH9XW.qXkyjeN6Tcg+G2CVvPSima3.ZHkP7Kzsdk8+G2CVvPSima3.qXkyjeN6Tcg+Vw10i0STBbM.ZHkP7Kzsdk8+Vw10i0STBbM.qXkyjeN6Tcg+IVBHuDAwwWc.ZHkP7Kzsdk8+IVBHuDAwwWc.qXkyjeN6Tcg+xhYdUpOuJ8a.ZHkP7Kzsdk8+xhYdUpOuJ8a.qXkyjeN6Tcg+t74IXliuxO9.ZHkP7Kzsdk8+t74IXliuxO9.qXkyjeN6Tcg+jcqiGiN9AN1.ZHkP7Kzsdk8+jcqiGiN9AN1.qXkyjeN6Tcg+S0LIYSO4y5u.ZHkP7Kzsdk8+S0LIYSO4y5u.qXkyjeN6Tcg+MzzeJbxXotR.ZHkP7Kzsdk8+MzzeJbxXotR.qXkyjeN6Tcg+XesTBZeQRBi.ZHkP7Kzsdk8+XesTBZeQRBi.qXkyjeN6Tcg+cW5ZAFlA2Od.ZHkP7Kzsdk8+cW5ZAFlA2Od.qXkyjeN6Tcg+kkFJTCCwg6J.ZHkP7Kzsdk8+kkFJTCCwg6J.qXkyjeN6Tcg+vCMDqFfxpxE.ZHkP7Kzsdk8+vCMDqFfxpxE.qXkyjeN6Tcg+zmpPPXsXEwV.ZHkP7Kzsdk8+zmpPPXsXEwV.qXkyjeN6Tcg+adpSYNolper.ZHkP7Kzsdk8+adpSYNolper.qXkyjeN6Tcg+A21HYuLDB6J.ZHkP7Kzsdk8+A21HYuLDB6J.qXkyjeN6Tcg+k7UacINfBBZ.ZHkP7Kzsdk8+k7UacINfBBZ.qXkyjeN6Tcg"},
+                               
+		{dxName: "totalF", dxId: "eniRkFWX4t3.KNOzsHpDaXn+eniRkFWX4t3.NFTGxX99clg+PG9ektSfQnv.KNOzsHpDaXn+PG9ektSfQnv.NFTGxX99clg+yphUJtVMzS0.KNOzsHpDaXn+yphUJtVMzS0.NFTGxX99clg+YpNBpZFfkJb.KNOzsHpDaXn+YpNBpZFfkJb.NFTGxX99clg+WpciXcJkDlK.KNOzsHpDaXn+WpciXcJkDlK.NFTGxX99clg+VOaqp1IOAiv.KNOzsHpDaXn+VOaqp1IOAiv.NFTGxX99clg+SL8fdXDH9XW.KNOzsHpDaXn+SL8fdXDH9XW.NFTGxX99clg+G2CVvPSima3.KNOzsHpDaXn+G2CVvPSima3.NFTGxX99clg+Vw10i0STBbM.KNOzsHpDaXn+Vw10i0STBbM.NFTGxX99clg+IVBHuDAwwWc.KNOzsHpDaXn+IVBHuDAwwWc.NFTGxX99clg+xhYdUpOuJ8a.KNOzsHpDaXn+xhYdUpOuJ8a.NFTGxX99clg+t74IXliuxO9.KNOzsHpDaXn+t74IXliuxO9.NFTGxX99clg+jcqiGiN9AN1.KNOzsHpDaXn+jcqiGiN9AN1.NFTGxX99clg+S0LIYSO4y5u.KNOzsHpDaXn+S0LIYSO4y5u.NFTGxX99clg+MzzeJbxXotR.KNOzsHpDaXn+MzzeJbxXotR.NFTGxX99clg+XesTBZeQRBi.KNOzsHpDaXn+XesTBZeQRBi.NFTGxX99clg+cW5ZAFlA2Od.KNOzsHpDaXn+cW5ZAFlA2Od.NFTGxX99clg+kkFJTCCwg6J.KNOzsHpDaXn+kkFJTCCwg6J.NFTGxX99clg+vCMDqFfxpxE.KNOzsHpDaXn+vCMDqFfxpxE.NFTGxX99clg+zmpPPXsXEwV.KNOzsHpDaXn+zmpPPXsXEwV.NFTGxX99clg+adpSYNolper.KNOzsHpDaXn+adpSYNolper.NFTGxX99clg+A21HYuLDB6J.KNOzsHpDaXn+A21HYuLDB6J.NFTGxX99clg+k7UacINfBBZ.KNOzsHpDaXn+k7UacINfBBZ.NFTGxX99clg"},
+		{dxName: "Emer", dxId: "E5sWdNQojoX.AWFHAFYJTph+MPIrCzYfZEn.AWFHAFYJTph"},
+        {dxName: "Emerg", dxId: "eniRkFWX4t3.ZHkP7Kzsdk8+eniRkFWX4t3.qXkyjeN6Tcg+PG9ektSfQnv.ZHkP7Kzsdk8+PG9ektSfQnv.qXkyjeN6Tcg+yphUJtVMzS0.ZHkP7Kzsdk8+yphUJtVMzS0.qXkyjeN6Tcg+YpNBpZFfkJb.ZHkP7Kzsdk8+YpNBpZFfkJb.qXkyjeN6Tcg+WpciXcJkDlK.ZHkP7Kzsdk8+WpciXcJkDlK.qXkyjeN6Tcg+VOaqp1IOAiv.ZHkP7Kzsdk8+VOaqp1IOAiv.ZHkP7Kzsdk8+VOaqp1IOAiv.qXkyjeN6Tcg+G2CVvPSima3.ZHkP7Kzsdk8+G2CVvPSima3.qXkyjeN6Tcg+Vw10i0STBbM.ZHkP7Kzsdk8+Vw10i0STBbM.qXkyjeN6Tcg+IVBHuDAwwWc.ZHkP7Kzsdk8+IVBHuDAwwWc.qXkyjeN6Tcg+xhYdUpOuJ8a.ZHkP7Kzsdk8+xhYdUpOuJ8a.qXkyjeN6Tcg+S0LIYSO4y5u.ZHkP7Kzsdk8+S0LIYSO4y5u.qXkyjeN6Tcg+MzzeJbxXotR.ZHkP7Kzsdk8+MzzeJbxXotR.qXkyjeN6Tcg+XesTBZeQRBi.ZHkP7Kzsdk8+XesTBZeQRBi.qXkyjeN6Tcg+cW5ZAFlA2Od.ZHkP7Kzsdk8+cW5ZAFlA2Od.qXkyjeN6Tcg+kkFJTCCwg6J.ZHkP7Kzsdk8+kkFJTCCwg6J.qXkyjeN6Tcg+vCMDqFfxpxE.ZHkP7Kzsdk8+vCMDqFfxpxE.qXkyjeN6Tcg+zmpPPXsXEwV.ZHkP7Kzsdk8+zmpPPXsXEwV.qXkyjeN6Tcg+adpSYNolper.ZHkP7Kzsdk8+adpSYNolper.qXkyjeN6Tcg+A21HYuLDB6J.ZHkP7Kzsdk8+A21HYuLDB6J.qXkyjeN6Tcg+k7UacINfBBZ.ZHkP7Kzsdk8+k7UacINfBBZ.qXkyjeN6Tcg+eniRkFWX4t3.KNOzsHpDaXn+eniRkFWX4t3.NFTGxX99clg+PG9ektSfQnv.KNOzsHpDaXn+PG9ektSfQnv.NFTGxX99clg+yphUJtVMzS0.KNOzsHpDaXn+yphUJtVMzS0.NFTGxX99clg+WSCfv2Uds4p.AWFHAFYJTph+mi5IPrhc9fI.AWFHAFYJTph+eUwtrDEH6P1.KNOzsHpDaXn+eUwtrDEH6P1.NFTGxX99clg+YpNBpZFfkJb.KNOzsHpDaXn+YpNBpZFfkJb.NFTGxX99clg+WpciXcJkDlK.KNOzsHpDaXn+WpciXcJkDlK.NFTGxX99clg+VOaqp1IOAiv.KNOzsHpDaXn+VOaqp1IOAiv.NFTGxX99clg+G2CVvPSima3.KNOzsHpDaXn+G2CVvPSima3.NFTGxX99clg+Vw10i0STBbM.KNOzsHpDaXn+Vw10i0STBbM.NFTGxX99clg+IVBHuDAwwWc.KNOzsHpDaXn+IVBHuDAwwWc.NFTGxX99clg+xhYdUpOuJ8a.KNOzsHpDaXn+xhYdUpOuJ8a.NFTGxX99clg+S0LIYSO4y5u.KNOzsHpDaXn+S0LIYSO4y5u.NFTGxX99clg+MzzeJbxXotR.KNOzsHpDaXn+MzzeJbxXotR.NFTGxX99clg+XesTBZeQRBi.KNOzsHpDaXn+XesTBZeQRBi.NFTGxX99clg+cW5ZAFlA2Od.KNOzsHpDaXn+cW5ZAFlA2Od.NFTGxX99clg+kkFJTCCwg6J.KNOzsHpDaXn+kkFJTCCwg6J.NFTGxX99clg+vCMDqFfxpxE.KNOzsHpDaXn+vCMDqFfxpxE.NFTGxX99clg+zmpPPXsXEwV.KNOzsHpDaXn+zmpPPXsXEwV.NFTGxX99clg+adpSYNolper.KNOzsHpDaXn+adpSYNolper.NFTGxX99clg+A21HYuLDB6J.KNOzsHpDaXn+A21HYuLDB6J.NFTGxX99clg+k7UacINfBBZ.KNOzsHpDaXn+k7UacINfBBZ.NFTGxX99clg+t74IXliuxO9.ZHkP7Kzsdk8+t74IXliuxO9.qXkyjeN6Tcg+jcqiGiN9AN1.ZHkP7Kzsdk8+jcqiGiN9AN1.qXkyjeN6Tcg+t74IXliuxO9.KNOzsHpDaXn+t74IXliuxO9.NFTGxX99clg+jcqiGiN9AN1.KNOzsHpDaXn+jcqiGiN9AN1.NFTGxX99clg+SL8fdXDH9XW.ZHkP7Kzsdk8+SL8fdXDH9XW.qXkyjeN6Tcg+SL8fdXDH9XW.KNOzsHpDaXn+SL8fdXDH9XW.NFTGxX99clg"},
+                                 
+		{dxName: "out", dxId: "Jn6XrpvZL9N.AWFHAFYJTph+UDPHWmC6tDf.AWFHAFYJTph"},
+        {dxName: "register", dxId: "LXRUJz9e7xT.AWFHAFYJTph"}  //51
+    ];
+	
+	/*
+	(E5sWdNQojoX.AWFHAFYJTph+MPIrCzYfZEn.AWFHAFYJTph)/(eniRkFWX4t3.ZHkP7Kzsdk8+eniRkFWX4t3.qXkyjeN6Tcg+PG9ektSfQnv.ZHkP7Kzsdk8+PG9ektSfQnv.qXkyjeN6Tcg+yphUJtVMzS0.ZHkP7Kzsdk8+yphUJtVMzS0.qXkyjeN6Tcg+YpNBpZFfkJb.ZHkP7Kzsdk8+YpNBpZFfkJb.qXkyjeN6Tcg+WpciXcJkDlK.ZHkP7Kzsdk8+WpciXcJkDlK.qXkyjeN6Tcg+VOaqp1IOAiv.ZHkP7Kzsdk8+VOaqp1IOAiv.ZHkP7Kzsdk8+VOaqp1IOAiv.qXkyjeN6Tcg+G2CVvPSima3.ZHkP7Kzsdk8+G2CVvPSima3.qXkyjeN6Tcg+Vw10i0STBbM.ZHkP7Kzsdk8+Vw10i0STBbM.qXkyjeN6Tcg+IVBHuDAwwWc.ZHkP7Kzsdk8+IVBHuDAwwWc.qXkyjeN6Tcg+xhYdUpOuJ8a.ZHkP7Kzsdk8+xhYdUpOuJ8a.qXkyjeN6Tcg+S0LIYSO4y5u.ZHkP7Kzsdk8+S0LIYSO4y5u.qXkyjeN6Tcg+MzzeJbxXotR.ZHkP7Kzsdk8+MzzeJbxXotR.qXkyjeN6Tcg+XesTBZeQRBi.ZHkP7Kzsdk8+XesTBZeQRBi.qXkyjeN6Tcg+cW5ZAFlA2Od.ZHkP7Kzsdk8+cW5ZAFlA2Od.qXkyjeN6Tcg+kkFJTCCwg6J.ZHkP7Kzsdk8+kkFJTCCwg6J.qXkyjeN6Tcg+vCMDqFfxpxE.ZHkP7Kzsdk8+vCMDqFfxpxE.qXkyjeN6Tcg+zmpPPXsXEwV.ZHkP7Kzsdk8+zmpPPXsXEwV.qXkyjeN6Tcg+adpSYNolper.ZHkP7Kzsdk8+adpSYNolper.qXkyjeN6Tcg+A21HYuLDB6J.ZHkP7Kzsdk8+A21HYuLDB6J.qXkyjeN6Tcg+k7UacINfBBZ.ZHkP7Kzsdk8+k7UacINfBBZ.qXkyjeN6Tcg+eniRkFWX4t3.KNOzsHpDaXn+eniRkFWX4t3.NFTGxX99clg+PG9ektSfQnv.KNOzsHpDaXn+PG9ektSfQnv.NFTGxX99clg+yphUJtVMzS0.KNOzsHpDaXn+yphUJtVMzS0.NFTGxX99clg+WSCfv2Uds4p.AWFHAFYJTph+mi5IPrhc9fI.AWFHAFYJTph+eUwtrDEH6P1.KNOzsHpDaXn+eUwtrDEH6P1.NFTGxX99clg+YpNBpZFfkJb.KNOzsHpDaXn+YpNBpZFfkJb.NFTGxX99clg+WpciXcJkDlK.KNOzsHpDaXn+WpciXcJkDlK.NFTGxX99clg+VOaqp1IOAiv.KNOzsHpDaXn+VOaqp1IOAiv.NFTGxX99clg+G2CVvPSima3.KNOzsHpDaXn+G2CVvPSima3.NFTGxX99clg+Vw10i0STBbM.KNOzsHpDaXn+Vw10i0STBbM.NFTGxX99clg+IVBHuDAwwWc.KNOzsHpDaXn+IVBHuDAwwWc.NFTGxX99clg+xhYdUpOuJ8a.KNOzsHpDaXn+xhYdUpOuJ8a.NFTGxX99clg+S0LIYSO4y5u.KNOzsHpDaXn+S0LIYSO4y5u.NFTGxX99clg+MzzeJbxXotR.KNOzsHpDaXn+MzzeJbxXotR.NFTGxX99clg+XesTBZeQRBi.KNOzsHpDaXn+XesTBZeQRBi.NFTGxX99clg+cW5ZAFlA2Od.KNOzsHpDaXn+cW5ZAFlA2Od.NFTGxX99clg+kkFJTCCwg6J.KNOzsHpDaXn+kkFJTCCwg6J.NFTGxX99clg+vCMDqFfxpxE.KNOzsHpDaXn+vCMDqFfxpxE.NFTGxX99clg+zmpPPXsXEwV.KNOzsHpDaXn+zmpPPXsXEwV.NFTGxX99clg+adpSYNolper.KNOzsHpDaXn+adpSYNolper.NFTGxX99clg+A21HYuLDB6J.KNOzsHpDaXn+A21HYuLDB6J.NFTGxX99clg+k7UacINfBBZ.KNOzsHpDaXn+k7UacINfBBZ.NFTGxX99clg+t74IXliuxO9.ZHkP7Kzsdk8+t74IXliuxO9.qXkyjeN6Tcg+jcqiGiN9AN1.ZHkP7Kzsdk8+jcqiGiN9AN1.qXkyjeN6Tcg+t74IXliuxO9.KNOzsHpDaXn+t74IXliuxO9.NFTGxX99clg+jcqiGiN9AN1.KNOzsHpDaXn+jcqiGiN9AN1.NFTGxX99clg+SL8fdXDH9XW.ZHkP7Kzsdk8+SL8fdXDH9XW.qXkyjeN6Tcg+SL8fdXDH9XW.KNOzsHpDaXn+SL8fdXDH9XW.NFTGxX99clg)*100
+	*/
+//119+97=216
+    // data <table><body> id
+    var showTable = "dataTable";
+    
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+
+    function arraySorting(a, b){
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    $(document).ready( function(){
+        $(".hideInPrint").hide();
+        $("#btnExport").click(function(e) {
+            window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+            e.preventDefault();
+        });
+
+        if(selOrgUnitLevel == 2 || selOrgUnitLevel == 3 || selOrgUnitLevel == 4) {
+
+            document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+            document.getElementById('period').innerHTML = getPeriod(gotPeriod);
+
+            $.each(tableDX, function (i) {
+			if(i !=51){
+			
+                var UIDs = this.dxId.split("+");
+                $.each(UIDs, function (i) {
+                    dxUIDs.push([UIDs[i].split(".")[0], UIDs[i].split(".")[1]])
+                });
+				}
+            });
+			
+			
+			
+			dxUIDs.push([["LXRUJz9e7xT"],["AWFHAFYJTph"]]);
+			
+			
+			
+			console.log(dxUIDs);
+		    
+           
+            if(selOrgUnitLevel == 2){
+                $.each(orgUnitChildren, function(idx, curr_Val){
+                    circlesArray.push([curr_Val.id, curr_Val.name]);
+                });
+                circlesArray.sort(arraySorting);
+            }
+            //console.log(dxUIDs);
+
+            // getting all the hospital ids and names in to one array
+            var hospUrl = "../api/organisationUnitGroups/S57GNhlxPe7.json?fields=organisationUnits[id,name,path]&includeDescendants=true";
+            $.get(hospUrl, function (hospitalJSON) {
+
+                // get all districts to an array
+                var districtUrl = "../api/organisationUnitGroups/CXswpFTMKVB.json?fields=organisationUnits[id,name,path]&includeDescendants=true";
+
+                $.get(districtUrl, function (districtJSON) {
+
+                    // select the district
+                    $.each(districtJSON.organisationUnits, function (i, curr_district) {
+                        var parentCircleID = curr_district.path.split("/")[3];
+                        districtsArray.push([curr_district.id, curr_district.name, parentCircleID]);
+                    });
+                    districtsArray.sort(arraySorting);
+                });
+                // getting all the orgUnitIDs into one array
+                var orgUnitUrl = "../api/organisationUnits/" + orgUnit.id + ".json?fields=[id]&includeDescendants=true";
+
+                $.get(orgUnitUrl, function (orgUnitJSON) {
+
+                    var alertMsg = 0;
+
+                    // cross checking the hospitalArray and orgUnitArray to find specific Hospitals for a Circle and find the district for that using path
+                    $.each(hospitalJSON.organisationUnits, function (i, curr_hospVal) {
+                        $.each(orgUnitJSON.organisationUnits, function (j, curr_orgUnitVal) {
+                            if (curr_hospVal.id == curr_orgUnitVal.id) {
+                                var parentDistrictID = curr_hospVal.path.split("/")[4];
+                                hospitalsArray.push([curr_hospVal.id, curr_hospVal.name, parentDistrictID]);
+                                alertMsg = 1;
+                                return false; // breaking the inner each loop if id is found
+                            }
+                        });
+                    });
+
+                    hospitalsArray.sort(arraySorting);
+                    // calling loadData() for each district to populate the table with data
+                    loadData();
+
+                    if (alertMsg == 0) {
+                        alert(orgUnit.name + " doesn't have hospiitals registered!!");
+                        window.history.back();
+                    }
+                });
+            });
+        }
+        else {
+            alert(" Please select State, Circle or District as an organisation Unit");
+            window.history.back();
+        }
+    });
+
+    // function for load table data
+    function loadData(){
+        var hospitalUIDs = "";
+        $.each(hospitalsArray, function (j) {
+            hospitalUIDs += hospitalsArray[j][0] + ";";
+        });
+
+		 $.each(dxUIDs, function (i) {
+		
+            arr.push(dxUIDs[i][0]);
+          });
+		
+		
+		
+      
+       var uniqueNames = [];
+       $.each(arr, function(i, el){
+      if($.inArray(el, uniqueNames) === -1) uniqueNames.push(el);
+    	});
+	 
+	 $.each(uniqueNames, function (i) {
+		
+            deUIDs +=uniqueNames[i]+";";
+        });
+		console.log(deUIDs);
+	
+	console.log(deUIDs)	
+		
+   
+        var dataUrl = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=ou:" + hospitalUIDs + "&dimension=co&filter=pe:" + period;
+		console.log(dataUrl);
+        $.get(dataUrl, function(json){
+            dataJsonObj = json;
+			console.log(dataJsonObj);
+            loadTable();
+        });
+    }
+
+    // function for load table
+    function loadTable(){
+        if(selOrgUnitLevel == 2){
+            var htmlReport = "";
+            var calcData_CirclesArray = [];
+
+            // generates the HTML report
+            $("#" + showTable + " > tbody").html("");
+
+            $.each(circlesArray, function(x){
+                var circlesDistrictArray = [];
+                var calcData_districtsArray = [];
+
+                $.each(districtsArray, function (index) {
+                    if(districtsArray[index][2] == circlesArray[x][0]) {
+                        var hasHospitals = false;
+                        $.each(hospitalsArray, function (i) {
+                            if (hospitalsArray[i][2] == districtsArray[index][0]) {
+                                hasHospitals = true;
+                            }
+                        });
+
+                        if (hasHospitals == true) {
+                            var districtID = districtsArray[index][0];
+                            var districtHospitalsArray = [];
+                            var districtName = "";
+                            var dataValuesArray = [];
+
+                            // gets the current district name to a variable for future usage
+                            $.each(districtsArray, function (i) {
+                                if (districtsArray[i][0] == districtID) {
+                                    districtName = districtsArray[i][1];
+                                    return false;
+                                }
+                            });
+
+                            // gets current district's hospitals to an array
+                            $.each(hospitalsArray, function (i) {
+                                if (hospitalsArray[i][2] == districtID) {
+                                    districtHospitalsArray.push([hospitalsArray[i][0], hospitalsArray[i][1]])
+                                }
+                            });
+
+                            // data rows
+                            $.each(districtHospitalsArray, function (i) {
+                                htmlReport += "<tr>";
+                                htmlReport += "<td align='center'><strong>" + (sNo + 1) + "</strong></td>";
+                                htmlReport += "<td align='left' colspan='4'>" + districtHospitalsArray[i][1] + "</td>";
+
+                          var rowarray=[];
+                             $.each(tableDX, function (j) {
+							
+							 var cellValue = 0;
+							
+					      	if(j!=51){
+                                       if(j==49){
+									   var value=0.0;
+										       var ids = tableDX[j].dxId.split("+");
+											   var t=0;
+                                                for (var x = 0; x < ids.length; x++) {
+												 t += getCellValue(ids[x].split(".")[0], districtHospitalsArray[i][0], ids[x].split(".")[1]);
+										         	}	console.info("t" +t);
+												    if(t==0){
+												            value=0;
+												     }
+												    else{
+                                                             value +=(parseFloat(rowarray[48])/t)*100;
+												    }
+                                                cellValue=t;
+                                               
+										
+									  	}  
+										else{ 
+										
+										         
+                                                var ids = tableDX[j].dxId.split("+");
+                                                for (var x = 0; x < ids.length; x++) {
+                                        
+                                                cellValue += getCellValue(ids[x].split(".")[0], districtHospitalsArray[i][0], ids[x].split(".")[1]);
+                                               
+                                                }
+									
+							                 }
+								}			 
+							else {
+							  
+							   cellValue = getCellValue("LXRUJz9e7xT", districtHospitalsArray[i][0], "AWFHAFYJTph");
+							  
+							}
+                                    rowarray.push(cellValue);
+                                    dataValuesArray.push(cellValue);
+									if(j==49){
+									htmlReport += "<td align='center'>" + value + "</td>";
+									}
+									else{
+                                   htmlReport += "<td align='center'>" + cellValue + "</td>";
+								   }
+                                    
+                                });
+
+
+                        // for displaying total
+                   //     htmlReport += "<td align='center'><Strong>" + ((value.toString() == 'NaN') ? "-" : value) + "</Strong></td>";
+                   //     dataValuesArray.push(value);
+                        htmlReport += "</tr>";
+                        sNo++;
+                    });
+
+                            // final row of the district (calculated district total)
+                            htmlReport += "<tr bgcolor='#cdfbc3'>";
+                            htmlReport += "<td align='left' colspan='5' ><strong>" + districtName + " Total" + "</strong></td>"
+
+                    var calcValuesArray = [];
+                    //note: (tableDx.length ) is to calculate the total values
+					
+                   for (var j = 0; j < tableDX.length ; j++) {
+				   
+                        var calcValue = loadCalculatedData(j, dataValuesArray, districtHospitalsArray);
+						   if(j==49){
+						     htmlReport += "<td align='center'><Strong>" +( parseFloat(calcValuesArray[48])/ parseFloat(calcValue))*100 + "</Strong></td>";
+						   }
+						   else{
+						    htmlReport += "<td align='center'><Strong>" +  calcValue + "</Strong></td>";
+						   }
+                       
+                        calcValuesArray.push(calcValue);
+                    }
+                            // add calculated data for a specific district to an array for further calculations
+                            $.each(calcValuesArray, function (i) {
+                                calcData_districtsArray.push([calcValuesArray[i]]);
+                            });
+
+                            htmlReport += "</tr>";
+                        }
+                    }
+                });
+                // load final rows of circles
+                htmlReport += "<tr bgcolor='#bcdf7e'>";
+
+                $.each(districtsArray, function (i) {
+                    var hasHospitals = false;
+                    $.each(hospitalsArray, function (j) {
+                        if (hospitalsArray[j][2] == districtsArray[i][0]) {
+                            hasHospitals = true;
+                            return false;
+                        }
+                    });
+                    if(hasHospitals == true) {
+                        if (districtsArray[i][2] == circlesArray[x][0]) {
+                            circlesDistrictArray.push([districtsArray[i][0]]);
+                        }
+                    }
+                });
+
+                htmlReport += "<td colspan='5'><Strong>" + circlesArray[x][1] + " Total" + "</Strong></td>";
+			
+			var f=[];
+                for (var j = 0; j < tableDX.length; j++) {
+				     if(j==49){
+					  var calcValue = loadCalculatedDataFinal(j, circlesDistrictArray, calcData_districtsArray);
+					  var t = (parseFloat(f[48])/calcValue)*100;
+					  htmlReport += "<td align='center'><Strong>" + t + "</Strong></td>";
+					 }
+				else{
+                    var calcValue = loadCalculatedDataFinal(j, circlesDistrictArray, calcData_districtsArray);
+                    htmlReport += "<td align='center'><Strong>" + calcValue + "</Strong></td>";
+                    
+					}
+					 f.push(calcValue);
+					calcData_CirclesArray.push(calcValue);
+                }	
+		/*	
+			var f=[];
+                for (var j = 0; j < tableDX.length ; j++) {
+				               if(j==49){
+							      var calcValue = (parseFloat(f[48])/loadCalculatedDataFinal(j, orgUnit_districtArray, calcData_districtsArray))*100;
+							   }
+							   else{
+							   var calcValue = loadCalculatedDataFinal(j, orgUnit_districtArray, calcData_districtsArray);
+							   }
+                    f.push(calcValue);
+                    htmlReport += "<td align='center'><Strong>" + calcValue + "</Strong></td>";
+                }
+				*/
+
+                // add calculated data for a specific district to an array for further calculations
+                $.each(calcData_districtsArray, function (i) {
+                    calcData_CirclesArray.push([calcData_districtsArray[i]]);
+                });
+                htmlReport += "</tr>";
+
+            });
+            // load final row of state
+            htmlReport += "<tr bgcolor='#9ac54e'>";
+
+            htmlReport += "<td colspan='5'><Strong>" + orgUnit.name + " State Total" + "</Strong></td>";
+           var k=[];
+		   for (var j = 0; j < tableDX.length ; j++) {
+			
+			if(j==49){
+			   var calcValue =(parseFloat(k[48]) /loadCalculatedDataFinal(j, circlesArray, calcData_CirclesArray))*100;
+			
+			}
+			else{
+                var calcValue = loadCalculatedDataFinal(j, circlesArray, calcData_CirclesArray);
+                
+                  }
+				  k.push(calcValue);
+				  htmlReport += "<td align='center'><Strong>" + calcValue+ "</Strong></td>";
+            }
+			
+			
+            // show report
+            $("#" + showTable).append(htmlReport);
+            hideLoad();
+        }
+        else if(selOrgUnitLevel == 3 || selOrgUnitLevel == 4) {
+            var htmlReport = "";
+            var orgUnit_districtArray = [];
+            var calcData_districtsArray = [];
+
+            // to check whether the selected orgUnit is a circle or district
+            var isOnlyDistrict = false;
+            $.each(districtsArray, function (idx) {
+                if (districtsArray[idx][0] == orgUnit.id) {
+                    isOnlyDistrict = true;
+                    return false;
+                }
+            });
+
+            $.each(districtsArray, function (index) {
+                var hasHospitals = false;
+                $.each(hospitalsArray, function (i) {
+                    if (hospitalsArray[i][2] == districtsArray[index][0]) {
+                        hasHospitals = true;
+                        return false;
+                    }
+                });
+
+                if (hasHospitals == true) {
+                    var districtID = districtsArray[index][0];
+                    var districtHospitalsArray = [];
+                    var districtName = "";
+                    var dataValuesArray = [];
+
+                    // gets the current district name to a variable for future usage
+                    $.each(districtsArray, function (i) {
+                        if (districtsArray[i][0] == districtID) {
+                            districtName = districtsArray[i][1];
+                            return false;
+                        }
+                    });
+
+                    if (isOnlyDistrict == true) {
+                        districtID = orgUnit.id;
+                        districtName = orgUnit.name;
+                    }
+
+                    // gets current district's hospitals to an array
+                    $.each(hospitalsArray, function (i) {
+                        if (hospitalsArray[i][2] == districtID) {
+                            districtHospitalsArray.push([hospitalsArray[i][0], hospitalsArray[i][1]])
+                        }
+                    });
+					
+
+                    // generates the HTML report
+                    $("#" + showTable + " > tbody").html("");
+
+                    // data rows
+                    $.each(districtHospitalsArray, function (i) {
+                        htmlReport += "<tr>";
+                        htmlReport += "<td align='center'><strong>" + (sNo + 1) + "</strong></td>";
+                        htmlReport += "<td align='left' colspan='4'>" + districtHospitalsArray[i][1] + "</td>";
+
+                       // var value = 0;
+                          var rowarray=[];
+                             $.each(tableDX, function (j) {
+							
+							 var cellValue = 0;
+							
+					      	if(j!=51){
+                                       if(j==49){
+									   var value=0.0;
+										       var ids = tableDX[j].dxId.split("+");
+											   var t=0;
+                                                for (var x = 0; x < ids.length; x++) {
+												 t += getCellValue(ids[x].split(".")[0], districtHospitalsArray[i][0], ids[x].split(".")[1]);
+										         	}	//console.info(t);
+												    if(t==0){
+												            value=0;
+												     }
+												    else{
+                                                             value +=(parseFloat(rowarray[48])/t)*100;
+												    }
+                                                cellValue=t;
+                                               
+										
+									  	}  
+										else{ 
+										
+										         
+                                                var ids = tableDX[j].dxId.split("+");
+                                                for (var x = 0; x < ids.length; x++) {
+                                        
+                                                cellValue += getCellValue(ids[x].split(".")[0], districtHospitalsArray[i][0], ids[x].split(".")[1]);
+                                               
+                                                }
+									
+							                 }
+								}			 
+							else {
+							  
+							   cellValue = getCellValue("LXRUJz9e7xT", districtHospitalsArray[i][0], "AWFHAFYJTph");
+							  
+							}
+                                    rowarray.push(cellValue);
+                                    dataValuesArray.push(cellValue);
+									if(j==49){
+									htmlReport += "<td align='center'>" + value + "</td>";
+									}
+									else{
+                                   htmlReport += "<td align='center'>" + cellValue + "</td>";
+								   }
+                                    
+                                });
+
+                   
+                         console.log(rowarray);
+                        // for displaying total
+                   //     htmlReport += "<td align='center'><Strong>" + ((value.toString() == 'NaN') ? "-" : value) + "</Strong></td>";
+                     //   dataValuesArray.push(value);
+					 
+                        htmlReport += "</tr>";
+                        sNo++;
+                    });
+    console.log(dataValuesArray);
+                    // final row of the district (calculated district total)
+                    htmlReport += "<tr bgcolor='#cdfbc3'>";
+                    htmlReport += "<td align='left' colspan='5' ><strong>" + districtName + " Total" + "</strong></td>";
+
+                    var calcValuesArray = [];
+                    //note: (tableDx.length ) is to calculate the total values
+					
+                   for (var j = 0; j < tableDX.length ; j++) {
+				   
+                        var calcValue = loadCalculatedData(j, dataValuesArray, districtHospitalsArray);
+						   if(j==49){
+						     htmlReport += "<td align='center'><Strong>" +( parseFloat(calcValuesArray[48])/ parseFloat(calcValue))*100 + "</Strong></td>";
+						   }
+						   else{
+						    htmlReport += "<td align='center'><Strong>" +  calcValue + "</Strong></td>";
+						   }
+                       
+                        calcValuesArray.push(calcValue);
+                    }
+           
+                    if (isOnlyDistrict == true) {
+                        htmlReport += "</tr>";
+                        return false;
+                    }
+
+                    // add calculated data for a specific district to an array for further calculations
+                    $.each(calcValuesArray, function (i) {
+                        calcData_districtsArray.push([calcValuesArray[i]]);
+                    });
+
+                    htmlReport += "</tr>";
+                }
+            });
+
+            if (isOnlyDistrict == true) {
+                // show report
+                $("#" + showTable).append(htmlReport);
+                hideLoad();
+            }
+            else {
+                // load final rows
+                htmlReport += "<tr bgcolor='#bcdf7e'>";
+
+                $.each(districtsArray, function (i) {
+                    var hasHospitals = false;
+                    $.each(hospitalsArray, function (j) {
+                        if (hospitalsArray[j][2] == districtsArray[i][0]) {
+                            hasHospitals = true;
+                            return false;
+                        }
+                    });
+                    if(hasHospitals == true){
+                        if (districtsArray[i][2] == orgUnit.id) {
+                            orgUnit_districtArray.push([districtsArray[i][0]]);
+                        }
+                    }
+                });
+
+                htmlReport += "<td colspan='5'><Strong>" + orgUnit.name + " Total" + "</Strong></td>"
+				var f=[];
+                for (var j = 0; j < tableDX.length ; j++) {
+				               if(j==49){
+							      var calcValue = (parseFloat(f[48])/loadCalculatedDataFinal(j, orgUnit_districtArray, calcData_districtsArray))*100;
+							   }
+							   else{
+							   var calcValue = loadCalculatedDataFinal(j, orgUnit_districtArray, calcData_districtsArray);
+							   }
+                    f.push(calcValue);
+                    htmlReport += "<td align='center'><Strong>" + calcValue + "</Strong></td>";
+                }	
+                htmlReport += "</tr>";
+
+                // show report
+                $("#" + showTable).append(htmlReport);
+                hideLoad();
+            }
+        }
+        else{
+            alert("Please select State, Circle or District");
+            window.history.back();
+        }
+    }
+
+    // function for calculate data
+    function loadCalculatedData(j,dataValuesArray, districtHospitalsArray){
+        var total;
+        total = parseInt(dataValuesArray[j]);
+        for(var i=0; i < districtHospitalsArray.length-1 ; i++){
+         //   if(parseFloat(total).toString() != "NaN") {
+                total += parseInt(dataValuesArray[(j + tableDX.length )]);
+         //   }
+            j += (tableDX.length );
+        }
+        return parseInt(total);
+    }
+
+    // function for calculate data
+    // Note: Final calculation
+    function loadCalculatedDataFinal(j,orgUnitArray,calcDataArray){
+        var total;
+        total = parseInt(calcDataArray[j]);
+
+        for(var i=0; i < orgUnitArray.length-1 ; i++){
+            total += parseInt(calcDataArray[(j + tableDX.length )]);
+            j += (tableDX.length );
+        }
+        return parseInt(total);
+    }
+
+    // function for getting cell values
+    function getCellValue(de, ou, co){
+        var result=0;
+        for (var i=0; i < dataJsonObj.rows.length; i++){
+            if (dataJsonObj.rows[i][0] == de && dataJsonObj.rows[i][1] == co && dataJsonObj.rows[i][2] == ou && dataJsonObj.rows[i][3] != null)
+            {
+                result = dataJsonObj.rows[i][3];
+            }
+        }
+        return parseFloat(result);
+    }
+
+    // function to convert periods to more visible info
+    function getPeriod( pr ) {
+        var year = pr.substring(0,4);
+        var month = pr.substring(4,6);
+        var strMonth="";
+
+        if(month=="01" || month=="1") 		strMonth="January";
+        else if(month=="02" || month=="2")	strMonth="February";
+        else if(month=="03" || month=="3")	strMonth="March";
+        else if(month=="04" || month=="4")	strMonth="April";
+        else if(month=="05" || month=="5")	strMonth="May";
+        else if(month=="06" || month=="6")	strMonth="June";
+        else if(month=="07" || month=="7")	strMonth="July";
+        else if(month=="08" || month=="8")	strMonth="August";
+        else if(month=="09" || month=="9")	strMonth="September";
+        else if(month=="10")				strMonth="October";
+        else if(month=="11") 				strMonth="November";
+        else if(month=="12")				strMonth="December";
+
+        return strMonth + " " + year;
+    }
+
+    // function to hide loading 
+	
+    function hideLoad() {
+        document.getElementById("cover").style.display="none";
+        document.getElementById("loads").style.display="none";
+        document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow="scroll";
+    }
+
+</script>
+
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font: Arial, Helvetica, sans-serif;
+                }
+
+                bd {
+                    border-style: solid;
+                    border-color: #000000;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align = center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width:1px;
+                    height: 50px;
+                    -ms-transform: rotate(90deg);
+                    -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    border-style: hidden;
+                }
+
+            </style>
+            <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+		    <div id="cover"></div>
+
+        </span></p>
+<table>
+    <tr>
+        <td>
+            <input type="button" id="btnBack" value=" Goto Report Selection Page"
+                   onclick="location.href='../dhis-web-reporting/displayViewReportForm.action'"/>
+            <input type="button" onclick="printContent('printing');" value="Print"/>
+            <input type="button" id="btnExport" value=" Download Excel "/>
+        </td>
+    </tr>
+</table>
+<br>
+<br>
+
+
+<div id="printing">
+    <div id="state">
+
+<br><br>
+
+   <table id="dataTable"  border="1" cellspacing="6" width="200%" cellpadding="4"
+       style="border-collapse:collapse; border:2px;  border-color:#000; font:Arial, Helvetica, sans-serif">
+	   
+	   <thead>
+	   <tr>
+    <td align="center" bgcolor="#99CC99" colspan="57"><span style="text-align: center;font-size: 25px;">REPORT- Wardwise IPD</span>
+    </td>
+   </tr>
+
+    <tr>
+        <td bgcolor="#99CC99" colspan="2" width="1%" style="text-align: center;"><span style="font-size:14px;"><strong>Facility</strong></span>
+        </td>
+        <td bgcolor="#99CC99" colspan="3"  id="orgUnitID" style="text-align: center;"><span
+                style="font-size:14px;"><strong>&nbsp;</strong></span></td>
+        <td bgcolor="#99CC99" colspan="1" width="1%" style="text-align: center;"><span style="font-size:14px;"><strong>Period</strong></span></td>
+        <td bgcolor="#99CC99" colspan="51" width="1%" id="period" style="text-align: left;"><span
+                style="font-size:14px;"><strong>&nbsp;</strong></span></td>
+    </tr>
+
+
+
+
+    <tr>
+	
+	<td bgcolor="#99CC99" style="height: 20px;" align="center" colspan="1" rowspan="2"><span
+                style="font-size:12px;"><strong>Sr.No.</strong></span></td>
+        <td bgcolor="#99CC99" style="height: 20px;" align="center" colspan="4" rowspan="2"><span
+                style="font-size:12px;"><strong>Name Of Hospital</strong></span></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Medicine</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Surgery</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Pedeatrics</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="1" rowspan="2"><strong>Obst</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="1" rowspan="2"><strong>Gyn</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Otho</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>TB</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>OPHT</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Psychiatric</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>SNCU/NBSU</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>ICU</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>BURN</strong></td>
+		<td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>NEONATAL</strong></td>
+		<td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>DIALYSIS</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Dog Bite</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Rabies</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Snake Bite</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Poisoning</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Scorpian Sting</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Isolation</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Ent</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Dental</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Skin</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Other Bites</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="2" rowspan="1"><strong>Total</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="1" rowspan="2"><strong>Emergency</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="1" rowspan="2"><strong>% Emergency Entry Ratio</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="1" rowspan="2"><strong>out</strong></td>
+        <td bgcolor="#99CC99" align="center" colspan="1" rowspan="2"><strong>register</strong></td>
+
+    </tr>
+
+
+    <tr>
+
+        <td bgcolor="#99CC99" colspan="1" align="center"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1" align="center"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+		
+		<td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+		
+		<td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+        <td bgcolor="#99CC99" colspan="1"><strong>Male</strong></td>
+        <td bgcolor="#99CC99" colspan="1"><strong>Female</strong></td>
+
+
+    </tr>
+    </thead>
+
+
+</tbody>
+
+</table>
+</div>
+</div>

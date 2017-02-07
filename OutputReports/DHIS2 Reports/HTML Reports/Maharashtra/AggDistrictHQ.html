@@ -1,0 +1,911 @@
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<script>
+
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+
+
+    var deids = [];
+    var deUIDs = "";
+    var deids2 = [];
+    var deidsmonth = [];
+    var deidsproTot = [];
+    var alertMsg = 0;
+    var districtName = [];
+    var blockName = [];
+    var periodStr = "";
+    var arrayPeriod = [];
+    var MonthName = "";
+    var dx1 = [];
+    var dx2 = [];
+
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+
+    // jsonObj
+    var dataJsonObj;
+
+    var showTable = "dataTable";
+
+    $(document).ready(function () {
+        $(".hideInPrint").hide();
+        $("#btnExport").click(function (e) {
+            window.open('data:application/vnd.ms-excel,' + encodeURIComponent($('#printing').html()));
+            e.preventDefault();
+        });
+
+
+        document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+        document.getElementById('period1').innerHTML = getPeriod(gotPeriod);
+        document.getElementById('monthid').innerHTML = MonthName;
+
+        //get monthly data elements
+        $(".m").each(function (i, trID) {
+            deids.push(trID.id)
+        });
+        // console.log(deids);
+
+        $.each(deids, function (i, val) {
+
+
+            dx1.push([val.split("-")[0], val.split("-")[1]]);
+            deUIDs += val.split("-")[0] + ";";
+
+        });
+        // console.log(dx1);
+        // console.log(deUIDs);
+
+
+        //get progressive data elements
+        $(".p").each(function (i, tdID) {
+            deids2.push(tdID.id)
+        });
+        // console.log(deids2);
+
+
+        for (var i = 0; i < dx1.length; i++) {
+
+            dx2.push(dx1[i]);
+
+        }
+
+        // console.log(dx2);
+
+
+        //get monthly toal IDS
+        $(".mtot").each(function (i, trID) {
+            deidsmonth.push(trID.id)
+        });
+        // console.log(deidsmonth.length);
+
+        //get progressive total ids
+        $(".ptot").each(function (i, tdID) {
+            deidsproTot.push(tdID.id)
+        });
+        // console.log(deidsproTot.length);
+
+
+        // getting all the PHC ids and names in to one array
+
+        var phcUrl =	"../api/organisationUnitGroups/CXswpFTMKVB.json?fields=organisationUnits[id,name,path]";
+        $.get(phcUrl, function (hospJSON) {
+            //	// console.log("*****");
+            PHCJSON=hospJSON;
+            // // console.log(PHCJSON);
+
+
+
+
+            // cross checking the hospitalArray and orgUnitArray to find specific Hospitals for a Circle and find the district for that using path
+            $.each(PHCJSON.organisationUnits, function (i, curr_phcVal) {
+
+                if (curr_phcVal.id == orgUnit.id) {
+                    // to get district name
+                    var districtNameURL="../api/organisationUnits.json?fields=name&filter=id:in:[" + curr_phcVal.path.split("/")[4] + "]" ;
+
+                    $.get(districtNameURL,function(district){
+                        districtName=district.organisationUnits[0].name;
+                       // console.log(districtName);
+                       // console.log(districtName);
+                       // document.getElementById('disID').innerHTML = districtName;
+                    });
+
+                    var blockNameURL="../api/organisationUnits.json?fields=name&filter=id:in:[" + curr_phcVal.path.split("/")[6] + "]" ;
+                    $.get(blockNameURL,function(block){
+                        blockName=block.organisationUnits[0].name;
+                        //  // console.log(blockName);
+                       document.getElementById('blockID').innerHTML = blockName;
+                    });
+                    alertMsg = 1;
+                }
+
+
+            });
+
+            if (alertMsg == 0) {
+                $(".hideInPrint").hide();
+                $("#dataTable").html("");
+                $("#buttonTable").html("");
+                alert("The selected Organisation Unit is not a District. ");
+                window.history.back();
+            }
+            loadData();
+            //getPeriodString();
+        });
+
+
+    });
+
+    // function for load table data
+    function loadData() {
+        var url = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=ou:" + orgUnit.id + "&dimension=co&dimension=pe:" + getPeriodString();
+        // console.log(url);
+        $.get(url, function (json) {
+            dataJsonObj = json;
+            // console.log(dataJsonObj);
+            loadTable();
+        });
+    }
+
+    //////////////////////
+    function getPeriodString() {
+        var year = gotPeriod.substr(0, 4);
+        var month = gotPeriod.substring(4, 6);
+        if (month == 01 || month == 02 || month == 03) {
+            var year2 = parseInt(year) - 1;
+            var yearS = year2.toString();
+            if (month == 1) {
+                periodStr = yearS + "04" + ";" + yearS + "05" + ";" + yearS + "06" + ";" + yearS + "07" + ";" + yearS + "08" + ";" + yearS + "09" + ";" + yearS + "10" + ";" + yearS + "11" + ";" + yearS + "12" + ";" + year + "01";
+            }
+            if (month == 2) {
+                periodStr = yearS + "04" + ";" + yearS + "05" + ";" + yearS + "06" + ";" + yearS + "07" + ";" + yearS + "08" + ";" + yearS + "09" + ";" + yearS + "10" + ";" + yearS + "11" + ";" + yearS + "12" + ";" + year + "01" + ";" + year + "02";
+            }
+            if (month == 3) {
+                periodStr = yearS + "04" + ";" + yearS + "05" + ";" + yearS + "06" + ";" + yearS + "07" + ";" + yearS + "08" + ";" + yearS + "09" + ";" + yearS + "10" + ";" + yearS + "11" + ";" + yearS + "12" + ";" + year + "01" + ";" + year + "02" + ";" + year + "03";
+            }
+        }
+
+        else {
+            if (month == 4) {
+                periodStr = year + "04";
+            }
+            if (month == 5) {
+                periodStr = year + "04" + ";" + year + "05";
+            }
+            if (month == 6) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06";
+            }
+            if (month == 7) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07";
+            }
+            if (month == 8) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08";
+            }
+            if (month == 9) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08" + ";" + year + "09";
+            }
+            if (month == 10) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08" + ";" + year + "09" + ";" + year + "10";
+            }
+            if (month == 11) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08" + ";" + year + "09" + ";" + year + "10" + ";" + year + "11";
+            }
+            if (month == 12) {
+                periodStr = year + "04" + ";" + year + "05" + ";" + year + "06" + ";" + year + "07" + ";" + year + "08" + ";" + year + "09" + ";" + year + "10" + ";" + year + "11" + ";" + year + "12";
+            }
+
+
+        }
+        arrayPeriod = periodStr.split(';');
+        // console.log(arrayPeriod);
+        // console.log(periodStr);
+        return periodStr;
+    }
+
+
+    function loadTable() {
+        var htmlReport = "";
+        var dbl = 0;
+        var dbl2 = 0;
+
+        $.each(dx1, function (i) {
+
+            var value = getCellValue(dx1[i][0], orgUnit.id, dx1[i][1], period);
+
+            // console.log(dx1[i][0] + "," + dx1[i][1]);
+            var strValue = value.toString();
+            document.getElementById(deids[i]).innerHTML = strValue;
+            document.getElementById(deids[i]).align = "center";
+
+
+        });
+
+        // for progressive data
+        $.each(dx2, function (i) {
+
+
+            var value = getCellValuepro(dx2[i][0], orgUnit.id, dx2[i][1], arrayPeriod);
+
+            // console.log(dx2[i][0] + "," + dx2[i][1]);
+            var strValue = value.toString();
+            document.getElementById(deids2[i]).innerHTML = strValue;
+            document.getElementById(deids2[i]).align = "center";
+
+        });
+
+        //for calculate monthly total
+        $.each(deidsmonth, function (i) {
+            var ids = deidsmonth[i].split("+");
+            var value = 0;
+            for (var j = 0; j < ids.length; j++) {
+
+                value += getCellValue(ids[j].split("-")[0], orgUnit.id, ids[j].split("-")[1], period);
+
+            }
+            document.getElementById(deidsmonth[i]).innerHTML = value.toString();
+            document.getElementById(deidsmonth[i]).align = "center";
+
+
+        });
+
+        //for calculate progressive total
+        $.each(deidsproTot, function (i) {
+            var ids = deidsproTot[i].split(".");
+            var value = 0;
+            for (var j = 0; j < ids.length; j++) {
+
+                value += getCellValuepro(ids[j].split("-")[0], orgUnit.id, ids[j].split("-")[1], arrayPeriod);
+
+            }
+            document.getElementById(deidsproTot[i]).innerHTML = value.toString();
+            document.getElementById(deidsproTot[i]).align = "center";
+        });
+
+
+
+       // document.getElementById("xm").innerHTML = parseInt(document.getElementById('vq3VYmdsk2r-AWFHAFYJTph').innerHTML).toString();
+        //document.getElementById("xm").align = "center";
+        //document.getElementById("xp").innerHTML = parseInt(document.getElementById('pr-vq3VYmdsk2r-AWFHAFYJTph').innerHTML).toString();
+       // document.getElementById("xp").align = "center";
+          hideLoad();
+
+    }
+
+		
+    // function for getting cell values
+    function getCellValue(de, ou, co, pe) {
+        //// console.log("get cell1");
+        var result = 0;
+        for (var i = 0; i < dataJsonObj.rows.length; i++) {
+            if (dataJsonObj.rows[i][0] == de && dataJsonObj.rows[i][1] == co && dataJsonObj.rows[i][2] == ou && dataJsonObj.rows[i][3] == pe && dataJsonObj.rows[i][4] != null) {
+                result = dataJsonObj.rows[i][4];
+            }
+        }
+        return parseFloat(result);
+    }
+
+    function getCellValuepro(de, ou, co, pe) {
+        // console.log("get cell2");
+        var result = 0;
+        for (var j = 0; j < pe.length; j++) {
+
+            for (var i = 0; i < dataJsonObj.rows.length; i++) {
+
+                if (dataJsonObj.rows[i][0] == de && dataJsonObj.rows[i][1] == co && dataJsonObj.rows[i][2] == ou && dataJsonObj.rows[i][3] == pe[j] && dataJsonObj.rows[i][4] != null) {
+                    result += dataJsonObj.rows[i][4];
+                }
+            }
+        }
+        return parseFloat(result);
+    }
+
+    // function to convert periods to more visible info
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        MonthName = strMonth;
+        return year;
+
+    }
+
+    // function to hide loading animation
+
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+		document.getElementById("loading").style.display = "none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+</script>
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+
+
+<style>
+
+	td
+	{
+		padding: 5px 10px;
+		font:Arial,Helvetica,sans-serif;
+	}
+
+	bd
+	{
+		border-style: solid;
+		border-color:#000000;
+	}
+
+	#cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+			.vtext{
+			/*width:1px;
+			height: 50px;
+			-ms-transform: rotate(90deg);
+			-webkit-transform: rotate(90deg);
+			transform: rotate(90deg);
+			border-style: hidden;*/
+	}
+
+</style>
+
+
+<container>
+    <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+    <input type="button"  onclick="printContent('printing');" value="Print"/>
+    <input type="button" id="btnExport" value=" Download Excel " />
+
+
+    </br></br>
+
+    <div id="printing">
+
+        <div id='state'>
+	    <!-- <div id="loads" > <p class="loading" align="center">Reports is Loading... Please Wait...</p></div> -->
+		<div id="cover" > </div>
+
+</span></p>		
+
+	<style type="text/css">
+		body,div,table,thead,tbody,tfoot,tr,th,td,p { font-family:"Calibri"; font-size:x-small }
+	</style>
+	
+
+
+<body>
+<table align="center" id="dataTable" border="1" cellspacing="6" cellpadding="4"
+       style="border-collapse:collapse; border:solid black 2px; font:Arial, Helvetica, sans-serif">
+<thead>
+		<td colspan=12 height="29" align="center" valign=middle><b><font size=4>Ministry of Health &amp; Family Welfare</font></b></td>
+		</tr>
+	<tr>
+		<td colspan=12 height="29" align="center" valign=middle><b><font size=4>   (Monitoring &amp; Evaluation  Division) </font></b></td>
+		</tr>
+	<tr>
+		<td colspan=12 height="27" align="center" valign=middle><b><u><font size=4>Monthly Format for District</font></u></b></td>
+		</tr>
+	
+	<tr>
+		<td height="28" align="right" valign=middle><font size=4><br></font></td>
+		<td align="left" valign=middle><b><font size=4>Name of State:</font></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=10 align="center" valign=middle><font face="Arial"><br>Maharashtra</font></td>
+
+		</tr>
+	<tr>
+		<td height="28" align="right" valign=middle><font size=4><br></font></td>
+		<td align="left" valign=middle><b><font size=4>Name of District:</font></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=10 align="center" valign=middle id="orgUnitID"><font face="Arial"><br>&nbsp;</font></td>
+		</tr>
+	<tr>
+		<td height="28" align="right" valign=middle><font size=4><br></font></td>
+		<td align="left" valign=middle><b><font size=4>Reporting Month:</font></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle id="monthid"><font face="Arial"><br></font></td>
+		<td align="center" valign=middle><b><font size=4>Year</font></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=8 align="center" valign=middle id="period1"><font face="Arial"><br>&nbsp;</font></td>
+
+		</tr>
+</thead>
+		<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" height="25" align="left" valign=middle bgcolor="#FFCC00"><b><font size=4>Part A</font></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000" align="left" valign=middle bgcolor="#FFCC00"><b><font size=4>Monthly Inventory Status</font></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=5 align="center" valign=middle bgcolor="#FFCC00"><font size=4><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=5 align="center" valign=middle bgcolor="#FFCC00"><font size=4><br></font></td>
+		</tr>
+	<tr>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" height="72" align="left" valign=middle bgcolor="#CCFFCC"><b><font size=4>M1</font></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=middle bgcolor="#CCFFCC"><b><font size=4> Stock Position (During the month)</font></b></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Balance from Previous month </font></i></b></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Stocks received </font></i></b></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Unusable stock</font></i></b></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Stock Distributed</font></i></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Total stock</font></i></b></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Balance from Previous month </font></i></b></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Stocks received </font></i></b></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Unusable stock</font></i></b></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Stock Distributed</font></i></b></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#CCFFCC"><b><i><font size=3>Total stock</font></i></b></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="25" align="left" valign=middle sdval="1" sdnum="1033;"><font size=4>1</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><b><font size=4>Vaccines</font></b></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="32" align="right" valign=middle sdval="1.1" sdnum="1033;"><font size=4>1.1</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>DPT</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="dYB9n7Hx6IN-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="m" valign=middle id="dYB9n7Hx6IN-zgIcteOpXbo"><font face="Arial" color="#000000">&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="dYB9n7Hx6IN-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="dYB9n7Hx6IN-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="dYB9n7Hx6IN-sxpwCwsothM+dYB9n7Hx6IN-zgIcteOpXbo+dYB9n7Hx6IN-xaERWCBQXUK+dYB9n7Hx6IN-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="p" id="pr_dYB9n7Hx6IN-sxpwCwsothM"><br>&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle class="p" id="pr_dYB9n7Hx6IN-zgIcteOpXbo"><font face="Arial"><br>&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle class="p" id="pr_dYB9n7Hx6IN-xaERWCBQXUK"><font face="Arial"><br>&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle class="p" id="pr_dYB9n7Hx6IN-qF4QNcLelEw"><font face="Arial"><br>&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle class="ptot" id="dYB9n7Hx6IN-sxpwCwsothM.dYB9n7Hx6IN-zgIcteOpXbo.dYB9n7Hx6IN-xaERWCBQXUK.dYB9n7Hx6IN-qF4QNcLelEw"><font face="Arial"><br>&nbsp;</font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="38" align="right" valign=middle><font size=4>1.1A</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Pentavalent</font></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="hfXllCH5CMs-sxpwCwsothM">&nbsp;</td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle class="m" id="hfXllCH5CMs-zgIcteOpXbo"><font face="Arial" color="#000000">&nbsp;</font></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="hfXllCH5CMs-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="hfXllCH5CMs-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="hfXllCH5CMs-sxpwCwsothM+hfXllCH5CMs-zgIcteOpXbo+hfXllCH5CMs-xaERWCBQXUK+hfXllCH5CMs-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="p" id="pr_hfXllCH5CMs-sxpwCwsothM"><br></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_hfXllCH5CMs-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_hfXllCH5CMs-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_hfXllCH5CMs-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="hfXllCH5CMs-sxpwCwsothMhfXllCH5CMs-zgIcteOpXbo.hfXllCH5CMs-xaERWCBQXUK.hfXllCH5CMs-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="36" align="right" valign=middle><font size=4>1.2</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>OPV</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="HOORsjVUb0U-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle class="m" id="HOORsjVUb0U-zgIcteOpXbo"><font face="Arial" color="#000000">&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="HOORsjVUb0U-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left"  class="m" id="HOORsjVUb0U-qF4QNcLelEw">&nbsp;</td>
+		<td align="left" id="HOORsjVUb0U-sxpwCwsothM+HOORsjVUb0U-zgIcteOpXbo+HOORsjVUb0U-xaERWCBQXUK+HOORsjVUb0U-qF4QNcLelEw" class="mtot">&nbsp;</td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" id="pr_HOORsjVUb0U-sxpwCwsothM" align="center" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" id="pr_HOORsjVUb0U-zgIcteOpXbo" align="center" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" id="pr_HOORsjVUb0U-xaERWCBQXUK" align="center" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" id="pr_HOORsjVUb0U-qF4QNcLelEw" align="center" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000"  id="HOORsjVUb0U-sxpwCwsothM.HOORsjVUb0U-zgIcteOpXbo.HOORsjVUb0U-xaERWCBQXUK.HOORsjVUb0U-qF4QNcLelEw"  align="center" class="ptot" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+ <tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="35" align="right" valign=middle sdval="1-3" sdnum="1033;"><font size=4>1.3</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>TT</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="TlqLqJXK4qU-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="m" id="TlqLqJXK4qU-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="TlqLqJXK4qU-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="TlqLqJXK4qU-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" id="TlqLqJXK4qU-sxpwCwsothM+TlqLqJXK4qU-zgIcteOpXbo+TlqLqJXK4qU-xaERWCBQXUK+TlqLqJXK4qU-qF4QNcLelEw" class="mtot">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-right: 1px solid #000000" id="pr_TlqLqJXK4qU-sxpwCwsothM" align="center" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000"  id="pr_TlqLqJXK4qU-zgIcteOpXbo" align="center" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000"  id="pr_TlqLqJXK4qU-xaERWCBQXUK"align="center" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" id="pr_TlqLqJXK4qU-qF4QNcLelEw" align="center" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" id="TlqLqJXK4qU-sxpwCwsothM.TlqLqJXK4qU-zgIcteOpXbo.TlqLqJXK4qU-xaERWCBQXUK.TlqLqJXK4qU-qF4QNcLelEw" align="center" class="ptot" valign=middle><font face="Arial"><br></font></td>
+    </tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="33" align="right" valign=middle sdval="1-4" sdnum="1033;"><font size=4>1.4</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>DT</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="db3RK8NIn19-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="m" valign=middle id="db3RK8NIn19-zgIcteOpXbo"><font face="Arial" color="#000000">&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="db3RK8NIn19-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="db3RK8NIn19-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="db3RK8NIn19-sxpwCwsothM+db3RK8NIn19-zgIcteOpXbo+db3RK8NIn19-xaERWCBQXUK+db3RK8NIn19-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_db3RK8NIn19-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_db3RK8NIn19-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_db3RK8NIn19-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_db3RK8NIn19-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center"  class="ptot" id="db3RK8NIn19-sxpwCwsothM.db3RK8NIn19-zgIcteOpXbo.db3RK8NIn19-xaERWCBQXUK.db3RK8NIn19-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="36" align="right" valign=middle sdval="1-5" sdnum="1033;"><font size=4>1.5</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>BCG</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="eKOkY2MaANa-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="m" valign=middle id="eKOkY2MaANa-zgIcteOpXbo"><font face="Arial" color="#000000">&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="eKOkY2MaANa-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="eKOkY2MaANa-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="eKOkY2MaANa-sxpwCwsothM+eKOkY2MaANa-zgIcteOpXbo+eKOkY2MaANa-xaERWCBQXUK+eKOkY2MaANa-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_eKOkY2MaANa-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_eKOkY2MaANa-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_eKOkY2MaANa-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_eKOkY2MaANa-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="eKOkY2MaANa-sxpwCwsothM.eKOkY2MaANa-zgIcteOpXbo.eKOkY2MaANa-xaERWCBQXUK.eKOkY2MaANa-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="36" align="right" valign=middle sdval="1-6" sdnum="1033;"><font size=4>1.6</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Measles</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="YSpOY3jCWsL-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="m" valign=middle id="YSpOY3jCWsL-zgIcteOpXbo"><font face="Arial" color="#000000">&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="YSpOY3jCWsL-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="YSpOY3jCWsL-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="YSpOY3jCWsL-sxpwCwsothM+YSpOY3jCWsL-zgIcteOpXbo+YSpOY3jCWsL-xaERWCBQXUK+YSpOY3jCWsL-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_YSpOY3jCWsL-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_YSpOY3jCWsL-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_YSpOY3jCWsL-xaERWCBQXUK" valign=middle><font face="Arial" ><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_YSpOY3jCWsL-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="YSpOY3jCWsL-sxpwCwsothM.YSpOY3jCWsL-zgIcteOpXbo.YSpOY3jCWsL-xaERWCBQXUK.YSpOY3jCWsL-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="31" align="right" valign=middle sdval="1-7" sdnum="1033;"><font size=4>1.7</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>JE</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="OQLOyMGtM1J-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="m" valign=middle id="OQLOyMGtM1J-zgIcteOpXbo"><font face="Arial" color="#000000">&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="OQLOyMGtM1J-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="OQLOyMGtM1J-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left"  class="mtot" id="OQLOyMGtM1J-sxpwCwsothM+OQLOyMGtM1J-zgIcteOpXbo+OQLOyMGtM1J-xaERWCBQXUK+OQLOyMGtM1J-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_OQLOyMGtM1J-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_OQLOyMGtM1J-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_OQLOyMGtM1J-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_OQLOyMGtM1J-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center"  class="ptot" id="OQLOyMGtM1J-sxpwCwsothM.OQLOyMGtM1J-zgIcteOpXbo.OQLOyMGtM1J-xaERWCBQXUK.OQLOyMGtM1J-qF4QNcLelEw"valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="33" align="right" valign=middle sdval="1-8" sdnum="1033;"><font size=4>1.8</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Hepatitis B</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="J4dYZ1cdpuT-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="m" valign=middle id="J4dYZ1cdpuT-zgIcteOpXbo"><font face="Arial" color="#000000">&nbsp;</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="J4dYZ1cdpuT-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="J4dYZ1cdpuT-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="J4dYZ1cdpuT-sxpwCwsothM+J4dYZ1cdpuT-zgIcteOpXbo+J4dYZ1cdpuT-xaERWCBQXUK+J4dYZ1cdpuT-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_J4dYZ1cdpuT-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_J4dYZ1cdpuT-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_J4dYZ1cdpuT-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_J4dYZ1cdpuT-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="J4dYZ1cdpuT-sxpwCwsothM.J4dYZ1cdpuT-zgIcteOpXbo.J4dYZ1cdpuT-xaERWCBQXUK.J4dYZ1cdpuT-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="25" align="left" valign=middle sdval="2" sdnum="1033;"><font size=4>2</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><b><font size=4>Family Planning</font></b></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="39" align="right" valign=middle sdval="2-1" sdnum="1033;"><font size=4>2.1</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>IUD 380 A</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m"  id="mRZePBI9SIs-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="mRZePBI9SIs-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="mRZePBI9SIs-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="mRZePBI9SIs-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="mRZePBI9SIs-sxpwCwsothM+mRZePBI9SIs-zgIcteOpXbo+mRZePBI9SIs-xaERWCBQXUK+mRZePBI9SIs-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_mRZePBI9SIs-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_mRZePBI9SIs-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_mRZePBI9SIs-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_mRZePBI9SIs-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="mRZePBI9SIs-sxpwCwsothM.mRZePBI9SIs-zgIcteOpXbo.mRZePBI9SIs-xaERWCBQXUK.mRZePBI9SIs-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="42" align="right" valign=middle sdval="2-2" sdnum="1033;"><font size=4>2.2</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Condoms</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="PAV7bNZlUQO-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="PAV7bNZlUQO-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="PAV7bNZlUQO-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="PAV7bNZlUQO-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="PAV7bNZlUQO-sxpwCwsothM+PAV7bNZlUQO-zgIcteOpXbo+PAV7bNZlUQO-xaERWCBQXUK+PAV7bNZlUQO-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_PAV7bNZlUQO-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_PAV7bNZlUQO-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_PAV7bNZlUQO-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_PAV7bNZlUQO-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="PAV7bNZlUQO-sxpwCwsothM.PAV7bNZlUQO-zgIcteOpXbo.PAV7bNZlUQO-xaERWCBQXUK.PAV7bNZlUQO-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="40" align="right" valign=middle sdval="2-3" sdnum="1033;"><font size=4>2.3</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Oral Contraceptive</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="iOpncdbQoWQ-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left"  class="m" id="iOpncdbQoWQ-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m"  id="iOpncdbQoWQ-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="iOpncdbQoWQ-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="iOpncdbQoWQ-sxpwCwsothM+iOpncdbQoWQ-zgIcteOpXbo+iOpncdbQoWQ-xaERWCBQXUK+iOpncdbQoWQ-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_iOpncdbQoWQ-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_iOpncdbQoWQ-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p"  id="pr_iOpncdbQoWQ-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p"  id="pr_iOpncdbQoWQ-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center"  class="ptot" id="iOpncdbQoWQ-sxpwCwsothM.iOpncdbQoWQ-zgIcteOpXbo.iOpncdbQoWQ-xaERWCBQXUK.iOpncdbQoWQ-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="34" align="right" valign=middle sdval="2-4" sdnum="1033;"><font size=4>2.4</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Emergency Contraceptive Pills</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="ZWf8fVM3Uss-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="ZWf8fVM3Uss-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="ZWf8fVM3Uss-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="ZWf8fVM3Uss-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="ZWf8fVM3Uss-sxpwCwsothM+ZWf8fVM3Uss-zgIcteOpXbo+ZWf8fVM3Uss-xaERWCBQXUK+ZWf8fVM3Uss-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_ZWf8fVM3Uss-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_ZWf8fVM3Uss-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_ZWf8fVM3Uss-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_ZWf8fVM3Uss-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="ZWf8fVM3Uss-sxpwCwsothM.ZWf8fVM3Uss-zgIcteOpXbo.ZWf8fVM3Uss-xaERWCBQXUK.ZWf8fVM3Uss-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="34" align="right" valign=middle sdval="2-5" sdnum="1033;"><font size=4>2.5</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Tubal rings</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="lASRJKCVSEp-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="lASRJKCVSEp-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="lASRJKCVSEp-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="lASRJKCVSEp-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="lASRJKCVSEp-sxpwCwsothM+lASRJKCVSEp-zgIcteOpXbo+lASRJKCVSEp-xaERWCBQXUK+lASRJKCVSEp-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_lASRJKCVSEp-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_lASRJKCVSEp-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_lASRJKCVSEp-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_lASRJKCVSEp-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="lASRJKCVSEp-sxpwCwsothM.lASRJKCVSEp-zgIcteOpXbo.lASRJKCVSEp-xaERWCBQXUK.lASRJKCVSEp-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="25" align="left" valign=middle sdval="3" sdnum="1033;"><font size=4>3</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><b><font size=4>Other Items</font></b></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="34" align="right" valign=middle sdval="3-01" sdnum="1033;"><font size=4>3.01</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Injection Oxytocin</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="UJ6CUqsvMhu-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="UJ6CUqsvMhu-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="UJ6CUqsvMhu-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m"  id="UJ6CUqsvMhu-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="UJ6CUqsvMhu-sxpwCwsothM+UJ6CUqsvMhu-zgIcteOpXbo+UJ6CUqsvMhu-xaERWCBQXUK+UJ6CUqsvMhu-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_UJ6CUqsvMhu-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_UJ6CUqsvMhu-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_UJ6CUqsvMhu-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_UJ6CUqsvMhu-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="UJ6CUqsvMhu-sxpwCwsothM.UJ6CUqsvMhu-zgIcteOpXbo.UJ6CUqsvMhu-xaERWCBQXUK.UJ6CUqsvMhu-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="34" align="right" valign=middle sdval="3-02" sdnum="1033;"><font size=4>3.02</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Gloves</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="X6Jz74mFJU9-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="X6Jz74mFJU9-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="X6Jz74mFJU9-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="X6Jz74mFJU9-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="X6Jz74mFJU9-sxpwCwsothM+X6Jz74mFJU9-zgIcteOpXbo+X6Jz74mFJU9-xaERWCBQXUK+X6Jz74mFJU9-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_X6Jz74mFJU9-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_X6Jz74mFJU9-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_X6Jz74mFJU9-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_X6Jz74mFJU9-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="X6Jz74mFJU9-sxpwCwsothM.X6Jz74mFJU9-zgIcteOpXbo.X6Jz74mFJU9-xaERWCBQXUK.X6Jz74mFJU9-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="34" align="right" valign=middle sdval="3-03" sdnum="1033;"><font size=4>3.03</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>MVA Syringes</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="EFDTSXsMyY3-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="EFDTSXsMyY3-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="EFDTSXsMyY3-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="EFDTSXsMyY3-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="EFDTSXsMyY3-sxpwCwsothM+EFDTSXsMyY3-zgIcteOpXbo+EFDTSXsMyY3-xaERWCBQXUK+EFDTSXsMyY3-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_EFDTSXsMyY3-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_EFDTSXsMyY3-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center"class="p" id="pr_EFDTSXsMyY3-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_EFDTSXsMyY3-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="EFDTSXsMyY3-sxpwCwsothM.EFDTSXsMyY3-zgIcteOpXbo.EFDTSXsMyY3-xaERWCBQXUK.EFDTSXsMyY3-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="32" align="right" valign=middle sdval="3-04" sdnum="1033;"><font size=4>3.04</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Tab- Fluconazole</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="iRWhAFYarfu-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="iRWhAFYarfu-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="iRWhAFYarfu-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="iRWhAFYarfu-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="iRWhAFYarfu-sxpwCwsothM+iRWhAFYarfu-zgIcteOpXbo+iRWhAFYarfu-xaERWCBQXUK+iRWhAFYarfu-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_iRWhAFYarfu-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_iRWhAFYarfu-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_iRWhAFYarfu-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_iRWhAFYarfu-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="iRWhAFYarfu-sxpwCwsothM.iRWhAFYarfu-zgIcteOpXbo.iRWhAFYarfu-xaERWCBQXUK.iRWhAFYarfu-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td> 
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="39" align="right" valign=middle sdval="3-05" sdnum="1033;"><font size=4>3.05</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Blood Transfusion sets</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="x2E63VrKzQT-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="x2E63VrKzQT-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="x2E63VrKzQT-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="x2E63VrKzQT-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left"  class="mtot" id="x2E63VrKzQT-sxpwCwsothM+x2E63VrKzQT-zgIcteOpXbo+x2E63VrKzQT-xaERWCBQXUK+x2E63VrKzQT-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_x2E63VrKzQT-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_x2E63VrKzQT-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_x2E63VrKzQT-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_x2E63VrKzQT-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="x2E63VrKzQT-sxpwCwsothM.x2E63VrKzQT-zgIcteOpXbo.x2E63VrKzQT-xaERWCBQXUK.x2E63VrKzQT-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="40" align="right" valign=middle sdval="3-06" sdnum="1033;"><font size=4>3.06</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Gluteraldehyde 2%</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="HrvRDn0n9ij-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="HrvRDn0n9ij-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="HrvRDn0n9ij-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="HrvRDn0n9ij-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left"  class="mtot" id="HrvRDn0n9ij-sxpwCwsothM+HrvRDn0n9ij-zgIcteOpXbo+HrvRDn0n9ij-xaERWCBQXUK+HrvRDn0n9ij-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_HrvRDn0n9ij-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_HrvRDn0n9ij-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_HrvRDn0n9ij-xaERWCBQXUK"valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_HrvRDn0n9ij-qF4QNcLelEw"valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="HrvRDn0n9ij-sxpwCwsothM.HrvRDn0n9ij-zgIcteOpXbo.HrvRDn0n9ij-xaERWCBQXUK.HrvRDn0n9ij-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="36" align="right" valign=middle sdval="3-07" sdnum="1033;"><font size=4>3.07</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>IFA tablets</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m"  id="ItaQXatjsTq-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="ItaQXatjsTq-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="ItaQXatjsTq-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="ItaQXatjsTq-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="ItaQXatjsTq-sxpwCwsothM+ItaQXatjsTq-zgIcteOpXbo+ItaQXatjsTq-xaERWCBQXUK+ItaQXatjsTq-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" class="p" id="pr_ItaQXatjsTq-sxpwCwsothM" align="center"><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" class="p" id="pr_ItaQXatjsTq-zgIcteOpXbo" align="center"><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" class="p" id="pr_ItaQXatjsTq-xaERWCBQXUK" align="center"><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" class="p" id="pr_ItaQXatjsTq-qF4QNcLelEw" align="center"><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" class="ptot" id="ItaQXatjsTq-sxpwCwsothM.ItaQXatjsTq-zgIcteOpXbo.ItaQXatjsTq-xaERWCBQXUK.ItaQXatjsTq-qF4QNcLelEw" align="center"><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="38" align="right" valign=middle sdval="3-08" sdnum="1033;"><font size=4>3.08</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>IFA Syrup (Paediatric)</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="mx7ZimypEUr-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="mx7ZimypEUr-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="mx7ZimypEUr-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="mx7ZimypEUr-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="mx7ZimypEUr-sxpwCwsothM+mx7ZimypEUr-zgIcteOpXbo+mx7ZimypEUr-xaERWCBQXUK+mx7ZimypEUr-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_mx7ZimypEUr-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_mx7ZimypEUr-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_mx7ZimypEUr-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_mx7ZimypEUr-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="mx7ZimypEUr-sxpwCwsothM.mx7ZimypEUr-zgIcteOpXbo.mx7ZimypEUr-xaERWCBQXUK.mx7ZimypEUr-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="43" align="right" valign=middle sdval="3-09" sdnum="1033;"><font size=4>3.09</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Paediatrics Antibiotics (Cotrimaxozole and Injectable Gentamicin)</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="gIncJyWrehR-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="gIncJyWrehR-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="gIncJyWrehR-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="gIncJyWrehR-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="gIncJyWrehR-sxpwCwsothM+gIncJyWrehR-zgIcteOpXbo+gIncJyWrehR-xaERWCBQXUK+gIncJyWrehR-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_gIncJyWrehR-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_gIncJyWrehR-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_gIncJyWrehR-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_gIncJyWrehR-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="gIncJyWrehR-sxpwCwsothM.gIncJyWrehR-zgIcteOpXbo.gIncJyWrehR-xaERWCBQXUK.gIncJyWrehR-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="41" align="right" valign=middle sdval="3-1" sdnum="1033;0;0-00"><font size=4>3.10</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>Vitamin A solution</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="OqrIfgThDuU-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="OqrIfgThDuU-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="OqrIfgThDuU-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="OqrIfgThDuU-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="OqrIfgThDuU-sxpwCwsothM+OqrIfgThDuU-zgIcteOpXbo+OqrIfgThDuU-xaERWCBQXUK+OqrIfgThDuU-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" class="p" id="pr_OqrIfgThDuU-sxpwCwsothM" align="center"><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" id="pr_OqrIfgThDuU-zgIcteOpXbo" class="p" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_OqrIfgThDuU-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_OqrIfgThDuU-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="OqrIfgThDuU-sxpwCwsothM.OqrIfgThDuU-zgIcteOpXbo.OqrIfgThDuU-xaERWCBQXUK.OqrIfgThDuU-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="39" align="right" valign=middle sdval="3-11" sdnum="1033;"><font size=4>3.11</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>ORS (New WHO)</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="kIHLIlVFsaK-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="kIHLIlVFsaK-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="kIHLIlVFsaK-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="kIHLIlVFsaK-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="kIHLIlVFsaK-sxpwCwsothM+kIHLIlVFsaK-zgIcteOpXbo+kIHLIlVFsaK-xaERWCBQXUK+kIHLIlVFsaK-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_kIHLIlVFsaK-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_kIHLIlVFsaK-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_kIHLIlVFsaK-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_kIHLIlVFsaK-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="kIHLIlVFsaK-sxpwCwsothM.kIHLIlVFsaK-zgIcteOpXbo.kIHLIlVFsaK-xaERWCBQXUK.kIHLIlVFsaK-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="25" align="left" valign=middle sdval="4" sdnum="1033;"><font size=4>4</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><b><font size=4>Syringes</font></b></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+		<td align="left"><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="23" align="right" valign=middle sdval="4-1" sdnum="1033;"><font size=4>4.1</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>0-1 ml (AD)</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="EiwJ70GnulW-sxpwCwsoth">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="EiwJ70GnulW-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="EiwJ70GnulW-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="EiwJ70GnulW-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="EiwJ70GnulW-sxpwCwsothM+EiwJ70GnulW-zgIcteOpXbo+EiwJ70GnulW-xaERWCBQXUK+EiwJ70GnulW-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center"  class="p" id="pr_EiwJ70GnulW-sxpwCwsoth" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_EiwJ70GnulW-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_EiwJ70GnulW-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_EiwJ70GnulW-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="EiwJ70GnulW-sxpwCwsothM.EiwJ70GnulW-zgIcteOpXbo.EiwJ70GnulW-xaERWCBQXUK.EiwJ70GnulW-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="39" align="right" valign=middle sdval="4-2" sdnum="1033;"><font size=4>4.2</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>0-5 ml (AD)</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="zg4PoU7PLIh-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="zg4PoU7PLIh-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="zg4PoU7PLIh-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="zg4PoU7PLIh-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="zg4PoU7PLIh-sxpwCwsothM+zg4PoU7PLIh-zgIcteOpXbo+zg4PoU7PLIh-xaERWCBQXUK+zg4PoU7PLIh-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_zg4PoU7PLIh-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_zg4PoU7PLIh-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_zg4PoU7PLIh-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_zg4PoU7PLIh-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="zg4PoU7PLIh-sxpwCwsothM.zg4PoU7PLIh-zgIcteOpXbo.zg4PoU7PLIh-xaERWCBQXUK.zg4PoU7PLIh-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+	<tr>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" height="33" align="right" valign=middle sdval="4-3" sdnum="1033;"><font size=4>4.3</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000" align="left" valign=middle><font size=4>5-0 ml (Disposable)</font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="fvnmbwRChYs-sxpwCwsothM">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="fvnmbwRChYs-zgIcteOpXbo">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="fvnmbwRChYs-xaERWCBQXUK">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="m" id="fvnmbwRChYs-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" class="mtot" id="fvnmbwRChYs-sxpwCwsothM+fvnmbwRChYs-zgIcteOpXbo+fvnmbwRChYs-xaERWCBQXUK+fvnmbwRChYs-qF4QNcLelEw">&nbsp;</td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_fvnmbwRChYs-sxpwCwsothM" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_fvnmbwRChYs-zgIcteOpXbo" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_fvnmbwRChYs-xaERWCBQXUK" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="p" id="pr_fvnmbwRChYs-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+		<td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" class="ptot" id="fvnmbwRChYs-sxpwCwsothM.fvnmbwRChYs-zgIcteOpXbo.fvnmbwRChYs-xaERWCBQXUK.fvnmbwRChYs-qF4QNcLelEw" valign=middle><font face="Arial"><br></font></td>
+	</tr>
+-->
+</table>
+<!-- ************************************************************************** -->
+</body>
+
+</html>
