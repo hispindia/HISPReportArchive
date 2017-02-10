@@ -5,10 +5,10 @@
 	var orgUnit = dhis2.report.organisationUnit;
 	var orgUnitChildrens = dhis2.report.organisationUnitChildren;
 	
-	var ArrStringDEs = ["Ci8xBrFejqh;HscG3R78Jzc","HscG3R78Jzc"];
+	var ArrStringDEs = ["Ci8xBrFejqh;w84aFW1LESM","Ci8xBrFejqh;HscG3R78Jzc"];
 	var stringDEs = "";
 	var arrayDEs = stringDEs.split(";");
-	var stringCOCs = "Dj0rmsKZiLJ;xS4ElXqiXoA;XsYqOrbvA7e;FxNqmZfHgEO;m7XVRi1qT1J;vAdaNYgYRX3;EJv9IPWeCTb;gsOm9pEBion;fYKzBP3njcE;zJQ0xbEoQJI;GyhEtL13JfA;fKYuaCH0OuA";
+	var stringCOCs = "ayMV9ieefqQ;ayMV9ieefqQ;sfmUgn8yywu;iUcXHCikw4W;ra6Eu2HG3uz;h5jQOtCwdWf;BsqZjzoTKXF;I1gylzOskBs;TTNFd2X49S6;Dj0rmsKZiLJ;xS4ElXqiXoA;XsYqOrbvA7e;FxNqmZfHgEO;m7XVRi1qT1J;vAdaNYgYRX3;EJv9IPWeCTb;gsOm9pEBion;fYKzBP3njcE;zJQ0xbEoQJI;GyhEtL13JfA;fKYuaCH0OuA";
 	var arrayCOCs = stringCOCs.split(";");
 
 	var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;JM8keEP4z6r;mtNeiqIynwj;UcN4jZjv9Oo";
@@ -25,12 +25,12 @@
 	var iteration = -1;
 	var rep=[false,false,false,false,false,false,false,false];
 	var disTotal=[0,0,0,0,0,0,0,0,0,0,0,0,0];
-	var strMonths=["","","","","","","","","","","","","",""];
+	var strMonths=["Shrawan","Bhadra","Ashwin","Kartik","Mangsir","Poush","Magh","Falgun","Chaitra","Baishakh","Jestha","Ashadh"];
 	var jsonGroup, jsonNepal, jsonDistricts;
 	//*******************************************************************************************************************************
 	//*******************************************************************************************************************************
 	
-	var rtype=params[4];
+	var rtype=12;
 	jQuery( document ).ready( function(){
 		console.log(periods);
 		console.log(orgUnit);	
@@ -40,7 +40,8 @@
 		
 		//alert(rtype);
 		if(rtype>1)
-		generateFourMonths();
+		//generateFourMonths();
+		generateAllMonths();
 		getJson();
 		loadall(0);
 		
@@ -69,7 +70,7 @@
 		function getPeriod()
 		{
 			if(rtype>1)
-			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[params[4]-1]);
+			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[12]);
 			
 			else			
 			return getPeriodTitle(gotPeriod);
@@ -77,7 +78,7 @@
 
 		function generateFourMonths()
 		{
-var n=params[4];
+            var n=params[4];
 			gotPeriod = gotPeriod.substring(0,6);
 			var year = gotPeriod.substring(0,4);
 			var month = gotPeriod.substring(4,6);	
@@ -100,6 +101,37 @@ var n=params[4];
 				fourMonths[y]=year+""+month;
 				gotPeriod+=fourMonths[y]+";";
 			}
+			
+		}
+		
+		function generateAllMonths()
+		{
+			var n = 12;
+			gotPeriod = gotPeriod.substring(0,4) + '04';
+			var year = gotPeriod.substring(0,4);
+			var month = '04';
+			fourMonths[0]=gotPeriod;
+			gotPeriod+=";";
+			for(var y=1; y<n; y++)
+			{
+			
+			if(month<12)
+				{
+					month++;
+				}
+				else
+				{
+					month=1;
+					year++;
+				}
+			if(month<10)
+			{
+			month="0"+month;
+			}
+				fourMonths[y]=year+""+month;
+				gotPeriod+=fourMonths[y]+";";
+				}
+			
 			
 		}
 		
@@ -338,7 +370,7 @@ var headings =["SERVICE PROVIDED: BY HEALTH FACILITY","SERVICE PROVIDED (SENIER 
 
 function printHeader(iteration)
 {
-	n=params[4];
+	n=12;
 	var htmRep="";
 	var add="";
 	if(iteration==0)
@@ -366,7 +398,7 @@ function printHeader(iteration)
 		htmRep+="<td align='center'>Population</td>";
 		
 		for(var u=0; u<n; u++)
-		htmRep+="<td align='center'>"+strMonths[u]+"</td>";
+		htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
 		
 		htmRep+="<td align='center'>Achievement</td>";
 		htmRep+="<td align='center'>Achieved</td>";	
@@ -409,9 +441,9 @@ function printChildren(json,disCodes)
 			
 			htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'Ci8xBrFejqh',child, 'kdsirVNKdhm')+"</td>";
 			
-			for(var r=0; r<params[4]; r++)
+			for(var r=0; r<12; r++)
 			{
-				var x=getValueForCategoryOptionCombo(json, 'w84aFW1LESM',child, 'kdsirVNKdhm');
+				var x=getValueForCategoryOptionCombo(json, 'w84aFW1LESM',child, 'kdsirVNKdhm',fourMonths[r]);
 				htmlReport+="<td align='center'>"+x+"</td>";
 				disTotal[r]=disTotal[r]+x;
 			}
@@ -424,7 +456,7 @@ function printChildren(json,disCodes)
 			//--------- footer--------------------------------------
 			htmlReport+="<tr>";
 				htmlReport+="<td colspan='3'> District Total </td>";
-				for(var r=0; r<params[4]; r++)
+				for(var r=0; r<12; r++)
 				{
 					htmlReport+="<td align='center'>"+disTotal[r]+"</td>";
 				}
@@ -433,7 +465,7 @@ function printChildren(json,disCodes)
 			
 			htmlReport+="<tr>";
 				htmlReport+="<td colspan='3'> Cumulative Achievement by Month </td>";
-				for(var r=0; r<params[4]; r++)
+				for(var r=0; r<12; r++)
 				{
 					htmlReport+="<td align='center'></td>";
 				}
@@ -463,17 +495,17 @@ function printChildren(json,disCodes)
 			
 			htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'Ci8xBrFejqh',child, 'kdsirVNKdhm')+"</td>";
 			
-			for(var r=0; r<params[4]; r++)
+			for(var r=0; r<12; r++)
 			{
-				var x=getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'I1gylzOskBs')+
-					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'TTNFd2X49S6')+
-					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'BsqZjzoTKXF')+
-					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'ayMV9ieefqQ')+
-					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'ayMV9ieefqQ')+
-					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'sfmUgn8yywu')+
-					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'iUcXHCikw4W')+
-					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'ra6Eu2HG3uz')+
-					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'h5jQOtCwdWf');
+				var x=getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'I1gylzOskBs',fourMonths[r])+
+					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'TTNFd2X49S6',fourMonths[r])+
+					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'BsqZjzoTKXF',fourMonths[r])+
+					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'ayMV9ieefqQ',fourMonths[r])+
+					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'ayMV9ieefqQ',fourMonths[r])+
+					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'sfmUgn8yywu',fourMonths[r])+
+					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'iUcXHCikw4W',fourMonths[r])+
+					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'ra6Eu2HG3uz',fourMonths[r])+
+					getValueForCategoryOptionCombo(json, 'HscG3R78Jzc',child, 'h5jQOtCwdWf',fourMonths[r]);
 
 				htmlReport+="<td align='center'>"+x+"</td>";
 				disTotal[r]=disTotal[r]+x;
@@ -487,7 +519,7 @@ function printChildren(json,disCodes)
 				//--------- footer--------------------------------------
 				htmlReport+="<tr>";
 					htmlReport+="<td colspan='3'> District Total </td>";
-					for(var r=0; r<params[4]; r++)
+					for(var r=0; r< 12; r++)
 					{
 						htmlReport+="<td align='center'>"+disTotal[r]+"</td>";
 					}
@@ -496,7 +528,7 @@ function printChildren(json,disCodes)
 				
 				htmlReport+="<tr>";
 					htmlReport+="<td colspan='3'> Cumulative Achievement by Month </td>";
-					for(var r=0; r<params[4]; r++)
+					for(var r=0; r<12; r++)
 					{
 						htmlReport+="<td align='center'></td>";
 					}
@@ -521,13 +553,13 @@ function printChildren(json,disCodes)
 			return result;
 		}
 
-		function getValueForCategoryOptionCombo( json, de, orgUnit, coc )
+		function getValueForCategoryOptionCombo( json, de, orgUnit, coc, pe )
 		{
 			var result=0;
 			for (var i=0; i < json.rows.length; i++){
-				if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][3] != null )
+				if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][3] == pe && json.rows[i][4] != null )
 				{
-					result+=parseInt(json.rows[i][3]);
+					result+=parseInt(json.rows[i][4]);
 				}
 			}
 			return result;
