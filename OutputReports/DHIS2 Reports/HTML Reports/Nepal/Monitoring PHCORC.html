@@ -5,13 +5,13 @@
 	var orgUnit = dhis2.report.organisationUnit;
 	var orgUnitChildrens = dhis2.report.organisationUnitChildren;
 	
-	var ArrStringDEs = ["BtZWQzepxDU","KFOKPk0SKFq;wX2bCn77pAZ;sb4e9ccVZEZ","aLtVoncLlGS;lzlKtOSysRz;PoVX1B5xEGw"];
+	var ArrStringDEs = ["yUNjmhz0j9s;BG55tDKF0np","BG55tDKF0np;bKTB9K7u6DS"];
 	var stringDEs = "";
 	var arrayDEs = stringDEs.split(";");
 	var stringCOCs = "Dj0rmsKZiLJ;xS4ElXqiXoA;XsYqOrbvA7e;FxNqmZfHgEO;m7XVRi1qT1J;vAdaNYgYRX3;EJv9IPWeCTb;gsOm9pEBion;fYKzBP3njcE;zJQ0xbEoQJI;GyhEtL13JfA;fKYuaCH0OuA";
 	var arrayCOCs = stringCOCs.split(";");
 
-	var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;JM8keEP4z6r;mtNeiqIynwj;UcN4jZjv9Oo";
+	var stringOrgGroups = "qaErQMOx3qd;XtxGdAJ4qz7;zM8iinKAB4o;PUyzad1v5G8;c74ro1k5AmH;wPdTd6n0HPc";
 	var url = window.location.href;
 	var params = url.split('=');
 	var gotOrg=params[3];
@@ -25,12 +25,12 @@
 	var iteration = -1;
 	var rep=[false,false,false,false,false,false,false,false];
 	var disTotal=[0,0,0,0,0,0,0,0,0,0,0,0,0];
-	var strMonths=["","","","","","","","","","","","","",""];
+	var strMonths=["Shrawan","Bhadra","Ashwin","Kartik","Mangsir","Poush","Magh","Falgun","Chaitra","Baishakh","Jestha","Ashadh"];
 	var jsonGroup, jsonNepal, jsonDistricts;
 	//*******************************************************************************************************************************
 	//*******************************************************************************************************************************
 	
-	var rtype=params[4];
+	var rtype=12;
 	jQuery( document ).ready( function(){
 		console.log(periods);
 		console.log(orgUnit);	
@@ -40,7 +40,8 @@
 		
 		//alert(rtype);
 		if(rtype>1)
-		generateFourMonths();
+	//generateFourMonths();
+		generateAllMonths();
 		getJson();
 		loadall(0);
 		
@@ -69,20 +70,21 @@
 		function getPeriod()
 		{
 			if(rtype>1)
-			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[params[4]-1]);
+			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[12]);
 			
 			else			
-			return getPeriodTitle(gotPeriod);
+			return getPeriodTitle(period);
 		}
 
 		function generateFourMonths()
 		{
-			var n=params[4];
-			gotPeriod = gotPeriod.substring(0,6);
-			var year = gotPeriod.substring(0,4);
-			var month = gotPeriod.substring(4,6);	
-			fourMonths[0]=gotPeriod;
-			gotPeriod+=";";
+			var n=12;
+			var year = period.substring(0,4);
+			var month = period.substring(4,6);
+			strMonths[0]=getPeriodTitle(month);			
+			fourMonths[0]=period;
+			engPeriods[0]=getEnglishPeriod(fourMonths[0]);
+			period+=";";
 			
 			for(var y=1; y<n; y++)
 			{
@@ -97,15 +99,48 @@
 				}
 				if(month<10)
 				month="0"+month;
+				strMonths[y]=getPeriodTitle(month);
+				fourMonths[y]=""+year+month;
+				engPeriods[y]=getEnglishPeriod(fourMonths[y]);
+				period+=fourMonths[y]+";";
+			}
+			
+		}
+		
+				function generateAllMonths()
+		{
+			var n = 12;
+			gotPeriod = gotPeriod.substring(0,4) + '04';
+			var year = gotPeriod.substring(0,4);
+			var month = '04';
+			fourMonths[0]=gotPeriod;
+			gotPeriod+=";";
+			for(var y=1; y<n; y++)
+			{
+			
+			if(month<12)
+				{
+					month++;
+				}
+				else
+				{
+					month=1;
+					year++;
+				}
+			if(month<10)
+			{
+			month="0"+month;
+			}
 				fourMonths[y]=year+""+month;
 				gotPeriod+=fourMonths[y]+";";
-			}
+				}
+			
 			
 		}
 		
 		function getEnglishPeriod(cprd)
 		{
-			var n=params[4];
+			var n=12;
 			var year = cprd.substring(0,4);
 			var month = cprd.substring(4,6);
 			
@@ -269,10 +304,11 @@
 			var childrens=[];
 			var allCodes=[];
 			var regionsLoaded=0;
- function arraySorting(a, b) {
+
+function arraySorting(a, b) {
         return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
     }
-
+	
 		function stringOrgChild(json)
 		{
 				var stringOrg = "";
@@ -366,7 +402,7 @@ function printHeader(currentIteration,numOfMonths)
 			htmRep+="<td align='center'>ORC</td>";
 			
 			for(var u=0; u<numOfMonths; u++)
-			htmRep+="<td align='center'>"+strMonths[u]+"</td>";
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
 			
 			htmRep+="<td align='center'></td>";
 			htmRep+="<td align='center'>held</td>";
@@ -393,7 +429,7 @@ function printHeader(currentIteration,numOfMonths)
 			htmRep+="<td align='center'>ORC</td>";
 			
 			for(var u=0; u<numOfMonths; u++)
-			htmRep+="<td align='center'>"+strMonths[u]+"</td>";
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
 			
 			htmRep+="<td align='center'></td>";
 			htmRep+="<td align='center'>Served per Clinic</td>";
@@ -412,7 +448,7 @@ function printChildren(json,disCodes)
 {
 		var htmlReport="";
 		var arrayCodes=disCodes.split(";");
-		printHeader(iteration,params[4]);
+		printHeader(iteration,12);
 		
 		grandTotal = 0;
 		totalTarget=0;
@@ -442,9 +478,9 @@ function printChildren(json,disCodes)
 			totalTarget += target;
 			htmlReport+="<td align='center'>"+target+"</td>";
 			var annualTotal=0;
-			for(var r=0; r<params[4]; r++)
+			for(var r=0; r<12; r++)
 			{
-				var x=getValueForCategoryOptionCombo(json, 'BG55tDKF0np',child, 'kdsirVNKdhm',engPeriods[r]);
+				var x=getValueForCategoryOptionCombo(json, 'BG55tDKF0np',child, 'kdsirVNKdhm',fourMonths[r]);
 				htmlReport+="<td align='center'>"+x+"</td>";//----------------------------------------------------------------------------------------//
 				disTotal[r]=parseInt(disTotal[r])+x;
 				annualTotal+=x;
@@ -453,7 +489,7 @@ function printChildren(json,disCodes)
 				grandTotal+=annualTotal;
 				grandTotal/=2;
 				htmlReport+="<td align='center'>"+annualTotal+"</td>";
-				htmlReport+="<td align='center'>"+(annualTotal/target)*100+"</td>";
+				htmlReport+="<td align='center'>"+((annualTotal/target)*100).toFixed(2)+"</td>";
 				htmlReport+="</tr>";	
 			});		
 		}
@@ -481,9 +517,9 @@ function printChildren(json,disCodes)
 			totalTarget += target;
 			htmlReport+="<td align='center'>"+target+"</td>";
 			var annualTotal=0;
-			for(var r=0; r<params[4]; r++)
+			for(var r=0; r<12; r++)
 			{
-				var x=getValueForCategoryOptionCombo(json, 'bKTB9K7u6DS',child, 'kdsirVNKdhm',engPeriods[r]);
+				var x=getValueForCategoryOptionCombo(json, 'bKTB9K7u6DS',child, 'kdsirVNKdhm',fourMonths[r]);
 				htmlReport+="<td align='center'>"+x+"</td>";//----------------------------------------------------------------------------------------//
 				disTotal[r]=parseInt(disTotal[r])+x;
 				annualTotal+=x;
@@ -492,14 +528,14 @@ function printChildren(json,disCodes)
 				grandTotal+=annualTotal;
 				grandTotal/=2;
 				htmlReport+="<td align='center'>"+annualTotal+"</td>";
-				htmlReport+="<td align='center'>"+(annualTotal/target)*100+"</td>";
+				htmlReport+="<td align='center'>"+((annualTotal/target)*100).toFixed(2)+"</td>";
 				htmlReport+="</tr>";	
 			});		
 		}
 		
 		$("#"+currentTableID).append(htmlReport);
 		
-		printFooter(iteration,params[4]);
+		printFooter(iteration,12);
 }
 
 function printFooter(currentIteration,numOfMonths)
@@ -519,8 +555,8 @@ function printFooter(currentIteration,numOfMonths)
 			}
 			
 			//other totals
-			htmlReport+="<td align='center'>"+grandTotal+"</td>";
-			htmlReport+="<td>"+(grandTotal/totalTarget)*100+"</td>";
+			htmlReport+="<td align='center'>"+grandTotal.toFixed(2)+"</td>";
+			htmlReport+="<td>"+((grandTotal/totalTarget)*100).toFixed(2)+"</td>";
 		htmlReport+="</tr>";
 		
 		//second row of footer
@@ -528,7 +564,7 @@ function printFooter(currentIteration,numOfMonths)
 		htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
 			
 			var cum = 0;
-			for(var r=0; r<params[4]; r++)
+			for(var r=0; r<12; r++)
 			{
 				cum += disTotal[r]/2;
 				htmlReport+="<td align='center'>"+cum+"</td>";
@@ -542,7 +578,7 @@ function printFooter(currentIteration,numOfMonths)
 		htmlReport+="<td colspan='2'> % of Clinics Held in Month </td>";
 			
 			var per = 0;
-			for(var r=0; r<params[4]; r++)
+			for(var r=0; r<12; r++)
 			{
 				per = ((disTotal[r]/2)/totalTarget)*100;
 				htmlReport+="<td align='center'></td>";
@@ -564,8 +600,8 @@ function printFooter(currentIteration,numOfMonths)
 			}
 			
 			//other totals
-			htmlReport+="<td align='center'>"+grandTotal+"</td>";
-			htmlReport+="<td>"+(grandTotal/totalTarget)*100+"</td>";
+			htmlReport+="<td align='center'>"+grandTotal.toFixed(2)+"</td>";
+			htmlReport+="<td>"+((grandTotal/totalTarget)*100).toFixed(2)+"</td>";
 		htmlReport+="</tr>";
 		
 		//second row of footer
@@ -573,7 +609,7 @@ function printFooter(currentIteration,numOfMonths)
 			htmlReport+="<td colspan='2'> No. of PF Cases </td>";
 				
 				var cum = 0;
-				for(var r=0; r<params[4]; r++)
+				for(var r=0; r<12; r++)
 				{
 					cum += disTotal[r]/2;
 					htmlReport+="<td align='center'></td>";
@@ -588,7 +624,7 @@ function printFooter(currentIteration,numOfMonths)
 			htmlReport+="<td colspan='2'> Monthly Parasite Incidence Rate (MPI) </td>";
 				
 				var cum = 0;
-				for(var r=0; r<params[4]; r++)
+				for(var r=0; r<12; r++)
 				{
 					cum += disTotal[r]/2;
 					htmlReport+="<td align='center'></td>";
@@ -603,7 +639,7 @@ function printFooter(currentIteration,numOfMonths)
 			htmlReport+="<td colspan='2'> Slide Positivity Rate (SPR) </td>";
 				
 				var cum = 0;
-				for(var r=0; r<params[4]; r++)
+				for(var r=0; r<12; r++)
 				{
 					cum += disTotal[r]/2;
 					htmlReport+="<td align='center'></td>";
@@ -626,7 +662,7 @@ function printFooter(currentIteration,numOfMonths)
 			}
 			
 			//other totals
-			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td align='center'>"+grandTotal.toFixed(2)+"</td>";
 			htmlReport+="<td></td>";
 		htmlReport+="</tr>";
 		
@@ -635,7 +671,7 @@ function printFooter(currentIteration,numOfMonths)
 			htmlReport+="<td colspan='1'> Cumulative Monthly Total </td>";
 				
 				var cum = 0;
-				for(var r=0; r<params[4]; r++)
+				for(var r=0; r<12; r++)
 				{
 					cum += disTotal[r]/2;
 					htmlReport+="<td align='center'>"+cum+"</td>";
@@ -650,7 +686,7 @@ function printFooter(currentIteration,numOfMonths)
 			htmlReport+="<td colspan='1'> Clinical Malaria Incidence </td>";
 				
 				var cum = 0;
-				for(var r=0; r<params[4]; r++)
+				for(var r=0; r<12; r++)
 				{
 					cum += disTotal[r]/2;
 					htmlReport+="<td align='center'></td>";
