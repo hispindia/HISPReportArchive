@@ -1,0 +1,729 @@
+<script type="text/javascript" async>
+	var selPeriods = dhis2.report.periods;
+	var period = selPeriods[0];
+	var zz = 0;
+	var orgUnit = dhis2.report.organisationUnit;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+	var total=0;
+	var url = window.location.href;
+	//var urlParams = url.split('&');
+	var params = url.split('=');
+
+	//var urlParams2 = urlParams[4];
+
+	//report duration
+	//params[4] = urlParams[1].split('=')[1];
+	//verification datasets
+
+	var per =params[2];
+	var finper=per.split('&');
+	var per2=finper[0];
+	//alert(per2);
+
+        var ym;
+     var mon =params[4];
+     var mont=mon.split('&');
+     var month=mont[0];
+    // alert(month);
+
+    //var finper = per.split(/[&,]/);
+    var org=params[6];
+   // var orgg=org.split(',');
+    var orggg=org.split('%');
+    var orgggg=orggg[0];
+
+    var org1=params[7];
+	var ou = org1;
+	var ou = ou.replace("%20", " ");
+    // var orgg=org.split(',');
+  //  var orggg1=org1.split('%20');
+ //   var orgggg1=orggg1[1];
+    //alert(orgggg1);
+
+var g;
+
+
+var count=1;
+
+    var org1=params[3];
+	var finorg=org1.split('&');
+	var fino = finorg[0]
+		//alert(fino);
+//    var finorg = org.split(/[&,]/);**/
+
+
+	var rurl = params[5];
+//	var finalUr = rurl.split(',');3
+    var finalUrl = rurl.split('&');
+    var finalUr = finalUrl[0];
+    	var fin = finalUr.split(',');
+	//alert(fin);
+
+
+	var gotOrg=params[3];
+
+	var iteration = -1;
+	var rtype=params[4];
+	var dataSetArray=[];
+	var currentDataSetIndex=0;
+	var dataElementsForCurrentDataSet = [];
+	var periodsArray = [];
+	var strMonths=["","","","","","","","","","","","","",""];
+	var catchid;
+    var groupname;
+   var result = 0;
+   var re;
+    $.ajaxSetup({
+        async: false
+    });
+//	var array = ["1","2","3","4","5","6","7"];
+  var jsonData;
+	jQuery( document ).ready( function() {
+		
+	//hideLoad();
+        generatePeriods(month);
+
+        var length = fin.length;
+
+
+
+        function loadData(deUIDs,fino,periodes,i) {
+            var url = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:" + fino + "&dimension=pe:" + periodes + "&skipMeta=true";
+            $.get(url, function (data) {
+                    if(data.rows.length == 0 || data.rows == '')
+					{
+					re = 0;
+					return parseInt(re);
+					}
+			else if(data.rows[i][0] == deUIDs && data.rows[i][2] == fino && data.rows[i][3] == periodes && data.rows[i][4] != null)
+                    {
+                        result = data.rows[i][4];
+						
+                    }
+
+                    re=result;
+					return parseInt(re);
+            });
+
+        }
+
+        function datagroup(a) {
+
+
+        $.getJSON("../api/dataElementGroups.Json", function (data) {
+            for (var q = 0; q < data.dataElementGroups.length; q++) {
+                if (data.dataElementGroups[q].id == a) {
+                    groupname = data.dataElementGroups[q].displayName;
+
+                    //  alert("found uu");
+                }
+            }
+            //alert(abc);
+        });
+
+        return groupname;
+
+    }
+
+		var f=1;
+			for(var z=0; z<length;z++){
+
+
+        $.getJSON("../api/dataElements.json?filter=dataElementGroups.id:eq:"+fin[z]+"&paging=false", function (data) {
+                   var groupid=fin[z];
+            datagroup(groupid);
+var increment = parseInt(month)+3;
+if(groupname != "Family Planning")
+			{
+			var OrgUnit = $("<tr style='border:1px solid black;background-color:#A8DAE5'> <td style= 'text-align:left'colspan= "+ increment +" >Organization Unit : " + ou + "</td></tr>");
+			var per = $("<tr style='border:1px solid black;background-color:#A8DAE5'> <td style= 'text-align:left'colspan= "+increment+" > PERIOD : " +getPeriodNAme(per2) + " to "+ getPeriodNAme(ed) +"</td></tr>");
+            var group = $("<tr style='border:1px solid black;background-color:#07E1DD'><td style= 'text-align:left'colspan= "+increment+" >" +groupname + "</td></tr>");
+            
+			$(".reporttable").append(OrgUnit);
+            $(".reporttable").append(per);
+            $(".reporttable").append(group);
+            
+							var headingName = "<tr  style='background-color:#81969B;border:1px solid black'><td colspan='1' >S.No. </td><td colspan='1'>Description</td>";
+
+				var ym = periodsArray;
+				for (var s = 0; s < ym.length; s++) {
+					 headingName = headingName+ "<td colspan='1'>" + getPeriodNAme(ym[s]) + "</td>";
+				}
+				headingName = headingName+ "<td colspan='1'>Total </td>";
+				$(".reporttable").append(headingName+"</tr>");
+			}
+			else
+			{
+			var OrgUnit = $("<tr style='border:1px solid black;background-color:#A8DAE5'> <td style= 'text-align:left'colspan= "+ (increment - 1) +" >Organization Unit : " + ou + "</td></tr>");
+			var per = $("<tr style='border:1px solid black;background-color:#A8DAE5'> <td style= 'text-align:left'colspan= "+ (increment - 1) +" > PERIOD : " +getPeriodNAme(per2) + " to "+ getPeriodNAme(ed) +"</td></tr>");
+            var group = $("<tr style='border:1px solid black;background-color:#07E1DD'><td style= 'text-align:left'colspan= "+ (increment - 1) +" >" +groupname + "</td></tr>");
+            
+			$(".reporttable").append(OrgUnit);
+            $(".reporttable").append(per);
+            $(".reporttable").append(group);
+			
+							var headingName = "<tr  style='background-color:#81969B;border:1px solid black'><td colspan='1' >S.No. </td><td colspan='1'>Description</td>";
+
+				var ym = periodsArray;
+				for (var s = 0; s < ym.length; s++) {
+					 headingName = headingName+ "<td colspan='1'>" + getPeriodNAme(ym[s]) + "</td>";
+				}
+				//headingName = headingName+ "<td colspan='1'>Total </td>";
+				$(".reporttable").append(headingName+"</tr>");
+			}
+			
+			if(groupname != "Family Planning")
+			{
+						var periodes=[periodsArray];
+        for (var i = 0; i < data.dataElements.length; i++) {
+                        var row = "<tr><td  class = 'tablerows' text-align:'left' colspan='1' id='td'>" + count + "</td><td class = 'tablerows' style='text-align:left' colspan='1' id='td'>" + data.dataElements[i].displayName + "</td>" ;
+                    count++;
+					var deUIDs= data.dataElements[i].id;
+					
+					for( g=0;g<periodsArray.length;g++)
+					{
+					loadData(deUIDs,fino,periodsArray[g],zz);
+					total = parseInt(total)+parseInt(re);
+					var add = [parseInt(re)];
+						row = row+"<td class = 'tablerows' colspan='1' id='td'>" + add + "</td>";
+					}
+						row = row+"<td class = 'tablerows' colspan='1' id='td'>" + total + "</td>";
+                       $(".reporttable").append(row+"</tr>");
+		
+			total=0;
+                    }
+			}
+			else
+			{
+					var periodes=[periodsArray];
+        for (var i = 0; i < data.dataElements.length; i++) {
+                        var row = "<tr><td  class = 'tablerows' text-align:'left' colspan='1' id='td'>" + count + "</td><td class = 'tablerows' style='text-align:left' colspan='1' id='td'>" + data.dataElements[i].displayName + "</td>" ;
+                    count++;
+					var deUIDs= data.dataElements[i].id;
+					
+					for( g=0;g<periodsArray.length;g++)
+					{
+					loadData(deUIDs,fino,periodsArray[g],zz);
+					total = parseInt(total)+parseInt(re);
+					var add = [parseInt(re)];
+						row = row+"<td class = 'tablerows' colspan='1' id='td'>" + add + "</td>";
+					}
+						//row = row+"<td class = 'tablerows' colspan='1' id='td'>" + total + "</td>";
+                       $(".reporttable").append(row+"</tr>");
+		
+			//total=0;
+                    }
+			
+			}
+			
+					var emptyrow = "<tr  style='border: none; display:none;' colspan="+increment+"> <td>&nbsp;</td>";
+            $(".reporttable").append(emptyrow+"</tr>");
+            var emptyrows = "<tr style='border: none; display:none;' colspan="+increment+"> <td>&nbsp;</td>";
+            $(".reporttable").append(emptyrows+"</tr>");
+
+count=1;
+
+        });
+	}
+	});
+	/*************************************************************************************************************/
+	
+	var allMonths=[];
+	function generatePeriods(month)
+	{
+		var n=month;
+			var year = per2.substring(0,4);
+			var month = per2.substring(4,6);
+			strMonths[0]=getPeriodTitle(month);
+			allMonths[0]=per2;
+			periodsArray[0] = per2;
+			per2+="";
+			
+			for(var y=1; y<n; y++)
+			{
+				if(month<12)
+				{
+					month++;
+				}
+				else
+				{
+					month=1;
+					year++;
+				}
+				if(month<10)
+				month="0"+month;
+				strMonths[y]=getPeriodTitle(month);
+				allMonths[y]=(""+year)+month;
+				period+=allMonths[y]+";";
+				periodsArray[y] = allMonths[y];
+
+			}
+			//return strMonths + " " + year;
+        //alert(periodsArray);
+        ed = periodsArray[y-1];
+        return periodsArray;
+		return ed;
+
+    }
+
+	
+	function getEnglishPeriod(cprd)
+	{
+		if(cprd!=null)
+		{
+			var year = cprd.substring(0,4);
+			var month = cprd.substring(4,6);
+			
+			year -= 57;
+			month=parseInt(month);
+			//alert(month);
+			if(month>9)
+			{
+				month += 3;	
+				month %= 12;
+				year++;
+			}
+			else
+			{
+				month += 3;
+			}
+				if(month<10)
+				month="0"+month;
+				//alert((""+year)+month);
+				return((""+year)+month);
+		}	
+	}
+		
+	function getPeriodTitle(month)
+		{		
+
+			if(month=="01" || month=="1")
+				strMonth="Baishakh";
+			else if(month=="02" || month=="2")
+				strMonth="Jestha";
+			else if(month=="03" || month=="3")
+				strMonth="Ashadh";
+			else if(month=="04" || month=="4")
+				strMonth="Shrawan";
+			else if(month=="05" || month=="5")
+				strMonth="Bhadra";
+			else if(month=="06" || month=="6")
+				strMonth="Ashwin";
+			else if(month=="07" || month=="7")
+				strMonth="Kartik";
+			else if(month=="08" || month=="8")
+				strMonth="Mangsir";
+			else if(month=="09" || month=="9")
+				strMonth="Poush";
+			else if(month=="10")
+				strMonth="Magh";
+			else if(month=="11")
+				strMonth="Falgun";
+			else if(month=="12")
+				strMonth="Chaitra";
+			 return strMonth;
+			
+		}
+		
+		function getPeriodNAme(pr)
+		{		
+			var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+		
+			if(month=="01" || month=="1")
+				strMonth="Baishakh";
+			else if(month=="02" || month=="2")
+				strMonth="Jestha";
+			else if(month=="03" || month=="3")
+				strMonth="Ashadh";
+			else if(month=="04" || month=="4")
+				strMonth="Shrawan";
+			else if(month=="05" || month=="5")
+				strMonth="Bhadra";
+			else if(month=="06" || month=="6")
+				strMonth="Ashwin";
+			else if(month=="07" || month=="7")
+				strMonth="Kartik";
+			else if(month=="08" || month=="8")
+				strMonth="Mangsir";
+			else if(month=="09" || month=="9")
+				strMonth="Poush";
+			else if(month=="10")
+				strMonth="Magh";
+			else if(month=="11")
+				strMonth="Falgun";
+			else if(month=="12")
+				strMonth="Chaitra";
+			 return strMonth + " " + year;
+			
+		}
+		
+	
+	/*************************************************************************************************************/
+	function hideLoad()
+	{
+		document.getElementById("cover").style.display="none";
+		document.getElementById("loads").style.display="none";
+		document.getElementsByTagName("body")[0].style.overflow="scroll";
+	}
+	
+	//-----------------------------------------------------------------------------------------------------------
+	
+
+</script>
+
+		<!-- download script ------------------------------------------------------
+		--------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------- -->
+<script type="text/javascript">
+	function convert(dataURI) 
+	{
+		  // convert base64 to raw binary data held in a string
+		  // doesn't handle URLEncoded DataURIs
+		  var byteString;
+		  if (dataURI.split(',')[0].indexOf('base64') >= 0)
+			  byteString = atob(dataURI.split(',')[1]);
+		  else
+			  byteString = unescape(dataURI.split(',')[1]);
+		  // separate out the mime component
+		  var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+		  // write the bytes of the string to an ArrayBuffer
+		  var ab = new ArrayBuffer(byteString.length);
+		  var ia = new Uint8Array(ab);
+		  for (var i = 0; i < byteString.length; i++) {
+			  ia[i] = byteString.charCodeAt(i);
+		  }
+
+		  // write the ArrayBuffer to a blob, and you're done
+		  return new Blob([ab],{type: mimeString});
+	}
+	
+	 var tablesToExcel = (function() {
+    var uri = 'data:application/vnd.ms-excel;base64,'
+    , tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+      + '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>ThaiND</Author><Created>{created}</Created></DocumentProperties>'
+	  +'<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:Size="8"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s26"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s23"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="0"/></Borders><Font ss:Bold="1"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s24"><Alignment ss:Horizontal="Left" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s28"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s29"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style></Styles>'
+      + '{worksheets}</Workbook>'
+    , tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="30"/><Column ss:AutoFitWidth="0" ss:Width="450"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/>{rows}</Table></Worksheet>'
+	, tmplCellXML = '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>'
+    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+	
+    return function(tables, wsnames, wbname) {
+		var ctx = "";
+		var workbookXML = "";
+		var worksheetsXML = "";
+		var rowsXML = "";
+		
+		for (var i = 0; i < tables.length; i++) 
+		{
+		
+			if (!tables[i].nodeType) 
+			tables[i] = document.getElementById(tables[i]);
+		
+			for (var j = 0; j < tables[i].rows.length; j++) 
+			{
+				rowsXML += '<Row>'
+				for (var k = 0; k < tables[i].rows[j].cells.length; k++) 
+				{
+					
+					var cols=tables[i].rows[j].cells[k].getAttribute("colspan");
+					var rws=tables[i].rows[j].cells[k].getAttribute("rowspan");
+					var styl=tables[i].rows[j].cells[k].getAttribute("bgcolor");
+					var styl2=tables[i].rows[j].getAttribute("bgcolor");
+					var cls=tables[i].rows[j].cells[k].getAttribute("class");
+					var algn=tables[i].rows[j].cells[k].getAttribute("align");
+					var cls2=tables[i].rows[j].getAttribute("class");
+					
+						var dataType = 'String';
+						var dataValue = tables[i].rows[j].cells[k].innerHTML;
+						var typeD="";
+						var parsed=parseInt(dataValue);
+						
+						if (parsed==dataValue)
+						{
+							typeD="Number";
+						}
+						else
+						{
+							typeD="String";
+						}
+					var n;
+						if(cls)
+						{
+							n=cls.indexOf("value"); 
+						}		
+						
+					if(cls2=="ylw")
+					{
+						ctx = {data: dataValue, mrg: 0, sid:"s26",dtype:typeD};
+						rowsXML += format(tmplCellXML, ctx);
+					}
+					
+					else if(cls2=="gray")
+					{
+						if(k==1&&j>3)
+						var cl="s28";
+						else
+						var cl="s29";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					else if(algn)
+					{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: 0, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: 0, sid: "Default",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+					}
+					
+					
+					else if(styl)
+					{
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:"s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+							ctx = {data: dataValue, mrg: 0, sid: "s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else
+					{
+						if(cols)
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"Default",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+
+						else
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: 0, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: 0, sid: "Default",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+					
+					}
+					
+				}
+				  rowsXML += '</Row>'
+			}
+			ctx = {rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i};
+			worksheetsXML += format(tmplWorksheetXML, ctx);
+			rowsXML = "";
+      }
+
+		ctx = {created: (new Date()).getTime(), worksheets: worksheetsXML};
+		workbookXML = format(tmplWorkbookXML, ctx);
+
+		console.log(workbookXML);
+
+		var blobUrl = URL.createObjectURL(convert(uri + base64(workbookXML)));
+		var link = document.createElement("A");
+		link.href = blobUrl;
+		//link.href = uri + base64(workbookXML);
+		link.download = wbname || 'Workbook.xls';
+		link.target = '_blank';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+    }
+  })();
+</script>
+
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+
+<script type="text/javascript">
+    function clickme() {
+
+
+        var a = document.createElement('a');
+        var data_type = 'data:application/vnd.ms-excel';
+        var table_div = document.getElementById('printing');
+        var table_html = table_div.outerHTML.replace(/ /g, '%20');
+        a.href = data_type + ', ' + table_html;
+        a.download = 'Verification Report.xls';
+        a.click();
+        e.preventDefault();
+
+    }
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function () {
+   $("input[value=Back]").closest('div').hide();
+});
+</script>
+	<style type="text/css">
+	.tablerows
+	{
+		border: 1px solid black;
+		 
+	}
+			body
+			{
+				overflow:none;
+			}
+			ul.tabs {
+				margin: 0;
+				padding: 0;
+				float: left;
+				list-style: none;
+				height: 32px;
+				border-bottom: 1px solid #999999;
+				border-left: 1px solid #999999;
+				width: 100%;
+			}
+			ul.tabs li {
+				float: left;
+				margin: 0;
+				cursor: pointer;
+				padding: 0px 21px ;
+				height: 31px;
+				line-height: 31px;
+				border: 1px solid #999999;
+				border-left: none;
+				font-weight: bold;
+				background: #EEEEEE;
+				overflow: hidden;
+				position: relative;
+			}
+			ul.tabs li:hover {
+				background: #CCCCCC;
+			}	
+			ul.tabs li.active{
+				background: #FFFFFF;
+				border-bottom: 1px solid #FFFFFF;
+			}
+			.tab_container {
+				clear: both;
+				float: left; 
+				width: 100%;
+				background: #FFFFFF;
+			}
+			.tab_content {
+				padding: 0;
+				font-size: 1.2em;
+				display: none;
+			}
+			#container {
+				width: 100%;
+				margin: 0 auto;	
+			}
+			
+			.vtext{
+				min-width:40px;
+			}
+			
+			.borders{
+				border-bottom-color:#999999;
+			}
+			
+			.rightborder{
+				border-right-color:#999999;	
+			}
+			
+			.all{
+				font-weight:bolder;
+				padding:4px 5px;
+			}
+			
+			.all td
+			{
+				padding:3px 5px;
+			}
+			.all2{
+				font-weight:bolder;
+				padding:4px 5px;
+				background:#fff;
+				border:0;
+			}
+			
+			td{	min-width:75px;	} #cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+		</style> 
+
+	<!--	<div id="loads" > <p id="leadMsg" class="loading" align="center">Reports Loading... Please Wait...</p></div>
+		<div id="cover" > </div>
+		</br></br>
+<<p><span style="font-size:20px; align-content: center">
+<div id="loads"><p id="loading">Reports Loading... Please Wait...</p></div>
+<div id="cover"></div>
+</span></p>
+
+<br><br>
+-->
+<input type="button" onclick="printContent('printing');" value="Print"/>
+<input type="button" onclick="clickme()" value=" Download Excel "/>
+
+
+
+<div id="printing">
+<table id="datavalue1" border="1" cellspacing="0" cellpadding="0">
+<table>
+
+		<tr align="center" height="20">
+			<td rowspan="1" border="1px solid black" width="20%" align="center" id="OrgUnit"></td>
+			<td rowspan="1" border="1px solid black" width="20%" align="center" id="group"></td>
+			<td rowspan="1" border="1px solid black" width="20%" align="center" id="per"></td>
+			<br>
+			<br>
+			<br>
+
+		</tr>
+	</table>
+
+	<table class="reporttable" style='border:1px solid black;border-collapse: collapse; text-align:center;'>
+    </table>
+</table>
+</div>
