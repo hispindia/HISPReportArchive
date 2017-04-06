@@ -23,7 +23,8 @@
     var gotOrgUnit = params[3];
     var gotPeriod = params[2];
 	var periodstr = gotPeriod.substr(0,4);
-     var periodstr1 = periodstr - 1;
+     var periodstr1 = +periodstr + 1;
+	 var periodstr4 = +periodstr + 2;
 	 var periodstr2 = periodstr1.toString();
 	 var periodstr3 =  periodstr2 + ";" + periodstr ;
     var trIDsArray = [];
@@ -37,6 +38,7 @@
     // jsonObj
     // jsonObj
     var dataJsonObj;
+	var dataoutput;
 
     var showTable = "dataTable";
     var showRow = "r1";
@@ -63,14 +65,15 @@
                 e.preventDefault();
             });
           document.getElementById('orgUnitID').innerHTML = orgUnit.name;
-            document.getElementById('periodID').innerHTML = getPeriod(gotPeriod);
-			document.getElementById('periodID1').innerHTML = periodstr;
-			document.getElementById('periodID2').innerHTML = periodstr;
-			document.getElementById('periodID3').innerHTML = periodstr;
+            document.getElementById('periodID').innerHTML = periodstr4;
+			document.getElementById('periodID1').innerHTML = periodstr1;
+			document.getElementById('periodID2').innerHTML = periodstr1;
+			document.getElementById('periodID3').innerHTML = periodstr1;
 			document.getElementById('periodID4').innerHTML = periodstr2;
-			document.getElementById('periodstr2').innerHTML = periodstr2 ;
-			document.getElementById('periodID5').innerHTML = periodstr;
-			document.getElementById('periodID6').innerHTML = periodstr;
+			document.getElementById('periodstr2').innerHTML = getPeriod(gotPeriod) ;
+			document.getElementById('periodID5').innerHTML = periodstr1;
+			document.getElementById('periodID6').innerHTML = periodstr1;
+			document.getElementById('dataoutput').innerHTML = dataoutput;
 
             $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
                 orgUnitChildrenUIds += childOrgUnit[0] + ";";
@@ -125,10 +128,15 @@
     // function for load table data
     function loadData(){
         var url = '../api/analytics.json?dimension=dx:' + deUIDsStr + '&dimension=co&dimension=ou:' + orgUnit.id + "&dimension=co&dimension=pe:" + periodstr3 + "&skipMeta=true";
+		var url1 = '../api/dataValueSets.json?dataSet=t8GCvXrCqz8&period=2016&orgUnit=riYV2TZ2ba6';
 		console.log('../api/analytics.json?dimension=dx:' + deUIDsStr + '&dimension=co&dimension=ou:' + orgUnit.id + "&dimension=co&dimension=pe:" + periodstr3 + "&skipMeta=true");
         $.get(url, function (json) {
             dataJsonObj = json;
+			$.get(url1, function (json2) {
+            dataJsonObj2 = json2;
             loadTable();
+        });
+           
         });
     
     }
@@ -164,12 +172,13 @@
             $("#" + rowID[0] + "-" + rowID[1]).append(addTdata);
                       });
 					
-			
+			 dataoutput = dataJsonObj2.dataValues[0].value;
+			 document.getElementById('dataoutput').innerHTML = dataoutput;
                     $.each(trIDsArray, function (idx, trID) {
                      
 					 var cellValue = 0;  
-                    if(trID.search('tot') == -1)
-					{
+                  //  if(trID.search('tot') == -1)
+					//{
 				 
 					
 					   if (trID.search('_') == -1) {
@@ -181,20 +190,20 @@
                             cellValue += getCellValue(deID.split('-')[0],orgUnit.id,deID.split('-')[1],periodstr);
                         });
                     }
-					}
+					//}
 					
-					else
+					//else
 					
-					{
+					//{
 				
 
-					var UIDs = trID.split('_');
-                        $.each(UIDs, function (j, deID) {
-                            cellValue += getCellValue(deID.split('-')[0],orgUnit.id,deID.split('-')[1],periodstr2);
-                        });
+					//var UIDs = trID.split('_');
+                      ///  $.each(UIDs, function (j, deID) {
+                         //   cellValue += getCellValue(deID.split('-')[0],orgUnit.id,deID.split('-')[1],periodstr2);
+                       // });
 					
 					
-					}
+					//}
                 
 				
                 $("#" + trID).append( cellValue );
@@ -222,6 +231,15 @@
         return parseInt(result);
     }
 
+	    function getCellValue1(de, ou, co, pe) {
+        var result = 0;
+        for (var i = 0; i < dataJsonObj2.rows.length; i++) {
+            if (dataJsonObj2.rows[i][0] == de && dataJsonObj2.rows[i][2] == ou && dataJsonObj2.rows[i][1] == co && dataJsonObj2.rows[i][3] == pe  && dataJsonObj2.rows[i][4] != null) {
+                result = dataJsonObj2.rows[i][4];
+            }
+        }
+        return parseInt(result);
+    }
 	function generateMonthlyPeriods(sD, eD) {
         var sDate = new Date(parseInt(sD.substring(0, 4)), parseInt(sD.substring(4, 6)-1));
         sDate.setDate(1);
@@ -455,13 +473,13 @@
   </tr>
   <tr>
     <td width="150" rowspan="4" align="left" valign="top"><img src="http://139.162.61.147/image/who.jpg" alt="who.jpeg" width="150" height="80"></td>
-    <td  style="border:none;" bgcolor="#F0F8FF" colspan="6" align="left" valign="top"><div align="center"><b>WORLD HEALTH ORGANIZATION</b></div></td>
+    <td  style="border:none;" bgcolor="#FFFFCC" colspan="6" align="left" valign="top"><div align="center"><b>WORLD HEALTH ORGANIZATION</b></div></td>
   </tr>
   <tr>
-    <td style="border:none;"  bgcolor="#F0F8FF" colspan="6" align="center"> <b>LEPROSY    ELIMINATION PROJECT</b></td>
+    <td style="border:none;"  bgcolor="#FFFFCC" colspan="6" align="center"> <b>LEPROSY    ELIMINATION PROJECT</b></td>
   </tr>
   <tr >
-    <td style="border:none;" bgcolor="#F0F8FF"  colspan="6" align="right"><b><p class="label">GOVERNMENT REQUEST FOR MDT DRUG SUPPLY BY WHO IN YEAR </p><p class="label" id="periodID"></p></b></td><b></b>
+    <td style="border:none;" bgcolor="#FFFFCC"  colspan="6" align="right"><b><p class="label">GOVERNMENT REQUEST FOR MDT DRUG SUPPLY BY WHO IN YEAR </p><p class="label" id="periodID"></p></b></td><b></b>
   </tr>
   <tr>
     <td colspan="2"></td>
@@ -473,36 +491,36 @@
     <td><div align="center"><b>D</div></b></td>
   </tr>
   <tr >
-    <td  rowspan="2" bgcolor="#F0F8FF"><b>COUNTRY:</b></td>
+    <td  rowspan="2" bgcolor="#FFFFCC"><b>COUNTRY:</b></td>
     <td style="text-align: center;" colspan="2" rowspan="2" id="orgUnitID">&nbsp;</td>
-    <td colspan="2" align="center" bgcolor="#F0F8FF"><b>MB PATIENTS</b></td>
-    <td colspan="2" align="center" bgcolor="#F0F8FF"><b>PB PATIENTS</b></td>
+    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>MB PATIENTS</b></td>
+    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>PB PATIENTS</b></td>
   </tr>
   <tr >
-    <td  align="center" bgcolor="#F0F8FF"> <b>ADULT</b></td>
-    <td align="center" bgcolor="#F0F8FF"><b>CHILD</b></td>
-    <td align="center" bgcolor="#F0F8FF"><b> ADULT</b></td>
-    <td align="center" bgcolor="#F0F8FF"><b>CHILD</b></td>
+    <td  align="center" bgcolor="#FFFFCC"> <b>ADULT</b></td>
+    <td align="center" bgcolor="#FFFFCC"><b>CHILD</b></td>
+    <td align="center" bgcolor="#FFFFCC"><b> ADULT</b></td>
+    <td align="center" bgcolor="#FFFFCC"><b>CHILD</b></td>
   </tr>
   <tr  >
-    <td style="text-align: left;" colspan="3" bgcolor="#F0F8FF"><b><p class="label">Total new cases detected in</p> <p class="label" id="periodstr2"> </p> *</b></td>
-    <td align="center" id="evXyDr6c7eu-Te9RyzefSAz_evXyDr6c7eu-sdMU6tpPki6_tot">&nbsp;</td>
-    <td align="center" id="evXyDr6c7eu-ZZFiCRpT37i_tot">&nbsp;</td>
-    <td align="center" id="gVmFx873rdZ-Te9RyzefSAz_gVmFx873rdZ-ZZFiCRpT37i_tot">&nbsp;</td>
-    <td align="center" id="gVmFx873rdZ-ZZFiCRpT37i_tot">&nbsp;</td>
+    <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC"><b><p class="label">Total new cases detected in</p> <p class="label" id="periodstr2"> </p> *</b></td>
+    <td align="center" id="evXyDr6c7eu-Te9RyzefSAz_evXyDr6c7eu-sdMU6tpPki6_IQgrP2W9gTV-Te9RyzefSAz_IQgrP2W9gTV-sdMU6tpPki6">&nbsp;</td>
+    <td align="center" id="evXyDr6c7eu-ZZFiCRpT37i">&nbsp;</td>
+    <td align="center" id="gVmFx873rdZ-Te9RyzefSAz_gVmFx873rdZ-sdMU6tpPki6">&nbsp;</td>
+    <td align="center" id="gVmFx873rdZ-ZZFiCRpT37i">&nbsp;</td>
   </tr>
   <tr >
-    <td style="text-align: left;"  colspan="3" bgcolor="#F0F8FF"><b>Number of cases registered (latest data) *</b></td>
-    <td align="center" id="evXyDr6c7eu-Te9RyzefSAz_evXyDr6c7eu-sdMU6tpPki6">&nbsp;</td>
-    <td align="center" id="evXyDr6c7eu-ZZFiCRpT37i">&nbsp;</td>
-    <td align="center" id="gVmFx873rdZ-Te9RyzefSAz_gVmFx873rdZ-ZZFiCRpT37i">&nbsp;</td>
-    <td align="center" id="gVmFx873rdZ-ZZFiCRpT37i">&nbsp;</td>
+    <td style="text-align: left;"  colspan="3" bgcolor="#FFFFCC"><b>Number of cases registered (at end of year) *</b></td>
+    <td align="center" id="bLR7YvL1f5O-Te9RyzefSAz_bLR7YvL1f5O-sdMU6tpPki6_lzbsUQJvvJB-Te9RyzefSAz_lzbsUQJvvJB-sdMU6tpPki6">&nbsp;</td>
+    <td align="center" id="bLR7YvL1f5O-ZZFiCRpT37i">&nbsp;</td>
+    <td align="center" id="mdupOTsRJ58-Te9RyzefSAz_mdupOTsRJ58-sdMU6tpPki6">&nbsp;</td>
+    <td align="center" id="mdupOTsRJ58-ZZFiCRpT37i">&nbsp;</td>
   </tr>
   <tr >
     <td  colspan="7" ></td>
 
   </tr>
-  <tr bgcolor="#F0F8FF" height="134">
+  <tr bgcolor="#FFFFCC" height="134">
     <td style="text-align: left;"  colspan="7"><p class="label">* As WHO provides both adult and child blister packs, please provide a breakdown by the type of case. WHO will estimate your    MDT requirements for <p class="label" id="periodID5"></p> based on this latest data and current trends in new    case detection in your country. The new MDT drug supply will normally be    shipped by June <p class="label" id="periodID6"></p>, and be followed by a further shipment later in the    year, if more is required. </p> </td>
   </tr>
   <tr >
@@ -510,20 +528,26 @@
 
   </tr>
   <tr >
-    <td style="text-align: left;" colspan="3" bgcolor="#F0F8FF"><b>MDT    STOCKS (Blister packs) **</b></td>
-    <td colspan="2" align="center" bgcolor="#F0F8FF"><b>MB DRUGS</b></td>
-    <td colspan="2" align="center" bgcolor="#F0F8FF"><b>PB DRUGS</b></td>
+    <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC"><b>MDT    STOCKS (Blister packs) **</b></td>
+    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>MB DRUGS</b></td>
+    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>PB DRUGS</b></td>
+  </tr>
+   <tr >
+    <td style="text-align: left;" colspan="1" bgcolor="#FFFFCC"><b>Date of Stock :</b></td>
+	 <td style="text-align: left;" colspan="2" bgcolor="#FFFFCC" id="dataoutput" ><b></b></td>
+    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>MB DRUGS</b></td>
+    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>PB DRUGS</b></td>
   </tr>
   <tr >
-    <td  colspan="3" bgcolor="#F0F8FF">&nbsp;</td>
+    <td  colspan="3" bgcolor="#FFFFCC">&nbsp;</td>
     
-    <td align="center" bgcolor="#F0F8FF"> <b>ADULT</b></td>
-    <td align="center" bgcolor="#F0F8FF"><b>CHILD</b></td>
-    <td align="center" bgcolor="#F0F8FF"><b> ADULT</b></td>
-    <td align="center" bgcolor="#F0F8FF"><b>CHILD</b></td>
+    <td align="center" bgcolor="#FFFFCC"> <b>ADULT</b></td>
+    <td align="center" bgcolor="#FFFFCC"><b>CHILD</b></td>
+    <td align="center" bgcolor="#FFFFCC"><b> ADULT</b></td>
+    <td align="center" bgcolor="#FFFFCC"><b>CHILD</b></td>
   </tr>
   <tr id="tot" >
-    <td style="text-align: left;" colspan="3" bgcolor="#F0F8FF"><b>CENTRAL    LEVEL STOCKS</b></td>
+    <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC"><b>CENTRAL    LEVEL STOCKS</b></td>
    
     <td align="center" id="L7hh1YhgC9r-L4l8bjmXAOw" >&nbsp;</td>
     <td align="center" id="L7hh1YhgC9r-FguxPzk0zgd">&nbsp;</td>
@@ -531,7 +555,7 @@
     <td align="center" id="iPq97RFrzOM-FguxPzk0zgd">&nbsp;</td>
   </tr>
   <tr >
-    <td style="text-align: left;" colspan="3" bgcolor="#F0F8FF"><b>REGIONAL    LEVEL STOCKS</b></td>
+    <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC"><b>REGIONAL    LEVEL STOCKS</b></td>
     
     <td align="center" id="G7tRDnxDLu1-L4l8bjmXAOw">&nbsp;</td>
     <td align="center" id="G7tRDnxDLu1-FguxPzk0zgd">&nbsp;</td>
@@ -539,7 +563,7 @@
     <td align="center" id="v37Or4BVtAp-FguxPzk0zgd">&nbsp;</td>
   </tr>
   <tr >
-    <td style="text-align: left;" colspan="3" bgcolor="#F0F8FF"><b>DISTRICT    LEVEL STOCKS</b></td>
+    <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC"><b>DISTRICT    LEVEL STOCKS</b></td>
     
     <td  align="center" id="hUpNI5ioZ63-L4l8bjmXAOw">&nbsp;</td>
     <td align="center" id="hUpNI5ioZ63-FguxPzk0zgd">&nbsp;</td>
@@ -547,7 +571,7 @@
     <td align="center" id="AvMSN2UQsy6-FguxPzk0zgd">&nbsp;</td>
   </tr>
   <tr >
-    <td colspan="3" style="text-align: left;" bgcolor="#F0F8FF"><b>TOTAL STOCKS</b></td>
+    <td colspan="3" style="text-align: left;" bgcolor="#FFFFCC"><b>TOTAL STOCKS</b></td>
    
     <td align="center" id="L7hh1YhgC9r-L4l8bjmXAOw_G7tRDnxDLu1-L4l8bjmXAOw_hUpNI5ioZ63-L4l8bjmXAOw"> </td>
     <td align="center" id="L7hh1YhgC9r-FguxPzk0zgd_G7tRDnxDLu1-FguxPzk0zgd_hUpNI5ioZ63-FguxPzk0zgd"> </td>
@@ -565,45 +589,45 @@
    <td  colspan="7" ></td>
   </tr>
   <tr >
-    <td style="text-align: left;" width="1245"  colspan="7" bgcolor="#F0F8FF">** Please complete this section on MDT stocks as    fully as possible, keeping in mind that significant quantities of MDT    blisters may exist at regional and district levels, which if ignored, may    result in an oversupply by WHO and consequent wastage due to expired drugs.</td>
+    <td style="text-align: left;" width="1245"  colspan="7" bgcolor="#FFFFCC">** Please complete this section on MDT stocks as    fully as possible, keeping in mind that significant quantities of MDT    blisters may exist at regional and district levels, which if ignored, may    result in an oversupply by WHO and consequent wastage due to expired drugs.</td>
   </tr>
   <tr >
    <td  colspan="7" ></td>
   </tr>
-  <tr bgcolor="#F0F8FF" >
+  <tr bgcolor="#FFFFCC" >
     <td style="text-align: left;" width="1245"  colspan="7"><p class="label">NOTE: This form constitutes    an official government request to WHO for the supply of MDT drugs in <p class="label" id="periodID3"></p> and    MUST be submitted along with the Quarterly Report for the period April-June <p class="label" id="periodID4"></p>  As part of its ongoing monitoring    and evaluation activities, and its contractual obligations to donors and    other partners, WHO or its appointed agents reserve the right to periodically    inspect MDT stocks at country level.</p></td>
   </tr>
   <tr >
    <td  colspan="7" ></td>
   </tr>
-  <tr bgcolor="#F0F8FF" height="28">
+  <tr bgcolor="#FFFFCC" height="28">
     <td  colspan="7"  style="text-align: left;border:none;">DISTRIBUTION:    BY EMAIL  TO:</td>
 
   </tr>
-  <tr bgcolor="#F0F8FF"  >
-    <td colspan="3"  style="text-align: left;border:none;">1)    WHO HQ (lyonss@who.int) or fax: (+41) 22 791 4777</td>
+  <tr bgcolor="#FFFFCC"  >
+    <td colspan="3"  style="text-align: left;border:none;">1)    WHO HQ (esind@who.int) or fax: (+41) 22 791 4777</td>
     <td colspan="4" style="text-align: left;border:none;">Signed:</td>
 
   </tr>
-  <tr bgcolor="#F0F8FF" >
+  <tr bgcolor="#FFFFCC" >
     <td  colspan="4"  style="text-align: left;border:none;">2) WHO Country Office</td>
     
     <td colspan="3"  style="text-align: left;border:none;">National Programme    Manager</td>
    
   </tr>
-  <tr bgcolor="#F0F8FF">
+  <tr bgcolor="#FFFFCC">
     <td colspan="3"  style="text-align: left;border:none;">3) National Programme Manager file</td>
    
     <td colspan="4" style="text-align: left;border:none;">Date:</td>
 
   </tr><br/>
-  <tr colspan="7" bgcolor="#F0F8FF" style="border:none;" >
+  <tr colspan="7" bgcolor="#FFFFCC" style="border:none;" >
 <br/>
   </tr>
     <tr >
    <td  colspan="7" ></td>
   </tr>
-  <tr bgcolor="#F0F8FF">
+  <tr bgcolor="#FFFFCC">
     <td  style="text-align: left;" colspan="7"><p class="label">SUBMISSION:  By 15th. August <p class="label" id="periodID1"></p>, together with the    April-June <p class="label" id="periodID2"> </p> Quarterly Report.</p></td>
 
   </tr>
@@ -612,7 +636,7 @@
   </tr>
 
   <tr >
-    <td  style="text-align: left;" width="1245" height="69" colspan="7" bgcolor="#F0F8FF">Buffer    stocks: WHO does not normally supply buffer stocks to countries, as it keeps    adequate stocks at its supplier's factory, stored under optimal conditions</td>
+    <td  style="text-align: left;" width="1245" height="69" colspan="7" bgcolor="#FFFFCC">Buffer    stocks: WHO does not normally supply buffer stocks to countries, as it keeps    adequate stocks at its supplier's factory, stored under optimal conditions</td>
   </tr>
   
 
