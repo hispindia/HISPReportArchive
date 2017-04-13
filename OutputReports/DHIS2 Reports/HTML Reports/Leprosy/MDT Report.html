@@ -1,5 +1,6 @@
 <script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.js"></script>
 <script>
     var periods = dhis2.report.periods;
     var period = periods[0];
@@ -65,7 +66,7 @@
                 e.preventDefault();
             });
           document.getElementById('orgUnitID').innerHTML = orgUnit.name;
-            document.getElementById('periodID').innerHTML = periodstr4;
+            document.getElementById('periodID').innerHTML = periodstr1;
 			document.getElementById('periodID1').innerHTML = periodstr1;
 			document.getElementById('periodID2').innerHTML = periodstr1;
 			document.getElementById('periodID3').innerHTML = periodstr1;
@@ -73,7 +74,7 @@
 			document.getElementById('periodstr2').innerHTML = getPeriod(gotPeriod) ;
 			document.getElementById('periodID5').innerHTML = periodstr1;
 			document.getElementById('periodID6').innerHTML = periodstr1;
-			document.getElementById('dataoutput').innerHTML = dataoutput;
+			//document.getElementById('dataoutput').innerHTML = dataoutput;
 
             $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
                 orgUnitChildrenUIds += childOrgUnit[0] + ";";
@@ -127,8 +128,8 @@
 
     // function for load table data
     function loadData(){
-        var url = '../api/analytics.json?dimension=dx:' + deUIDsStr + '&dimension=co&dimension=ou:' + orgUnit.id + "&dimension=co&dimension=pe:" + periodstr3 + "&skipMeta=true";
-		var url1 = '../api/dataValueSets.json?dataSet=t8GCvXrCqz8&period=2016&orgUnit=riYV2TZ2ba6';
+        var url = '../api/dataValueSets.json?dataSet=HuEPuYmPfvj,t8GCvXrCqz8&orgUnit=' + orgUnit.id + "&period=" + periodstr + "&skipMeta=true";
+		var url1 = '../api/dataValueSets.json?dataSet=t8GCvXrCqz8&orgUnit=' + orgUnit.id + "&period=" + periodstr;
 		console.log('../api/analytics.json?dimension=dx:' + deUIDsStr + '&dimension=co&dimension=ou:' + orgUnit.id + "&dimension=co&dimension=pe:" + periodstr3 + "&skipMeta=true");
         $.get(url, function (json) {
             dataJsonObj = json;
@@ -172,9 +173,18 @@
             $("#" + rowID[0] + "-" + rowID[1]).append(addTdata);
                       });
 					
-			 dataoutput = dataJsonObj2.dataValues[0].value;
-			 document.getElementById('dataoutput').innerHTML = dataoutput;
+			// dataoutput = dataJsonObj2.dataValues[0].value;
+			// document.getElementById('dataoutput').innerHTML = dataoutput;
                     $.each(trIDsArray, function (idx, trID) {
+					
+					if(trID == 'wOpvIxNbfMl-HllvX50cXC0')
+					{
+					var cellValue = 0;  
+					cellValue = getCellValue1(trID.split('-')[0],  orgUnit.id, trID.split('-')[1],periodstr);
+					$("#" + trID).append( cellValue );
+					}
+					else
+					{
                      
 					 var cellValue = 0;  
                   //  if(trID.search('tot') == -1)
@@ -209,23 +219,22 @@
                 $("#" + trID).append( cellValue );
 				
 				cellValue = 0;
+				}
             });
 			
 		
 		
 		
 			
-
-        hideLoad();
        
     }
 
     // function for getting cell values
     function getCellValue(de, ou, co, pe) {
         var result = 0;
-        for (var i = 0; i < dataJsonObj.rows.length; i++) {
-            if (dataJsonObj.rows[i][0] == de && dataJsonObj.rows[i][2] == ou && dataJsonObj.rows[i][1] == co && dataJsonObj.rows[i][3] == pe  && dataJsonObj.rows[i][4] != null) {
-                result = dataJsonObj.rows[i][4];
+        for (var i = 0; i < dataJsonObj.dataValues.length; i++) {
+            if (dataJsonObj.dataValues[i].dataElement == de && dataJsonObj.dataValues[i].orgUnit == ou && dataJsonObj.dataValues[i].categoryOptionCombo == co && dataJsonObj.dataValues[i].period == pe  && dataJsonObj.dataValues[i].value != null) {
+                result = dataJsonObj.dataValues[i].value;
             }
         }
         return parseInt(result);
@@ -233,12 +242,12 @@
 
 	    function getCellValue1(de, ou, co, pe) {
         var result = 0;
-        for (var i = 0; i < dataJsonObj2.rows.length; i++) {
-            if (dataJsonObj2.rows[i][0] == de && dataJsonObj2.rows[i][2] == ou && dataJsonObj2.rows[i][1] == co && dataJsonObj2.rows[i][3] == pe  && dataJsonObj2.rows[i][4] != null) {
-                result = dataJsonObj2.rows[i][4];
+        for (var i = 0; i < dataJsonObj2.dataValues.length; i++) {
+            if (dataJsonObj2.dataValues[i].dataElement == de && dataJsonObj2.dataValues[i].orgUnit == ou && dataJsonObj2.dataValues[i].categoryOptionCombo == co && dataJsonObj2.dataValues[i].period == pe  && dataJsonObj2.dataValues[i].value != null) {
+                result = dataJsonObj2.dataValues[i].value;
             }
         }
-        return parseInt(result);
+        return result;
     }
 	function generateMonthlyPeriods(sD, eD) {
         var sDate = new Date(parseInt(sD.substring(0, 4)), parseInt(sD.substring(4, 6)-1));
@@ -280,13 +289,7 @@
     }
 
     // function to hide loading animation
-    
-    function hideLoad() {
-        document.getElementById("cover").style.display = "none";
-        document.getElementById("loads").style.display = "none";
-        //document.getElementById("loading").style.display="none";
-        document.getElementsByTagName("body")[0].style.overflow = "scroll";
-    }
+   
 
 </script>
 
@@ -304,22 +307,14 @@
 
     <script>
         function genScreenshot() {
-     
-                  
-               
-                 var doc = new jsPDF({
-                orientation: 'portrait',
-                unit: 'in',
-                format: [20,50]
-            });
-				  doc.addHTML($('#dataTable'), function() {
-	
-				   doc.save('MDT-Report.pdf');
+    
+            var doc = new jsPDF('p','pt','letter');
+				  doc.addHTML($('#printing'), function() {
+				   doc.save('Annual MDT request.pdf');
 					location.reload();
 				});
-				
-				
-		
+
+               
         }
     </script>
 
@@ -328,49 +323,8 @@
                 td {
                     padding: 5px 10px;
                     font: Arial, Helvetica, sans-serif;
-                }
-
-
-
-                #cover {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    background: rgba(0, 0, 0, 0.7);
-                    z-index: 5;
-                    width: 100%;
-                    height: 100%;
-                }
-
-                #loads {
-                    height: 100px;
-                    width: 500px;
-                    position: fixed;
-                    z-index: 10;
-                    margin: 0 auto;
-                    top: 50%;
-                    left: 50%;
-                    margin-top: -50px;
-                    margin-left: -250px;
-                    background: #999;
-                    border: 5px solid #cccccc;
-                    text-align: center;
-                    border-radius: 5px;
-                }
-
-                .loading {
-                    width: 400px;
-                    font-size: 20px;
-                    font-family: verdana;
-                    font-weight: bolder;
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    margin: 0 auto;
-                    margin-top: -8px;
-                    margin-left: -200px;
-                }
-
+             }
+              
                 .vtext {
                     width: 1px;
                     height: 50px;
@@ -381,14 +335,13 @@
                 }
 				
 				#dataTable  {
-				
+				margin:auto;
 				background-color: white;
 				
 				}
 
             </style>
-    <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
-<div id="cover"></div>
+
 </span></p>
 
 
@@ -406,7 +359,7 @@
 </table>
 
 <br/>
-
+<div id ="test">
 <div id="printing">
     <div id='state'>
         <table  id='dataTable' cellspacing='6' cellpadding='4' border='1' width='80%'
@@ -467,6 +420,7 @@
            
         
         <tbody>     
+  
   <tr >
 
     <td bgcolor="#DCDCDC"  colspan="7" width="1245"><div align="right">Annual Request</div></td>
@@ -520,7 +474,7 @@
     <td  colspan="7" ></td>
 
   </tr>
-  <tr bgcolor="#FFFFCC" height="134">
+  <tr bgcolor="#FFFFCC" height="20">
     <td style="text-align: left;"  colspan="7"><p class="label">* As WHO provides both adult and child blister packs, please provide a breakdown by the type of case. WHO will estimate your    MDT requirements for <p class="label" id="periodID5"></p> based on this latest data and current trends in new    case detection in your country. The new MDT drug supply will normally be    shipped by June <p class="label" id="periodID6"></p>, and be followed by a further shipment later in the    year, if more is required. </p> </td>
   </tr>
   <tr >
@@ -529,14 +483,12 @@
   </tr>
   <tr >
     <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC"><b>MDT    STOCKS (Blister packs) **</b></td>
-    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>MB DRUGS</b></td>
-    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>PB DRUGS</b></td>
+    <td colspan="2" rowspan= "2" align="center" bgcolor="#FFFFCC"><b>MB DRUGS</b></td>
+    <td colspan="2" rowspan= "2" align="center" bgcolor="#FFFFCC"><b>PB DRUGS</b></td>
   </tr>
    <tr >
     <td style="text-align: left;" colspan="1" bgcolor="#FFFFCC"><b>Date of Stock :</b></td>
-	 <td style="text-align: left;" colspan="2" bgcolor="#FFFFCC" id="dataoutput" ><b></b></td>
-    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>MB DRUGS</b></td>
-    <td colspan="2" align="center" bgcolor="#FFFFCC"><b>PB DRUGS</b></td>
+	 <td style="text-align: left;" colspan="2" bgcolor="#FFFFCC" id="wOpvIxNbfMl-HllvX50cXC0" ><b></b></td>
   </tr>
   <tr >
     <td  colspan="3" bgcolor="#FFFFCC">&nbsp;</td>
@@ -636,7 +588,7 @@
   </tr>
 
   <tr >
-    <td  style="text-align: left;" width="1245" height="69" colspan="7" bgcolor="#FFFFCC">Buffer    stocks: WHO does not normally supply buffer stocks to countries, as it keeps    adequate stocks at its supplier's factory, stored under optimal conditions</td>
+    <td  style="text-align: left;" width="1245" height="20" colspan="7" bgcolor="#FFFFCC">Buffer    stocks: WHO does not normally supply buffer stocks to countries, as it keeps    adequate stocks at its supplier's factory, stored under optimal conditions</td>
   </tr>
   
 
@@ -646,14 +598,14 @@
 
   </tr>
   <tr>
-  <td colspan="7" height="200"> </td>
+  <td colspan="7" height="100"> </td>
   </tr>
 
   <tr >
     <td style="text-align: left;" colspan="7">Show  details of any stocks within 3 months of expiry, giving quantities and dates.</td>
     
   </tr>
- 
+ </div>
            </tbody>
         </table>
     </div>
