@@ -1,0 +1,1778 @@
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript" async>
+        var periods = dhis2.report.periods;
+        periods = periods.sort();
+        periods.shift();
+		var monthwise = periods.reverse();
+		var onemonth = monthwise.slice(0, 1);
+		var twomonth = monthwise.slice(0, 2);
+		var threemonth = monthwise.slice(0, 3);
+		var fourmonth = monthwise.slice(0, 4);
+		var fivemonth = monthwise.slice(0, 5);
+		var sixmonth = monthwise.slice(0, 6);
+        var rowCount=0;
+        var oldValue;
+        var oldDistrict="";
+        var dis,disId,levell,name,count=0;
+        var districtArray=[];
+        var estCount,estCountLic;
+        var lenth=0,flag=0;
+        var estsum =0,value=-1;
+        var previous="";
+        var previouss= "";
+		var occur;
+		var a;
+		
+        var url = window.location.href;
+        var districtId = url.split('=')[3];
+console.log(districtId);
+
+$.ajaxSetup({
+    async: false
+});
+
+var updateSettings = function(){
+	var dropdown = document.getElementById("dropdown");
+	  a = dropdown.options[dropdown.selectedIndex].value;
+	  if(a=="selected"){
+		confirm("Please select period first!");
+		}
+		else{
+	      submit(a);
+	  }
+		
+};
+
+var submit = function(a){
+  $ ("#overlay").show("5000",function(){
+    document.getElementById('loader').style.display = "block";
+    $('.reporttable tbody').remove();
+    $('.reporttable tbody').detach();
+
+    var main ="<tbody><tr style='border:1px solid black' width='100%' height='100%'><td width='40%'  cellpadding='0'><table class='report2' id='report2Table' width='100%' align='left' cellspacing='0' cellpadding='0'></table></td> <td id='IncRowspan' width='60%'  cellpadding='0'><table class='report3' width='100%' align='left' cellspacing='0' cellpadding='0'></table></td></tr></tbody>";
+    $('.reporttable').append(main);
+     var heading2 = "<thead><tr><td colspan='1' class='headTd'><b>District</b></td><td colspan='1' class='headTd'><b>Community Name</b></td><td colspan='1' class='headTd'><b>Number of establishments failing critical inspection</b></td><td colspan='1' class='headTd'><b>Inspection item name</b></td></tr></thead>";
+
+   var heading3 = "<thead><tr>";
+    var yy;
+    var mm;
+	
+	if(a=="one"){periods = onemonth;}
+    if(a=="two"){periods = twomonth;}
+    if(a=="three"){periods = threemonth;}
+    if(a=="four"){periods = fourmonth;}
+    if(a=="five"){periods = fivemonth;}
+    if(a=="six"){periods = sixmonth;}
+    for (var u = 0; u < periods.length; u++){
+        yy = periods[u].substring(0, 4);
+        mm = periods[u].substring(4, 6);
+        heading3 = heading3 + "<td colspan='1' class='headTd'><b>" + getPeriod(mm) +" "+ yy + "</b></td>";
+    }
+    heading3 =  heading3+ "<td colspan='1' class='headTd'><b>Total</b></td></tr></thead>";
+
+   // $(".report1").append(heading1);
+    $(".report2").append(heading2);
+    $(".report3").append(heading3);
+
+var level = getLevel(districtId);
+
+        switch(level){
+            case 1:
+
+
+                $.getJSON("../api/organisationUnits/Jgc02tIKupW.json?paging=false",function(data){
+                    document.getElementById('loader').style.display = "block";
+                    for(var start=0; start< data.children.length; start++){
+                        var child = data.children[start].id;
+                        $.getJSON("../api/organisationUnits/"+child+".json?paging=false",function(data1){
+                            dis = data1.displayName;
+                            disId = data1.id;
+                            estCount=0;
+                            estCountLic=0;
+							occur=0;
+                            for(var i=0; i< data1.children.length;i++){
+                                var childd = data1.children[i].id;
+                                var childName = getChildName(childd);
+								 $.getJSON("../api/events.json?orgUnit="+childd+"&&program=tITlMGNJTbJ",function(data3){
+
+										if(data3.events.length != 0){
+                                        for(var k3=0; k3< data3.events.length;k3++){
+                                            for(var kk1=0; kk1< data3.events[k3].dataValues.length;kk1++){
+											
+											if(data3.events[k3].dataValues[kk1].dataElement == 'hP51xheznfk' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+											   var datauid= 'hP51xheznfk';
+											   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'Zo6xY3QgGVZ' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												 var datauid= 'Zo6xY3QgGVZ';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd); 
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'kSq9gtWTcBz' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												     var  datauid= 'kSq9gtWTcBz';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'jbsPswX4Qna' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var  datauid= 'jbsPswX4Qna';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'e0OayJVULCX' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var  datauid= 'e0OayJVULCX';
+												    var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'xktLhatlfNO' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												    var datauid= 'xktLhatlfNO';
+												  var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'PVdJ9WPO4W0' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var  datauid= 'PVdJ9WPO4W0';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'nnsUccNCyHz' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'nnsUccNCyHz';
+												    var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'G37uiLa1U83' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var datauid= 'G37uiLa1U83';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'j5jq9jpRKI1' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												 var datauid= 'j5jq9jpRKI1';
+												  var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd); 
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'GsmBZt4hVmV' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'GsmBZt4hVmV';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'cwwyeD031w4' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var datauid= 'cwwyeD031w4';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'wecTgkjHRzM' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'wecTgkjHRzM';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+								
+								}
+								}
+								}
+								
+});
+								 if(districtArray.length!=0){
+									console.log(districtArray);
+								 printReport22(districtArray);
+                                    printReport3(districtArray);
+                                }
+                                districtArray = [];
+								
+                            }
+                        });
+
+
+
+                    }
+                    var getContent = document.getElementsByClassName('contentRow');
+                    console.log(getContent);
+                    if(getContent.length>=1){
+                    getTotal();}
+                    else{
+                        window.alert("No data to display !");
+                    }
+                 });
+
+                break;
+
+
+            case 2:
+
+
+                     var child = districtId;
+                        $.getJSON("../api/organisationUnits/"+child+".json?paging=false",function(data1){
+
+                            dis = data1.displayName;
+                            disId = data1.id;
+                            estCount=0;
+                            estCountLic=0;
+							occur=0;
+                            for(var i=0; i< data1.children.length;i++){
+                                var childd = data1.children[i].id;
+                                var childName = getChildName(childd);
+								
+								$.getJSON("../api/events.json?orgUnit="+childd+"&&program=tITlMGNJTbJ",function(data3){
+										if(data3.events.length != 0){
+                                        for(var k3=0; k3< data3.events.length;k3++){
+                                            for(var kk1=0; kk1< data3.events[k3].dataValues.length;kk1++){
+                                                if(data3.events[k3].dataValues[kk1].dataElement == 'hP51xheznfk' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+											   var datauid= 'hP51xheznfk';
+											   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'Zo6xY3QgGVZ' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												 var datauid= 'Zo6xY3QgGVZ';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd); 
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'kSq9gtWTcBz' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												     var  datauid= 'kSq9gtWTcBz';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'jbsPswX4Qna' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var  datauid= 'jbsPswX4Qna';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'e0OayJVULCX' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var  datauid= 'e0OayJVULCX';
+												    var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'xktLhatlfNO' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												    var datauid= 'xktLhatlfNO';
+												  var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'PVdJ9WPO4W0' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var  datauid= 'PVdJ9WPO4W0';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'nnsUccNCyHz' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'nnsUccNCyHz';
+												    var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'G37uiLa1U83' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var datauid= 'G37uiLa1U83';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'j5jq9jpRKI1' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												 var datauid= 'j5jq9jpRKI1';
+												  var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd); 
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'GsmBZt4hVmV' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'GsmBZt4hVmV';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'cwwyeD031w4' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var datauid= 'cwwyeD031w4';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'wecTgkjHRzM' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'wecTgkjHRzM';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+                                
+							}
+					
+					}
+					}
+					 });	
+								
+						 if(districtArray.length!=0){
+                            console.log(districtArray);
+                            printReport22(districtArray);
+                            printReport3(districtArray);
+                        }
+                        districtArray = [];
+							
+                    
+					 }
+
+                            var getContent = document.getElementsByClassName('contentRow');
+                            console.log(getContent);
+                            if(getContent.length>=1){
+                                getTotal();}
+                            else{
+                                window.alert("No data to display !");
+                            }
+                });
+				
+
+                break;
+
+
+            case 3:
+						
+                            estCount=0;
+                            estCountLic=0;
+							occur=0;
+                            var childd = districtId;
+							var childName = getChildName(childd);
+							
+							$.getJSON("../api/events.json?orgUnit="+childd+"&&program=tITlMGNJTbJ",function(data3){
+
+
+                                    if(data3.events.length != 0){
+                                        for(var k3=0; k3< data3.events.length;k3++){
+										
+                                            for(var kk1=0; kk1< data3.events[k3].dataValues.length;kk1++){
+                                                if(data3.events[k3].dataValues[kk1].dataElement == 'hP51xheznfk' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+											   var datauid= 'hP51xheznfk';
+											   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'Zo6xY3QgGVZ' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												 var datauid= 'Zo6xY3QgGVZ';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd); 
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'kSq9gtWTcBz' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												     var  datauid= 'kSq9gtWTcBz';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'jbsPswX4Qna' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var  datauid= 'jbsPswX4Qna';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'e0OayJVULCX' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var  datauid= 'e0OayJVULCX';
+												    var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'xktLhatlfNO' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												    var datauid= 'xktLhatlfNO';
+												  var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'PVdJ9WPO4W0' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var  datauid= 'PVdJ9WPO4W0';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'nnsUccNCyHz' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'nnsUccNCyHz';
+												    var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'G37uiLa1U83' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var datauid= 'G37uiLa1U83';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'j5jq9jpRKI1' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												 var datauid= 'j5jq9jpRKI1';
+												  var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd); 
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'GsmBZt4hVmV' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'GsmBZt4hVmV';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'cwwyeD031w4' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												  var datauid= 'cwwyeD031w4';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												
+												else if(data3.events[k3].dataValues[kk1].dataElement == 'wecTgkjHRzM' && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+												   var datauid= 'wecTgkjHRzM';
+												   var est=data3.events[k3].trackedEntityInstance;
+											    getest(data3,k3,kk1,datauid,dis,est, count,disId,childName,childd);
+												}
+												                               
+							}
+								}								
+								
+							 
+                        if(districtArray.length!=0){
+                            printReport22(districtArray);
+                            printReport3(districtArray);
+                        }
+                        districtArray = [];
+                    }
+							
+				var getContent = document.getElementsByClassName('contentRow');
+                                    if(getContent.length>=1){
+                                        getTotal();}
+                                    else{
+                                        window.alert("No data to display !");
+                                    }
+									
+							});
+				 break;
+			
+			default: console.log(error);
+        }
+		});
+    $("#overlay").hide('slow');
+};
+
+
+var getLevel = function(districtId){
+
+    $.getJSON("../api/organisationUnits/"+districtId+".json?paging=false",function(data){
+        levell = data.level;
+    });
+    return levell;
+
+};
+
+var getdistrict = function(id){
+
+    $.getJSON("../api/organisationUnits/"+id+".json?&fields=parent[name,id]&paging=false",function(data){
+        name = data.parent.name;
+    });
+ return name;
+};
+
+var getChildName = function(id){
+
+    $.getJSON("../api/organisationUnits/"+id+".json?paging=false",function(data){
+        name = data.displayName;
+    });
+    return name;
+};
+
+var getest = function(data3,k3,kk1,datauid,dis,est, count,disId,childName, childd)
+{
+		$.getJSON("../api/trackedEntityInstances.json?ou="+childd+"&paging=false&program=tITlMGNJTbJ",function(data2){
+			if(data2.trackedEntityInstances.length != 0){
+			for(var k=0; k< data2.trackedEntityInstances.length;k++){
+			 if(data2.trackedEntityInstances[k].trackedEntityInstance == est)
+			{
+			 dis = getdistrict(data2.trackedEntityInstances[k].orgUnit)
+			$.getJSON("../api/dataElements/"+datauid+".json", function(data4){ 
+			 var insitem = data4.displayName;
+			var update = getformat(data3, k3,kk1);
+				if(update==0){}
+				else{
+				updatedistrictArray(dis, insitem, count,disId,childName, update);
+			}
+			console.log(childd);
+			console.log(est);
+			console.log(insitem);
+            });  
+			}
+			 }
+			 }
+			});		                          
+};
+
+var getTotal = function(){
+    var tds = document.getElementsByClassName('totalSum');
+    var sum=0;
+    var JanSum =0;
+    var FebSum =0;
+    var MarSum =0;
+    var AprSum =0;
+    var MaySum =0;
+    var JunSum =0;
+    var JulSum =0;
+    var AugSum =0;
+    var SepSum =0;
+    var OctSum =0;
+    var NovSum =0;
+    var DecSum =0;
+    for(var k=0;k<tds.length;k++){
+        if(document.getElementsByClassName('jan').length != 0) {
+            var jann = parseInt(document.getElementsByClassName('jan')[k].innerText);
+            JanSum = jann + JanSum;
+        }
+        if(document.getElementsByClassName('feb').length != 0) {
+            var febb = parseInt(document.getElementsByClassName('feb')[k].innerText);
+            FebSum = febb + FebSum;
+        }
+        if(document.getElementsByClassName('mar').length != 0) {
+            var marr = parseInt(document.getElementsByClassName('mar')[k].innerText);
+            MarSum = marr + MarSum;
+        }
+        if(document.getElementsByClassName('apr').length != 0) {
+            var aprr = parseInt(document.getElementsByClassName('apr')[k].innerText);
+            AprSum = aprr + AprSum;
+        }
+        if(document.getElementsByClassName('may').length != 0) {
+            var mayy = parseInt(document.getElementsByClassName('may')[k].innerText);
+            MaySum = mayy + MaySum;
+        }
+        if(document.getElementsByClassName('jun').length != 0) {
+            var junn = parseInt(document.getElementsByClassName('jun')[k].innerText);
+            JunSum = junn + JunSum;
+        }
+        if(document.getElementsByClassName('jul').length != 0) {
+            var jull = parseInt(document.getElementsByClassName('jul')[k].innerText);
+            JulSum = jull + JulSum;
+        }
+        if(document.getElementsByClassName('aug').length != 0) {
+            var augg = parseInt(document.getElementsByClassName('aug')[k].innerText);
+            AugSum = augg + AugSum;
+        }
+        if(document.getElementsByClassName('sep').length != 0) {
+            var sepp = parseInt(document.getElementsByClassName('sep')[k].innerText);
+            SepSum = sepp + SepSum;
+        }
+        if(document.getElementsByClassName('oct').length != 0) {
+            var octt = parseInt(document.getElementsByClassName('oct')[k].innerText);
+            OctSum = octt + OctSum;
+        }
+        if(document.getElementsByClassName('nov').length != 0) {
+            var novv = parseInt(document.getElementsByClassName('nov')[k].innerText);
+            NovSum = novv + NovSum;
+        }
+        if(document.getElementsByClassName('dec').length != 0) {
+            var decc = parseInt(document.getElementsByClassName('dec')[k].innerText);
+            DecSum = decc + DecSum;
+        }
+        var value = parseInt(document.getElementsByClassName('totalSum')[k].innerText);
+        sum = value + sum;
+    }
+    console.log(sum);
+     var reportTotal = "<tr style='background-color: #99CCFF'><td colspan='1' height='48px' style='border:1px solid black'>Total</td></tr>";
+     $('.reporttable').append(reportTotal);
+
+    var yy;
+    var mm;
+	if(a=="one"){periods = onemonth;}
+    if(a=="two"){periods = twomonth;}
+    if(a=="three"){periods = threemonth;}
+    if(a=="four"){periods = fourmonth;}
+	if(a=="five"){periods = fivemonth;}
+    if(a=="six"){periods = sixmonth;}
+
+    report3Content = "<tr style='background-color: #99CCFF'>";
+    for (var uu = 0; uu < periods.length; uu++){
+
+        yy = periods[uu].substring(0, 4);
+        mm = periods[uu].substring(4, 6);
+
+
+        if (mm == "01" || mm == "1")        report3Content = report3Content+ "<td class='jan' colspan='1' >" + JanSum + "</td>";
+        else if (mm == "02" || mm == "2")    report3Content = report3Content+ "<td class='feb' colspan='1' >" + FebSum + "</td>";
+        else if (mm == "03" || mm == "3")    report3Content = report3Content+ "<td class='mar' colspan='1' >" + MarSum + "</td>";
+        else if (mm == "04" || mm == "4")    report3Content = report3Content+ "<td class='apr' colspan='1'>" + AprSum + "</td>";
+        else if (mm == "05" || mm == "5")    report3Content = report3Content+ "<td class='may' colspan='1' >" + MaySum + "</td>";
+        else if (mm == "06" || mm == "6")    report3Content = report3Content+ "<td class='jun' colspan='1'>" + JunSum + "</td>";
+        else if (mm == "07" || mm == "7")   report3Content = report3Content+ "<td class='jul' colspan='1' >" + JulSum + "</td>";
+        else if (mm == "08" || mm == "8")    report3Content = report3Content+ "<td class='aug' colspan='1' >" + AugSum + "</td>";
+        else if (mm == "09" || mm == "9")    report3Content = report3Content+ "<td class='sep' colspan='1'>" + SepSum + "</td>";
+        else if (mm == "10")                report3Content = report3Content+ "<td class='oct' colspan='1'>" + OctSum + "</td>";
+        else if (mm == "11")                report3Content = report3Content+ "<td class='nov' colspan='1'>" + NovSum + "</td>";
+        else if (mm == "12")                report3Content = report3Content+ "<td class='dec' colspan='1' >" + DecSum + "</td>";
+    }
+
+    var report3Content = report3Content + "<td>"+sum+"</td></tr>";
+    $('.report3').append(report3Content);
+    document.getElementById('IncRowspan').rowSpan = "2";
+    debugger
+  
+};
+
+function getPeriod(month) {
+    var strMonth = "";
+    if (month == "01" || month == "1")        strMonth = "January";
+    else if (month == "02" || month == "2")    strMonth = "February";
+    else if (month == "03" || month == "3")    strMonth = "March";
+    else if (month == "04" || month == "4")    strMonth = "April";
+    else if (month == "05" || month == "5")    strMonth = "May";
+    else if (month == "06" || month == "6")    strMonth = "June";
+    else if (month == "07" || month == "7")    strMonth = "July";
+    else if (month == "08" || month == "8")    strMonth = "August";
+    else if (month == "09" || month == "9")    strMonth = "September";
+    else if (month == "10")                strMonth = "October";
+    else if (month == "11")                strMonth = "November";
+    else if (month == "12")                strMonth = "December";
+
+    return strMonth;
+}
+
+
+
+var printReport22 = function(districtArray){
+
+var increment =1;
+    if(oldDistrict != districtArray[0].district) {
+
+        var report2Content = "<tr class='report2Row'>";
+       var report2Content = report2Content + "<td class='report2td'>" + districtArray[0].district + "</td><td class='report2tdc'>" + districtArray[0].communityName + "</td><td class='report2tdl'></td><td>" + districtArray[0].establishmentName + "</td></tr>";
+        $(".report2").append(report2Content);
+        oldValue = districtArray[0].communityName;
+
+        if (districtArray.length > 1) {
+            var p =0;
+            for (var i = 1; i < districtArray.length; i++) {
+
+                var table = document.getElementById("report2Table");
+                var row1 = table.insertRow(lenth+i+1);
+                var cell1 = row1.insertCell(0);
+                cell1.innerHTML = districtArray[i].establishmentName;
+
+                if (oldValue == districtArray[i].communityName) {
+                    document.getElementsByClassName('report2td')[rowCount].rowSpan = increment + 1;
+                    document.getElementsByClassName('report2tdc')[rowCount].rowSpan = increment + 1;
+                    document.getElementsByClassName('report2tdl')[rowCount+p].rowSpan = increment + 1;
+                }
+
+
+                oldValue = districtArray[i].communityName;
+                oldDistrict = districtArray[i].district;
+                increment++;
+            }
+            p++;
+        }
+    lenth = lenth + districtArray.length;
+	}
+    else{
+        var t=1;
+        if (districtArray.length >= 1) {
+            for (var j = 0; j < districtArray.length; j++) {
+
+                var table = document.getElementById("report2Table");
+                var row2 = table.insertRow(lenth+1);
+				var cell3 = row2.insertCell(0);
+                var cell2 = row2.insertCell(-1);
+                cell3.innerHTML = districtArray[j].communityName;
+                cell2.innerHTML = districtArray[j].establishmentName;
+
+			var save = document.getElementsByClassName('report2td')[rowCount-t].rowSpan;
+				
+			   if (oldValue == districtArray[j].communityName) {
+                    document.getElementsByClassName('report2tdc')[0].rowSpan = save + 1;
+                }
+				
+               
+                document.getElementsByClassName('report2td')[rowCount-t].rowSpan = save + 1;
+               //   document.getElementsByClassName('report2tdt')[rowCount-t].rowSpan = increment + 1;
+                    document.getElementsByClassName('report2tdl')[rowCount-t].rowSpan = save + 1;
+                 //   document.getElementsByClassName('report2tdp')[rowCount-t].rowSpan = increment + 1;
+
+                oldValue = districtArray[j].communityName;
+                increment++;
+            }
+        }
+            oldDistrict = districtArray[districtArray.length-1].district;
+    t++;
+    lenth = lenth + districtArray.length;
+	}
+    
+    rowCount++;
+};
+
+
+var printReport3 = function(districtArray){
+
+    for(var index=0; index<districtArray.length; index++){
+
+
+        var yy;
+        var mm;
+        var ms = 0;
+		if(a=="one"){periods = onemonth;}
+    if(a=="two"){periods = twomonth;}
+    if(a=="three"){periods = threemonth;}
+    if(a=="four"){periods = fourmonth;}
+	if(a=="five"){periods = fivemonth;}
+    if(a=="six"){periods = sixmonth;}
+
+        report3Content = "<tr class='contentRow'>";
+        for (var uu = 0; uu < periods.length; uu++){
+
+            yy = periods[uu].substring(0, 4);
+            mm = periods[uu].substring(4, 6);
+
+
+            if (mm == "01" || mm == "1") {
+                report3Content = report3Content+ "<td class='jan' colspan='1' >" + districtArray[index].MonthJan + "</td>";
+                ms += districtArray[index].MonthJan;
+                }
+            else if (mm == "02" || mm == "2")  {
+                report3Content = report3Content+ "<td class='feb' colspan='1' >" + districtArray[index].MonthFeb + "</td>";
+                ms += districtArray[index].MonthFeb;
+            }
+            else if (mm == "03" || mm == "3")   {
+                report3Content = report3Content+ "<td class='mar' colspan='1' >" + districtArray[index].MonthMar + "</td>";
+                ms += districtArray[index].MonthMar;
+            }
+            else if (mm == "04" || mm == "4")  {
+                report3Content = report3Content+ "<td class='apr' colspan='1'>" + districtArray[index].MonthApr + "</td>";
+                ms += districtArray[index].MonthApr;
+            }
+            else if (mm == "05" || mm == "5")   {
+                report3Content = report3Content+ "<td class='may' colspan='1' >" + districtArray[index].MonthMay + "</td>";
+                ms += districtArray[index].MonthMay;
+            }
+            else if (mm == "06" || mm == "6")   {
+                report3Content = report3Content+ "<td class='jun' colspan='1'>" + districtArray[index].MonthJun + "</td>";
+                ms += districtArray[index].MonthJun;
+            }
+            else if (mm == "07" || mm == "7")  {
+                report3Content = report3Content+ "<td class='jul' colspan='1' >" + districtArray[index].MonthJul + "</td>";
+                ms += districtArray[index].MonthJul;
+            }
+            else if (mm == "08" || mm == "8")   {
+                report3Content = report3Content+ "<td class='aug' colspan='1' >" + districtArray[index].MonthAug + "</td>";
+                ms += districtArray[index].MonthAug;
+            }
+            else if (mm == "09" || mm == "9")   {
+                report3Content = report3Content+ "<td class='sep' colspan='1'>" + districtArray[index].MonthSep + "</td>";
+                ms += districtArray[index].MonthSep;
+            }
+            else if (mm == "10")               {
+                report3Content = report3Content+ "<td class='oct' colspan='1'>" + districtArray[index].MonthOct + "</td>";
+                ms += districtArray[index].MonthOct;
+            }
+            else if (mm == "11")               {
+                report3Content = report3Content+ "<td class='nov' colspan='1'>" + districtArray[index].MonthNov + "</td>";
+                ms += districtArray[index].MonthNov;
+            }
+            else if (mm == "12")          {
+                report3Content = report3Content+ "<td class='dec' colspan='1' >" + districtArray[index].MonthDec + "</td>";
+                ms += districtArray[index].MonthDec;
+            }
+        }
+        report3Content =  report3Content+ "<td colspan='1' class='totalSum'>"+ms+"</td></tr>";
+
+        $(".report3").append(report3Content);
+
+        if(districtArray[index].district ==  previous){
+            estsum = estsum + ms;
+        }
+        else{
+            estsum = ms;
+        }
+        previous = districtArray[index].district;
+    }
+    value += 1;
+    changeValue(districtArray, estsum, value);
+};
+
+
+var changeValue = function(districtArray, estsum, valuee){
+
+
+    var crt = document.getElementsByClassName("report2td");
+    if(districtArray.length == 1){
+        if(districtArray[0].district != previouss){
+
+            if(crt.length<=valuee){
+                valuee = crt.length-1;
+            }
+            document.getElementsByClassName('report2tdl')[valuee].innerHTML = estsum;
+        }
+        else{
+            document.getElementsByClassName('report2tdl')[valuee-1].innerHTML = estsum;
+        }
+        previouss = districtArray[0].district;
+    }
+    else{
+        if(districtArray[0].district != previouss){
+            document.getElementsByClassName('report2tdl')[valuee].innerHTML = estsum;
+        }
+        else{
+            if(crt.length<=valuee){
+                valuee = crt.length-1;
+            }
+            document.getElementsByClassName('report2tdl')[valuee-1].innerHTML = estsum;
+        }
+        previouss = districtArray[districtArray.length-1].district;
+    }
+
+
+};
+
+/*var getPerc =  function(){
+    var all =  document.getElementsByClassName('report2tdt');
+
+    for(var f=0;f<all.length;f++){
+        var d = parseInt(document.getElementsByClassName('report2tdt')[f].innerText);
+        var n = parseInt(document.getElementsByClassName('report2tdl')[f].innerText);
+        var percent = ((n/d)*100).toFixed(2);
+        document.getElementsByClassName('report2tdp')[f].innerHTML = percent+"%";
+    }
+};*/
+
+  
+	var getformat = function(response, k3,kk1){
+		var flagg=0;
+	    var trackdate = new Date(response.events[k3].dataValues[kk1].lastUpdated);
+								var createddate = trackdate.toISOString().substring(0, 10);
+								var dt = new Date(createddate);
+								var lastmonth = dt.getMonth() + 1;
+								var lastyear = dt.getFullYear();
+	if(a=="one"){periods = onemonth;}
+    if(a=="two"){periods = twomonth;}
+    if(a=="three"){periods = threemonth;}
+    if(a=="four"){periods = fourmonth;}
+	if(a=="five"){periods = fivemonth;}
+    if(a=="six"){periods = sixmonth;}
+				for (var u = 0; u < periods.length; u++){
+                      yy = periods[u].substring(0, 4);
+					var yyy = parseInt(yy);
+                         mm = periods[u].substring(4, 6);
+                    var mmm = parseInt(mm);
+                      if(lastyear == yyy && lastmonth == mmm){
+                           flagg= 1;
+                  return (lastmonth);
+                }
+            }
+            if(flagg==0){
+				    return (0);
+            }
+	};
+
+
+var updatedistrictArray =  function(dis, insitem, count, disId,childName, update){
+			switch(update) {
+                case 1:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthJan++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 1,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 1,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 2:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthFeb++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 1,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 1,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 3:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthMar++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 1,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 1,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 4:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthApr++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 1,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 1,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 5:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthMay++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 1,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 1,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 6:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthJun++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 1,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 1,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 7:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthJul++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 1,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 1,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 8:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthAug++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 1,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 1,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 9:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthSep++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 1,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 1,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 10:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthOct++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 1,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 1,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 11:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthNov++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 1,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 1,
+                            MonthDec: 0
+                        });
+                    }
+                    break;
+                case 12:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                districtArray[f].MonthDec++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 1
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 1
+                        });
+                    }
+                    break;
+                default:
+                    if (districtArray.length != 0) {
+                        for (var f = 0; f < districtArray.length; f++) {
+                            if (districtArray[f].establishmentName == insitem && districtArray[f].district == dis && districtArray[f].communityName == childName) {
+                                districtArray[f].Licensed++;
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0) {
+                            districtArray.push({
+                                district: dis,
+                                id: disId,
+                                communityName: childName,
+                                establishmentName: insitem,
+                                Licensed: count,
+                                MonthJan: 0,
+                                MonthFeb: 0,
+                                MonthMar: 0,
+                                MonthApr: 0,
+                                MonthMay: 0,
+                                MonthJun: 0,
+                                MonthJul: 0,
+                                MonthAug: 0,
+                                MonthSep: 0,
+                                MonthOct: 0,
+                                MonthNov: 0,
+                                MonthDec: 0
+
+                            });
+                        }
+                    }
+                    else {
+                        districtArray.push({
+                            district: dis,
+                            id: disId,
+                            communityName: childName,
+                            establishmentName: insitem,
+                            Licensed: count,
+                            MonthJan: 0,
+                            MonthFeb: 0,
+                            MonthMar: 0,
+                            MonthApr: 0,
+                            MonthMay: 0,
+                            MonthJun: 0,
+                            MonthJul: 0,
+                            MonthAug: 0,
+                            MonthSep: 0,
+                            MonthOct: 0,
+                            MonthNov: 0,
+                            MonthDec: 0
+                        });
+                    }
+            }
+  };
+  
+
+</script>
+<script type="text/javascript">
+    function exportExcel() {
+                var a = document.createElement('a');
+                var data_type = 'data:application/vnd.ms-excel';
+                var table_div = document.getElementById('printing');
+                var table_html = table_div.outerHTML.replace(/ /g, '%20');
+                a.href = data_type + ', ' + table_html;
+                a.download = 'Licensed Report.xls';
+                a.click();
+                e.preventDefault();
+            }
+
+</script>
+
+	<style type="text/css">
+
+        .reporttable{
+		border: none;
+		border-collapse:collapse;
+            width:100%;
+            margin-left:-5px;
+     	}
+	.reporttable th {
+    text-align:center;
+        border:1px solid black;
+  }
+        .report2 tr, .report3 tr {
+    height:50px;
+        }
+    .report1 , .report2, .report3 {
+        border-collapse: collapse;
+        border: none;
+    }
+    .headTd {
+        border:1px solid black;
+    }
+    #overlay{
+        width:100%;
+        height:100%;
+        background-color: gray;
+        position: absolute;
+        top:0;
+        bottom:0;
+        right:0;
+        left:0;
+        z-index:5;
+        display:none;
+        opacity:0.9;
+    }
+        #loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #A8DAE5; /* Blue */
+            border-radius: 50%;
+            position:fixed;
+            left:45%;
+            top:35%;
+            display:block;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            z-index:5;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .report2 .headTd {
+            width:8%
+        }
+        .report3 .headTd {
+            width:8%
+        }
+        table, td, th {
+            border-collapse: collapse;
+            border: 1px solid #000;
+        }
+        thead tr{
+           background-color:  #A8A8A8
+        }
+        table.report3 tr:nth-child(n+1) td:last-child {
+            background-color: #99CCFF ;
+        }
+	#tap {
+		margin-left : 20px;
+	}
+	#export {
+		margin-left:50px;
+	}
+
+
+	</style> 
+</head>
+<body>
+<div id="overlay">
+    <div id="loader"></div></div>
+<div id="printing" >
+<br>
+ <label for="districtNameStng"><font size="2" ><b>Select Period : </b></font></label>
+<select id="dropdown" style="color: #0000FF"; height="20px"; width="20px"; name="selectperiod"; value="periodvalue";  onchange="updateSettings(this.value)"; class="text ui-widget-content ui-corner-all">
+						<option value="selected"> Please Select Period </option>
+						<option value="one"> One month</option>
+						<option value="two"> Two months</option>
+						<option value="three"> Three months</option>
+						<option value="four"> Four months</option>
+						<option value="five"> Five months</option>
+						<option value="six"> Six months</option>
+						<option value="twelvemonths"> Twelve months</option>
+				</select>
+				<button onClick="window.location.reload()" id="tap" >Reset</button>
+
+<table class="reporttable" id="table1" width="100%" style=' text-align:center' cellspacing="0" cellpadding="0">
+  <thead>
+  <tr align="center"  height="27">
+							<tr align="center" height="27" border="1px solid black" width="100%">
+                        <td colspan="18" height="27" class="col" bgcolor="#32849C" ><font size="3" color="white"><b>Total Establishments failing critical inspection
+                        </b></font></td>
+                    </tr>
+	</thead>
+    </table>
+</div>
+</body>
+</html>  
