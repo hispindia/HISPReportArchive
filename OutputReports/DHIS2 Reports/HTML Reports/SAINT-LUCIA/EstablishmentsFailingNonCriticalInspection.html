@@ -2,9 +2,11 @@
 <head>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
 <script type="text/javascript" async>
+	//for getting periods
         var periods = dhis2.report.periods;
         periods = periods.sort();
         periods.shift();
+	//for getting months(1,2,3,4,5,6)
         var monthwise = periods.reverse();
 		var onemonth = monthwise.slice(0, 1);
 		var twomonth = monthwise.slice(0, 2);
@@ -26,6 +28,8 @@
 		var a;
 		var dataelemmember=[];
 		
+		var dcount=0,ccount=0,ecount=1;
+		
         var url = window.location.href;
         var districtId = url.split('=')[3];
 console.log(districtId);
@@ -33,7 +37,7 @@ console.log(districtId);
 $.ajaxSetup({
     async: false
 });
-
+//function for selected option from the dropdown(it will show the data of the selected months only)
 var updateSettings = function(){
 	var dropdown = document.getElementById("dropdown");
 	  a = dropdown.options[dropdown.selectedIndex].value;
@@ -46,6 +50,7 @@ var updateSettings = function(){
 		
 };
 
+//function from where all the values come into the table
 var submit = function(a){
    	$ ("#overlay").show("5000",function(){
     document.getElementById('loader').style.display = "block";
@@ -83,11 +88,13 @@ var level = getLevel(districtId);
 				dataelemmember.push(data9.dataElements[k9].id);
 				}
 				});
-							
+
         switch(level){
+//case 1 is for getting the data by country level 
             case 1:
-				
-			$.getJSON("../api/organisationUnits/Jgc02tIKupW.json?paging=false",function(data){
+
+
+                $.getJSON("../api/organisationUnits/Jgc02tIKupW.json?paging=false",function(data){
                     document.getElementById('loader').style.display = "block";
                     for(var start=0; start< data.children.length; start++){
                         var child = data.children[start].id;
@@ -101,12 +108,12 @@ var level = getLevel(districtId);
                                 var childd = data1.children[i].id;
                                 var childName = getChildName(childd);
 								 $.getJSON("../api/events.json?orgUnit="+childd+"&&program=tITlMGNJTbJ",function(data3){
-								 
+
 										if(data3.events.length != 0){
                                         for(var k3=0; k3< data3.events.length;k3++){
                                             for(var kk1=0; kk1< data3.events[k3].dataValues.length;kk1++){
 											
-											if(data3.events[k3].dataValues[kk1].dataElement != dataelemmember  && data3.events[k3].dataValues[kk1].value == -1 )
+											if(data3.events[k3].dataValues[kk1].dataElement != dataelemmember && data3.events[k3].dataValues[kk1].value == -1 )
 												{
 												 occur++;
 											 var est=data3.events[k3].trackedEntityInstance;
@@ -115,8 +122,10 @@ var level = getLevel(districtId);
 								}
 								}
 								}
-							});
+								
+});
 								 if(districtArray.length!=0){
+								 console.log(districtArray);
                                     printReport22(districtArray);
                                     printReport3(districtArray);
                                 }
@@ -139,9 +148,10 @@ var level = getLevel(districtId);
 
                 break;
 
-
+//case 2 is for getting the data by district level
             case 2:
-		
+
+
                      var child = districtId;
                         $.getJSON("../api/organisationUnits/"+child+".json?paging=false",function(data1){
 
@@ -155,7 +165,7 @@ var level = getLevel(districtId);
                                 var childName = getChildName(childd);
 								
 								$.getJSON("../api/events.json?orgUnit="+childd+"&&program=tITlMGNJTbJ",function(data3){
-								if(data3.events.length != 0){
+										if(data3.events.length != 0){
                                         for(var k3=0; k3< data3.events.length;k3++){
                                             for(var kk1=0; kk1< data3.events[k3].dataValues.length;kk1++){
 											
@@ -167,8 +177,8 @@ var level = getLevel(districtId);
 												}
 								}
 								}
-								}		
-								});	
+								}
+					 });	
 								
 						 if(districtArray.length!=0){
                             console.log(districtArray);
@@ -179,7 +189,7 @@ var level = getLevel(districtId);
 							
                     
 					 }
-					});
+
                             var getContent = document.getElementsByClassName('contentRow');
                             console.log(getContent);
                             if(getContent.length>=1){
@@ -187,14 +197,14 @@ var level = getLevel(districtId);
                             else{
                                 window.alert("No data to display !");
                             }
-                
+                });
 				
 
                 break;
 
-
+//case 3 is for getting the data by community level
             case 3:
-			
+						
                             estCount=0;
                             estCountLic=0;
 							occur=0;
@@ -202,21 +212,20 @@ var level = getLevel(districtId);
 							var childName = getChildName(childd);
 							
 							$.getJSON("../api/events.json?orgUnit="+childd+"&&program=tITlMGNJTbJ",function(data3){
-							
-							if(data3.events.length != 0){
-							for(var k3=0; k3< data3.events.length;k3++){
-								for(var kk1=0; kk1< data3.events[k3].dataValues.length;kk1++){
+										if(data3.events.length != 0){
+                                        for(var k3=0; k3< data3.events.length;k3++){
+                                            for(var kk1=0; kk1< data3.events[k3].dataValues.length;kk1++){
+											
+											if(data3.events[k3].dataValues[kk1].dataElement != dataelemmember && data3.events[k3].dataValues[kk1].value == -1 )
+												{
+												 occur++;
+											 var est=data3.events[k3].trackedEntityInstance;
+											  getest(data3,k3,kk1,est,dis, count,disId,childName,childd);
+												}
+								}
+								}
+								}
 								
-								if(data3.events[k3].dataValues[kk1].dataElement != dataelemmember && data3.events[k3].dataValues[kk1].value == -1 )
-									{
-									 occur++;
-								 var est=data3.events[k3].trackedEntityInstance;
-								  getest(data3,k3,kk1,est,dis, count,disId,childName,childd);
-									}
-								}
-								}
-								}
-								 
 								});
 							 
                         if(districtArray.length!=0){
@@ -224,7 +233,7 @@ var level = getLevel(districtId);
                             printReport3(districtArray);
                         }
                         districtArray = [];
-                   
+                    
 								
 				var getContent = document.getElementsByClassName('contentRow');
                                     if(getContent.length>=1){
@@ -267,6 +276,7 @@ var getChildName = function(id){
     return name;
 };
 
+//for getting the establishment type value of the selected trackEntityInstance
 var getest = function(data3,k3,kk1,est,dis, count,disId,childName, childd)
 {
 $.getJSON("../api/trackedEntityInstances.json?ou="+childd+"&paging=false&program=tITlMGNJTbJ",function(data2){
@@ -282,10 +292,7 @@ $.getJSON("../api/trackedEntityInstances.json?ou="+childd+"&paging=false&program
 							if(update==0){}
 							else{
 							updatedistrictArray(dis, EstName, count,disId,childName, update);
-						}
-						console.log(childd);
-						console.log(est);
-						console.log(EstName);					
+						}					
 						}
 					}						
 			}
@@ -295,6 +302,7 @@ $.getJSON("../api/trackedEntityInstances.json?ou="+childd+"&paging=false&program
 });
 };
 
+//for getting the total sum of the values of months
 var getTotal = function(){
     var tds = document.getElementsByClassName('totalSum');
     var sum=0;
@@ -363,7 +371,7 @@ var getTotal = function(){
         sum = value + sum;
     }
     console.log(sum);
-     var reportTotal = "<tr style='background-color: #99CCFF'><td colspan='1' height='48px' style='border:1px solid black'>Total</td></tr>";
+     var reportTotal = "<tr style='background-color: #99CCFF'><td colspan='1' height='65px' style='border:1px solid black'>Total</td></tr>";
      $('.reporttable').append(reportTotal);
 
     var yy;
@@ -401,7 +409,7 @@ var getTotal = function(){
     debugger
   
 };
-
+//for getting periods(months) in the header
 function getPeriod(month) {
     var strMonth = "";
     if (month == "01" || month == "1")        strMonth = "January";
@@ -419,82 +427,74 @@ function getPeriod(month) {
 
     return strMonth;
 }
-
+//for getting values of district,community,count and establishment
 var printReport22 = function(districtArray){
 
     var increment =1;
     if(oldDistrict != districtArray[0].district) {
 
         var report2Content = "<tr class='report2Row'>";
-        var report2Content = report2Content + "<td class='report2td'>" + districtArray[0].district + "</td><td class='report2tdc'>" + districtArray[0].communityName + "</td><td class='report2tdl'></td><td>" + districtArray[0].establishmentName + "</td></tr>";
+        var report2Content = report2Content + "<td class='report2td'>" + districtArray[0].district + "</td><td class='report2tdc'>" + districtArray[0].communityName + "</td><td class='report2tdl'></td><td class='report2tde'>" + districtArray[0].establishmentName + "</td></tr>";
       $(".report2").append(report2Content);
-        oldValue = districtArray[0].communityName;
-
         if (districtArray.length > 1) {
-            var p =0;
+            ecount++;
             for (var i = 1; i < districtArray.length; i++) {
-
+				
                 var table = document.getElementById("report2Table");
-                var row1 = table.insertRow(lenth +i+1);
+                var row1 = table.insertRow(ecount);
                 var cell1 = row1.insertCell(0);
                 cell1.innerHTML = districtArray[i].establishmentName;
+				cell1.className = "report2tde";
 
-                if (oldValue == districtArray[i].communityName) {
-                    document.getElementsByClassName('report2td')[rowCount].rowSpan = increment + 1;
-                   // document.getElementsByClassName('report2tdt')[rowCount].rowSpan = increment + 1;
-                    document.getElementsByClassName('report2tdl')[rowCount].rowSpan = increment + 1;
-                   // document.getElementsByClassName('report2tdp')[rowCount].rowSpan = increment + 1;
-                    document.getElementsByClassName('report2tdc')[rowCount+p].rowSpan = increment + 1;
-                }
+                document.getElementsByClassName('report2td')[dcount].rowSpan += 1;
+                document.getElementsByClassName('report2tdl')[dcount].rowSpan += 1;
+                document.getElementsByClassName('report2tdc')[ccount].rowSpan += 1;
 
-
-                oldValue = districtArray[i].communityName;
                 oldDistrict = districtArray[i].district;
-                increment++;
-            }
-            p++;
+            ecount++;
+			}
         }
-        else{
-            oldValue = districtArray[0].communityName;
-            oldDistrict = districtArray[0].district;
-        }
-        lenth = lenth + districtArray.length;
+		else{
+			ecount++;
+			oldDistrict = districtArray[0].district;
+		}
+        dcount++;
     }
     else {
-        var t = 1;
-        if (districtArray.length >= 1) {
-            for (var j = 0; j < districtArray.length; j++) {
+	
+					var table = document.getElementById("report2Table");
+                    var row2 = table.insertRow(ecount);
+                    var cell3 = row2.insertCell(0);
+                    var cell2 = row2.insertCell(-1);
+                    cell3.innerHTML = districtArray[0].communityName;
+                    cell3.className = "report2tdc";
+                    cell2.innerHTML = districtArray[0].establishmentName;
+					cell2.className = "report2tde";
+                document.getElementsByClassName('report2td')[dcount-1].rowSpan += 1;
+                document.getElementsByClassName('report2tdl')[dcount-1].rowSpan += 1;
+				ecount++;
+		
+			if(districtArray.length > 1){
+					for (var j = 1; j < districtArray.length; j++) {
+							
+							var table = document.getElementById("report2Table");
+							var row4 = table.insertRow(ecount);
+							var cell4 = row4.insertCell(0);
+							cell4.innerHTML = districtArray[j].establishmentName;
+							cell4.className = "report2tde";
+				 
+							document.getElementsByClassName('report2td')[dcount-1].rowSpan += 1;
+							document.getElementsByClassName('report2tdl')[dcount-1].rowSpan += 1;
+							document.getElementsByClassName('report2tdc')[ccount].rowSpan += 1;
 
-                var table = document.getElementById("report2Table");
-                var row2 = table.insertRow(lenth + 1);
-                var cell3 = row2.insertCell(0);
-                var cell2 = row2.insertCell(-1);
-                cell3.innerHTML = districtArray[j].communityName;
-                cell2.innerHTML = districtArray[j].establishmentName;
-
-                var save = document.getElementsByClassName('report2td')[rowCount - t].rowSpan;
-
-                if (oldValue == districtArray[j].communityName) {
-                    document.getElementsByClassName('report2tdc')[0].rowSpan = save + 1;
-                }
-
-                document.getElementsByClassName('report2td')[rowCount - t].rowSpan = save + 1;
-                //document.getElementsByClassName('report2tdt')[rowCount - t].rowSpan = save + 1;
-                document.getElementsByClassName('report2tdl')[rowCount - t].rowSpan = save + 1;
-               // document.getElementsByClassName('report2tdp')[rowCount - t].rowSpan = save + 1;
-
-                oldValue = districtArray[j].communityName;
-                increment++;
-            }
-        }
+							ecount++;
+				}
+			}
         oldDistrict = districtArray[districtArray.length - 1].district;
-        t++;
-
-        lenth = lenth + districtArray.length;
-    }
-    rowCount++;
+    	}
+    ccount++;
 };
-
+//for getting values in the periods columns
 var printReport3 = function(districtArray){
 
     for(var index=0; index<districtArray.length; index++){
@@ -578,56 +578,11 @@ var printReport3 = function(districtArray){
         }
         previous = districtArray[index].district;
     }
-    value += 1;
-    changeValue(districtArray, estsum, value);
+ document.getElementsByClassName('report2tdl')[dcount-1].innerHTML = estsum;
 };
 
 
-var changeValue = function(districtArray, estsum, valuee){
-
-
-    var crt = document.getElementsByClassName("report2td");
-    if(districtArray.length == 1){
-        if(districtArray[0].district != previouss){
-
-            if(crt.length<=valuee){
-                valuee = crt.length-1;
-            }
-            document.getElementsByClassName('report2tdl')[valuee].innerHTML = estsum;
-        }
-        else{
-            document.getElementsByClassName('report2tdl')[valuee-1].innerHTML = estsum;
-        }
-        previouss = districtArray[0].district;
-    }
-    else{
-        if(districtArray[0].district != previouss){
-            document.getElementsByClassName('report2tdl')[valuee].innerHTML = estsum;
-        }
-        else{
-            if(crt.length<=valuee){
-                valuee = crt.length-1;
-            }
-            document.getElementsByClassName('report2tdl')[valuee-1].innerHTML = estsum;
-        }
-        previouss = districtArray[districtArray.length-1].district;
-    }
-
-
-};
-
-/*var getPerc =  function(){
-    var all =  document.getElementsByClassName('report2tdt');
-
-    for(var f=0;f<all.length;f++){
-        var d = parseInt(document.getElementsByClassName('report2tdt')[f].innerText);
-        var n = parseInt(document.getElementsByClassName('report2tdl')[f].innerText);
-        var percent = ((n/d)*100).toFixed(2);
-        document.getElementsByClassName('report2tdp')[f].innerHTML = percent+"%";
-    }
-};*/
-
-  
+  //for compairing the dates(periods)
 	var getformat = function(response, k3,kk1){
 		var flagg=0;
 	    var trackdate = new Date(response.events[k3].dataValues[kk1].lastUpdated);
@@ -656,7 +611,7 @@ var changeValue = function(districtArray, estsum, valuee){
             }
 	};
 
-
+//for pushing the values into the array(monthwise) different cases for different months
 var updatedistrictArray =  function(dis, EstName, count, disId,childName, update){
 var flag=0;
 			switch(update) {
@@ -1366,15 +1321,15 @@ var flag=0;
 
 </script>
 <script type="text/javascript">
+//for getting excel export file
     function exportExcel() {
                 var a = document.createElement('a');
                 var data_type = 'data:application/vnd.ms-excel';
-                var table_div = document.getElementById('printing');
+                var table_div = document.getElementById('printing1');
                 var table_html = table_div.outerHTML.replace(/ /g, '%20');
                 a.href = data_type + ', ' + table_html;
-                a.download = 'Licensed Report.xls';
+                a.download = 'Total Establishments failing non-critical inspection.xls';
                 a.click();
-                e.preventDefault();
             }
 
 </script>
@@ -1392,7 +1347,7 @@ var flag=0;
         border:1px solid black;
   }
         .report2 tr, .report3 tr {
-    height:50px;
+    height:65px;
         }
     .report1 , .report2, .report3 {
         border-collapse: collapse;
@@ -1454,14 +1409,22 @@ var flag=0;
 	#export {
 		margin-left:50px;
 	}
+	@media print
+{    
+    .no-print, .no-print *
+    {
+        display: none !important;
+    }
+}
 
 
 	</style> 
 </head>
+<!--for buttons and header -->
 <body>
 <div id="overlay">
     <div id="loader"></div></div>
-<div id="printing" >
+<div id="printing" class="no-print">
 <br>
  <label for="districtNameStng"><font size="2" ><b>Select Period : </b></font></label>
 <select id="dropdown" style="color: #0000FF"; height="20px"; width="20px"; name="selectperiod"; value="periodvalue";  onchange="updateSettings(this.value)"; class="text ui-widget-content ui-corner-all">
@@ -1474,16 +1437,18 @@ var flag=0;
 						<option value="six"> Six months</option>
 						<option value="twelvemonths"> Twelve months</option>
 				</select>
-				<button onClick="window.location.reload()" id="tap" >Reset</button>
-
+				<button onClick="window.location.reload()" id="tap" >Reset</button><button onClick="exportExcel()" id="tap" >Get Excel</button>
+</div>
+<div id="printing1">
 <table class="reporttable" id="table1" width="100%" style=' text-align:center' cellspacing="0" cellpadding="0">
   <thead>
   <tr align="center"  height="27">
 							<tr align="center" height="27" border="1px solid black" width="100%">
-                        <td colspan="18" height="27" class="col" bgcolor="#32849C" ><font size="3" color="white"><b>Total Establishments failing non-critical inspection
+                        <td colspan="2" height="27" class="col" bgcolor="#32849C" ><font size="3" color="white"><b>Total Establishments failing non-critical inspection
                         </b></font></td>
                     </tr>
 	</thead>
+	</div>
     </table>
 </div>
 </body>
