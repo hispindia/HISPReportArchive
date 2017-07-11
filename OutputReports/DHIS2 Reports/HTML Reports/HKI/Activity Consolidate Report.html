@@ -1,3 +1,6 @@
+ 
+ <head>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" /></head>
  <link type="text/css" rel="stylesheet" href="../dhis-web-commons/font-awesome/css/font-awesome.min.css?_rev=19841" />
     <link type="text/css" rel="stylesheet" media="screen" href="../dhis-web-commons/javascripts/jQuery/ui/css/redmond/jquery-ui.css?_rev=19841" />
     <link type="text/css" rel="stylesheet" media="screen,print" href="../dhis-web-commons/css/green/green.css?_rev=19841" />
@@ -81,9 +84,13 @@
             dhis2.period.generator = new dhis2.period.PeriodGenerator( dhis2.period.calendar, dhis2.period.format );
       dhis2.period.picker = new dhis2.period.DatePicker( dhis2.period.calendar, dhis2.period.format );
     </script>
+ <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+<div id="cover"></div>
 	<div class="NepalFooter" id="NepalFooter">
 <div class="footerContent"><b id="orgTitle"  style="margin:0;color:#000;font-size:12px;">Not selected yet</b></div>
+<div class="footerContent"><div class="loader" id="orgTitle1"  style="margin:0;color:#000;font-size:12px;display:none">It will take few seconds to load the report.....</div></div>
 </div>
+
 	<style> 
 			
 			div
@@ -147,6 +154,7 @@
 				font-weight:bold;
 				box-shadow: 1px 1px 10px #444;
 			}
+		
 
 			.content
 			{
@@ -406,6 +414,21 @@
 				padding-top:3px;
 				overflow:hidden;
 			}
+				.footerContent1
+			{
+				position:absolute;
+				width:100%;
+				height:22px;
+				left:10px;
+				bottom:5px;
+				color:#000;
+				font-family:verdana;
+				font-size:12px;
+				text-align:left;
+				padding-top:3px;
+				overflow:hidden;
+			}
+			
 			
 			.footerSelReportBack
 			{
@@ -487,31 +510,88 @@
 				padding-left:20px;
 			}
 			
+.loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
 			
 		</style>
 		
 		<script>
 		//var orgUnit = dhis2.report.organisationUnit;
-		var periodst= [];
+		var periodArray= [];
 		 var deUIDsStr = "";
 		  var tdIDsArray = [];
          var deUIDsArray = [];
-		
+		var periodstrseed =[];
+		var periodstrseed1 =[];
+		var periodstrseed2 =[];
 		 var dataJsonObj= [];
-		
+		function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+    
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
 			jQuery( document ).ready( function() 			{		
 
-			
+
 			selectionTreeSelection.setMultipleSelectionAllowed( false );
 				selectionTree.clearSelectedOrganisationUnitsAndBuildTree();
+				hideLoad();
 				$("input[value=Back]").closest('div').hide();
 		
 		$("#dataTable > tbody > tr").find("td").each(function (i, td) {
      
-              //  if(td.id.search("-") > -1){
-                  //  tdIDsArray.push(td.id);
-					// deUIDsArray.push(td.id.split('-')[0]);
-               // }
+       
 				
 				if(td.id.search("_") == -1){
                     if(td.id.search("-") > -1){
@@ -532,18 +612,9 @@
             
         });
         
-        
-	
-		
-          
-				//selectionTree.clearSelectedOrganisationUnits();
-				
-				//console.log(periods);
-				//console.log(orgUnit);
+       
 				
 				var r = document.getElementById("printButton");
-				//document.getElementById('applicationsButton').style.display="none";
-				//document.getElementById('profileButton').style.display="none";
 				
 				$("#btnExport1").click(function(e) {
 			window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#displayshow').html()));
@@ -553,27 +624,7 @@
 
 			});	
 		
-		function viewTree()
-		{
-			//document.getElementById('Rtitle').innerHTML=value+" report parameters";
-			document.getElementsByClassName('content')[0].style.display="none";
-			document.getElementsByClassName('contenttree')[0].style.display="block";
-			document.getElementById('tree').style.display="block";	
-			printMonths();
-			printOrgunit();
-		}
 		
-			function verificationSelected()
-		{
-			document.getElementById("btnContinue").style.display="block";
-			document.getElementById("btnBack").style.display="none";
-			document.getElementById("btnCancel").style.display="block";
-			document.getElementById("btnGenerate").style.display="none";
-			document.getElementById("btnExport1").style.display="block";
-			document.getElementById("butnBack").style.display="block";
-			$("#NepalFooter").hide();
-			viewTree();
-		}
 		
 	
 		 var selectedOrgUnitUid ;
@@ -581,6 +632,7 @@
 			
 		function printOrgunit()
 		{
+		
 			var org = "Not Selected yet";
 			if(document.getElementsByClassName('selected')[0])
 			{
@@ -595,8 +647,9 @@
 				oid=document.getElementsByClassName('selected')[0].href;					
 				oid=oid.split("\"")[1];
 				selectedOrgUnitUid = oid;
-				//console.log(selectedOrgUnitUid + "selectedOrgUnitUid");
+				
 			}
+			
 		}
 		
 		function printReport()
@@ -616,14 +669,22 @@
 			
 			document.getElementById('btnGenerate').onclick = function()
 			{
+		
+			
+			var org = document.getElementById('orgTitle1').innerHTML;
+			document.getElementById('orgTitle').innerHTML=org;
 			if(oid==0)
 			{
 				alert("Please select an organization unit");
 				return false;
 			}
-			$("#NepalFooter").hide();
+				
+			
+			
+			
 			}
-			 var org= document.getElementById("orgTitle").innerHTML;
+			 
+
 
 				
 			printapi();
@@ -638,22 +699,28 @@
 		{
 		
 	
-		var perd1=document.getElementById('cyear').value;
-			var perd2=document.getElementById('cyear1').value;
-			test[0]=parseInt(document.getElementById('cyear').value);
-			diff = perd2 - perd1;
-			
-			periodstr+= perd1 +";";
-			if(diff >= 1)
-			{
-			for(var i = 0; i < diff; i++)
-			{
-			perd1++;
-			test[i]= perd1;
-			periodstr += test[i] + ";" ;
-			}
-			}
-			
+
+			var sDate = new Date(parseInt(document.getElementById('cyear').value), document.getElementById('reportingPeriod').value);
+        sDate.setDate(1);
+        var eDate = new Date(parseInt(document.getElementById('cyear1').value), document.getElementById('reportingPeriod1').value);
+
+        while (sDate < eDate) {
+            var month = sDate.getMonth() + 1;
+            month = ( month  ) > 9 ? month : "0" + month;
+
+            var dhisDate = sDate.getFullYear() + "" + month;
+            periodstr = ( periodstr == "" ) ? dhisDate : ( periodstr + ";" + dhisDate );
+
+            periodArray.push(dhisDate);
+
+            sDate.setMonth(sDate.getMonth() + 1);
+        }
+		var urlseed = "../api/25/analytics.json?dimension=dx:HFXFlPt8KGt&dimension=co&dimension=pe:" + periodstr  + "&dimension=ou:" + selectedOrgUnitUid + "&skipMeta=true";
+		$.get(urlseed, function (json) {
+            var jsonData = json;
+            loadReport(jsonData);
+        });
+		
           
 		 if (deUIDsArray.length > 50) {
 		 	var url = [];
@@ -687,25 +754,44 @@
                     });
 					  
                 });
+				
+				$("#NepalFooter").hide();
                loadTable();
        
             });
 
 
         
-		periodst = periodstr.split(';');
+	
 		
 		
 		}
 		}
-		
+		 function loadReport(json)
+		 {
+		 for (var i = 0; i < json.rows.length; i++) {
+		 if (json.rows[i][4]=='summer_seed')
+		 {
+		 periodstrseed.push(json.rows[i][2]) ;
+		 }
+		 else if(json.rows[i][4]=='winter_seed')
+		 {
+		  periodstrseed1.push(json.rows[i][2]) ;
+		 }
+		 else
+		 {
+		 periodstrseed2.push(json.rows[i][2]) ;
+		 }
+		 }
+		 }
+		console.log("periodstrseed" + periodstrseed + periodstrseed1 + periodstrseed2);
 		function loadTable() {
         
            
      document.getElementById('displayshow').style.display = "block";
 		document.getElementById('display1').style.display = "none";
 		document.getElementById('HKIHeader').style.display = "none";
-		//document.getElementById('buttonTable').style.display = "block";
+		
 		 
 					   
 				   
@@ -715,11 +801,17 @@
 					var cellValue = 0;
 					 
 					
-               $.each (periodst, function (j,pe){
+               
 				
-                    //cellValue += getCellValue(tdID.split('-')[0],selectedOrgUnitUid,tdID.split('-')[1],pe);
-             
-				if (tdID.search('_') == -1) {
+			
+				
+				
+				if(tdID.search('summerseeds') == -1 && tdID.search('winterseeds') == -1 && tdID.search('rainyseeds') == -1){
+				$.each (periodArray, function (j,pe){
+                 if (tdID.search('double') == -1)
+				 {
+
+                 	if (tdID.search('_') == -1) {
                         cellValue += getCellValue(tdID.split('-')[0],  selectedOrgUnitUid, tdID.split('-')[1],pe);
                     }
                     else { 
@@ -729,14 +821,60 @@
                         });
                     }
 
-			  });
+
+                 }
+				 
+else{
+
+			 
+				if (tdID.search('_') == -1) {
+                        cellValue += getCellValue(tdID.split('-')[0],  selectedOrgUnitUid, tdID.split('-')[1],pe);
+                    }
+                    else { 
+                        var UIDs = tdID.split('_');
+                        $.each(UIDs, function (j, deID) {
+                            cellValue += getCellValue(deID.split('-')[0],selectedOrgUnitUid,deID.split('-')[1],pe);
+                        });
+                    }
+					}
+					 });
+					}
+					
+					else 
+                    {					
+
+               if(tdID.split('-')[2]=='summerseeds' )
+				{
+				$.each (periodstrseed, function (j,pe){
+				 cellValue += getCellValue(tdID.split('-')[0],  selectedOrgUnitUid, tdID.split('-')[1],pe);
+				
+				});
+				}
+				
+				 if(tdID.split('-')[2]=='winterseeds' )
+				{
+				
+				$.each (periodstrseed1, function (j,pe){
+				 cellValue += getCellValue(tdID.split('-')[0],  selectedOrgUnitUid, tdID.split('-')[1],pe);
+				 });
+				}
+				
+					 if(tdID.split('-')[2]=='rainyseeds' )
+				{
+				
+				$.each (periodstrseed2, function (j,pe){
+				 cellValue += getCellValue(tdID.split('-')[0],  selectedOrgUnitUid, tdID.split('-')[1],pe);
+				 });
+				}
+                  }
+			 
 			  
 			  $("#" + tdID).append(cellValue );
 			  
 			  
 			});
 			
-
+           
     
     }
 	
@@ -755,10 +893,7 @@
 		</script>
 		
 		<div id="HKIHeader">Activity Reporting Consolidated Report</div>
-		<!--<div class="contenttree" style="display:none">
-			<input type="hidden" id="uid" name="uid" value="PjobTWrNe92" />
-			<input type="hidden" id="mode" name="mode" value="report" />
-			<input type="hidden" id="type" name="type" value="html" />-->
+		
 		<div id="display1" class="display" style="text-align:center;margin-top:200px;">
 				<div style="width:600px;margin:0 auto">
 					<table>
@@ -766,7 +901,32 @@
 							<td><div class="parameterBack">Report Starting Year</div></td>
 							<td>	<div class="parameterInputBack" style="width:300px;background:#aaa">
 												
-												
+												<select id="reportingPeriod" class="monthSel" name="reportingPeriod" style="width:200px;margin-top:0;"  >               
+																		
+																		
+																		
+																		
+																		<option value="01">January</option>
+																		<option value="02">February</option>
+																		<option value="03">March</option>
+																		<option value="04">April</option>
+																		<option value="05">May</option>
+																		<option value="06">June</option>
+																		<option value="07">July</option>
+																		<option value="08">August</option>
+																		<option value="09">September</option>
+																		<option value="10">October</option>
+																		<option value="11">November</option>
+																		<option value="12">December</option>
+																		
+																		
+																		
+																		
+																		
+																		
+																		
+																		
+												</select>
 												<input type="number" id="cyear" min="2016" max="2045"  value="2016" style="font-weight:bold; padding-left:3px;">
 									</div></td>
 						</tr>
@@ -776,10 +936,23 @@
 							<td>
 									<div class="parameterInputBack" style="width:300px;background:#aaa">
 												
-												
+														<select id="reportingPeriod1" class="monthSel" name="reportingPeriod1" style="width:200px;margin-top:0;"  >               
+																		
+								                                        <option value="01">January</option>
+																		<option value="02">February</option>
+																		<option value="03">March</option>
+																		<option value="04">April</option>
+																		<option value="05">May</option>
+																		<option value="06">June</option>
+																		<option value="07">July</option>
+																		<option value="08">August</option>
+																		<option value="09">September</option>
+																		<option value="10">October</option>
+																		<option value="11">November</option>
+																		<option value="12">December</option>
+												</select>
 												<input type="number" id="cyear1" min="2016" max="2045"  value="2017" style="font-weight:bold; padding-left:3px;">
-									</div>
-							</td>
+									</div></td>
 						</tr>
 						
 						<tr>
@@ -787,8 +960,7 @@
 							<td rowspan="2">
 								<div class="parameterInputBack" style="width:300px; height:150px" onmouseover="printOrgunit()">
 									<div id="selectionTree" style="width:290px; height:130px"></div>
-								</div>
-							</td>
+								</div></td>
 						</tr>
 						<tr>
 							<td></td>
@@ -827,8 +999,8 @@
       </div>
 		
    
-  <tr bgcolor="#007EA8" height="69">
-    <td  height="69" colspan="42"><div align="center">Suaahara Activity Reporting Consolidated Report</div></td>
+  <tr  height="69">
+    <td  bgcolor="#007EA8" height="69" colspan="42"><div align="center">Suaahara Activity Reporting Consolidated Report</div></td>
   </tr>
   <tr height="69">
     <td height="69" colspan="5" bgcolor="#BFDFFF"><div align="center">Activity Details</div></td>
@@ -846,7 +1018,7 @@
     <td width="349" rowspan="2" bgcolor="#BFDFFF"><div align="center">Indicator</div></td>
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Target</div></td>
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Male</div></td>
-    <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">FemaleÂ </div></td>
+    <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Female�</div></td>
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Other</div></td>
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Dalit (1)</div></td>
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Muslim (2)</div></td>
@@ -854,7 +1026,7 @@
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Newar (4)</div></td>
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Disadvantage Janjati (5)</div></td>
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Gurung and Thakali (6)</div></td>
-    <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">TeraiÂ     Other Caste Group (7)</div></td>
+    <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Terai�    Other Caste Group (7)</div></td>
     <td width="88" rowspan="2" bgcolor="#BFDFFF"><div align="center">Other (8)</div></td>
     <td width="528" colspan="6" bgcolor="#BFDFFF"><div align="center">Government    HWs</div></td>
     <td width="528" colspan="6" bgcolor="#BFDFFF"><div align="center">Others</div></td>
@@ -890,7 +1062,7 @@
   </tr>
  
   <tr height="69">
-    <td height="69" width="63"  align="center">1 </td>
+    <td height="69" width="63"  align="center">1</td>
     <td width="131" align="center">PM output</td>
     <td width="378">1-Project Advisory Group Meeting</td>
     <td width="279">1-# of project    avdisor group meeting conducted</td>
@@ -951,18 +1123,18 @@
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
-    <td align="center"  id="Kzexkp0yArP-CVGjMQDV2bK"></td>
-    <td align="center"  id="Kzexkp0yArP-NA4CQgTSvx5"></td>
-    <td align="center"  id="Kzexkp0yArP-XFKJ4P80WQk"></td>
-    <td align="center"  id="Kzexkp0yArP-UBImdHyjLjp"></td>
-    <td align="center"  id="Kzexkp0yArP-vDvu3wLe8P0"></td>
-    <td align="center"  id="Kzexkp0yArP-gV76Y9vlToM"></td>
-    <td align="center"  id="M4hBrZ5EUsl-ZTMHyFkTRom"></td>
-    <td align="center"  id="M4hBrZ5EUsl-bQmgZMbzViC"></td>
-    <td align="center"  id="M4hBrZ5EUsl-iEDkoxuG8O4"></td>
-    <td align="center"  id="M4hBrZ5EUsl-XxxvvgPriJ7"></td>
-    <td align="center"  id="M4hBrZ5EUsl-xetxjLnimv7"></td>
-    <td align="center"  id="M4hBrZ5EUsl-TMvgqWn9QGL"></td>
+    <td align="center"  id="Kzexkp0yArP-CVGjMQDV2bK-double"></td>
+    <td align="center"  id="Kzexkp0yArP-NA4CQgTSvx5-double"></td>
+    <td align="center"  id="Kzexkp0yArP-XFKJ4P80WQk-double"></td>
+    <td align="center"  id="Kzexkp0yArP-UBImdHyjLjp-double"></td>
+    <td align="center"  id="Kzexkp0yArP-vDvu3wLe8P0-double"></td>
+    <td align="center"  id="Kzexkp0yArP-gV76Y9vlToM-double"></td>
+    <td align="center"  id="M4hBrZ5EUsl-ZTMHyFkTRom-double"></td>
+    <td align="center"  id="M4hBrZ5EUsl-bQmgZMbzViC-double"></td>
+    <td align="center"  id="M4hBrZ5EUsl-iEDkoxuG8O4-double"></td>
+    <td align="center"  id="M4hBrZ5EUsl-XxxvvgPriJ7-double"></td>
+    <td align="center"  id="M4hBrZ5EUsl-xetxjLnimv7-double"></td>
+    <td align="center"  id="M4hBrZ5EUsl-TMvgqWn9QGL-double"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -1378,7 +1550,7 @@
     <td width="131"><div align="center">PM output</div></td>
     <td width="378">7-USAID Rules &amp; Regulation    Workshop / Refresher</td>
     <td width="279">1-#    of workshop conducted</td>
-    <td width="88"><div align="center">1    time</div></td>
+    <td width="88"><div align="center">1 </div></td>
     <td align="center"  id="xX5Cm3YjgOi-HllvX50cXC0"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -1554,7 +1726,7 @@
     <td width="131"><div align="center">PM output</div></td>
     <td width="378">9-District Implementation Plan    Meetings for Year 2</td>
     <td width="279">1-#    of meeting conducted</td>
-    <td width="88"><div align="center">1    time</div></td>
+    <td width="88"><div align="center">1</div></td>
     <td align="center"  id="VKub7tdDfk1-HllvX50cXC0"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -1904,7 +2076,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">14</div></td>
     <td width="131"><div align="center">FO Output</div></td>
-    <td width="378">14-Internship ProgramÂ </td>
+    <td width="378">14-Internship Program�</td>
     <td width="279">1-#    of interns</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -2212,7 +2384,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">18</div></td>
     <td width="131"><div align="center">FO Output</div></td>
-    <td width="378">18-District Level Finance /    Operation Peer Review- Semi AnnualÂ </td>
+    <td width="378">18-District Level Finance /    Operation Peer Review- Semi Annual�</td>
     <td width="279">1-#    of peer review conducted</td>
     <td width="88"><div align="center">2</div></td>
     <td align="center"  id="uQhFhXB7Iuq-HllvX50cXC0"></td>
@@ -2256,7 +2428,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131"><div align="center">FO Output</div></td>
-    <td width="378">18-District Level Finance /    Operation Peer Review- Semi AnnualÂ </td>
+    <td width="378">18-District Level Finance /    Operation Peer Review- Semi Annual�</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -2301,7 +2473,7 @@
     <td height="69" width="63"><div align="center">19</div></td>
     <td width="131"><div align="center">FO Output</div></td>
     <td width="378">19-Internal Audit (Risk Based)</td>
-    <td width="279">1-#    of internal audit conductedÂ </td>
+    <td width="279">1-#    of internal audit conducted�</td>
     <td width="88" align="center"></td>
     <td align="center"  id="ojrNfkjSV3H-HllvX50cXC0"></td>
     <td align="center"></td>
@@ -2551,6 +2723,7 @@
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
+
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -2608,7 +2781,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">23</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">23-Design, update, IEC and    Training ManualÂ </td>
+    <td width="378">23-Design, update, IEC and    Training Manual�</td>
     <td width="279">1-#    of manual developed</td>
     <td width="88" align="center"></td>
     <td align="center"  id="khkDRhWD0Yr-HllvX50cXC0"></td>
@@ -2652,7 +2825,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">24</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">24-Support to CHD on NUTEC    activitiesÂ </td>
+    <td width="378">24-Support to CHD on NUTEC    activities�</td>
     <td width="279">1-#    of times support provided</td>
     <td width="88" align="center"></td>
     <td align="center"  id="QknlUundw0R-HllvX50cXC0"></td>
@@ -2740,7 +2913,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">26</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">26-District Consultative Meeting    for MIYCNÂ  training planÂ  in 7 districts( Taplejung, Bhojpur,    Solukhumbu, Dolakha, Nawalparasi, Lamjung and Myagdi)</td>
+    <td width="378">26-District Consultative Meeting    for MIYCN� training plan� in 7 districts( Taplejung, Bhojpur,    Solukhumbu, Dolakha, Nawalparasi, Lamjung and Myagdi)</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88" align="center"></td>
     <td align="center"  id="V0ODclpvJkL-HllvX50cXC0"></td>
@@ -2784,7 +2957,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">26-District Consultative Meeting    for MIYCNÂ  training planÂ  in 7 districts( Taplejung, Bhojpur,    Solukhumbu, Dolakha, Nawalparasi, Lamjung and Myagdi)</td>
+    <td width="378">26-District Consultative Meeting    for MIYCN� training plan� in 7 districts( Taplejung, Bhojpur,    Solukhumbu, Dolakha, Nawalparasi, Lamjung and Myagdi)</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -2828,7 +3001,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">27</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">27-MIYCN Refresher Training    (VLT) in 10 districtsÂ  (Taplejung,    Bhojpur, Solukhumbu, Dolakha, Nawalparasi, Lamjung, Myagdi, Bajura,Bajhang    and Darchula )</td>
+    <td width="378">27-MIYCN Refresher Training    (VLT) in 10 districts� (Taplejung,    Bhojpur, Solukhumbu, Dolakha, Nawalparasi, Lamjung, Myagdi, Bajura,Bajhang    and Darchula )</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88" align="center"></td>
     <td align="center"  id="hBaCaqXYCdi-HllvX50cXC0"></td>
@@ -2872,7 +3045,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">27-MIYCN Refresher Training    (VLT) in 10 districtsÂ  (Taplejung,    Bhojpur, Solukhumbu, Dolakha, Nawalparasi, Lamjung, Myagdi, Bajura,Bajhang    and Darchula )</td>
+    <td width="378">27-MIYCN Refresher Training    (VLT) in 10 districts� (Taplejung,    Bhojpur, Solukhumbu, Dolakha, Nawalparasi, Lamjung, Myagdi, Bajura,Bajhang    and Darchula )</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -2916,7 +3089,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">28</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">28-Two days preparatory workshop    with trained health &amp; Non-health workers for community level    trainingÂ </td>
+    <td width="378">28-Two days preparatory workshop    with trained health &amp; Non-health workers for community level    training�</td>
     <td width="279">1-# of 2 days    preparatory workshop conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -2960,7 +3133,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">28-Two days preparatory workshop    with trained health &amp; Non-health workers for community level    trainingÂ </td>
+    <td width="378">28-Two days preparatory workshop    with trained health &amp; Non-health workers for community level    training�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -3004,7 +3177,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">29</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">29-MIYCNÂ  basic trainingÂ  (VLTÂ     Training)Â  in DhadhingÂ  and TaplejungÂ Â </td>
+    <td width="378">29-MIYCN� basic training� (VLT�    Training)� in Dhadhing� and Taplejung��</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88">&nbsp;</td> <td align="center" id="W5puJM2NXsV-HllvX50cXC0"></td>
     <td align="center"></td>
@@ -3047,7 +3220,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">29-MIYCNÂ  basic trainingÂ  (VLTÂ     Training)Â  in DhadhingÂ  and TaplejungÂ Â </td>
+    <td width="378">29-MIYCN� basic training� (VLT�    Training)� in Dhadhing� and Taplejung��</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -3154,7 +3327,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">31</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">31-Two daysÂ  training to health workers ( who had    trained on MIYCN from Government ) on Suaahara &amp; NACSÂ  in PachtharÂ </td>
+    <td width="378">31-Two days� training to health workers ( who had    trained on MIYCN from Government ) on Suaahara &amp; NACS� in Pachthar�</td>
     <td width="279">1-#    of events of 2 days training conducted</td>
     <td width="88">&nbsp;</td> <td align="center" id="feEafgsjgjL-TMvgqWn9QGL"></td>
     <td align="center"></td>
@@ -3197,7 +3370,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">31-Two daysÂ  training to health workers ( who had    trained on MIYCN from Government ) on Suaahara &amp; NACSÂ  in PachtharÂ </td>
+    <td width="378">31-Two days� training to health workers ( who had    trained on MIYCN from Government ) on Suaahara &amp; NACS� in Pachthar�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -3229,7 +3402,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">32</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">32-Two days training on MIYCF    Refresher and WLI preparation to FCHVs in PachtharÂ </td>
+    <td width="378">32-Two days training on MIYCF    Refresher and WLI preparation to FCHVs in Pachthar�</td>
     <td width="279">1-#    of events of 2 days training conducted</td>
     <td width="88">&nbsp;</td> <td align="center" id="ZqNattksear-HllvX50cXC0"></td>
     <td align="center"></td>
@@ -3272,7 +3445,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">32- Two days training on MIYCF    Refresher and WLI preparation to FCHVs in PachtharÂ </td>
+    <td width="378">32- Two days training on MIYCF    Refresher and WLI preparation to FCHVs in Pachthar�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -3464,7 +3637,7 @@
     <td height="69" width="63"><div align="center">35</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
     <td width="378">35-Orientation to NSBCC Officers</td>
-    <td width="279">1-#    of orientation conductedÂ </td>
+    <td width="279">1-#of orientation conducted</td>
     <td width="88">&nbsp;</td> <td align="center" id="PCzv8A51Qel-HllvX50cXC0"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -3613,7 +3786,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">37</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">37-VDC Orientation on Suaahara    IIÂ </td>
+    <td width="378">37-VDC Orientation on Suaahara    II</td>
     <td width="279">1-#    of orientation conducted</td>
     <td width="88">&nbsp;</td> <td align="center" id="GXZBoDV5VqU-HllvX50cXC0"></td>
     <td align="center"></td>
@@ -3656,8 +3829,8 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">37-VDC Orientation on Suaahara    IIÂ </td>
-    <td width="279">2-#    of participants</td>
+    <td width="378">37-VDC Orientation on Suaahara II</td>
+    <td width="279">2-# of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td> 
 	<td align="center" id="y1xHU6pXDfe-tT7oO1vZgDM"></td>
@@ -3700,7 +3873,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">38</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">38-Two days MIYCN orientation to    NGO Staff in 40 districtsÂ </td>
+    <td width="378">38-Two days MIYCN orientation to    NGO Staff in 40 districts</td>
     <td width="279">1-#    of orientation to PNGO staff</td>
     <td width="88">&nbsp;</td> <td align="center" id="hAyXOe8m0qF-HllvX50cXC0"></td>
     <td align="center"></td>
@@ -3743,8 +3916,8 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">38- Two days MIYCN orientation    to NGO Staff in 40 districtsÂ </td>
-    <td width="279">2-#    of participants</td>
+    <td width="378">38- Two days MIYCN orientation to NGO Staff in 40 districts</td>
+    <td width="279">2-# of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td> <td align="center" id="xOnxLEUMT7C-tT7oO1vZgDM"></td> <td align="center" id="xOnxLEUMT7C-NL7qwhjmc8t"></td> <td align="center" id="xOnxLEUMT7C-SG4GEjuYjP8"></td>
     <td align="center"></td>
@@ -3903,7 +4076,7 @@
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
     <td width="378">40-Two days MIYCN training to    mothers group members and decision makers ward level ( WLI)</td>
-    <td width="279">2-#    of 1000 days mother participated in the 1st day of the trainingÂ </td>
+    <td width="279">2-#    of 1000 days mother participated in the 1st day of the training</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
     <td align="center"></td>
@@ -3978,7 +4151,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">41</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">41-Two days District TOT on HMIS    in 7 districtsÂ  ( Rukum, Bardiya,    Jajarkot, Dailekh, Achham, Baitadi, Dadeldhura)</td>
+    <td width="378">41-Two days District TOT on HMIS    in 7 districts� ( Rukum, Bardiya,    Jajarkot, Dailekh, Achham, Baitadi, Dadeldhura)</td>
     <td width="279">1-#    of events of D-ToT on HMIS conducted</td>
     <td width="88">&nbsp;</td> <td align="center" id="CZdOrsItGZs-HllvX50cXC0"></td>
     <td align="center"></td>
@@ -4021,7 +4194,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">41-Two days District TOT on HMIS    in 7 districtsÂ  ( Rukum, Bardiya,    Jajarkot, Dailekh, Achham, Baitadi, Dadeldhura)</td>
+    <td width="378">41-Two days District TOT on HMIS    in 7 districts� ( Rukum, Bardiya,    Jajarkot, Dailekh, Achham, Baitadi, Dadeldhura)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -4053,10 +4226,10 @@
   <tr height="92">
     <td height="92" width="63"><div align="center">42</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">42-Orientation on HMIS recording    and reporting (Nutrition and Health Indicators) to health workers and FCHVs    (Taplejung, Bhojpur, Solukhumbu, Dolakha, Nawalparasi, Lamjung, Myagdi,    Rukum, Bardiya, Jajarkot, Dailekh, Achham, Baitadi, Dadeldhura, Bajura, BajhangÂ  and Darchula</td>
+    <td width="378">42-Orientation on HMIS recording    and reporting (Nutrition and Health Indicators) to health workers and FCHVs    (Taplejung, Bhojpur, Solukhumbu, Dolakha, Nawalparasi, Lamjung, Myagdi,    Rukum, Bardiya, Jajarkot, Dailekh, Achham, Baitadi, Dadeldhura, Bajura, Bajhang� and Darchula</td>
     <td width="279">1-#    of events of orientation on HMIS conducted</td>
     <td width="88">&nbsp;</td> 
-	<td align="center" id="fHSi4pIrhUb-HllvX50cXC0"></td>
+	<td align="center" id="fHSi4pIrhUb-HllvX50cXC0-double"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -4097,7 +4270,7 @@
   <tr height="92">
     <td height="92" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">42-Orientation on HMIS recording    and reporting (Nutrition and Health Indicators) to health workers and FCHVs    (Taplejung, Bhojpur, Solukhumbu, Dolakha, Nawalparasi, Lamjung, Myagdi,    Rukum, Bardiya, Jajarkot, Dailekh, Achham, Baitadi, Dadeldhura, Bajura, BajhangÂ  and Darchula</td>
+    <td width="378">42-Orientation on HMIS recording    and reporting (Nutrition and Health Indicators) to health workers and FCHVs    (Taplejung, Bhojpur, Solukhumbu, Dolakha, Nawalparasi, Lamjung, Myagdi,    Rukum, Bardiya, Jajarkot, Dailekh, Achham, Baitadi, Dadeldhura, Bajura, Bajhang� and Darchula</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -4112,18 +4285,18 @@
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td> 
-	<td align="center" id="EavMT2bXxr2-CVGjMQDV2bK"></td> 
-	<td align="center" id="EavMT2bXxr2-NA4CQgTSvx5"></td> 
-	<td align="center" id="EavMT2bXxr2-XFKJ4P80WQk"></td> 
-	<td align="center" id="EavMT2bXxr2-UBImdHyjLjp"></td> 
-	<td align="center" id="EavMT2bXxr2-vDvu3wLe8P0"></td> 
-	<td align="center" id="EavMT2bXxr2-gV76Y9vlToM"></td> 
-	<td align="center" id="AzURV9UmByY-ZTMHyFkTRom"></td> 
-	<td align="center" id="AzURV9UmByY-bQmgZMbzViC"></td> 
-	<td align="center" id="AzURV9UmByY-iEDkoxuG8O4"></td> 
-	<td align="center" id="AzURV9UmByY-XxxvvgPriJ7"></td> 
-	<td align="center" id="AzURV9UmByY-xetxjLnimv7"></td>
-	<td align="center" id="AzURV9UmByY-TMvgqWn9QGL"></td>
+	<td align="center" id="EavMT2bXxr2-CVGjMQDV2bK-double"></td> 
+	<td align="center" id="EavMT2bXxr2-NA4CQgTSvx5-double"></td> 
+	<td align="center" id="EavMT2bXxr2-XFKJ4P80WQk-double"></td> 
+	<td align="center" id="EavMT2bXxr2-UBImdHyjLjp-double"></td> 
+	<td align="center" id="EavMT2bXxr2-vDvu3wLe8P0-double"></td> 
+	<td align="center" id="EavMT2bXxr2-gV76Y9vlToM-double"></td> 
+	<td align="center" id="AzURV9UmByY-ZTMHyFkTRom-double"></td> 
+	<td align="center" id="AzURV9UmByY-bQmgZMbzViC-double"></td> 
+	<td align="center" id="AzURV9UmByY-iEDkoxuG8O4-double"></td> 
+	<td align="center" id="AzURV9UmByY-XxxvvgPriJ7-double"></td> 
+	<td align="center" id="AzURV9UmByY-xetxjLnimv7-double"></td>
+	<td align="center" id="AzURV9UmByY-TMvgqWn9QGL-double"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -4141,7 +4314,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">43</div></td>
     <td width="131"><div align="center">Output 1.1.1</div></td>
-    <td width="378">43-Data quality audits on    nutrition indicators in 15 districtsÂ </td>
+    <td width="378">43-Data quality audits on    nutrition indicators in 15 districts</td>
     <td width="279">1-#    of events of DQA conducted</td>
     <td width="88">&nbsp;</td> <td align="center" id="ENpngxWvBfb-HllvX50cXC0"></td>
     <td align="center"></td>
@@ -4184,7 +4357,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">43-Data quality audits on    nutrition indicators in 15 districtsÂ </td>
+    <td width="378">43-Data quality audits on    nutrition indicators in 15 districts�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td> <td align="center" id="GOSgdtfewAu-tT7oO1vZgDM"></td> <td align="center" id="GOSgdtfewAu-NL7qwhjmc8t"></td> <td align="center" id="GOSgdtfewAu-SG4GEjuYjP8"></td>
@@ -4312,7 +4485,7 @@
   <tr height="78">
     <td height="78" width="63"><div align="center">45</div></td>
     <td width="131"><div align="center">Output 1.1.2</div></td>
-    <td width="378">45-Food Demonstration at    community LevelÂ  25% DAG    VDCs(Kapilvastu, Rukum, Rolpa,Pyuthan, Banke, Bardiya, Arghakhanchi, Palpla,    Gulmi, Dang, Salyan, Surkket, Jajarkot, Dailekh, Kailali, Kanchanpur,    Dadeldhura, Baitadi, Achham, Doti, Pachthar)</td>
+    <td width="378">45-Food Demonstration at    community Level� 25% DAG    VDCs(Kapilvastu, Rukum, Rolpa,Pyuthan, Banke, Bardiya, Arghakhanchi, Palpla,    Gulmi, Dang, Salyan, Surkket, Jajarkot, Dailekh, Kailali, Kanchanpur,    Dadeldhura, Baitadi, Achham, Doti, Pachthar)</td>
     <td width="279">1-#    of events of the food demonstration sessions conducted</td>
     <td width="88">&nbsp;</td>
      <td align="center" id="InnbsCgCkNQ-HllvX50cXC0"></td>
@@ -4356,7 +4529,7 @@
   <tr height="78">
     <td height="78" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">45-Food Demonstration at    community LevelÂ  25% DAG    VDCs(Kapilvastu, Rukum, Rolpa,Pyuthan, Banke, Bardiya, Arghakhanchi, Palpla,    Gulmi, Dang, Salyan, Surkket, Jajarkot, Dailekh, Kailali, Kanchanpur,    Dadeldhura, Baitadi, Achham, Doti, Pachthar)</td>
+    <td width="378">45-Food Demonstration at    community Level� 25% DAG    VDCs(Kapilvastu, Rukum, Rolpa,Pyuthan, Banke, Bardiya, Arghakhanchi, Palpla,    Gulmi, Dang, Salyan, Surkket, Jajarkot, Dailekh, Kailali, Kanchanpur,    Dadeldhura, Baitadi, Achham, Doti, Pachthar)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -4664,7 +4837,7 @@
   <tr height="78">
     <td height="78" width="63"><div align="center">47</div></td>
     <td width="131"><div align="center">Output 1.1.2</div></td>
-    <td width="378">47-Counsel 1,000 days women and    family members on maternal, infant and young child nutrition (MIYCN) and    family planning during PHC/ ORCs, EPI/ GMP and ANC clinics.Â </td>
+    <td width="378">47-Counsel 1,000 days women and    family members on maternal, infant and young child nutrition (MIYCN) and    family planning during PHC/ ORCs, EPI/ GMP and ANC clinics.</td>
     <td width="279">1-#    of 1000 days women and family members counselled.</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -4755,7 +4928,7 @@
     <td width="378">49-Identify and invite new 1000    days women adolescent including DAG, to attain Suaahara II activities</td>
     <td width="279">1-#    of new 1000 days women identified.</td>
     <td width="88">&nbsp;</td>
-    <td><div align="center">To be cleared by HKI</div></td>
+    <td><div align="center"></div></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -4928,7 +5101,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">53</div></td>
     <td width="131"><div align="center">Output 1.2.1.</div></td>
-    <td width="378">53-Revision of WASH    CurriculaÂ </td>
+    <td width="378">53-Revision of WASH    Curricula�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -4972,7 +5145,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">54</div></td>
     <td width="131"><div align="center">Output 1.2.1.</div></td>
-    <td width="378">54-Training on WASH to District    WASH Officers at central levelÂ </td>
+    <td width="378">54-Training on WASH to District    WASH Officers at central level�</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88">&nbsp;</td>
      <td align="center" id="PYqr0DNuTeT-HllvX50cXC0"></td>
@@ -5016,7 +5189,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">54-Training on WASH to District    WASH Officers at central levelÂ </td>
+    <td width="378">54-Training on WASH to District    WASH Officers at central level�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td align="center"></td>
@@ -5324,7 +5497,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">58</div></td>
     <td width="131"><div align="center">Output 1.2.1.</div></td>
-    <td width="378">58-Develop training materials on    WASH and distribution of bag pack to WASH OfficersÂ </td>
+    <td width="378">58-Develop training materials on    WASH and distribution of bag pack to WASH Officers�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="QomTNyJv7ZZ-HllvX50cXC0"></td>
@@ -5637,7 +5810,7 @@
     <td width="279">1-#    of training conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="M2mRp4VukNB-HllvX50cXC0"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -5681,37 +5854,37 @@
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="jBsr9CtrHuJ-tT7oO1vZgDM"></td>
+	<td width="88"  align="center" id="jBsr9CtrHuJ-NL7qwhjmc8t"></td>
+	<td width="88"  align="center" id="jBsr9CtrHuJ-SG4GEjuYjP8"></td>
+	<td width="88"  align="center" id="wr3ZcSvnlH1-eDV5E3LoaCP"></td>
+	<td width="88"  align="center" id="wr3ZcSvnlH1-dGq3kC3W9Td"></td>
+	<td width="88"  align="center" id="wr3ZcSvnlH1-vkNdQJ1rbLc"></td>
+	<td width="88"  align="center" id="wr3ZcSvnlH1-EAVz9Ef5Sv2"></td>
+	<td width="88"  align="center" id="wr3ZcSvnlH1-DZDJ0C9ZCOw"></td>
+	<td width="88"  align="center" id="wr3ZcSvnlH1-tFCHAz564G0"></td>
+	<td width="88"  align="center" id="wr3ZcSvnlH1-WRyU1fPC6Os"></td>
+	<td width="88"  align="center" id="wr3ZcSvnlH1-Lzl8lYHOxu8"></td>
+	<td width="88"  align="center" id="ytYQ9oMyt5O-CVGjMQDV2bK"></td>
+	<td width="88"  align="center" id="ytYQ9oMyt5O-NA4CQgTSvx5"></td>
+	<td width="88"  align="center" id="ytYQ9oMyt5O-XFKJ4P80WQk"></td>
+	<td width="88"  align="center" id="ytYQ9oMyt5O-UBImdHyjLjp"></td>
+	<td width="88"  align="center" id="ytYQ9oMyt5O-vDvu3wLe8P0"></td>
+	<td width="88"  align="center" id="ytYQ9oMyt5O-gV76Y9vlToM"></td>
+	<td width="88"  align="center" id="Cuh8tXugPth-ZTMHyFkTRom"></td>
+	<td width="88"  align="center" id="Cuh8tXugPth-bQmgZMbzViC"></td>
+	<td width="88"  align="center" id="Cuh8tXugPth-iEDkoxuG8O4"></td>
+	<td width="88"  align="center" id="Cuh8tXugPth-XxxvvgPriJ7"></td>
+	<td width="88"  align="center" id="Cuh8tXugPth-xetxjLnimv7"></td>
+	<td width="88"  align="center" id="Cuh8tXugPth-TMvgqWn9QGL"></td>
+	<td width="88"  align="center" id="N9WijAMIMNm-HllvX50cXC0"></td>
+	<td width="88"  align="center" ></td>		
+	<td width="88"  align="center" ></td>		
+	<td width="88"  align="center" ></td>		
+	<td width="88"  align="center" ></td>		
+	<td width="88"  align="center" id="Lerru9v1Da9-HllvX50cXC0"></td>
+	<td width="88"  align="center" id="N34AHwzN1D9-HllvX50cXC0"></td>
+	<td width="88"  align="center" id="gC972bystI3-HllvX50cXC0"></td>
     <td width="132" align="center"></td>
     <td width="111"><div align="center">Monthly</div></td>
     <td width="115"><div align="center">Training</div></td>
@@ -5809,7 +5982,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">64</div></td>
     <td width="131"><div align="center">Output 1.2.1.</div></td>
-    <td width="378">64-Support to organize    D/V/MWASHCC meeting in programme VDCsÂ </td>
+    <td width="378">64-Support to organize    D/V/MWASHCC meeting in programme VDCs�</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="y0BjBmTx6oa-HllvX50cXC0"></td>
@@ -5853,7 +6026,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">64-Support to organize    D/V/MWASHCC meeting in programme VDCsÂ </td>
+    <td width="378">64-Support to organize    D/V/MWASHCC meeting in programme VDCs�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -6043,6 +6216,7 @@
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
+
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -6076,6 +6250,7 @@
     <td width="378">67-Support of materials in    toilet construction in DAG community</td>
     <td width="279">1-#    of DAG families received material support</td>
     <td width="88">&nbsp;</td>
+    <td width="88"  align="center" id="gyEuNDoFROf-HllvX50cXC0" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -6104,8 +6279,7 @@
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="PbXdQ0uHmAe-HmG8H1m8wYz"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="132" align="center"></td>
@@ -6120,6 +6294,7 @@
     <td width="378">68-Support for HWTS (Household    water treatment System) and improved cook stove for DAG</td>
     <td width="279">1-#    of DAG families received material support</td>
     <td width="88">&nbsp;</td>
+    <td width="88"  align="center" id="LPJ8CEKI7F1-HllvX50cXC0" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -6148,8 +6323,7 @@
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="KG8UwTBpORS-HmG8H1m8wYz"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="132" align="center"></td>
@@ -6161,7 +6335,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">69</div></td>
     <td width="131"><div align="center">Output 1.2.5.</div></td>
-    <td width="378">69-Conduct water Quality    Testing, monitoring and Research at the community levelÂ </td>
+    <td width="378">69-Conduct water Quality    Testing, monitoring and Research at the community level�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="V8NEcS68AiT-HllvX50cXC0"></td>
@@ -6205,7 +6379,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">70</div></td>
     <td width="131"><div align="center">Output 1.2.6.</div></td>
-    <td width="378">70-Orienation on WASH for    community GroupsÂ Â </td>
+    <td width="378">70-Orienation on WASH for    community Groups��</td>
     <td width="279">1-#    of orientation conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="ZXqQDzTw98z-HllvX50cXC0"></td>
@@ -6249,7 +6423,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">70-Orienation on WASH for    community GroupsÂ Â </td>
+    <td width="378">70-Orienation on WASH for    community Groups��</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -6293,7 +6467,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">71</div></td>
     <td width="131"><div align="center">Output 1.2.6.</div></td>
-    <td width="378">71-Mass awareness Campaign on    WASH at the community levelÂ </td>
+    <td width="378">71-Mass awareness Campaign on    WASH at the community level�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="NUgTdOL5Pti-HllvX50cXC0"></td>
@@ -6337,7 +6511,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">71-Mass awareness Campaign on    WASH at the community levelÂ </td>
+    <td width="378">71-Mass awareness Campaign on    WASH at the community level�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -6381,7 +6555,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">72</div></td>
     <td width="131"><div align="center">Output 1.2.6.</div></td>
-    <td width="378">72-Orientation on WASH and    menstrual hygeine to members of child club and adolescent girlsÂ </td>
+    <td width="378">72-Orientation on WASH and    menstrual hygeine to members of child club and adolescent girls�</td>
     <td width="279">1-#    of orientation conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="TRbFVRgiYG9-HllvX50cXC0"></td>
@@ -6425,7 +6599,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">72-Orientation on WASH and    menstrual hygeine to members of child club and adolescent girlsÂ </td>
+    <td width="378">72-Orientation on WASH and    menstrual hygeine to members of child club and adolescent girls�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -6472,7 +6646,7 @@
     <td width="378">73-Development of IEC materials    and message dissimination at the community level</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="SOD1wf5nZTa-HllvX50cXC0" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -6513,7 +6687,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">74</div></td>
     <td width="131"><div align="center">Output 1.2.6.</div></td>
-    <td width="378">74-Coordination and    collaboration with Swachchhata&nbsp;Project in WASH acctivitiesÂ </td>
+    <td width="378">74-Coordination and    collaboration with Swachchhata&nbsp;Project in WASH acctivities�</td>
     <td width="279">1-#    of coordination meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="wpeZ0Ha07Gx-HllvX50cXC0"></td>
@@ -6557,7 +6731,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">74-Coordination and    collaboration with Swachchhata&nbsp;Project in WASH acctivitiesÂ </td>
+    <td width="378">74-Coordination and    collaboration with Swachchhata&nbsp;Project in WASH acctivities�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -6865,7 +7039,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">78</div></td>
     <td width="131"><div align="center">Output 2.1.3</div></td>
-    <td width="378">78-Consultative meeting for NACS    performance standard package developmentÂ </td>
+    <td width="378">78-Consultative meeting for NACS    performance standard package development�</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="d3ll7uLMfy5-HllvX50cXC0"></td>
@@ -6909,7 +7083,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">78-Consultative meeting for NACS    performance standard package developmentÂ </td>
+    <td width="378">78-Consultative meeting for NACS    performance standard package development�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -7262,7 +7436,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">83</div></td>
     <td width="131"><div align="center">Output 2.2.1</div></td>
-    <td width="378">83-Monitoring and Supervision of    CBIMNCI program for central, regional and district leve MoHP staffÂ </td>
+    <td width="378">83-Monitoring and Supervision of    CBIMNCI program for central, regional and district leve MoHP staff�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="REYfOYyRffS-HllvX50cXC0"></td>
@@ -7394,7 +7568,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">85</div></td>
     <td width="131"><div align="center">Output 2.2.1</div></td>
-    <td width="378">85-Conduct quarterly district    nutrition coordination meetings and district planning [per quarter]Â </td>
+    <td width="378">85-Conduct quarterly district    nutrition coordination meetings and district planning [per quarter]</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="BUmTwD1r2yQ-HllvX50cXC0"></td>
@@ -7438,7 +7612,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">85-Conduct quarterly district    nutrition coordination meetings and district planning [per quarter]Â </td>
+    <td width="378">85-Conduct quarterly district    nutrition coordination meetings and district planning [per quarter]</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -7570,7 +7744,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">87</div></td>
     <td width="131"><div align="center">Output 2.2.2</div></td>
-    <td width="378">87-Orientation on HMIS recording    and reporting (Nutrition and Health Indicators) to health workers and    FCHVsÂ </td>
+    <td width="378">87-Orientation on HMIS recording    and reporting (Nutrition and Health Indicators) to health workers and    FCHVs�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="fHSi4pIrhUb-HllvX50cXC0"></td>
@@ -7614,7 +7788,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">87-Orientation on HMIS recording    and reporting (Nutrition and Health Indicators) to health workers and    FCHVsÂ </td>
+    <td width="378">87-Orientation on HMIS recording    and reporting (Nutrition and Health Indicators) to health workers and    FCHVs�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -7658,7 +7832,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">88</div></td>
     <td width="131"><div align="center">Output 2.2.3</div></td>
-    <td width="378">88-Technical support visits to    HFOMCsÂ </td>
+    <td width="378">88-Technical support visits to    HFOMCs�</td>
     <td width="279">1-#    of visits conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="EoSQ0vOS8j2-HllvX50cXC0"></td>
@@ -7702,7 +7876,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">88-Technical support visits to    HFOMCsÂ </td>
+    <td width="378">88-Technical support visits to    HFOMCs�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -7746,7 +7920,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">89</div></td>
     <td width="131"><div align="center">Output 2.2.4</div></td>
-    <td width="378">89-Consultation with MoH and MOE    for identifying the need for school health and nutrition education especially    for adolescent girls (2 workshops)Â </td>
+    <td width="378">89-Consultation with MoH and MOE    for identifying the need for school health and nutrition education especially    for adolescent girls (2 workshops)</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="KdNjUnwNCcR-HllvX50cXC0"></td>
@@ -7790,7 +7964,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">89-Consultation with MoH and MOE    for identifying the need for school health and nutrition education especially    for adolescent girls (2 workshops)Â </td>
+    <td width="378">89-Consultation with MoH and MOE    for identifying the need for school health and nutrition education especially    for adolescent girls (2 workshops)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -7834,7 +8008,7 @@
   <tr height="80">
     <td height="80" width="63"><div align="center">90</div></td>
     <td width="131"><div align="center">Output 2.2.4</div></td>
-    <td width="378">90-Organize sharing meeting on    the process of need identification and design/approach for school health and    nutrition with district education officeÂ     and district health officeÂ </td>
+    <td width="378">90-Organize sharing meeting on    the process of need identification and design/approach for school health and    nutrition with district education office�    and district health office�</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="fZb6vW8Ktwy-HllvX50cXC0"></td>
@@ -7878,7 +8052,7 @@
   <tr height="80">
     <td height="80" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">90-Organize sharing meeting on    the process of need identification and design/approach for school health and    nutrition with district education officeÂ     and district health officeÂ </td>
+    <td width="378">90-Organize sharing meeting on    the process of need identification and design/approach for school health and    nutrition with district education office�    and district health office�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -8054,10 +8228,10 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">93</div></td>
     <td width="131"><div align="center">Output 2.2.5</div></td>
-    <td width="378">93-Mapping of VDCs/HFs to    identify DAG/hard to reach, poor performing communities with respect to    nutrition indicators and basic MNH indicatorsÂ     [Through workshop with DDC and DHO</td>
+    <td width="378">93-Mapping of VDCs/HFs to    identify DAG/hard to reach, poor performing communities with respect to    nutrition indicators and basic MNH indicators�    [Through workshop with DDC and DHO</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="AhcQLHLlw3L-HllvX50cXC0"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -8142,7 +8316,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">95</div></td>
     <td width="131"><div align="center">Output 2.2.5</div></td>
-    <td width="378">95-Conduct orientation of health    service providers/managers at the district level on the process and expected    benefits of SATHÂ </td>
+    <td width="378">95-Conduct orientation of health    service providers/managers at the district level on the process and expected    benefits of SATH�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="XRvPvvzGjqV-HllvX50cXC0"></td>
@@ -8186,7 +8360,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">95-Conduct orientation of health    service providers/managers at the district level on the process and expected    benefits of SATHÂ </td>
+    <td width="378">95-Conduct orientation of health    service providers/managers at the district level on the process and expected    benefits of SATH�</td>
     <td width="279">2-#    participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -8406,7 +8580,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">98</div></td>
     <td width="131"><div align="center">Output 2.3.1.</div></td>
-    <td width="378">98-Support implementation of    micro-planning of FP program (under performing districts)Â </td>
+    <td width="378">98-Support implementation of    micro-planning of FP program (under performing districts)</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="fXlBsFTeEGR-HllvX50cXC0"></td>
@@ -8450,7 +8624,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">99</div></td>
     <td width="131"><div align="center">Output 2.3.1.</div></td>
-    <td width="378">99-Support regularize quarterly    RHCC meetings at district levelÂ </td>
+    <td width="378">99-Support regularize quarterly    RHCC meetings at district level�</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="JZeWvjc6t2w-HllvX50cXC0"></td>
@@ -8494,7 +8668,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">99-Support regularize quarterly    RHCC meetings at district levelÂ </td>
+    <td width="378">99-Support regularize quarterly    RHCC meetings at district level�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -8538,10 +8712,10 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">100</div></td>
     <td width="131"><div align="center">Output 2.3.1.</div></td>
-    <td width="378">100-Workshop to reviseÂ  job aids for health workers, FCHVs and    public facilities</td>
+    <td width="378">100-Workshop to revise� job aids for health workers, FCHVs and    public facilities</td>
     <td width="279">1-#    of workshop conducted</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" id="n99La6TRVKX-HllvX50cXC0"></td>
+    <td width="88"  align="center" id="n99La6TRVKX-HllvX50cXC0-double"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -8582,41 +8756,41 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">100-Workshop to reviseÂ  job aids for health workers, FCHVs and    public facilities</td>
+    <td width="378">100-Workshop to revise� job aids for health workers, FCHVs and    public facilities</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
-    <td width="88"  align="center" id="g0LfxyWiqsf-tT7oO1vZgDM"></td>
-    <td width="88"  align="center" id="g0LfxyWiqsf-NL7qwhjmc8t"></td>
-    <td width="88"  align="center" id="g0LfxyWiqsf-SG4GEjuYjP8"></td>
-    <td width="88"  align="center" id="WAhIPptl387-eDV5E3LoaCP"></td>
-    <td width="88"  align="center" id="WAhIPptl387-dGq3kC3W9Td"></td>
-    <td width="88"  align="center" id="WAhIPptl387-vkNdQJ1rbLc"></td>
-    <td width="88"  align="center" id="WAhIPptl387-EAVz9Ef5Sv2"></td>
-    <td width="88"  align="center" id="WAhIPptl387-DZDJ0C9ZCOw"></td>
-    <td width="88"  align="center" id="WAhIPptl387-tFCHAz564G0"></td>
-    <td width="88"  align="center" id="WAhIPptl387-WRyU1fPC6Os"></td>
-    <td width="88"  align="center" id="WAhIPptl387-Lzl8lYHOxu8"></td>
-    <td width="88"  align="center" id="kBLchanJfEW-CVGjMQDV2bK"></td>
-    <td width="88"  align="center" id="kBLchanJfEW-NA4CQgTSvx5"></td>
-    <td width="88"  align="center" id="kBLchanJfEW-XFKJ4P80WQk"></td>
-    <td width="88"  align="center" id="kBLchanJfEW-UBImdHyjLjp"></td>
-    <td width="88"  align="center" id="kBLchanJfEW-vDvu3wLe8P0"></td>
-    <td width="88"  align="center" id="kBLchanJfEW-gV76Y9vlToM"></td>
-    <td width="88"  align="center" id="TdL01wrB2nY-ZTMHyFkTRom"></td>
-    <td width="88"  align="center" id="TdL01wrB2nY-bQmgZMbzViC"></td>
-    <td width="88"  align="center" id="TdL01wrB2nY-iEDkoxuG8O4"></td>
-    <td width="88"  align="center" id="TdL01wrB2nY-XxxvvgPriJ7"></td>
-    <td width="88"  align="center" id="TdL01wrB2nY-xetxjLnimv7"></td>
-    <td width="88"  align="center" id="TdL01wrB2nY-TMvgqWn9QGL"></td>
-    <td width="88"  align="center" id="v5Pv5HgMXYY-HllvX50cXC0"></td>
+    <td width="88"  align="center" id="g0LfxyWiqsf-tT7oO1vZgDM-double"></td>
+    <td width="88"  align="center" id="g0LfxyWiqsf-NL7qwhjmc8t-double"></td>
+    <td width="88"  align="center" id="g0LfxyWiqsf-SG4GEjuYjP8-double"></td>
+    <td width="88"  align="center" id="WAhIPptl387-eDV5E3LoaCP-double"></td>
+    <td width="88"  align="center" id="WAhIPptl387-dGq3kC3W9Td-double"></td>
+    <td width="88"  align="center" id="WAhIPptl387-vkNdQJ1rbLc-double"></td>
+    <td width="88"  align="center" id="WAhIPptl387-EAVz9Ef5Sv2-double"></td>
+    <td width="88"  align="center" id="WAhIPptl387-DZDJ0C9ZCOw-double"></td>
+    <td width="88"  align="center" id="WAhIPptl387-tFCHAz564G0-double"></td>
+    <td width="88"  align="center" id="WAhIPptl387-WRyU1fPC6Os-double"></td>
+    <td width="88"  align="center" id="WAhIPptl387-Lzl8lYHOxu8-double"></td>
+    <td width="88"  align="center" id="kBLchanJfEW-CVGjMQDV2bK-double"></td>
+    <td width="88"  align="center" id="kBLchanJfEW-NA4CQgTSvx5-double"></td>
+    <td width="88"  align="center" id="kBLchanJfEW-XFKJ4P80WQk-double"></td>
+    <td width="88"  align="center" id="kBLchanJfEW-UBImdHyjLjp-double"></td>
+    <td width="88"  align="center" id="kBLchanJfEW-vDvu3wLe8P0-double"></td>
+    <td width="88"  align="center" id="kBLchanJfEW-gV76Y9vlToM-double"></td>
+    <td width="88"  align="center" id="TdL01wrB2nY-ZTMHyFkTRom-double"></td>
+    <td width="88"  align="center" id="TdL01wrB2nY-bQmgZMbzViC-double"></td>
+    <td width="88"  align="center" id="TdL01wrB2nY-iEDkoxuG8O4-double"></td>
+    <td width="88"  align="center" id="TdL01wrB2nY-XxxvvgPriJ7-double"></td>
+    <td width="88"  align="center" id="TdL01wrB2nY-xetxjLnimv7-double"></td>
+    <td width="88"  align="center" id="TdL01wrB2nY-TMvgqWn9QGL-double"></td>
+    <td width="88"  align="center" id="v5Pv5HgMXYY-HllvX50cXC0-double"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
-    <td width="88"  align="center" id="nUde1Mqr8py-HllvX50cXC0"></td>
-    <td width="88"  align="center" id="X5VHGX0uDLz-HllvX50cXC0"></td>
-    <td width="88"  align="center" id="IFMgux34YN8-HllvX50cXC0"></td>
+    <td width="88"  align="center" id="nUde1Mqr8py-HllvX50cXC0-double"></td>
+    <td width="88"  align="center" id="X5VHGX0uDLz-HllvX50cXC0-double"></td>
+    <td width="88"  align="center" id="IFMgux34YN8-HllvX50cXC0-double"></td>
     <td width="132" align="center"></td>
     <td width="111" align="center"></td>
     <td width="115" align="center"></td>
@@ -8714,7 +8888,7 @@
   <tr height="69">
     <td height="69" width="63" align="center">102</td>
     <td width="131" align="center">Output 2.3.2</td>
-    <td width="378">102-Organize training on    Professional development for project staffÂ     (NACS &amp; FP)</td>
+    <td width="378">102-Organize training on    Professional development for project staff�    (NACS &amp; FP)</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="B2IiWJRvD1F-HllvX50cXC0"></td>
@@ -8757,7 +8931,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">102-Organize training on    Professional development for project staffÂ     (NACS &amp; FP)</td>
+    <td width="378">102-Organize training on    Professional development for project staff�    (NACS &amp; FP)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -8886,7 +9060,7 @@
   <tr height="69">
     <td height="69" width="63" align="center">104</td>
     <td width="131" align="center">Output 3.1.1</td>
-    <td width="378">104-Organize HFP program sharing    and planning meeting with DADO and DLSOÂ </td>
+    <td width="378">104-Organize HFP program sharing    and planning meeting with DADO and DLSO�</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="BJXc5Ym1mJX-HllvX50cXC0"></td>
@@ -8929,7 +9103,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">104-Organize HFP program sharing    and planning meeting with DADO and DLSOÂ </td>
+    <td width="378">104-Organize HFP program sharing    and planning meeting with DADO and DLSO�</td>
     <td width="279">2-#    of people participated</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -8972,7 +9146,7 @@
   <tr height="69">
     <td height="69" width="63" align="center">105</td>
     <td width="131" align="center">Output 3.1.1</td>
-    <td width="378">105-Organize 6 days DTOT on    Homestead Food Production (HFP) for field supervisors and extension workers-2    new districtsÂ </td>
+    <td width="378">105-Organize 6 days DTOT on    Homestead Food Production (HFP) for field supervisors and extension workers-2    new districts�</td>
     <td width="279">1-#    of 6 days D-ToT on HFP conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="vU9o0XnuthA-HllvX50cXC0"></td>
@@ -9015,7 +9189,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">105-Organize 6 days DTOT on    Homestead Food Production (HFP) for field supervisors and extension workers-2    new districtsÂ </td>
+    <td width="378">105-Organize 6 days DTOT on    Homestead Food Production (HFP) for field supervisors and extension workers-2    new districts�</td>
     <td width="279">2-#    of people trained.</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -9147,7 +9321,7 @@
     <td width="378">107-Conduct one day refresher on    backyard poultry rearing practices including importance of vaccine for    mothers and FCHVs trained in 16 FTF districts during Suaahara 1(Kailali,    Kanchanpur, Bardiya, Rolpa, Surkhet, Salyan, Dang, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">1-#    of groups where 1 day orientation program for owners of back yard poultry    (from poultry distributed VDCs) about ND vaccination and bird flu organized</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="iuRJdMopw2N-HllvX50cXC0-double"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9276,7 +9450,7 @@
     <td width="378">108-Provide seeds of nutrient    dense vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)(    Panchthar, Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht,    Dadeldhura, Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">1-#    of 1000 days HHs provided with dry season seeds</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="i9fqUH3esLq-wkzwWXcagkL-summerseeds"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9319,7 +9493,7 @@
     <td width="378">108-Provide seeds of nutrient    dense vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)(    Panchthar, Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht,    Dadeldhura, Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">2-#    of FCHVs provided with dry season seeds</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="i9fqUH3esLq-aTrVb1fymdC-summerseeds"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9362,7 +9536,7 @@
     <td width="378">108-Provide seeds of nutrient    dense vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)(    Panchthar, Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht,    Dadeldhura, Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">3-#    of VMF provided with dry season seeds</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="i9fqUH3esLq-CkNvdfS0H9W-summerseeds"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9405,7 +9579,7 @@
     <td width="378">108-Provide seeds of nutrient    dense vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)(    Panchthar, Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht,    Dadeldhura, Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">4-#    of 1000 days HHs provided with rainy season seeds</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="i9fqUH3esLq-wkzwWXcagkL-rainyseeds"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9448,7 +9622,7 @@
     <td width="378">Provide seeds of nutrient dense    vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)( Panchthar,    Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht, Dadeldhura,    Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">5-#    of FCHV provided with rainy season seeds</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="i9fqUH3esLq-aTrVb1fymdC-rainyseeds"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9491,7 +9665,7 @@
     <td width="378">108-Provide seeds of nutrient    dense vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)(    Panchthar, Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht,    Dadeldhura, Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">6-#    of VMF provided with rainy season seeds</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="i9fqUH3esLq-CkNvdfS0H9W-rainyseeds"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9534,7 +9708,7 @@
     <td width="378">108-Provide seeds of nutrient    dense vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)(    Panchthar, Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht,    Dadeldhura, Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">7-#    of 1000 days HHs provided with Winter season seeds</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="i9fqUH3esLq-wkzwWXcagkL-winterseeds"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9577,7 +9751,7 @@
     <td width="378">108-Provide seeds of nutrient    dense vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)(    Panchthar, Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht,    Dadeldhura, Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">8-#    of FCHV provided with Winter season seeds</td>
     <td width="88">&nbsp;</td>
-    <td align="center"></td>
+    <td align="center" id="i9fqUH3esLq-aTrVb1fymdC-winterseeds"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -9621,7 +9795,7 @@
     <td width="378">108-Provide seeds of nutrient    dense vegetables to VMFs, FCHVs and mothers of 1000 days (23 district)(    Panchthar, Dhading, Nuwakot, Kailali, Kanchanpur, Bardiya, Rolpa, Surkeht,    Dadeldhura, Salyan, Dang, Baitadi, Achham, Doti, Dailekh, Jajarkot, Rukum, Banke,    Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
     <td width="279">9-No.    of VMF provided with winter season seeds</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center" id="i9fqUH3esLq-CkNvdfS0H9W"></td>
+    <td width="88"  align="center" id="i9fqUH3esLq-CkNvdfS0H9W-winterseeds"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
@@ -9662,7 +9836,7 @@
     <td height="94" width="63" align="center">109</td>
     <td width="131" align="center">Output 3.1.1</td>
     <td width="378">109-Provide orange fleshed Sweet    Potatoes (OFSP) planting material as the start up support to VMFs(Panchthar,    Dhading, Kailali, Kanchanpur, Bardiya, Rolpa, Surkhet, Salyan, Dang, Dailekh,    Jajarkot, Rukum, Banke, Pyuthan, Palpa, Arghakhanchi, Gulmi and Kapilvastu)</td>
-    <td width="279">1-#    of VMF receivedÂ  orange fleshed Sweet    Potatoes (OFSP) planting materialÂ </td>
+    <td width="279">1-#    of VMF received� orange fleshed Sweet    Potatoes (OFSP) planting material�</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="rBkSn2JNe5k-CkNvdfS0H9W"></td>
     <td width="88"  align="center" id="qWRQGsYKcJc-tT7oO1vZgDM"></td>
@@ -9951,7 +10125,7 @@
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
-    <td width="88"  align="center" ></td>
+    <td width="88"  align="center" id="hywifRqtd4O-HmG8H1m8wYz"></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td> <td width="132"  align="center "></td>
     <td width="111" align="center">Monthly</td>
@@ -10005,7 +10179,7 @@
   <tr height="69">
     <td height="69" width="63" align="center">114</td>
     <td width="131" align="center">Output 3.1.1</td>
-    <td width="378">114-Organize AG staff and    Enterprise Expert team Review and Planning MeetingÂ Â </td>
+    <td width="378">114-Organize AG staff and    Enterprise Expert team Review and Planning Meeting��</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="T96iCNqcM1U-HllvX50cXC0"></td>
@@ -10048,7 +10222,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">114-Organize AG staff and    Enterprise Expert team Review and Planning MeetingÂ Â </td>
+    <td width="378">114-Organize AG staff and    Enterprise Expert team Review and Planning Meeting��</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" ></td>
@@ -10177,7 +10351,7 @@
   <tr height="69">
     <td height="69" width="63" align="center">116</td>
     <td width="131" align="center">Output 3.1.1</td>
-    <td width="378">116-Develop and print HFP IEC    materialsÂ  in coordination with MOAD    and MOLSÂ </td>
+    <td width="378">116-Develop and print HFP IEC    materials� in coordination with MOAD    and MOLS�</td>
     <td width="279">1-#    of HFP IEC materials developed</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="CrZIq7cSEVi-HllvX50cXC0"></td>
@@ -10263,7 +10437,7 @@
   <tr height="69">
     <td height="69" width="63" align="center">118</td>
     <td width="131" align="center">Output 3.1.1</td>
-    <td width="378">118-HFPÂ  Surveillance of sub-sample households</td>
+    <td width="378">118-HFP� Surveillance of sub-sample households</td>
     <td width="279">1-HFP    surveillance conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="jlq3p00eJoP-HllvX50cXC0"></td>
@@ -10427,16 +10601,16 @@
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td>
     <td width="88"  align="center" ></td> <td width="132"  align="center "></td>
-    <td width="111"  align="center">Monthly </td>
-    <td width="115"  align="center">Training </td>
-    <td width="115"  align="center">HKI </td>
-    <td width="115"  align="center">PNGO </td>
+    <td width="111"  align="center">Monthly</td>
+    <td width="115"  align="center">Training</td>
+    <td width="115"  align="center">HKI</td>
+    <td width="115"  align="center">PNGO</td>
   </tr>
   
   <tr height="69">
     <td height="69" width="63"  align="center" > 121</td>
     <td width="131"  align="center"  >Output 3.1.2</td>
-    <td width="378">121-Organize on site coaching on    HFP by DADO and DLSOÂ </td>
+    <td width="378">121-Organize on site coaching on    HFP by DADO and DLSO�</td>
     <td width="279">1-# of onsite    coaching on HFP by DADO and DLSO</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="EjW0rSUWRdX-HllvX50cXC0"></td>
@@ -10480,10 +10654,10 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  ></td>
     <td width="131"  align="center"  ></td>
-    <td width="378">121-Organize on site coaching on    HFP by DADO and DLSOÂ </td>
+    <td width="378">121-Organize on site coaching on    HFP by DADO and DLSO�</td>
     <td width="279">2-#    of people involved in the onsite coaching</td>
     <td width="88">&nbsp;</td>
-    <td width="88"  align="center">  All    fields blocked for participants</td>
+    <td width="88"  align="center" id="EjW0rSUWRdX-HllvX50cXC0"> </td>
     <td width="88"  align="center"  ></td>
     <td width="88"  align="center"  ></td>
     <td width="88"  align="center"  ></td>
@@ -10612,7 +10786,7 @@
   <tr height="89">
     <td height="89" width="63"  align="center"  >123</td>
     <td width="131"  align="center"  >Output 3.1.2</td>
-    <td width="378">123-Organnize consultative    Meeting with DADO and DLSO (agenda of meeting may be a. to avoid duplication    in activities,b. to discuss upon group registration, VMF network process in    case of mature districts)Â </td>
+    <td width="378">123-Organnize consultative    Meeting with DADO and DLSO (agenda of meeting may be a. to avoid duplication    in activities,b. to discuss upon group registration, VMF network process in    case of mature districts)</td>
     <td width="279">1-#    of consultative meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="a9sqM3lHuiN-HllvX50cXC0"></td>
@@ -10656,7 +10830,7 @@
   <tr height="89">
     <td height="89" width="63"  align="center"  ></td>
     <td width="131"  align="center"  ></td>
-    <td width="378">123-Organnize consultative    Meeting with DADO and DLSO (agenda of meeting may be a. to avoid duplication    in activities,b. to discuss upon group registration, VMF network process in    case of mature districts)Â </td>
+    <td width="378">123-Organnize consultative    Meeting with DADO and DLSO (agenda of meeting may be a. to avoid duplication    in activities,b. to discuss upon group registration, VMF network process in    case of mature districts)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  ></td>
@@ -10700,9 +10874,9 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  >124</td>
     <td width="131"  align="center"  >Output 3.1.2</td>
-    <td width="378">124-Support in    establishment/strengthening of Brooding Center for improved chicken    breedsÂ Â </td>
+    <td width="378">124-Support in    establishment/strengthening of Brooding Center for improved chicken    breeds�</td>
     <td width="279">1-#    of brooding centre establised</td>
-    <td width="88">Housholds    covered instead of number of events</td>
+    <td width="88"></td>
     <td width="88"  align="center"  id="UPPrjXfigR8-HllvX50cXC0"></td>
     <td width="88"  align="center"  ></td>
     <td width="88"  align="center"  ></td>
@@ -11008,7 +11182,7 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  >128</td>
     <td width="131"  align="center"  >Output 3.2.1</td>
-    <td width="378">128-Conduct quarterly Review and    Planning Meeting with FTF, PAHAL AFSP, and AGLivestock StakeholdersÂ </td>
+    <td width="378">128-Conduct quarterly Review and    Planning Meeting with FTF, PAHAL AFSP, and AGLivestock Stakeholders�</td>
     <td width="279">1-#    of review and planning meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="mHcs6qUqEhQ-HllvX50cXC0"></td>
@@ -11052,7 +11226,7 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  ></td>
     <td width="131"  align="center"  ></td>
-    <td width="378">128-Conduct quarterly Review and    Planning Meeting with FTF, PAHAL AFSP, and AGLivestock StakeholdersÂ </td>
+    <td width="378">128-Conduct quarterly Review and    Planning Meeting with FTF, PAHAL AFSP, and AGLivestock Stakeholders�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  ></td>
@@ -11184,7 +11358,7 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  >130</td>
     <td width="131"  align="center"  >Output 3.2.1</td>
-    <td width="378">130-Organize VMFs' exposure    visit to KISANÂ  demonstration site and    interaction meeting with Local Service Providers/Leader FarmersÂ </td>
+    <td width="378">130-Organize VMFs' exposure    visit to KISAN� demonstration site and    interaction meeting with Local Service Providers/Leader Farmers�</td>
     <td width="279">1-#    of exposure visit conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="IsrkVBGiC7U-HllvX50cXC0"></td>
@@ -11228,7 +11402,7 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  ></td>
     <td width="131"  align="center"  ></td>
-    <td width="378">130-Organize VMFs' exposure    visit to KISANÂ  demonstration site and    interaction meeting with Local Service Providers/Leader FarmersÂ </td>
+    <td width="378">130-Organize VMFs' exposure    visit to KISAN� demonstration site and    interaction meeting with Local Service Providers/Leader Farmers�</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  ></td>
@@ -11272,7 +11446,7 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  >131</td>
     <td width="131"  align="center"  >Output 3.2.1</td>
-    <td width="378">131-Support in regularization of    HFPB group and link with KISAN/PAHAL groups/other farmers livelihood    groupsÂ </td>
+    <td width="378">131-Support in regularization of    HFPB group and link with KISAN/PAHAL groups/other farmers livelihood    groups�</td>
     <td width="279">1-#    of support provided for regularisation of the HFPB group</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="hHrohzyJ98J-HllvX50cXC0"></td>
@@ -11316,7 +11490,7 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  >132</td>
     <td width="131"  align="center"  >Output 3.2.1</td>
-    <td width="378">132-Support to promote VMF    services through VMF BoardÂ </td>
+    <td width="378">132-Support to promote VMF    services through VMF Board�</td>
     <td width="279">1-#    of support provided to promote VMF service</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="RiLovZitobj-HllvX50cXC0"></td>
@@ -11360,7 +11534,7 @@
   <tr height="96">
     <td height="96" width="63"  align="center"  >133</td>
     <td width="131"  align="center"  >Output 3.2.1</td>
-    <td width="378">133-Conduct Orientation cum    planning meeting with VMFs to reach new mothers and sustain HFP practices    (based on Plan of action prepared by VMF during this meeting, VMFs will    beÂ  provided additional enterprise    development training through 3.2)Â </td>
+    <td width="378">133-Conduct Orientation cum    planning meeting with VMFs to reach new mothers and sustain HFP practices    (based on Plan of action prepared by VMF during this meeting, VMFs will    be� provided additional enterprise    development training through 3.2)</td>
     <td width="279">1-#    of orientation cum planning meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="daEHABV1mwg-HllvX50cXC0"></td>
@@ -11404,7 +11578,7 @@
   <tr height="96">
     <td height="96" width="63"  align="center"  ></td>
     <td width="131"  align="center"  ></td>
-    <td width="378">133-Conduct Orientation cum    planning meeting with VMFs to reach new mothers and sustain HFP practices    (based on Plan of action prepared by VMF during this meeting, VMFs will    beÂ  provided additional enterprise    development training through 3.2)Â </td>
+    <td width="378">133-Conduct Orientation cum    planning meeting with VMFs to reach new mothers and sustain HFP practices    (based on Plan of action prepared by VMF during this meeting, VMFs will    be� provided additional enterprise    development training through 3.2)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  ></td>
@@ -11448,7 +11622,7 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  >134</td>
     <td width="131"  align="center"  >Output 3.2.1</td>
-    <td width="378">134-Organize HFP and VMF    mainstreaming workshop with MOAD and other Food Security Program Partner    (KISAN, AFSP, PAHAL)Â </td>
+    <td width="378">134-Organize HFP and VMF    mainstreaming workshop with MOAD and other Food Security Program Partner    (KISAN, AFSP, PAHAL)</td>
     <td width="279">1-#    of workshop conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="e2maRXkCpSV-HllvX50cXC0"></td>
@@ -11492,7 +11666,7 @@
   <tr height="69">
     <td height="69" width="63"  align="center"  ></td>
     <td width="131"  align="center"  ></td>
-    <td width="378">134-Organize HFP and VMF    mainstreaming workshop with MOAD and other Food Security Program Partner    (KISAN, AFSP, PAHAL)Â </td>
+    <td width="378">134-Organize HFP and VMF    mainstreaming workshop with MOAD and other Food Security Program Partner    (KISAN, AFSP, PAHAL)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  ></td>
@@ -11712,7 +11886,7 @@
   <tr height="86">
     <td height="86" width="63"  align="center"  >138</td>
     <td width="131"  align="center"  >Output 3.2.2</td>
-    <td width="378">138-Support in Promotion of    short term nutritious fruits in homestead garden scale and promote nutrition    value chain through product diversification in collaboration with KISAN,    AFSPÂ </td>
+    <td width="378">138-Support in Promotion of    short term nutritious fruits in homestead garden scale and promote nutrition    value chain through product diversification in collaboration with KISAN,    AFSP�</td>
     <td width="279">1-#    of support provided for promotion of short term nutrition fruits in homestead    garden.</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="YR3XgAsyTzH-HllvX50cXC0"></td>
@@ -11756,7 +11930,7 @@
   <tr height="86">
     <td height="86" width="63"  align="center"  >139</td>
     <td width="131"  align="center"  >Output 3.2.2</td>
-    <td width="378">139-Quick assessment on VMF    profileÂ  in coordination with ASC, LSC    and VDC (1-2 FGD with mothers)</td>
+    <td width="378">139-Quick assessment on VMF    profile� in coordination with ASC, LSC    and VDC (1-2 FGD with mothers)</td>
     <td width="279">1-#    districts conducted quick assesment</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="aWqu700zsEp-HllvX50cXC0"></td>
@@ -11800,7 +11974,7 @@
   <tr height="86">
     <td height="86" width="63"  align="center"  >140</td>
     <td width="131"  align="center"  >Output 3.2.2</td>
-    <td width="378">140-Enhance capacity of VMFs    through increased access to SMART Krishi apps reaching new mothers of 1000    days with agri market information and messages (for 5 districts Nuwakot,    Rasuwa, Dolakha, Kailali and Dadeldhura)Â </td>
+    <td width="378">140-Enhance capacity of VMFs    through increased access to SMART Krishi apps reaching new mothers of 1000    days with agri market information and messages (for 5 districts Nuwakot,    Rasuwa, Dolakha, Kailali and Dadeldhura)</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center"  id="e3hPTucgoU8-HllvX50cXC0"></td>
@@ -11845,7 +12019,7 @@
     <tr height="86">
     <td height="86" width="63"><div align="center">141</div></td>
     <td width="131"><div align="center">Output 3.2.2</div></td>
-    <td width="378">141-Organize Sensitization    Workshop on PPP approach for ND vaccine in coordination with DLSO for CAHWs,    agro vets and other vaccine suppliersÂ Â </td>
+    <td width="378">141-Organize Sensitization    Workshop on PPP approach for ND vaccine in coordination with DLSO for CAHWs,    agro vets and other vaccine suppliers��</td>
     <td width="279">1-# of workshop    conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="PWRlvWwZtt7-HllvX50cXC"></td>
@@ -11889,7 +12063,7 @@
   <tr height="86">
     <td height="86" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">141-Organize Sensitization    Workshop on PPP approach for ND vaccine in coordination with DLSO for CAHWs,    agro vets and other vaccine suppliersÂ Â </td>
+    <td width="378">141-Organize Sensitization    Workshop on PPP approach for ND vaccine in coordination with DLSO for CAHWs,    agro vets and other vaccine suppliers��</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -11933,7 +12107,7 @@
   <tr height="82">
     <td height="82" width="63"><div align="center">142</div></td>
     <td width="131"><div align="center">Output 3.2.2</div></td>
-    <td width="378">142-Conduct VMF plus group    representative Capacity building on group mobilization/saving &amp; credit    and account keeping in coordination and consultation with DADO, DLSOÂ Â Â </td>
+    <td width="378">142-Conduct VMF plus group    representative Capacity building on group mobilization/saving &amp; credit    and account keeping in coordination and consultation with DADO, DLSO���</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="iYfNPnpWb0F-HllvX50cXC0"></td>
@@ -11977,7 +12151,7 @@
   <tr height="82">
     <td height="82" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">142-Conduct VMF plus group    representative Capacity building on group mobilization/saving &amp; credit    and account keeping in coordination and consultation with DADO, DLSOÂ Â Â </td>
+    <td width="378">142-Conduct VMF plus group    representative Capacity building on group mobilization/saving &amp; credit    and account keeping in coordination and consultation with DADO, DLSO���</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -12021,7 +12195,7 @@
   <tr height="82">
     <td height="82" width="63"><div align="center">143</div></td>
     <td width="131"><div align="center">Output 3.2.2</div></td>
-    <td width="378">143-Conduct VMF Orientation    programÂ  on Business Plan, gender    friendly enterprise development, financial literacy andÂ  linkage with financial institution in    coordinaiton and consulation with DADO, DLSOÂ Â Â Â </td>
+    <td width="378">143-Conduct VMF Orientation    program� on Business Plan, gender    friendly enterprise development, financial literacy and� linkage with financial institution in    coordinaiton and consulation with DADO, DLSO����</td>
     <td width="279">1-#    of orientation conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="GlrYYhTKAgY-HllvX50cXC0"></td>
@@ -12065,7 +12239,7 @@
   <tr height="82">
     <td height="82" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">143-Conduct VMF Orientation    programÂ  on Business Plan, gender    friendly enterprise development, financial literacy andÂ  linkage with financial institution in    coordinaiton and consulation with DADO, DLSOÂ Â Â Â </td>
+    <td width="378">143-Conduct VMF Orientation    program� on Business Plan, gender    friendly enterprise development, financial literacy and� linkage with financial institution in    coordinaiton and consulation with DADO, DLSO����</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -12109,7 +12283,7 @@
   <tr height="82">
     <td height="82" width="63"><div align="center">144</div></td>
     <td width="131"><div align="center">Output 3.2.2</div></td>
-    <td width="378">144-Training on improved    processing and preservation with demonstration kit support for nutrition    value chainÂ Â </td>
+    <td width="378">144-Training on improved    processing and preservation with demonstration kit support for nutrition    value chain��</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="i48xgjfWmvr-HllvX50cXC0"></td>
@@ -12153,7 +12327,7 @@
   <tr height="82">
     <td height="82" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">144-Training on improved    processing and preservation with demonstration kit support for nutrition    value chainÂ Â </td>
+    <td width="378">144-Training on improved    processing and preservation with demonstration kit support for nutrition    value chain��</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -12285,7 +12459,7 @@
   <tr height="82">
     <td height="82" width="63"><div align="center">146</div></td>
     <td width="131"><div align="center">Output 3.3.1</div></td>
-    <td width="378">146-HFP adaptation measures    meeting with food security cluster and Nutrition emergency clusterÂ  and mainstreaming nutrition into DRR plan</td>
+    <td width="378">146-HFP adaptation measures    meeting with food security cluster and Nutrition emergency cluster� and mainstreaming nutrition into DRR plan</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="OyKVzkbbpLP-HllvX50cXC0"></td>
@@ -12329,7 +12503,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">146-HFP adaptation measures    meeting with food security cluster and Nutrition emergency clusterÂ  and mainstreaming nutrition into DRR plan</td>
+    <td width="378">146-HFP adaptation measures    meeting with food security cluster and Nutrition emergency cluster� and mainstreaming nutrition into DRR plan</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -12373,7 +12547,7 @@
   <tr height="82">
     <td height="82" width="63"><div align="center">147</div></td>
     <td width="131"><div align="center">Output 4.1.1</div></td>
-    <td width="378">147-Organize orientation on    accelerating rollout Multi-sector Nutrition plan (MSNP) through strengthened    local governance forÂ  District    Coordinators and Local Governance Officers</td>
+    <td width="378">147-Organize orientation on    accelerating rollout Multi-sector Nutrition plan (MSNP) through strengthened    local governance for� District    Coordinators and Local Governance Officers</td>
     <td width="279">1-#    of orientation conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="HqqLjBwiX0V-HllvX50cXC0"></td>
@@ -12417,7 +12591,7 @@
   <tr height="82">
     <td height="82" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">147-Organize orientation on    accelerating rollout Multi-sector Nutrition plan (MSNP) through strengthened    local governance forÂ  District    Coordinators and Local Governance Officers</td>
+    <td width="378">147-Organize orientation on    accelerating rollout Multi-sector Nutrition plan (MSNP) through strengthened    local governance for� District    Coordinators and Local Governance Officers</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -12461,7 +12635,7 @@
   <tr height="82">
     <td height="82" width="63"><div align="center">148</div></td>
     <td width="131"><div align="center">Output 4.1.1</div></td>
-    <td width="378">148-Support to organize workshop    for integration of INP indicators in DPMASS (District PlanningÂ  Monitoring and Analysis System)</td>
+    <td width="378">148-Support to organize workshop    for integration of INP indicators in DPMASS (District Planning� Monitoring and Analysis System)</td>
     <td width="279">1-#    of workshop conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="j6bGP8jAoe6-HllvX50cXC0"></td>
@@ -12505,7 +12679,7 @@
   <tr height="82">
     <td height="82" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">148-Support to organize workshop    for integration of INP indicators in DPMASS (District PlanningÂ  Monitoring and Analysis System)</td>
+    <td width="378">148-Support to organize workshop    for integration of INP indicators in DPMASS (District Planning� Monitoring and Analysis System)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -12549,7 +12723,7 @@
   <tr height="82">
     <td height="82" width="63"><div align="center">149</div></td>
     <td width="131"><div align="center">Output 4.1.1</div></td>
-    <td width="378">149-Support inÂ  updating nutrition andÂ  MSNP related plan, policiesÂ  andÂ     strategies ( Facilitate and assist toÂ     update nutrition related policies)</td>
+    <td width="378">149-Support in� updating nutrition and� MSNP related plan, policies� and�    strategies ( Facilitate and assist to�    update nutrition related policies)</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="ejmkBEhXQpM-HllvX50cXC0"></td>
@@ -12593,7 +12767,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">150</div></td>
     <td width="131"><div align="center">Output 4.1.1</div></td>
-    <td width="378">150-Support to DDC forÂ  updatingÂ     the districtÂ  DAG mapping( in    line with MSNP)</td>
+    <td width="378">150-Support to DDC for� updating�    the district� DAG mapping( in    line with MSNP)</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="uIX6BUj0ngQ-HllvX50cXC0"></td>
@@ -12945,7 +13119,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">156</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">156-Publish SBCC materials    forÂ  accelerating IR4 activities</td>
+    <td width="378">156-Publish SBCC materials    for� accelerating IR4 activities</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="eWLiIo3Ha9s-HllvX50cXC0"></td>
@@ -13033,7 +13207,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">158</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">158-Support to organize regional    level TOT forÂ  MSNPÂ  for district level GoN focal persons    (Regional / DistrictÂ  based government    stakeholders andÂ  Suaahara II )</td>
+    <td width="378">158-Support to organize regional    level TOT for� MSNP� for district level GoN focal persons    (Regional / District� based government    stakeholders and� Suaahara II )</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="HGzFhedxlf0-HllvX50cXC0"></td>
@@ -13077,7 +13251,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">158-Support to organize regional    level TOT forÂ  MSNPÂ  for district level GoN focal persons    (Regional / DistrictÂ  based government    stakeholders andÂ  Suaahara II )</td>
+    <td width="378">158-Support to organize regional    level TOT for� MSNP� for district level GoN focal persons    (Regional / District� based government    stakeholders and� Suaahara II )</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -13121,7 +13295,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">159</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">159-Support toÂ  formationÂ     DistrictÂ Â  level Nutrition and    Food Security Steering Committee</td>
+    <td width="378">159-Support to� formation�    District�� level Nutrition and    Food Security Steering Committee</td>
     <td width="279">1-#    of District level Nutrition and Food security steering committee formed</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="FyMN4EFahCa-HllvX50cXC0"></td>
@@ -13165,10 +13339,10 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">160</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">160-Support to capacitate    District level Nutrition and Food SecurityÂ     Steering committee meetings</td>
+    <td width="378">160-Support to capacitate    District level Nutrition and Food Security�    Steering committee meetings</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
-    <td width="88" align="center" id="mhTk1PCbgIM-HllvX50cXC0"></td>
+    <td width="88" align="center" id="mhTk1PCbgIM-HllvX50cXC0-double"></td>
     <td width="88" align="center"></td>
     <td width="88" align="center"></td>
     <td width="88" align="center"></td>
@@ -13210,7 +13384,7 @@
      <tr height="69">
     <td height="69" width="63"><div align="center">161</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">161-Support toÂ  formationÂ     VDC/MunicipalÂ  level Nutrition    and Food Security Steering CommitteesÂ </td>
+    <td width="378">161-Support to� formation�    VDC/Municipal� level Nutrition    and Food Security Steering Committees�</td>
     <td width="279">1-# of    VDC/Municipality level nutrition and food security steering committee formed</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="BCJMUJJLHpW-HllvX50cXC0"></td>
@@ -13254,7 +13428,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">162</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">162-Support toÂ  capacitate VDC/Municipality level Nutrition    and Food Security Steering Committee meetings</td>
+    <td width="378">162-Support to� capacitate VDC/Municipality level Nutrition    and Food Security Steering Committee meetings</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="mhTk1PCbgIM-HllvX50cXC0"></td>
@@ -13298,7 +13472,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">162-Support toÂ  capacitate VDC/Municipality level Nutrition    and Food Security Steering Committee meetings</td>
+    <td width="378">162-Support to� capacitate VDC/Municipality level Nutrition    and Food Security Steering Committee meetings</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -13342,7 +13516,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">163</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">163-Support to organize    MSNPÂ  training/refresher training for    District level Nutrition and Food security Steering committee members.</td>
+    <td width="378">163-Support to organize    MSNP� training/refresher training for    District level Nutrition and Food security Steering committee members.</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="vgy4TAWgeit-HllvX50cXC0"></td>
@@ -13386,7 +13560,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">163-Support to organize    MSNPÂ  training/refresher training for    District level Nutrition and Food security Steering committee members.</td>
+    <td width="378">163-Support to organize    MSNP� training/refresher training for    District level Nutrition and Food security Steering committee members.</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -13430,7 +13604,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">164</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">164-Organize MSNP training/    refresher trainingÂ  to field level    staff of Suaahara -II and DDC (Suaahara II FS and DDC-LGCDP SM/PC)</td>
+    <td width="378">164-Organize MSNP training/    refresher training� to field level    staff of Suaahara -II and DDC (Suaahara II FS and DDC-LGCDP SM/PC)</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="ITYLAz8QsD2-HllvX50cXC0"></td>
@@ -13474,7 +13648,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">164-Organize MSNP training/    refresher trainingÂ  to field level    staff of Suaahara -II and DDC (Suaahara II FS and DDC-LGCDP SM/PC)</td>
+    <td width="378">164-Organize MSNP training/    refresher training� to field level    staff of Suaahara -II and DDC (Suaahara II FS and DDC-LGCDP SM/PC)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -13606,7 +13780,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">166</div></td>
     <td width="131"><div align="center">Output 4.1.2</div></td>
-    <td width="378">166-Organize MSNPÂ  trainingÂ Â     to VDC secretaries/Municipality'sÂ     ward level focal person</td>
+    <td width="378">166-Organize MSNP� training��    to VDC secretaries/Municipality's�    ward level focal person</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="u8IFQ5AOCpJ-HllvX50cXC0"></td>
@@ -13650,7 +13824,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">166-Organize MSNPÂ  trainingÂ Â     to VDC secretaries/Municipality'sÂ     ward level focal person</td>
+    <td width="378">166-Organize MSNP� training��    to VDC secretaries/Municipality's�    ward level focal person</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -13738,7 +13912,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">168</div></td>
     <td width="131"><div align="center">Output 4.2.1</div></td>
-    <td width="378">168-ParticipateÂ  and support to organize NPCâ€“led National    Nutrition Coordination Committee meetings</td>
+    <td width="378">168-Participate� and support to organize NPC�����œled National    Nutrition Coordination Committee meetings</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="iMPqXGydAWZ-HllvX50cXC0"></td>
@@ -13782,7 +13956,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">168-ParticipateÂ  and support to organize NPCâ€“led National    Nutrition Coordination Committee meetings</td>
+    <td width="378">168-Participate� and support to organize NPC�����œled National    Nutrition Coordination Committee meetings</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -13826,7 +14000,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">169</div></td>
     <td width="131"><div align="center">Output 4.2.1</div></td>
-    <td width="378">169-Participate and organize    Civil SocietyÂ  Alliance for Nutrition    Nepal (CSANN) â€“ledÂ  meetings</td>
+    <td width="378">169-Participate and organize    Civil Society� Alliance for Nutrition    Nepal (CSANN) �����œled� meetings</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="dRvOO8FLxWB-HllvX50cXC0"></td>
@@ -13870,7 +14044,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">169-Participate and organize    Civil SocietyÂ  Alliance for Nutrition    Nepal (CSANN) â€“ledÂ  meetings</td>
+    <td width="378">169-Participate and organize    Civil Society� Alliance for Nutrition    Nepal (CSANN) �����œled� meetings</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -13914,7 +14088,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">170</div></td>
     <td width="131"><div align="center">Output 4.2.1</div></td>
-    <td width="378">170-Organize joint monitoring    and supportive fieldÂ  visit for Higher    level government officials</td>
+    <td width="378">170-Organize joint monitoring    and supportive field� visit for Higher    level government officials</td>
     <td width="279">1-#    of monitoring visit conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="lbrLZjdjqZI-HllvX50cXC0"></td>
@@ -13958,7 +14132,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">171</div></td>
     <td width="131"><div align="center">Output 4.2.1</div></td>
-    <td width="378">171-Organize joint monitoring    and supportive fieldÂ  visit for    regional GoN officials</td>
+    <td width="378">171-Organize joint monitoring    and supportive field� visit for    regional GoN officials</td>
     <td width="279">1-#    of monitoring visit conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88"  align="center" id="dVig34pKs0E-HllvX50cXC0"></td>
@@ -14046,7 +14220,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">173</div></td>
     <td width="131"><div align="center">Output 4.2.1</div></td>
-    <td width="378">173-Participate andÂ  support to organizeÂ  for Nutrition Technical Committee( NuTEC)    meetings</td>
+    <td width="378">173-Participate and� support to organize� for Nutrition Technical Committee( NuTEC)    meetings</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center" id="fRDCFKyOZ5U-HllvX50cXC0"></td>
@@ -14090,7 +14264,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">173-Participate andÂ  support to organizeÂ  for Nutrition Technical Committee( NuTEC)    meetings</td>
+    <td width="378">173-Participate and� support to organize� for Nutrition Technical Committee( NuTEC)    meetings</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -14310,7 +14484,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">176</div></td>
     <td width="131"><div align="center">Output 4.2.1</div></td>
-    <td width="378">176-Organize joint review and    planning meeting with governmentÂ  and    external development partners(EDPs)</td>
+    <td width="378">176-Organize joint review and    planning meeting with government� and    external development partners(EDPs)</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88">1</td>
     <td width="88" align="center" id="sI5VYBOTvwn-HllvX50cXC0"></td>
@@ -14354,7 +14528,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">176-Organize joint review and    planning meeting with governmentÂ  and    external development partners(EDPs)</td>
+    <td width="378">176-Organize joint review and    planning meeting with government� and    external development partners(EDPs)</td>
     <td width="279">2-#    of participants</td>
     <td width="88">&nbsp;</td>
     <td width="88" align="center"></td>
@@ -14398,7 +14572,7 @@
   <tr height="69">
     <td height="69" width="63">177</td>
     <td width="131">Output 4.2.2</td>
-    <td width="563">177-OrganizeÂ  meeting withÂ  MoHP, MoFALD and NPC for preparing    Transferring Guideline and Post Transferring guideline</td>
+    <td width="563">177-Organize� meeting with� MoHP, MoFALD and NPC for preparing    Transferring Guideline and Post Transferring guideline</td>
     <td width="349">1-#    of meeting conducted</td>
     <td width="195">1</td>
     <td align="center"  id="uV9P5ubBzi5-HllvX50cXC0"></td>
@@ -14442,7 +14616,7 @@
   <tr height="69">
     <td height="69" width="63">&nbsp;</td>
     <td width="131">&nbsp;</td>
-    <td width="563">177-OrganizeÂ  meeting withÂ  MoHP, MoFALD and NPC for preparing    Transferring Guideline and Post Transferring guideline</td>
+    <td width="563">177-Organize� meeting with� MoHP, MoFALD and NPC for preparing    Transferring Guideline and Post Transferring guideline</td>
     <td width="349">2-#    of participants</td>
     <td width="195">&nbsp;</td>
     <td>&nbsp;</td>
@@ -14657,6 +14831,7 @@
     <td width="111">Monthly</td>
     <td width="115">Workshop</td>
     <td width="115">HKI</td>
+
     <td width="115">PNGO</td>
   </tr>
   <tr height="69">
@@ -14794,7 +14969,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">182</div></td>
     <td width="131"><div align="center">Output 4.3.1</div></td>
-    <td width="378">182-Organize joint field    visitÂ  for district level stakeholders</td>
+    <td width="378">182-Organize joint field    visit� for district level stakeholders</td>
     <td width="279">1-# of joint    field visit conducted</td>
     <td width="88" align="center"></td>
     <td width="88" align="center" id="HqkLPEf7et4-HllvX50cXC0"></td>
@@ -14926,7 +15101,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">184</div></td>
     <td width="131"><div align="center">Output 4.3.1</div></td>
-    <td width="378">184-Coordination meeting with    other USAID funded projectsÂ </td>
+    <td width="378">184-Coordination meeting with    other USAID funded projects�</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="HRTUgHbgssr-HllvX50cXC0"></td>
@@ -14970,7 +15145,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">184-Coordination meeting with    other USAID funded projectsÂ </td>
+    <td width="378">184-Coordination meeting with    other USAID funded projects�</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -15014,7 +15189,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">185</div></td>
     <td width="131"><div align="center">Output 4.3.1</div></td>
-    <td width="378">185-Support to display theÂ  Information boardÂ  regarding toÂ  utilization of VDC block grant for nutrion    promotion of 1000 days mothers andÂ     under 2 years of children</td>
+    <td width="378">185-Support to display the� Information board� regarding to� utilization of VDC block grant for nutrion    promotion of 1000 days mothers and�    under 2 years of children</td>
     <td width="279">1-#    of information board displayed</td>
     <td width="88" align="center"></td>
     <td align="center" id="bHAAVhDzUQS-HllvX50cXC0"></td>
@@ -15058,7 +15233,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">186</div></td>
     <td width="131"><div align="center">Output 4.3.2</div></td>
-    <td width="378">186-Organize orientationÂ  aboutÂ     MSNP toÂ  Ward CitizenÂ  Forum (WCF)/Ward Committees(WC) members</td>
+    <td width="378">186-Organize orientation� about�    MSNP to� Ward Citizen� Forum (WCF)/Ward Committees(WC) members</td>
     <td width="279">1-#    of orientation conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="raA1lAFouRB-HllvX50cXC0"></td>
@@ -15102,7 +15277,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">186-Organize orientationÂ  aboutÂ     MSNP toÂ  Ward CitizenÂ  Forum (WCF)/Ward Committees(WC) members</td>
+    <td width="378">186-Organize orientation� about�    MSNP to� Ward Citizen� Forum (WCF)/Ward Committees(WC) members</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -15146,7 +15321,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">187</div></td>
     <td width="131"><div align="center">Output 4.3.2</div></td>
-    <td width="378">187-Support toÂ  capacitate WCF meetings</td>
+    <td width="378">187-Support to� capacitate WCF meetings</td>
     <td width="279">1-#    of meeting conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="AlnnbMf5PRw-HllvX50cXC0"></td>
@@ -15190,7 +15365,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">187-Support toÂ  capacitate WCF meetings</td>
+    <td width="378">187-Support to� capacitate WCF meetings</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -15279,7 +15454,7 @@
     <td height="85" width="63"><div align="center">189</div></td>
     <td width="131"><div align="center">Output 4.3.2</div></td>
     <td width="378">189-Planning and utilization of    VDC Funds for INP<br>
-      a) Support to VDCs onÂ  effective    utilizationÂ  of committedÂ  resourcesÂ     for INP (HFP,Nutrition,HSP,WASH,Environment,Education and GESI)</td>
+      a) Support to VDCs on� effective    utilization� of committed� resources�    for INP (HFP,Nutrition,HSP,WASH,Environment,Education and GESI)</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="hN85EnCdswl-HllvX50cXC0"></td>
@@ -15323,7 +15498,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">190</div></td>
     <td width="131"><div align="center">Output 4.3.2</div></td>
-    <td width="378">190-b) FacilitateÂ  to CACs, HMGs, HFP Groups, communities,    VDCs on budget allocation (as per the resource mobilization guideline    -2069/MoFALD) for INP</td>
+    <td width="378">190-b) Facilitate� to CACs, HMGs, HFP Groups, communities,    VDCs on budget allocation (as per the resource mobilization guideline    -2069/MoFALD) for INP</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="rz5E8QDjtkl-HllvX50cXC0"></td>
@@ -15367,7 +15542,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">191</div></td>
     <td width="131"><div align="center">Output 4.3.2</div></td>
-    <td width="378">191-Support for declaration of    Child Friendly VDCÂ </td>
+    <td width="378">191-Support for declaration of    Child Friendly VDC�</td>
     <td width="279">1-#    of VDCs declared Child Friendly VDC</td>
     <td width="88" align="center"></td>
     <td align="center" id="Zaj7vITD7ZA-HllvX50cXC0"></td>
@@ -15411,7 +15586,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">192</div></td>
     <td width="131"><div align="center">DPR Output</div></td>
-    <td width="378">192-Two days disaster    preparedness &amp; response trainingÂ     and contingency planning support to KTM based staff (HKI+Consortium)</td>
+    <td width="378">192-Two days disaster    preparedness &amp; response training�    and contingency planning support to KTM based staff (HKI+Consortium)</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="hVpHZCknm1I-HllvX50cXC0"></td>
@@ -15455,7 +15630,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">192-Two days disaster    preparedness &amp; response trainingÂ     and contingency planning support to KTM based staff (HKI+Consortium)</td>
+    <td width="378">192-Two days disaster    preparedness &amp; response training�    and contingency planning support to KTM based staff (HKI+Consortium)</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -16160,7 +16335,7 @@
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
     <td width="378">204-Stakeholder Meeting with    NHEICC, technical committee and other consortium partners</td>
-    <td width="279">#    ofÂ  participants</td>
+    <td width="279">#    of� participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
     <td align="center" id="rMuhm74tmMF-tT7oO1vZgDM_rMuhm74tmMF-NL7qwhjmc8t_rMuhm74tmMF-SG4GEjuYjP8"></td>
@@ -16555,7 +16730,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">211</div></td>
     <td width="131"><div align="center">SBCC Output</div></td>
-    <td width="378">211-Design document workshop (2    days' residential workshop)Â </td>
+    <td width="378">211-Design document workshop (2    days' residential workshop)</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="GYGQDZ63Egv-HllvX50cXC0"></td>
@@ -16599,7 +16774,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">211-Design document workshop (2    days' residential workshop)Â </td>
+    <td width="378">211-Design document workshop (2    days' residential workshop)</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center" id="qE1PDLipgJm-tT7oO1vZgDM"></td>
@@ -16687,7 +16862,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">213</div></td>
     <td width="131"><div align="center">SBCC Output</div></td>
-    <td width="378">213-Repeat broadcast of    Bhanchhin AamaÂ </td>
+    <td width="378">213-Repeat broadcast of    Bhanchhin Aama�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="xDuf4EfGW2j-HllvX50cXC0"></td>
@@ -16765,6 +16940,7 @@
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
+
     <td align="center"></td>
     <td align="center"></td>
     <td width="111"><div align="center">Monthly</div></td>
@@ -16863,7 +17039,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">216</div></td>
     <td width="131"><div align="center">SBCC Output</div></td>
-    <td width="378">216-Adolescent girls' training    (5 trainings to 160 adolescent girls)Â </td>
+    <td width="378">216-Adolescent girls' training    (5 trainings to 160 adolescent girls)</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -16907,7 +17083,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">216-Adolescent girls' training    (5 trainings to 160 adolescent girls)Â </td>
+    <td width="378">216-Adolescent girls' training    (5 trainings to 160 adolescent girls)</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -16998,7 +17174,7 @@
     <td width="378">218-Group Facilitator's Training</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88" align="center"></td>
-    <td align="center" id="pnIQfLWZ5lH-HllvX50cXC0"></td>
+    <td align="center" id="pnIQfLWZ5lH-HllvX50cXC0-double"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -17043,10 +17219,10 @@
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
-    <td align="center" id="zlqPx4mVCsZ-tT7oO1vZgDM_zlqPx4mVCsZ-NL7qwhjmc8t_zlqPx4mVCsZ-SG4GEjuYjP8"></td>
+    <td align="center" id="zlqPx4mVCsZ-tT7oO1vZgDM-double_zlqPx4mVCsZ-NL7qwhjmc8t-double_zlqPx4mVCsZ-SG4GEjuYjP8-double"></td>
     <td align="center"></td>
     <td align="center"></td>
-    <td align="center" id="DasGzJcMr2Y-eDV5E3LoaCP_DasGzJcMr2Y-dGq3kC3W9Td_DasGzJcMr2Y-vkNdQJ1rbLc_DasGzJcMr2Y-EAVz9Ef5Sv2_DasGzJcMr2Y-DZDJ0C9ZCOw_DasGzJcMr2Y-tFCHAz564G0_DasGzJcMr2Y-WRyU1fPC6Os_DasGzJcMr2Y-Lzl8lYHOxu8"></td>
+    <td align="center" id="DasGzJcMr2Y-eDV5E3LoaCP-double_DasGzJcMr2Y-dGq3kC3W9Td-double_DasGzJcMr2Y-vkNdQJ1rbLc-double_DasGzJcMr2Y-EAVz9Ef5Sv2-double_DasGzJcMr2Y-DZDJ0C9ZCOw-double_DasGzJcMr2Y-tFCHAz564G0-double_DasGzJcMr2Y-WRyU1fPC6Os-double_DasGzJcMr2Y-Lzl8lYHOxu8-double"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -17171,10 +17347,10 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">220</div></td>
     <td width="131"><div align="center">PPP Output</div></td>
-    <td width="378">220-WorkshopÂ  to develop Public Private Partnership    concept paper for SP IIÂ </td>
+    <td width="378">220-Workshop� to develop Public Private Partnership    concept paper for SP II�</td>
     <td>1-# of workshop    conducted</td>
     <td align="center"></td>
-    <td align="center"></td>
+    <td align="center" id="kvGFfPb3YOE-HllvX50cXC0"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -17215,13 +17391,13 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">220-WorkshopÂ  to develop Public Private Partnership    concept paper for SP IIÂ </td>
+    <td width="378">220-Workshop� to develop Public Private Partnership    concept paper for SP II�</td>
     <td>2-# of participants</td>
     <td align="center"></td>
     <td align="center"></td>
-    <td align="center"></td>
-    <td align="center"></td>
-    <td align="center"></td>
+   <td width="88"  align="center" id="yAJ5N3t8v22-tT7oO1vZgDM"></td>
+    <td width="88"  align="center" id="yAJ5N3t8v22-NL7qwhjmc8t"></td>
+    <td width="88"  align="center" id="yAJ5N3t8v22-SG4GEjuYjP8"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -17259,10 +17435,10 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">221</div></td>
     <td width="131"><div align="center">PPP Output</div></td>
-    <td width="378">221-Workshop to finalise PPP    strategyÂ  with stakeholders</td>
+    <td width="378">221-Workshop to finalise PPP    strategy� with stakeholders</td>
     <td width="279">1-# of workshop    conducted</td>
     <td width="88" align="center"></td>
-    <td width="88" align="center"></td>
+    <td width="88" align="center" id="CBQNGVPW4ry-HllvX50cXC0"></td>
     <td width="88" align="center"></td>
     <td width="88" align="center"></td>
     <td width="88" align="center"></td>
@@ -17303,13 +17479,13 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">221-Workshop to finalise PPP    strategyÂ  with stakeholders</td>
+    <td width="378">221-Workshop to finalise PPP    strategy� with stakeholders</td>
     <td>2-# of participants</td>
     <td align="center"></td>
     <td align="center"></td>
-    <td align="center"></td>
-    <td align="center"></td>
-    <td align="center"></td>
+    <td width="88"  align="center" id="o0XbGNyXdJQ-tT7oO1vZgDM"></td>
+    <td width="88"  align="center" id="o0XbGNyXdJQ-NL7qwhjmc8t"></td>
+    <td width="88"  align="center" id="o0XbGNyXdJQ-SG4GEjuYjP8"></td>
     <td align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -17391,7 +17567,7 @@
   <tr height="98">
     <td height="98" width="63"><div align="center">223</div></td>
     <td width="131"><div align="center">PPP Output</div></td>
-    <td width="378">223-Consultative meetings with    agribusiness, agro-vetâ€™s sectors, microfinance and insurance companies, ND    vaccine producers, suppliers and government stakeholders to discuss and    develop a partnership plan for a sustainable supply and ND vaccination services    in target areas.Â </td>
+    <td width="378">223-Consultative meetings with    agribusiness, agro-vet������s sectors, microfinance and insurance companies, ND    vaccine producers, suppliers and government stakeholders to discuss and    develop a partnership plan for a sustainable supply and ND vaccination services    in target areas.</td>
     <td>1-# of meeting    conducted</td>
     <td align="center"></td>
     <td align="center" id="GBkeQakkCl9-HllvX50cXC0"></td>
@@ -17435,7 +17611,7 @@
   <tr height="98">
     <td height="98" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">223-Consultative meetings with    agribusiness, agro-vetâ€™s sectors, microfinance and insurance companies, ND    vaccine producers, suppliers and government stakeholders to discuss and    develop a partnership plan for a sustainable supply and ND vaccination services    in target areas.Â </td>
+    <td width="378">223-Consultative meetings with    agribusiness, agro-vet������s sectors, microfinance and insurance companies, ND    vaccine producers, suppliers and government stakeholders to discuss and    develop a partnership plan for a sustainable supply and ND vaccination services    in target areas.</td>
     <td>2-# of participants</td>
     <td align="center"></td>
     <td align="center"></td>
@@ -17479,7 +17655,7 @@
   <tr height="98">
     <td height="98" width="63"><div align="center">224</div></td>
     <td width="131"><div align="center">PPP Output</div></td>
-    <td width="378">224-Consultative meetings with    private sectors and public sectors for developing a partnership model in    awareness rising and BCC activities. (Steel, cement companies, Telcoâ€™s, etc).</td>
+    <td width="378">224-Consultative meetings with    private sectors and public sectors for developing a partnership model in    awareness rising and BCC activities. (Steel, cement companies, Telco������s, etc).</td>
     <td>1-# of meeting    conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="Kis6mgNs02A-HllvX50cXC0"></td>
@@ -17523,7 +17699,7 @@
   <tr height="93">
     <td height="93" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">224-Consultative meetings with    private sectors and public sectors for developing a partnership model in    awareness rising and BCC activities. (Steel, cement companies, Telcoâ€™s, etc).</td>
+    <td width="378">224-Consultative meetings with    private sectors and public sectors for developing a partnership model in    awareness rising and BCC activities. (Steel, cement companies, Telco������s, etc).</td>
     <td>2-# of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -17567,7 +17743,7 @@
   <tr height="93">
     <td height="93" width="63"><div align="center">225</div></td>
     <td width="131"><div align="center">PPP Output</div></td>
-    <td width="378">225-Consultative meetings with    private companies from WASH sectorÂ  to    develop a PPP plan to support sani-marketing and post ODF activities.</td>
+    <td width="378">225-Consultative meetings with    private companies from WASH sector� to    develop a PPP plan to support sani-marketing and post ODF activities.</td>
     <td>1-# of meeting    conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="o5zb0IiwJKn-HllvX50cXC0"></td>
@@ -17611,7 +17787,7 @@
   <tr height="93">
     <td height="93" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">225-Consultative meetings with    private companies from WASH sectorÂ  to    develop a PPP plan to support sani-marketing and post ODF activities.</td>
+    <td width="378">225-Consultative meetings with    private companies from WASH sector� to    develop a PPP plan to support sani-marketing and post ODF activities.</td>
     <td>2-# of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -17743,7 +17919,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">227</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">227-Gender eqality and diversity    learning audit to identify gaps and progress of    implementing local partners andÂ     consortium partnersÂ Â </td>
+    <td width="378">227-Gender eqality and diversity    learning audit to identify gaps and progress of    implementing local partners and�    consortium partners��</td>
     <td>1-# of event    conducted</td>
     <td align="center"></td>
     <td align="center" id="PlFAH6Q4SXH-HllvX50cXC0"></td>
@@ -17787,7 +17963,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">228</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">228-Develop GESI plan as per    theÂ  recommendation and findings of the    auditÂ </td>
+    <td width="378">228-Develop GESI plan as per    the� recommendation and findings of the    audit�</td>
     <td>1-# of event    conducted</td>
     <td align="center"></td>
     <td align="center" id="dlwq7QIDx9K-HllvX50cXC0"></td>
@@ -17831,7 +18007,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">229</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">229-Develop/adapt training    manuals/tools focusing on nutrition and health governanceÂ </td>
+    <td width="378">229-Develop/adapt training    manuals/tools focusing on nutrition and health governance�</td>
     <td>1-# of event    conducted</td>
     <td align="center"></td>
     <td align="center" id="rGERw9eUgb7-HllvX50cXC0"></td>
@@ -17875,7 +18051,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">230</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">230-MToT on the manuals to GESI    working groupÂ </td>
+    <td width="378">230-MToT on the manuals to GESI    working group�</td>
     <td>1-# of training    conducted</td>
     <td align="center"></td>
     <td align="center" id="ojSfgrIlQF8-HllvX50cXC0"></td>
@@ -17919,7 +18095,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">230-MToT on the manuals to GESI    working groupÂ </td>
+    <td width="378">230-MToT on the manuals to GESI    working group�</td>
     <td>2-# of participants</td>
     <td align="center"></td>
     <td align="center"></td>
@@ -17963,7 +18139,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">231</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">231-Sharing ofÂ  theÂ     needs assessment at the district andÂ     national level for policy influenceÂ </td>
+    <td width="378">231-Sharing of� the�    needs assessment at the district and�    national level for policy influence�</td>
     <td>1-# of event    conducted</td>
     <td align="center"></td>
     <td align="center" id="A5ojPlq8Vch-HllvX50cXC0"></td>
@@ -18007,7 +18183,7 @@
   <tr height="98">
     <td height="98" width="63"><div align="center">232</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">232-Sensitize/orientation on    GESI concept and gender transformative approach to community mobiliser to    facilitate and mobilize FCHV, HFOMC, district GESI focal point, Social    service Unit, GESI technical groups and committees at all level and support    in developing GESI action plan to sustain the impact.Â </td>
+    <td width="378">232-Sensitize/orientation on    GESI concept and gender transformative approach to community mobiliser to    facilitate and mobilize FCHV, HFOMC, district GESI focal point, Social    service Unit, GESI technical groups and committees at all level and support    in developing GESI action plan to sustain the impact.</td>
     <td>1-# of orientation    conducted</td>
     <td align="center"></td>
     <td align="center" id="unLjMXhJcdU-HllvX50cXC0"></td>
@@ -18051,7 +18227,7 @@
   <tr height="98">
     <td height="98" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">232-Sensitize/orientation on    GESI concept and gender transformative approach to community mobiliser to    facilitate and mobilize FCHV, HFOMC, district GESI focal point, Social    service Unit, GESI technical groups and committees at all level and support    in developing GESI action plan to sustain the impact.Â </td>
+    <td width="378">232-Sensitize/orientation on    GESI concept and gender transformative approach to community mobiliser to    facilitate and mobilize FCHV, HFOMC, district GESI focal point, Social    service Unit, GESI technical groups and committees at all level and support    in developing GESI action plan to sustain the impact.</td>
     <td>2-# of participants</td>
     <td align="center"></td>
     <td align="center"></td>
@@ -18095,7 +18271,7 @@
   <tr height="98">
     <td height="98" width="63"><div align="center">233</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">233-Development of communication    tools (IEC/BCC) to spread information of GESI responsive health and    nutritionÂ </td>
+    <td width="378">233-Development of communication    tools (IEC/BCC) to spread information of GESI responsive health and    nutrition�</td>
     <td>1-# of event    conducted</td>
     <td align="center"></td>
     <td align="center" id="ZlMyl4kCFwX-HllvX50cXC0"></td>
@@ -18139,7 +18315,7 @@
   <tr height="98">
     <td height="98" width="63"><div align="center">234</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">234-Training to community    mobilisers andÂ  district staff on    Social Analysis and Action approach to surface and stimulate reflection on    gender norms( 15 handover district, Doti, Dailekh, Jajarkot, Rukum and    Darchula)</td>
+    <td width="378">234-Training to community    mobilisers and� district staff on    Social Analysis and Action approach to surface and stimulate reflection on    gender norms( 15 handover district, Doti, Dailekh, Jajarkot, Rukum and    Darchula)</td>
     <td>1-# of training    conducted</td>
     <td align="center"></td>
     <td align="center" id="mqLAHUEC4WJ-HllvX50cXC0"></td>
@@ -18183,7 +18359,7 @@
   <tr height="98">
     <td height="98" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">234-Training to community    mobilisers andÂ  district staff on    Social Analysis and Action approach to surface and stimulate reflection on    gender norms( 15 handover district, Doti, Dailekh, Jajarkot, Rukum and    Darchula)</td>
+    <td width="378">234-Training to community    mobilisers and� district staff on    Social Analysis and Action approach to surface and stimulate reflection on    gender norms( 15 handover district, Doti, Dailekh, Jajarkot, Rukum and    Darchula)</td>
     <td>2-# of participants</td>
     <td align="center"></td>
     <td align="center"></td>
@@ -18271,7 +18447,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">236</div></td>
     <td width="131"><div align="center">GESI Output</div></td>
-    <td width="378">236-Conduct gender and GBV risk    analysisÂ </td>
+    <td width="378">236-Conduct gender and GBV risk analysis</td>
     <td>1-# of event    conducted</td>
     <td align="center"></td>
     <td align="center" id="JS59CCnoiYp-HllvX50cXC0"></td>
@@ -18359,7 +18535,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">238</div></td>
     <td width="131"><div align="center">MER Output</div></td>
-    <td width="378">238-Training and roll out    ofÂ  M&amp;E approach, tools and    systems/ Training and roll out of management information system tools    andÂ Â  (DHIS, MIS)- Combined</td>
+    <td width="378">238-Training and roll out    of� M&amp;E approach, tools and    systems/ Training and roll out of management information system tools    and�� (DHIS, MIS)- Combined</td>
     <td width="279">1-#    of training conducted</td>
     <td width="88" align="center"></td>
     <td align="center" id="YJwoBMwTVWG-HllvX50cXC0"></td>
@@ -18403,7 +18579,7 @@
   <tr height="69">
     <td height="69" width="63" align="center"></td>
     <td width="131" align="center"></td>
-    <td width="378">238-Training and roll out    ofÂ  M&amp;E approach, tools and    systems/ Training and roll out of management information system tools    andÂ Â  (DHIS, MIS)- Combined</td>
+    <td width="378">238-Training and roll out    of� M&amp;E approach, tools and    systems/ Training and roll out of management information system tools    and�� (DHIS, MIS)- Combined</td>
     <td width="279">2-#    of participants</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -18535,7 +18711,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="center">240</div></td>
     <td width="131"><div align="center">MER Output</div></td>
-    <td width="378">240-Annual outcome monitoring    surveyÂ </td>
+    <td width="378">240-Annual outcome monitoring    survey�</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -18623,7 +18799,7 @@
   <tr height="69">
     <td height="69" width="63"><div align="left">242</div></td>
     <td width="131"><div align="left">MER Output</div></td>
-    <td width="378">242-Rapid assessment sick child    feeding, animal source food consumption, hand washing and water    treatmentÂ  and post partum care seeking</td>
+    <td width="378">242-Rapid assessment sick child    feeding, animal source food consumption, hand washing and water    treatment� and post partum care seeking</td>
     <td width="279">1-#    of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
@@ -19020,7 +19196,7 @@
     <td height="69" width="63"><div align="left">248</div></td>
     <td width="131"><div align="left">MER Output</div></td>
     <td width="378">248-Formative research on gender    inequalities</td>
-    <td width="279">1-#Â  of event conducted</td>
+    <td width="279">1-#�of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -19064,7 +19240,7 @@
     <td height="69" width="63"><div align="left">249</div></td>
     <td width="131"><div align="left">MER Output</div></td>
     <td width="378">249-Knowledge, attitudes and    motivating factors relevent to adolescent nutrition and reproductive health</td>
-    <td width="279">1-#Â  of event conducted</td>
+    <td width="279">1-# of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -19107,8 +19283,8 @@
   <tr height="69">
     <td height="69" width="63"><div align="left">250</div></td>
     <td width="131"><div align="left">MER Output</div></td>
-    <td width="378">250-Rapid assessment sick child    feeding, animal source food consumption, hand washing and water    treatmentÂ  and post partum care seeking</td>
-    <td width="279">1-#Â  of event conducted</td>
+    <td width="378">250-Rapid assessment sick child    feeding, animal source food consumption, hand washing and water    treatment� and post partum care seeking</td>
+    <td width="279">1-#�of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
@@ -19152,7 +19328,7 @@
     <td height="69" width="63"><div align="left">251</div></td>
     <td width="131"><div align="left">MER Output</div></td>
     <td width="378">251-Barrier analysis to identify    behavioral determinants that affect seeking of services and adoption of key    practices.</td>
-    <td width="279">1-#Â  of event conducted</td>
+    <td width="279">1-# of event conducted</td>
     <td width="88" align="center"></td>
     <td align="center"></td>
     <td align="center"></td>
