@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.22" id="1">
     <property name="createdBy">Eclipse BIRT Designer Version 4.3.0.v201306041519 Build &lt;3.7.0.v20130611-1045></property>
-
     <property name="units">in</property>
     <property name="iconFile">/templates/blank_report.gif</property>
     <property name="bidiLayoutOrientation">ltr</property>
@@ -73,13 +72,14 @@
                 </ex-property>
             </list-property>
             <property name="odaDriverClass">com.mysql.jdbc.Driver</property>
-            <property name="odaURL">jdbc:mysql://localhost/intpart</property>
-            <property name="odaUser">root</property>
-            <encrypted-property name="odaPassword" encryptionID="base64">aGlzcA==</encrypted-property>
+            <property name="odaURL">jdbc:mysql://192.168.0.25/pgichd</property>
+            <property name="odaUser">birt</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">YmlydA==</encrypted-property>
         </oda-data-source>
     </data-sources>
     <data-sets>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="Data Set" id="5">
+            <property name="nullsOrdering">nulls lowest</property>
             <list-property name="columnHints">
                 <structure>
                     <property name="columnName">Date of Visit</property>
@@ -297,7 +297,7 @@
                 <structure>
                     <property name="position">4</property>
                     <property name="name">Patient Name</property>
-                    <property name="nativeName">fullname</property>
+                    <property name="nativeName">Patient Name</property>
                     <property name="dataType">string</property>
                     <property name="nativeDataType">12</property>
                 </structure>
@@ -365,14 +365,14 @@
                     <property name="nativeDataType">12</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[SELECT o.obs_datetime AS 'Date of Visit',ps.identifier AS 'Patient Id',CONCAT(address1,' ',city_village,' ',county_district) AS 'Postal Address' , ps.fullname AS 'Patient Name',
+            <xml-property name="queryText"><![CDATA[SELECT o.obs_datetime AS 'Date of Visit',ps.identifier AS 'Patient Id',CONCAT(address1,' ',city_village,' ',county_district) AS 'Postal Address' , CONCAT(ps.given_name,' ',ps.middle_name,' ',ps.family_name) AS 'Patient Name',
 ps.gender AS 'Gender', 
 CASE WHEN (YEAR(ps1.date_created)-YEAR(ps.birthdate)>=1) 
     THEN 
     CASE
     WHEN (YEAR(ps1.date_created)-YEAR(ps.birthdate)=1)
-        THEN CONCAT(ps.age,' ','year')
-        ELSE CONCAT(ps.age,' ','years')    
+        THEN CONCAT(ps.age,'year')
+        ELSE CONCAT(ps.age,'years')    
     END
 ELSE
     CASE
@@ -398,15 +398,16 @@ ELSE
                            END
     END
     END 
-END AS 'Age',pattCon.value AS 'MobileNo' ,
-CONCAT(pn.family_name,' ',pn.given_name) AS 'Treating Doctor',
+END AS 'Age', pattCon.value AS 'MobileNo', 
+
+CONCAT(pn.given_name,' ',pn.middle_name,' ',pn.family_name) AS 'Treating Doctor',
 GROUP_CONCAT(DISTINCT cn.name) AS 'Diagnosis' ,
 CONCAT(MAX(CASE WHEN ob.concept_id IN (SELECT concept_id FROM concept_name WHERE NAME IN('SYSTOLIC BLOOD PRESSURE') 
 AND concept_name_type = 'FULLY_SPECIFIED')THEN ob.value_numeric ELSE NULL END),'/',
 MAX(CASE WHEN ob.concept_id IN (SELECT concept_id FROM concept_name WHERE NAME IN('DAISTOLIC BLOOD PRESSURE') AND 
 concept_name_type = 'FULLY_SPECIFIED') THEN ob.value_numeric ELSE NULL END),' mm/Hg') 
 	AS 'Blood Pressure',
-MAX(CASE WHEN ob.concept_id IN (SELECT concept_id FROM concept_name WHERE NAME IN('BMI') AND concept_name_type = 'FULLY_SPECIFIED') THEN ob.value_numeric ELSE NULL END) AS  'BMI' ,
+MAX(CASE WHEN ob.concept_id IN (SELECT concept_id FROM concept_name WHERE NAME IN('BMI') AND concept_name_type = 'FULLY_SPECIFIED') THEN ROUND(ob.value_numeric) ELSE NULL END) AS  'BMI' ,
 MAX(CASE WHEN ps.gender LIKE "F" AND ob.concept_id IN (SELECT concept_id FROM concept_name WHERE NAME IN('LAST MENSTRUAL PERIOD') AND concept_name_type = 'FULLY_SPECIFIED') THEN DATE(ob.value_datetime) ELSE NULL END) AS  'LMP' ,
 MAX(CASE WHEN ob.concept_id IN (SELECT concept_id FROM concept_name WHERE NAME IN('VISIT OUTCOME') AND concept_name_type = 'FULLY_SPECIFIED') THEN
  CASE WHEN ob.value_text LIKE 'Follow-up' THEN CONCAT( ob.value_text,',',DATE(ob.value_datetime)) ELSE 
@@ -415,21 +416,20 @@ FROM obs o
 INNER JOIN concept_name cn ON o.value_coded = cn.concept_id AND cn.concept_name_type = 'FULLY_SPECIFIED'
 INNER JOIN opd_patient_queue_log opdl ON o.person_id = opdl.patient_id AND o.encounter_id=opdl.encounter_id
 INNER JOIN concept c ON c.concept_id=cn.concept_id 
+INNER JOIN patient_search ps ON ps.patient_id=o.person_id
 INNER JOIN obs ob ON ob.person_id=o.person_id
 INNER JOIN person_address AS peradd ON o.person_id = peradd.person_id
-INNER JOIN person_attribute AS pattCon ON o.person_id = pattCon.person_id
-INNER JOIN person_attribute_type percon ON percon.person_attribute_type_id = pattCon.person_attribute_type_id AND percon.name LIKE '%Phone Number%' 
+LEFT JOIN  person_attribute AS pattCon ON o.person_id = pattCon.person_id AND pattCon.person_attribute_type_id=16
+LEFT JOIN  person_attribute_type percon ON percon.person_attribute_type_id = pattCon.person_attribute_type_id 
 INNER JOIN users us ON opdl.user = us.user_id
 INNER JOIN person_name pn ON pn.person_id AND pn.person_id=us.person_id
-INNER JOIN patient_search ps ON ps.patient_id=o.person_id
 INNER JOIN patient ps1 ON ps.patient_id=ps1.patient_id
 WHERE o.concept_id IN (SELECT concept_id FROM concept_name WHERE NAME IN('PROVISIONAL DIAGNOSIS','FINAL DIAGNOSIS') AND concept_name_type = 'FULLY_SPECIFIED'
 )
 AND DATE(o.obs_datetime) BETWEEN ? AND ? #input
 AND c.class_id = 4
 AND (opdl.opd_concept_name LIKE ? OR ? LIKE "All OPD") #input
-GROUP BY o.obs_datetime
-]]></xml-property>
+GROUP BY o.obs_datetime]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
   <Version>2.0</Version>
