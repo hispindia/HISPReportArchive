@@ -357,10 +357,10 @@ GROUP BY cnn.`name`]]></xml-property>
                     <text-property name="heading">identifier</text-property>
                 </structure>
                 <structure>
-                    <property name="columnName">NAME</property>
+                    <property name="columnName">fullNAME</property>
                     <property name="analysis">dimension</property>
-                    <text-property name="displayName">NAME</text-property>
-                    <text-property name="heading">NAME</text-property>
+                    <text-property name="displayName">fullNAME</text-property>
+                    <text-property name="heading">fullNAME</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">age</property>
@@ -409,6 +409,12 @@ GROUP BY cnn.`name`]]></xml-property>
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">Contact</text-property>
                     <text-property name="heading">Contact</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">person_attribute_type_id</property>
+                    <property name="analysis">measure</property>
+                    <text-property name="displayName">person_attribute_type_id</text-property>
+                    <text-property name="heading">person_attribute_type_id</text-property>
                 </structure>
             </list-property>
             <list-property name="parameters">
@@ -487,7 +493,7 @@ GROUP BY cnn.`name`]]></xml-property>
                     </structure>
                     <structure>
                         <property name="position">3</property>
-                        <property name="name">NAME</property>
+                        <property name="name">fullNAME</property>
                         <property name="dataType">string</property>
                     </structure>
                     <structure>
@@ -532,6 +538,11 @@ GROUP BY cnn.`name`]]></xml-property>
                     </structure>
                     <structure>
                         <property name="position">12</property>
+                        <property name="name">person_attribute_type_id</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
                         <property name="name">S.No</property>
                         <property name="dataType">integer</property>
                     </structure>
@@ -555,8 +566,8 @@ GROUP BY cnn.`name`]]></xml-property>
                 </structure>
                 <structure>
                     <property name="position">3</property>
-                    <property name="name">NAME</property>
-                    <property name="nativeName">NAME</property>
+                    <property name="name">fullNAME</property>
+                    <property name="nativeName">fullNAME</property>
                     <property name="dataType">string</property>
                     <property name="nativeDataType">12</property>
                 </structure>
@@ -616,15 +627,22 @@ GROUP BY cnn.`name`]]></xml-property>
                     <property name="dataType">string</property>
                     <property name="nativeDataType">12</property>
                 </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">person_attribute_type_id</property>
+                    <property name="nativeName">person_attribute_type_id</property>
+                    <property name="dataType">integer</property>
+                    <property name="nativeDataType">4</property>
+                </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[SELECT DATE(e.encounter_datetime), identifier, CONCAT(given_name,' ',middle_name,' ',Family_name) NAME,
+            <xml-property name="queryText"><![CDATA[SELECT  DATE(e.encounter_datetime), identifier, CONCAT(given_name,' ',middle_name,' ',Family_name) AS fullNAME,
 TIMESTAMPDIFF(YEAR,(per.birthdate),(e.encounter_datetime)) age, per.gender, patt.value,
-COALESCE(o.value_text, '-') Temp_Category,et.name,cn1.name,CONCAT(address1,' ',city_village,' ',county_district) Address ,pattCon.value AS Contact
+COALESCE(o.value_text, '-') Temp_Category,et.name,cn1.name,CONCAT(address1,' ',city_village,' ',county_district) Address ,pattCon.value AS Contact,pattCon.person_attribute_type_id
 FROM encounter AS e 
-	INNER JOIN person_attribute AS patt ON e.patient_id = patt.person_id
-	INNER JOIN person_attribute_type p ON p.person_attribute_type_id = patt.person_attribute_type_id AND p.name LIKE '%Patient Category%' 
-	INNER JOIN person_attribute AS pattCon ON e.patient_id = pattCon.person_id
-	INNER JOIN person_attribute_type percon ON percon.person_attribute_type_id = pattCon.person_attribute_type_id  
+	LEFT JOIN person_attribute AS patt ON e.patient_id = patt.person_id
+	LEFT JOIN person_attribute_type p ON p.person_attribute_type_id = patt.person_attribute_type_id AND p.name LIKE '%Patient Category%' 
+	LEFT JOIN person_attribute AS pattCon ON e.patient_id = pattCon.person_id  AND pattCon.person_attribute_type_id = 16
+	LEFT JOIN person_attribute_type percon ON percon.person_attribute_type_id = pattCon.person_attribute_type_id 
 	INNER JOIN person_address AS peradd ON e.patient_id = peradd.person_id
 	INNER JOIN encounter_type et ON et.encounter_type_id= e.encounter_type AND (et.name IN ('REGINITIAL'))	
         INNER JOIN patient_identifier pid ON pid.patient_id = e.patient_id  
@@ -642,20 +660,21 @@ WHERE
 DATE(e.encounter_datetime) BETWEEN ? AND ?
 AND patt.voided = 0
 AND cn1.name LIKE ?
-GROUP BY identifier
+
+GROUP BY  identifier
 
 UNION
 
-SELECT DATE(e.encounter_datetime), identifier, CONCAT(given_name,' ',middle_name,' ',Family_name) NAME,
+SELECT  DATE(e.encounter_datetime), identifier, CONCAT(given_name,' ',middle_name,' ',Family_name) AS fullNAME,
 TIMESTAMPDIFF(YEAR,(per.birthdate),(e.encounter_datetime)) age, per.gender, patt.value,
-COALESCE(o.value_text, '-') Temp_Category,et.name,cn1.name,CONCAT(address1,' ',city_village,' ',county_district) Address ,pattCon.value AS Contact
+COALESCE(o.value_text, '-') Temp_Category,et.name,cn1.name,CONCAT(address1,' ',city_village,' ',county_district) Address ,pattCon.value AS Contact,pattCon.person_attribute_type_id
 FROM encounter AS e 
-	INNER JOIN person_attribute AS patt ON e.patient_id = patt.person_id
-	INNER JOIN person_attribute_type p ON p.person_attribute_type_id = patt.person_attribute_type_id AND p.name LIKE '%Patient Category%' 
-	INNER JOIN person_attribute AS pattCon ON e.patient_id = pattCon.person_id
-	INNER JOIN person_attribute_type percon ON percon.person_attribute_type_id = pattCon.person_attribute_type_id 
+	LEFT JOIN person_attribute AS patt ON e.patient_id = patt.person_id
+	LEFT JOIN person_attribute_type p ON p.person_attribute_type_id = patt.person_attribute_type_id AND p.name LIKE '%Patient Category%' 
+	LEFT JOIN person_attribute AS pattCon ON e.patient_id = pattCon.person_id  AND pattCon.person_attribute_type_id = 16
+	LEFT JOIN person_attribute_type percon ON percon.person_attribute_type_id = pattCon.person_attribute_type_id 
 	INNER JOIN person_address AS peradd ON e.patient_id = peradd.person_id
-	INNER JOIN encounter_type et ON et.encounter_type_id= e.encounter_type AND (et.name IN ('REGREVISIT'))		
+	INNER JOIN encounter_type et ON et.encounter_type_id= e.encounter_type AND (et.name IN ('REGREVISIT'))	
         INNER JOIN patient_identifier pid ON pid.patient_id = e.patient_id  
         INNER JOIN person_name pn ON pn.person_id = e.patient_id
         INNER JOIN person per ON per.person_id = e.patient_id
@@ -670,8 +689,9 @@ LEFT JOIN obs o
 WHERE 
 DATE(e.encounter_datetime) BETWEEN ? AND ?
 AND patt.voided = 0
-AND cn1.name LIKE ?
-GROUP BY identifier]]></xml-property>
+AND cn1.name LIKE ? 
+
+GROUP BY  identifier]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
   <Version>2.0</Version>
@@ -1144,12 +1164,6 @@ GROUP BY identifier]]></xml-property>
                     <property name="dataType">string</property>
                 </structure>
                 <structure>
-                    <property name="name">NAME</property>
-                    <text-property name="displayName">NAME</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["NAME"]</expression>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
                     <property name="name">age</property>
                     <text-property name="displayName">age</text-property>
                     <expression name="expression" type="javascript">dataSetRow["age"]</expression>
@@ -1195,6 +1209,12 @@ GROUP BY identifier]]></xml-property>
                     <property name="name">Contact</property>
                     <text-property name="displayName">Contact</text-property>
                     <expression name="expression" type="javascript">dataSetRow["Contact"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">fullNAME</property>
+                    <text-property name="displayName">fullNAME</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["fullNAME"]</expression>
                     <property name="dataType">string</property>
                 </structure>
             </list-property>
@@ -1457,8 +1477,9 @@ GROUP BY identifier]]></xml-property>
                         <property name="borderTopColor">#000000</property>
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">thin</property>
-                        <data id="1809">
-                            <property name="resultSetColumn">NAME</property>
+                        <data id="1812">
+                            <property name="textAlign">left</property>
+                            <property name="resultSetColumn">fullNAME</property>
                         </data>
                     </cell>
                     <cell id="1742">
