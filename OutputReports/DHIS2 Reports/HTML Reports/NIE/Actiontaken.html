@@ -1,0 +1,990 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+<script
+  src="https://code.jquery.com/jquery-2.2.4.js"
+  integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+  crossorigin="anonymous"></script>
+
+
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"></script>
+   
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript">
+
+var district,hud,block,phc,village,hsc,rrt;
+var districtid,blockid,phcid,villageid,hscid;
+var hrg=0,sip=0,d=0,tbpu=0,tlcu=0,ttum=0,tpum=0,lacu=0,np=0;
+$(document).ready(function(){
+               var url = window.location.href;
+		var arrayUrl = url.split('&');
+		var ouu = arrayUrl[1];
+		var ou = ouu.split('=')[1];
+		if(arrayUrl.length >2){
+		var arraySDate = arrayUrl[2] ;
+		 today = arraySDate.split('=')[1];
+			}
+			else{
+				today = new Date();
+				var dd = today.getDate();
+				var mm = today.getMonth()+1; //January is 0!
+
+				var yyyy = today.getFullYear();
+					if(dd<10){
+						dd='0'+dd;
+					} 
+					if(mm<10){
+						mm='0'+mm;
+					} 
+				today = yyyy+mm+dd;
+			}
+				setOrgUnits(ou);	
+				printPage1(ou);
+				printPage2(ou);
+				//printPage3(ou);
+			//	printPage4(ou);
+						document.getElementById('district').innerHTML = district;
+					//	document.getElementById('hud').innerHTML = hud;
+						document.getElementById('block').innerHTML = block;
+						document.getElementById('phc').innerHTML = phc;
+						document.getElementById('hsc').innerHTML = hsc;
+						document.getElementById('village').innerHTML = village;
+						document.getElementById('villageName').innerHTML = village;
+
+
+window.ajax = new ajaXwrapper();			
+makeDistrictMap();
+makeBlockMap();
+makeHscMap();
+makePhcMap();
+
+});
+
+
+function makeDistrictMap(){
+districtMap = new dhis2Map();
+districtMap.init("districtMap",[13.239758,79.978065],9);
+			
+  var style = { color: "black",
+                  opacity: 0.75,
+                  fillColor: "white",
+                  fillOpacity: 0,
+                  weight : 2,
+                  //                  dashArray: '5, 5',
+
+                }
+ var style2 = { color: "yellow",
+                  opacity: 0.75,
+                  fillColor: "yellow",
+                  fillOpacity: 2,
+                  weight : 3,
+	 label:"Hey There"
+                  //                  dashArray: '5, 5',
+
+                }
+
+addOrgUnitLayer(districtMap,5,Object.assign({},style));
+addOrgUnitLayer2(districtMap,blockid,Object.assign({},style2));
+//addOrgUnitLayer(districtMap,6,Object.assign({},style));
+//L.marker([13.239758,79.978065]).addTo(districtMap.getMap());
+}
+
+function makeBlockMap(){
+blockMap = new dhis2Map();
+blockMap.init("blockMap",[13.239758,79.978065],9);
+			
+  var style = { color: "black",
+                  opacity: 0.75,
+                  fillColor: "white",
+                  fillOpacity: 0,
+                  weight : 2,
+                  //                  dashArray: '5, 5',
+
+                }
+ var style2 = { color: "red",
+                  opacity: 0.75,
+                  fillColor: "red",
+                  fillOpacity: 2,
+                  weight : 3,
+                  //                  dashArray: '5, 5',
+
+                }
+    addOrgUnitLayer(blockMap,4,Object.assign({},style));
+    addOrgUnitLayer(blockMap,5,Object.assign({},style));
+    addOrgUnitLayer(blockMap,6,Object.assign({},style));
+addOrgUnitLayer2(blockMap,blockid,Object.assign({},style));
+addOrgUnitLayer2(blockMap,phcid,Object.assign({},style2));
+//blockMap.setMaxBounds(blockMap.getBounds());
+//addOrgUnitLayer(districtMap,6,Object.assign({},style));
+//L.marker([13.239758,79.978065]).addTo(districtMap.getMap());
+}
+
+function makePhcMap(){
+phcMap = new dhis2Map();
+phcMap.init("phcMap",[13.239758,79.978065],9);
+			
+  var style = { color: "black",
+                  opacity: 0.75,
+                  fillColor: "white",
+                  fillOpacity: 0,
+                  weight : 2,
+                  //                  dashArray: '5, 5',
+
+                }
+ var style2 = { color: "blue",
+                  opacity: 0.75,
+                  fillColor: "blue",
+	 			label:"Test",
+                  fillOpacity: 2,
+                  weight : 3,
+                  //                  dashArray: '5, 5',
+
+                }
+    addOrgUnitLayer(phcMap,4,Object.assign({},style));
+    addOrgUnitLayer(phcMap,5,Object.assign({},style));
+    addOrgUnitLayer(phcMap,6,Object.assign({},style));
+    addOrgUnitLayer(phcMap,7,Object.assign({},style));
+addOrgUnitLayer2(phcMap,phcid,Object.assign({},style));
+addOrgUnitLayer2(phcMap,hscid,Object.assign({},style2));
+//blockMap.setMaxBounds(blockMap.getBounds());
+//addOrgUnitLayer(districtMap,6,Object.assign({},style));
+//L.marker([13.239758,79.978065]).addTo(districtMap.getMap());
+}
+
+function makeHscMap(){
+hscMap = new dhis2Map();
+hscMap.init("hscMap",[13.239758,79.978065],9);
+			
+  var style = { color: "black",
+                  opacity: 0.75,
+                  fillColor: "white",
+                  fillOpacity: 0,
+                  weight : 2,
+                  //                  dashArray: '5, 5',
+
+                }
+ var style2 = { color: "green",
+                  opacity: 0.75,
+                  fillColor: "green",
+                  fillOpacity: 2,
+                  weight : 3,
+                  //                  dashArray: '5, 5',
+
+                }
+    addOrgUnitLayer(hscMap,4,Object.assign({},style));
+    addOrgUnitLayer(hscMap,5,Object.assign({},style));
+    addOrgUnitLayer(hscMap,6,Object.assign({},style));
+    addOrgUnitLayer(hscMap,7,Object.assign({},style));
+    addOrgUnitLayer(hscMap,8,Object.assign({},style));
+addOrgUnitLayer2(hscMap,hscid,Object.assign({},style));
+addOrgUnitLayer2(hscMap,villageid,Object.assign({},style2));
+//hscMap.fitBounds(hscMap.getBounds());
+//addOrgUnitLayer(districtMap,6,Object.assign({},style));
+//L.marker([13.239758,79.978065]).addTo(districtMap.getMap());
+}
+
+var setOrgUnits = function(ou){
+	
+	$.ajax({
+
+                            async: false,
+                            type: "GET",
+                            url: '../api/organisationUnits/' + ou + '?fields=displayName,id,ancestors[id,displayName,level],children[id,displayName,level]',
+                            success: function (data1) {
+                                $.each(data1.ancestors, function (index, item2) {
+                                    if (item2.level == 3) {
+                                        district = item2.displayName;
+                                        districtd = item2.id;
+                                    }
+                                    if (item2.level == 4) {
+                                        hud = item2.displayName;
+                                    }
+                                    if (item2.level == 5) {
+                                        block = item2.displayName;
+                                        blockid = item2.id;
+                                    }
+									if (item2.level == 6) {
+                                        phc = item2.displayName;
+                                        phcid = item2.id;
+                                    }
+                                    if (item2.level == 7) {
+                                        hsc = item2.displayName;
+                                        hscid = item2.id;
+                                    }
+                                });
+								village = data1.displayName;
+								villageid = data1.id;
+
+                            },
+                            error: function (response) {
+
+                            }
+                        });
+	
+};
+
+var printPage1 =  function(ou){
+	
+	$.ajax({
+
+                            async: false,
+                            type: "GET",
+                            url: '../api/26/analytics/events/query/Ml0ZNj9APN0.json?dimension=pe:'+today+'&dimension=ou:'+ou+'&dimension=glBt6kk3AXS:LIKE:linelist_v2&dimension=EmMnlcA8WVr&dimension=xq2RxjLDbev&dimension=pa6AUJ4s9li&dimension=XYhSJWeyxQL&dimension=GIGDIz8ivwS&dimension=usRaRx8mwsy&dimension=zk3DzDRcq0s&stage=iWcQ5lxmsy4&displayProperty=NAME&outputType=EVENT&pageSize=100&page=1',
+                            success: function (data2) {
+							var index = 1;
+							var empty ="";
+								for(var j=0;j<data2.rows.length;j++){
+									if(data2.rows[j][7]==ou){
+									var age = Math.round(data2.rows[j][10]);
+									var gender = data2.rows[j][11];
+										var col1 = data2.rows[j][9] +" "+ Math.round(data2.rows[j][10]) + " " + data2.rows[j][11]; 
+										var col2 = data2.rows[j][12] +" "+ data2.rows[j][13]; 
+										var row = "<tr class='page2table'><td colspan='1' rowspan='1'>"+index+"</td>"+
+							"<td colspan='1' rowspan='1'>"+col1+"</td>"+
+							"<td colspan='1' rowspan='1'>"+col2+"</td>"+
+							"<td colspan='1' rowspan='1'>"+data2.rows[j][14]+"</td>"+
+							"<td colspan='1' rowspan='1'>"+data2.rows[j][15]+"</td>"+
+							"<td colspan='1' rowspan='1'>"+empty+"</td>"+
+							"<td colspan='1' rowspan='1'>"+empty+"</td>"+
+							"<td colspan='1' rowspan='1'>"+empty+"</td>"+
+							"<td colspan='1' rowspan='1'>"+empty+"</td>"+
+						"</tr>";
+						$('.custom-table12').append(row);
+							var age1=0,age2=0,age3=0,age4=0,age5=0;
+							var age1m=0,age2m=0,age3m=0,age4m=0,age5m=0;
+							var age1f=0,age2f=0,age3f=0,age4f=0,age5f=0;
+							if(age <1){age1++;
+								if(gender == "male"){age1m++;}
+								else{age1f++;}
+							}
+							if(age >=1 && age<5){age2++;
+								if(gender == "male"){age2m++;}
+								else{age2f++;}
+							}
+							if(age >=5 && age<10){age3++;
+								if(gender == "male"){age3m++;}
+								else{age3f++;}
+							}
+							if(age >=10 && age<14){age4++;
+								if(gender == "male"){age4m++;}
+								else{age4f++;}
+							}
+							if(age >=14){age5++;
+								if(gender == "male"){age5m++;}
+								else{age5f++;}
+							}
+							}
+							}
+							
+							document.getElementById('indexd1').innerHTML = data2.rows[0][9];
+							document.getElementById('indexd2').innerHTML = data2.rows[0][14];
+							document.getElementById('indexd3').innerHTML = Math.round(data2.rows[0][10]);
+							document.getElementById('indexd4').innerHTML = data2.rows[0][15];
+							document.getElementById('indexd5').innerHTML = data2.rows[0][11];
+							document.getElementById('indexd6').innerHTML = data2.rows[0][12] +" "+ data2.rows[0][13];
+							
+						var newrow1 = "<tr class='page2table'><td colspan='1'>0-1</td><td colspan='1'>"+age1+"</td><td colspan='1'>"+age1m+"</td><td colspan='1'>"+age1f+"</td></tr>";
+						var newrow2 = "<tr class='page2table'><td colspan='1'>1-5</td><td colspan='1'>"+age2+"</td><td colspan='1'>"+age2m+"</td><td colspan='1'>"+age2f+"</td></tr>";
+						var newrow3 = "<tr class='page2table'><td colspan='1'>5-10</td><td colspan='1'>"+age3+"</td><td colspan='1'>"+age3m+"</td><td colspan='1'>"+age3f+"</td></tr>";
+						var newrow4 = "<tr class='page2table'><td colspan='1'>10-14</td><td colspan='1'>"+age4+"</td><td colspan='1'>"+age4m+"</td><td colspan='1'>"+age4f+"</td></tr>";
+						var newrow5 = "<tr class='page2table'><td colspan='1'>14 & above</td><td colspan='1'>"+age5+"</td><td colspan='1'>"+age5m+"</td><td colspan='1' rowspan='1'>"+age5f+"</td></tr>";
+							$('.custom-table13').append(newrow1);
+							$('.custom-table13').append(newrow2);
+							$('.custom-table13').append(newrow3);
+							$('.custom-table13').append(newrow4);
+							$('.custom-table13').append(newrow5);
+							},
+                            error: function (response) {
+
+                            }
+							});
+	
+};
+
+
+var printPage2 =  function(ou){
+	
+	$.ajax({
+
+                            async: false,
+                            type: "GET",
+                            url: '../api/26/analytics/events/query/Ml0ZNj9APN0.json?dimension=pe:'+today+'&dimension=ou:'+ou+'&dimension=glBt6kk3AXS:LIKE:general_v2&dimension=W6qn3INRFbS&dimension=bCRe8ppFSEu&stage=iWcQ5lxmsy4&displayProperty=NAME&outputType=EVENT&pageSize=100&page=1&outputIdScheme=NAME',
+                            success: function (data2) {
+									for(var j=0;j<data2.rows.length;j++){
+									if(data2.rows[j][7]==ou){
+										var population =  data2.rows[j][10];
+										var houses = data2.rows[j][9];
+										
+										document.getElementById('population').innerHTML = Math.round( population);
+										document.getElementById('houses').innerHTML = Math.round( houses);
+									}
+									}
+								
+							},
+                            error: function (response) {
+
+                            }
+							});
+	
+};
+
+var printPage3 =  function(ou){
+	
+	$.ajax({
+
+                            async: false,
+                            type: "GET",
+                            url: '../api/26/analytics/events/query/Ml0ZNj9APN0.json?dimension=pe:LAST_12_MONTHS&dimension=ou:mnbTnDyJ37p&dimension=glBt6kk3AXS:LIKE:RRT_Form3&dimension=m2ZfrZ8S3lV&dimension=vvg4HbWcexe&dimension=KgIJmJvQ3yi&dimension=XKNqEcG0Wtd&dimension=Q97Q3ioQg8Q&dimension=exivkavRFFD&dimension=LCNmaUDgNuX&dimension=grB2XVX7doD&dimension=mWNEozteylb&dimension=AatZs3YYSCh&dimension=aBEYPh9lFDI&stage=iWcQ5lxmsy4&displayProperty=NAME&outputType=EVENT&pageSize=100&page=1&outputIdScheme=NAME',
+                            success: function (data2) {
+							var index = 1;
+								
+							},
+                            error: function (response) {
+
+                            }
+							});
+	
+};
+
+
+var printPage4 =  function(ou){
+	
+	$.ajax({
+
+                            async: false,
+                            type: "GET",
+                            url: '../api/26/analytics/events/query/Ml0ZNj9APN0.json?dimension=pe:LAST_12_MONTHS&dimension=ou:mnbTnDyJ37p&dimension=glBt6kk3AXS:LIKE:RRT_FORM4&dimension=XYhSJWeyxQL&dimension=LMaifGPFvcH&dimension=fuK3meQ1KSQ&dimension=vFreAMvGWiT&dimension=WN5vL93Oclp&dimension=ACZXAvYiPHW&dimension=BG05HJlnWWb&dimension=J6r5ihKqCFt&dimension=IwNx9W7fniM&dimension=yh7fF14liAT&dimension=M2b3ZkGWBt2&dimension=zCQrwSjwhSG&dimension=DIi2NMavmMi&dimension=SSTgGFoFe5O&dimension=u6hIjwSaBFx&dimension=Ug5rsd70aSV&dimension=cwCdFNq1kkM&dimension=VEQaF0ZB0YT&stage=iWcQ5lxmsy4&displayProperty=NAME&outputType=EVENT&pageSize=100&page=1&outputIdScheme=NAME',
+                            success: function (data2) {
+							var index = 1;
+							
+							},
+                            error: function (response) {
+
+                            }
+							});
+	
+};
+
+
+
+function dhis2Map(){
+
+    var map;
+    const osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: "Map: <a href=\"http://osm.org/copyright\">OpenStreetMap</a>contributers" });
+    const  esri = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: "Map: <a href=\"http://osm.org/copyright\">OpenStreetMap</a>" });
+    const stamen = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: "Map: <a href=\"http://osm.org/copyright\">OpenStreetMap</a>" })
+    
+    const  esri2 = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+	attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+	maxZoom: 8
+    });
+
+    const osm_bw = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+
+    var baseLayers = {"stamen": stamen, "osm":osm, "esri":esri ,"osm_bw":osm_bw};
+
+    this.init = function(mapContainerId,center,zoom){
+        map = L.map(mapContainerId, {
+            center :center,
+            zoom: zoom
+        });
+//      baseLayers.osm_bw.addTo(map);
+       // baseLayers.osm.addTo(map);
+        
+        // var little = L.marker([13.23521,80.3332]).bindPopup('teshgghgft').addTo(map);
+        
+    };
+
+
+    this.clearLayers = function(id,value){
+        map.eachLayer(function (layer) {
+            if (layer.feature){
+                if (layer.feature.properties[id] == value){
+                    map.removeLayer(layer);
+                }
+            }
+        });
+    }
+
+    this.getLayer = function(id,value){
+        var _layer;
+         map.eachLayer(function (layer) {
+            if (layer.feature){
+                if (layer.feature.properties[id] == value){
+                    _layer = layer
+                }
+            }
+        });
+        return _layer;
+    }
+    this.addGeoJson = function(geoJson,pointToLayer,style,onEachFeature){
+
+        var mapArgs ={
+            /*     onEachFeature: function (feature, layer)
+                   {
+             if (feature.properties.type == 'centroid'){                
+             layer.bindPopup('<div id="alert"><i>Cluster Found</i><br><input type="button" value="Please confirm" onclick="alertConfirmed()"></div>');
+             
+
+             }else{
+             layer.bindPopup('<div id="alert"><i>Fever Case[<b> '+feature.properties.label+'</b>]<br></div>');
+
+             }
+
+             layer.on('click', function(e) {
+             // alert("SMS alerts to go here!");
+             
+             // Do whatever you want here, when the polygon is clicked.
+             });
+             }*/
+        };
+        if (style){
+            mapArgs.style = style;
+        }
+        if (onEachFeature){
+            mapArgs.onEachFeature = onEachFeature;
+        }
+        if (pointToLayer){
+            mapArgs.pointToLayer = pointToLayer;
+        }
+        
+
+        return  new  L.GeoJSON(geoJson,mapArgs).addTo(map); 
+    };
+
+
+    this.addToMap = function(obj){
+        obj.addTo(map);
+    };
+
+    this.getMap = function(){
+        return map;
+    }
+}
+
+
+function addOrgUnitLayer(map,level,style){
+
+        ajax.request({
+        type: "GET",
+        async: true,
+        contentType: "application/json",
+        url: "../api/organisationUnits?filter=level:eq:"+level+"&fields=id,name,coordinates&paging=false"
+    },function(error,response){
+        if (error){
+
+        }else{
+            addOrgUnits(map,getCoordinatesFromOus(response.organisationUnits),style);
+        }
+    });
+
+
+	function getCoordinatesFromOus(ous){
+
+	    var ouCoords = [];
+	    for (var key in ous){
+	        if (ous[key].coordinates){
+	            var coords = JSON.parse(ous[key].coordinates);
+	            //reverseCoordinates(coords[0]);
+	
+	            ouCoords.push(coords[0]);
+	        }
+	    }
+	    return ouCoords;
+	}
+}
+function addOrgUnitLayer2(map,ouuu,style){
+
+    ajax.request({
+        type: "GET",
+        async: true,
+        contentType: "application/json",
+        url: "../api/organisationUnits/"+ouuu+"?&fields=id,name,coordinates&paging=false"
+    },function(error,response){
+        if (error){
+
+        }else{
+            addOrgUnits(map,getCoordinatesFromOus2(response),style);
+        }
+    })
+
+
+	function getCoordinatesFromOus2(ous){
+
+	    var ouCoords2 = [];
+	            var coords2 = JSON.parse(ous.coordinates);
+	            //reverseCoordinates(coords[0]);
+	
+	            ouCoords2.push(coords2[0]);
+	        
+	    
+	    return ouCoords2;
+	}
+}
+
+
+function addOrgUnits(map,blockCoords,style,affectedOU){
+    
+    // a GeoJSON multipolygon
+    var mp = {
+        "type": "Feature",
+        "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": blockCoords
+        },
+        "properties": {
+            "name": "MultiPolygon",
+            key : "block"
+        }
+    };
+    
+    map.addGeoJson(mp,null,style);
+
+}
+
+
+var ajaXwrapper = function(){
+
+    var $ = jQuery;
+
+    this.request = function(param,callback){
+        param.success = success;
+        param.error = error;
+        $.ajax(param);
+
+        function success(response){
+            callback(null,response);
+        }
+
+        function error(response){
+            callback(true,response);
+        }
+    }
+
+}
+
+
+</script>
+<style>
+.custom{
+	margin-top:50px;
+	width:100%;
+	padding:20px;
+}
+h1{
+	text-align:center;
+	font-color:black;
+	text-decoration:underline;
+	font-family:Arial;
+}
+h5{
+	margin-top:30px;
+	margin-left:150px;
+}
+.custom-table1{
+	width:85%;
+	margin:auto;
+	font-size:16px;
+	text-align:center;
+}
+.head1span{
+	width:30%;
+	float:left;
+}
+
+.head1{
+	float:left;
+}
+.custom-table1 tr td {
+	min-width:90px;
+	border:1px solid black;
+	color:black;
+}
+.custom-table2{
+	width:75%;
+	margin:auto;
+	font-size:16px;
+	text-align:center;
+}
+.custom-table2 tr td {
+	border:1px solid black;
+	color:black;
+}
+.custom-table3, .custom-table4,.custom-table6,.custom-table7,.custom-table8,.custom-table9,.custom-table10,.custom-table12,.custom-table13{
+	width:75%;
+	margin:auto;
+	font-size:16px;
+	text-align:center;
+}
+.custom-table3 tr td , .custom-table4 tr td, .custom-table6 tr td, .custom-table7 tr td, .custom-table8 tr td, .custom-table9 tr td, .custom-table10 tr td,.custom-table12 tr td, .custom-table13 tr td{
+	border:1px solid black;
+	color:black;
+}
+.custom-table3wb,.custom-table7wb,.custom-table10wb{
+	width:75%;
+	margin:auto;
+	font-size:16px;
+	text-align:center;
+	border:none;
+}
+.custom-table3wb tr td {
+	border:none;
+	color:black;
+	text-align:left;
+}
+.custom-table10wb tr td {
+	border:none;
+	color:black;
+	text-align:center;
+}
+.custom-table7wb tr td {
+	border:none;
+	width:25%;
+	color:black;
+	text-align:left;
+}
+.table2q{
+	max-width:90px;
+}
+.custom-table11{
+	width:65%;
+	margin-left:15%;
+	font-size:16px;
+	text-align:center;
+}
+.custom-table11 tr td {
+	border:1px solid black;
+	color:black;
+}
+</style>
+</head>
+<body>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-lg-*  custom">
+				<img src="../api/documents/PRa74yvj2VL/data" style="float:left;margin-top:-20px;margin-left:100px;width: 100px;height: 100px">
+				<img src="../api/documents/KyVqC2KDKXO/data" style="float:right;margin-top:-20px;margin-right:100px;width: 100px;height: 100px">
+				<h1><b>ACTION TAKEN REPORT</b><br><b>EIR</b><br><b>PRELIMINARY REPORT</b></h1><br>
+				<span class="head1span" style="margin-left:250px"><p class="head1"><b>District :</b></p><p class="head1" id="district"></p></span>
+				<span class="head1span"><p class="head1"><b>Date :</b></p><p class="head1"></p></span><br><br><br><br>
+				
+				<table class="table table-bordered custom-table1">
+					<tr>
+						<td><u>a) Cross notification</u></td>
+						<td>Yes</td>
+						<td>b) Self Detection</td>
+						<td></td>
+						<td>c) Newspaper</td>
+						<td></td>
+					</tr>
+				</table>
+				<br>
+				<h5><b>2. Index Case Details </b></h5>
+			<!-- table 2 -->
+				<table class="table table-bordered custom-table2">
+					<tr><td class="table2q">Name</td><td id="indexd1"></td><td class="table2q">Diagnosis:</td><td id="indexd2"></td></tr>
+					<tr><td class="table2q">Age</td><td id="indexd3"></td><td class="table2q">Date of Onset fever:</td><td id="indexd4"></td></tr>
+					<tr><td class="table2q">Sex</td><td id="indexd5"></td><td class="table2q">Travel history:</td><td>No</td></tr>
+					<tr><td>Address</td><td colspan="3" id="indexd6"></td></tr>
+				</table>
+				<br>
+			<h5><b>3. Affected Area Details: <p id="district"></p></b></h5>
+			<!-- table 3 -->
+				<table class="table table-bordered custom-table3">
+					<tr><td>S1. No.</td><td>Name of the Block</td><td>PHC</td><td>HSC</td><td>Village</td><td>Pop. of village</td></tr>
+					<tr><td>1</td><td id="block"></td><td id="phc"></td><td id="hsc"></td><td id="village"></td><td id="population"></td></tr>
+				</table><br>
+		<p style="margin-left:200px;"><b>District Map:</b></p><br>
+			<center><div id = "districtMap" style="display:inline-block;height: 350px ;width:47%;"></div></center>
+<br>
+
+<br>
+		<p style="margin-left:200px;"><b>Block Map:</b></p><br>
+			<center><div id = "blockMap" style="display:inline-block;height: 350px ;width:47%;"></div></center>
+<br>
+
+<br>
+		<p style="margin-left:200px;"><b>PHC Map:</b></p><br>
+			<center><div id = "phcMap" style="display:inline-block;height: 350px ;width:47%;"></div></center>
+<br>
+
+<br>
+		<p style="margin-left:200px;"><b>HSC Map:</b></p><br>
+			<center><div id = "hscMap" style="display:inline-block;height: 350px ;width:47%;"></div></center>
+<br>
+
+			<!-- table 3 without border -->
+				<table class="table table-bordered custom-table3wb">
+					<tr><td rowspan="4">include</td><td>District Map – showing affected Block</td></tr>
+					<tr><td>Block Map – Showing affected PHC</td></tr>
+					<tr><td>PHC Map – Showing affected HSC</td></tr>
+					<tr><td>HSC Map – Showing affected and surrounding village details</td></tr>
+				</table>
+				<br>
+			<h5><b>4. Surrounding / Neighboring Area Details: </b></h5>
+			<!-- table 4 -->
+				<table class="table table-bordered custom-table4">
+					<tr><td>S1. No.</td><td>Name of the Block</td><td>PHC</td><td>HSC</td><td>Village</td><td>Pop. of village</td></tr>
+					<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+				</table>
+				<table class="table table-bordered custom-table3wb">
+					<tr><td>HSC Map – Showing affected and surrounding villages</td></tr>
+				</table>
+				<br>
+			<h5><b>5. Fever Surveillance: </b></h5>
+			<!-- table 5 without border -->
+				<table class="table table-bordered custom-table3wb">
+					<tr><td>a) Daily Surveillance Reporting Format (Annexure A )</td></tr>
+					<tr><td>b) Line list of Fever Cases ( Annexure B )</td></tr>
+					<tr><td>c) Age Group and Sex distribution of cases ( Annexure C )</td></tr>
+				</table>
+			<br>
+			<h5><b>6. Vector Surveillance (should be conducted by DMO immediately before initiating Antilarval / Anti adult measures) </b></h5>
+			<!-- table 6 -->
+				<table class="table table-bordered custom-table6">
+					<thead><tr><td rowspan="2">Date of Survey</td>
+						<td rowspan="2">Name of Village</td>
+						<td colspan="3">Houses</td>
+						<td colspan="3">Containers</td>
+						<td colspan="2" rowspan="2">Breateu Index</td>
+					</tr>
+					<tr><td>No. checked</td>
+						<td>Positive</td>
+						<td>Index</td>
+						<td>No. checked</td>
+						<td>Positive</td>
+						<td>Index</td>
+					</tr></thead>
+					<tbody>
+						<tr>
+							<td></td>
+							<td id="villageName"></td>
+							<td id="houses"></td>
+							<td></td>
+							<td></td>
+							<td id="containers"></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+					</tbody>
+				</table>
+				<br>
+			<h5><b>7. Medical Team Details: </b></h5>
+			<!-- table 7 -->
+				<table class="table table-bordered custom-table7">
+					<thead><tr><td rowspan="2">Date</td>
+						<td rowspan="2">Total no. of Teams</td>
+						<td colspan="2">Team 1</td>
+						<td colspan="2">Team 2</td>
+						<td colspan="2">Team 3</td>
+					</tr>
+					<tr><td>Areas covered</td>
+						<td>No. treated</td>
+						<td>Areas covered</td>
+						<td>No. treated</td>
+						<td>Areas covered</td>
+						<td>No. treated</td>
+					</tr></thead>
+					<tbody>
+						<tr>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+						</tr>
+					</tbody>
+				</table>
+				<!-- table 7 without border -->
+					<br>
+			<h5><b>8. Water Chlorination: </b></h5>
+				<table class="table table-bordered custom-table7wb">
+					<tr><td></td><td></td><td><b>Total No.of</b></td><td></td></tr>
+					<tr><td></td><td></td><td>a) OHT:</td><td id="oht"></td></tr>
+					<tr><td></td><td></td><td>b) Street Pipe:</td><td>0</td></tr>
+					<tr><td></td><td></td><td>c) House Pipe:</td><td>0</td></tr>
+				</table>
+				<!-- table 8 -->
+				<table class="table table-bordered custom-table8">
+					<thead><tr><td rowspan="2">S.No.</td>
+						<td rowspan="2">Date</td>
+						<td rowspan="2">Village</td>
+						<td colspan="2">OHT</td>
+						<td colspan="2">House Pipe</td>
+						<td colspan="2">Street Pipe</td>
+					</tr>
+					<tr><td>No. checked</td>
+						<td>Nil chlorine</td>
+						<td>No. checked</td>
+						<td>Nil chlorine</td>
+						<td>No. checked</td>
+						<td>Nil chlorine</td>
+					</tr></thead>
+					<tbody>
+						
+					</tbody>
+				</table>
+				<h5><b>9. Anti larval Measures </b></h5>
+			<!-- table 9 -->
+				<table class="table table-bordered custom-table9">
+					<tr>
+						<td rowspan="3">Date</td>
+						<td rowspan="3">Total No. of Teams</td>
+						<td rowspan="3">Area Covered</td>
+						<td rowspan="3">No. of Houses covered</td>
+						<td colspan="3">Team 1</td>
+					</tr>
+					<tr>
+						<td colspan="3">Sources</td>
+					</tr>
+					<tr>
+						<td>Identified</td>
+						<td>reduced</td>
+						<td>treated</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+					</tr>
+					<tr>
+						<td colspan="3">Team 2</td>
+						<td colspan="4">Team 3</td>
+					</tr>
+					<tr>
+						<td colspan="3">Sources</td>
+						<td colspan="4">Sources</td>
+					</tr>
+					<tr>
+						<td>Identified</td>
+						<td>reduced</td>
+						<td>treated</td>
+						<td>Identified</td>
+						<td colspan="2">reduced</td>
+						<td>treated</td>
+					</tr>
+					<tr>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+						<td colspan="2"></td>
+						<td></td>
+					</tr>
+				</table>
+				<h5><b>3. Affected Area Details: <p id="district"></p> </b></h5>
+				<center><h6>Adulticide Used: Pyrethrum 2% extract</h6></center>
+			<!-- table 10 -->
+				<table class="table table-bordered custom-table10">
+					<tr><td>Date</td><td>Areas Covered</td><td>No. of Houses covered</td></tr>
+					<tr><td></td><td></td><td></td></tr>
+				</table>
+			<h5><b>11. IEC Activities : Chorination Done & Fogging Done</b></h5>
+				<!-- table 10 without border -->
+				<table class="table table-bordered custom-table10wb">
+					<tr><td><b>Health Education given: Mosquito control Activities. Larval control Activities done. Fever survey done.</b></td></tr>
+				</table>
+				
+				<center><h5><b><u>ANNEXURE - A</u></b></h5></center>
+				<table class="table table-bordered custom-table10wb">
+					<tr><td><b>Fever Surveillance Details : </b>During 1st day of Survey all fever cases that occur 2 weeks before index case (twice
+							incubation of probable diagnosis) has to be included.</td></tr>
+				</table>
+				<table class="table table-bordered custom-table10wb">
+					<tr><td><b>Affected</b></td><td><b></b></td></tr>
+				</table>
+					
+					<!-- table 11 -->
+				<table class="table table-bordered custom-table11">
+					<tr>
+						<td rowspan="3">Day</td>
+						<td rowspan="3">Date of Survey</td>
+						<td colspan="6">village A</td>
+					</tr>
+					<tr>
+						<td colspan="2">Total</td>
+						<td colspan="2">Blood Smear</td>
+						<td colspan="2">Serum sample </td>
+					</tr>
+					<tr>
+						<td>Fever</td>
+						<td> Death</td>
+						<td>Coll</td>
+						<td> Result</td>
+						<td>Coll.</td>
+						<td> Result</td>
+					</tr>
+				</table>
+				<table class="able table-bordered custom-table3wb">
+					<tr><td><b>Note:</b></td></tr>
+					<tr><td>1) Both Old recovered and current new cases has to be included in the line list</td></tr>
+				</table>
+				
+				<center><h5><b><u>LINE LIST OF FEVER CASES ( ANNEXURE B )</u></b></h5></center>
+				<table class="table table-bordered custom-table10wb">
+					<tr><td style="text-align:left"><b>NAME OF THE VILLAGE :</b></td></tr>
+				</table>
+				
+				<!-- table 12 -->
+				<table class="table table-bordered custom-table12">
+					<tr>
+						<td rowspan="2">S.No</td>
+						<td rowspan="2">Name, Age and Sex</td>
+						<td rowspan="2">Door No. and Street Name</td>
+						<td rowspan="2">Signs and Symptoms</td>
+						<td rowspan="2">Date of onset Fever/symptoms</td>
+						<td colspan="2">Blood Smear</td>
+						<td colspan="2">Serum Sample</td>
+					</tr>
+					<tr>
+						<td>Date of Collection</td>
+						<td> Result</td>
+						<td>Date of Collection</td>
+						<td> Result</td>
+					</tr>
+				</table>
+				
+				<table class="able table-bordered custom-table3wb">
+					<tr><td>3) Serum Sample: IgM antibody (which usual occur 7 days after infection and persist detection is carried out for
+diagnosis. Hence, 5 serum samples should be collected only from cases who had fever (current or recovered)
+between one week and four weeks after onset of fever.</td></tr>
+				</table>
+				<br><br>
+				
+				<center><h5><b><u>AGE GROUP AND SEX DISTRIBUTION OF CASES ( ANNEXURE C )</u></b></h5></center>
+				<!-- table 13 --><br>
+				<table class="table table-bordered custom-table13">
+					<tr>
+						<td rowspan="2" colspan="1">Age Group</td>
+						<td colspan="3">Village A</td>
+					</tr>
+					<tr>
+						<td colspan="1">Total cases up to</td>
+						<td colspan="1"> Male</td>
+						<td colspan="1"> Female</td>
+					</tr>
+					
+				</table>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>
