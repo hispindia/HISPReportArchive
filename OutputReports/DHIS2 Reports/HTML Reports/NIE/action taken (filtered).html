@@ -1,0 +1,86 @@
+<html>
+<head>
+    <title>Clusters</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript">
+
+
+
+        var startDate,endDate,clusterId,clusterType;
+			var map;
+
+       
+        var submit =  function(){
+ var dat = document.getElementById("CheckDate").value;
+        var dat1 = dat.split('-');
+        var datee =  dat1.join('');
+         
+            
+            var index=1;
+            $.getJSON("../api/26/analytics/events/query/Ml0ZNj9APN0.json?dimension=pe:"+datee+"&dimension=ou:mnbTnDyJ37p&dimension=glBt6kk3AXS:LIKE:v2&stage=iWcQ5lxmsy4&displayProperty=NAME&outputType=EVENT&pageSize=100&page=1&outputIdScheme=NAME",function(data){
+			
+			$('.reporttable tbody').remove();
+            $('.reporttable tbody').detach();
+			prepareIdToObjectMap(data.rows,5);
+             var reportRow = "<tbody>";
+                for(var i=0;i<Object.keys(map).length;i++) {
+				var ouName = Object.keys(map)[i];
+				var ouId = Object.values(map)[i];
+                            var reportRow = reportRow + "<tr><td class='rowdata'>" + index + "</td><td class='rowdata'>"+ouName+"</td><td class='rowdata' ><a href='../dhis-web-reporting/generateHtmlReport.action?uid=yVqbfntXine&ou="+ouId+"&date="+datee+"' target='_self'>Click here to view report</a></td></tr>";
+                   
+                    index++;
+                }
+                 $('.reporttable').append(reportRow+"</tbody>");
+            });
+        };
+	var	prepareIdToObjectMap = function(object,id){
+map = [];
+for (var i=0;i<object.length;i++){
+map[object[i][id]] = object[i][7];
+}
+return map;
+}
+
+    </script>
+    <style>
+        .reporttable{
+            border-collapse: collapse;
+            border:1px solid black;
+            width:600px;
+        }
+        .tablerows{
+            text-align: center;
+            font-size:15px;
+            background-color: #81969B;
+            border:1px solid black;
+            height:30px;
+            width:150px;
+        }
+        .rowdata{
+            border:1px solid black;
+        }
+        a{
+            cursor:pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="printing"><center>
+    <input type="date" required id="CheckDate">
+
+    <button onClick="submit()" id="tap">Get List</button><br><br>
+</center>
+    <table class="reporttable" style='border:1px solid black;border-collapse: collapse; text-align:center;'>
+        <thead>
+        <tr>
+            <td class="tablerows">S.No.</td>
+            <td class="tablerows">Village Name</td>
+            <td class="tablerows">Link to report</td>
+        </tr>
+        </thead>
+    </table>
+</body>
+</html>
