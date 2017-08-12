@@ -1,0 +1,744 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+	<script>$(document).ready(function() {
+  $.ajaxSetup({ cache: false });
+});</script>
+  <style type="text/css" href="http://139.162.61.147/nieodk_new/api/documents/IlCodOSjSxY/data" media="print">
+        @media print {
+            .notPrint {
+                display: none;
+            }
+            #printing {
+                display: block;
+            }
+            @page {
+                size: A4 landscape;
+                max-height: 100%;
+                max-width: 100%
+            }
+        }
+    </style>
+
+    <style>
+        /* Center the loader */
+        #loader {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index:3;
+            width: 150px;
+            height: 150px;
+            margin: -75px 0 0 -75px;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+        }
+
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        table {
+            border-collapse: collapse;
+        }
+
+        table,
+        td,
+        th {
+            border: 1px solid black;
+        }
+
+        p {
+            text-align: center;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div id="loader" class="loader"></div>
+
+<div class="notPrint">
+<b style="margin-left: 30%">Start Date : </b><input type="date" id ="start" required>
+<input type="checkbox" id ="checkit" onclick="checkfunction()" checked> search only for single day End Date :  <input type="date" id ="end" disabled required><br><br>
+</div>
+<div style="text-align: center" class="notPrint">
+    <button onClick="generate(1);" id="dr1add">Daily Report 1-ADD</button>
+    &nbsp;
+    <button onClick="generate(2);" id="dr1afi">Daily Report 1-AFI</button>
+    &nbsp;
+    <button onClick="generate(3);" id="dr2">Daily Report 2 LAB</button><br><br>
+
+    <input type="button" id="export1" value="Download as Excel(DR1 ADD)" onClick="exportExcel_dr1add()">
+    &nbsp;
+    <input type="button" id="export2" value="Download as Excel(DR1 AFI)" onClick="exportExcel_dr1afi()">
+    &nbsp;
+    <input type="button" id="export3" value="Download as Excel(DR2 Lab)" onClick="exportExcel_dr2lab()">
+</div>
+<div id="printing">
+
+    <p id="dr1_fever"><strong>Daily  Report - I - ADD</strong></p>
+    <p id="dr1_fever1"><strong>Daily  Report - I - AFI</strong></p>
+    <p id="dr2_lab"><strong>Daily  Report 2</strong></p>
+    <p style="text-align: left;display: inline" id="datedisplay">Start Date:</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<p style="text-align: left;display: inline" id="datedisplay1">End Date:</p>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<p style="text-align: center;display: inline" id="orgunitdisplay"><strong>OrgUnit:</strong></p>
+
+    <table style="text-align:center" class="table_fever" id="fever_table">
+        <thead>
+        <tr style='border:1px solid black'>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>S.No.</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Date of Admission</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Age(in years)</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Sex (M/F)</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Guardian</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Door Number,Street Name,Habitation</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Village</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the block</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the HUD</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the District</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Contact Number</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Probable Diagnosis</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of Hospital/organisation</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Remarks if any</b></th></tr>
+        </thead>
+    </table>
+    <table style="text-align:center" class="table_lab" id="lab_table">
+        <thead>
+        <tr style='border:1px solid black'>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>S.No.</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Date of Confirmation</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Age(in years)</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Sex (M/F)</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Guardian</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Door Number,Street Name,Habitation</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Village</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the block</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the HUD</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the District</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Contact Number</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Diagnosis Lab Confirmed</b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of Institution/Lab Confirmed </b></th>
+            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Remarks if any</b></th></tr>
+        </thead>
+    </table>
+    <div style="display:flex">
+        <p style="padding-right:50%" id="footer1"> Supported by GHSA Project, ICMR-NIE, Chennai-77</p>
+        <p id="footer2"> Facilitated by DPH and PM, Chennai-06</p>
+        </div>
+</div>
+
+<script type="text/javascript">
+  
+var startDate="",endDate="";
+   var flag=0;
+    $( document ).ready(function() {
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("export2").disabled = true;
+        document.getElementById("export1").disabled = true;
+        document.getElementById("export3").disabled = true;
+        $('.table_fever').hide();
+        $('.table_lab').hide();
+        $('#datedisplay').hide();
+        $('#datedisplay1').hide();
+        $('#orgunitdisplay').hide();
+        $('#dr1_fever').hide();
+        $('#dr1_fever1').hide();
+        $('#dr2_lab').hide();
+        $('#footer1').hide();
+        $('#footer2').hide();
+		
+		var url = window.location.href;
+		var arrayUrl = url.split('&');
+		if(arrayUrl.length >2){
+		var arraySDate = arrayUrl[2] ;
+		 startDate = arraySDate.split('=')[1];
+		var arrayEDate = arrayUrl[3];
+		 endDate = arrayEDate.split('=')[1];
+		var arrayType = arrayUrl[4];
+		var type = arrayType.split('=')[1];
+		flag = 2;
+			generate(type);
+		
+		}
+//
+//            fever_table.Visible=false;
+//            lab_table.Visible=false;
+
+    });
+	
+	  var checkfunction = function(){
+        if($('input:checkbox').is(':checked')){
+            document.getElementById("end").disabled = true;
+        }
+        else{
+            document.getElementById("end").disabled = false;
+        }
+    };
+	var generate = function(selection){
+	
+				  
+    var urlApi;
+    var add_afi=[],add_aff=[],daily_ip=[],daily_op=[],daily_lab=[],village=[],hud=[],block=[],districtu=[],habitationu=[],gaurdian=[],remarks=[];
+	var dateofAdd=[],patientname=[],age=[],sex=[],guardian=[],street1=[],street2=[],district=[];
+    var url = window.location.href;
+    var ouu = url.split('=')[2],ouname;
+   var ou = ouu.split('&')[0]
+   var json,length;
+   var addcount=1;
+     var oulevel,oulevel_name;
+	var lab_positive="Positive",lab_diagnosis=[],lab_diagnosis_string=[];
+        var org_ghuid;
+        var hospital=[],contactnumber=[],diagnosis=[],nameofhospital,remarks=[];
+	
+  
+	
+    function callApis(selection)
+    {	
+		if(flag!=2){
+		startDate = document.getElementById("start").value;
+
+        if($('input:checkbox').is(':checked')){
+
+		endDate = startDate.substring(0,8)+(Number(startDate.substring(8,10)) + 1);
+		flag = 1;
+
+            
+        }
+        else{
+            endDate = document.getElementById("end").value;
+           
+        }
+		}
+		
+        document.getElementById("export2").disabled = true;
+        document.getElementById("export1").disabled = true;
+        document.getElementById("export3").disabled = true;
+//        showLoader();
+
+ $('.table_fever tbody').remove();
+        $('.table_fever tbody').detach();
+        $('.table_fever').show();
+        $('.table_lab').hide();
+        $('#dr2_lab').hide();
+        $('#datedisplay').show();
+        $('#datedisplay1').show();
+        $('#orgunitdisplay').show();
+        $('#dr1_fever').hide();
+		 $('#dr1_fever1').hide();
+        $('#footer1').show();
+        $('#footer2').show();
+      
+
+        $.getJSON("../api/organisationUnits/"+ou+".json", function(data1){
+	$("#loader").show();
+            ouname=data1.displayName;
+            oulevel=data1.level;
+
+            $.getJSON("../api/organisationUnitLevels?fields=level,name", function(data2) {
+
+                $.each(data2.organisationUnitLevels, function (index, item) {
+                    if(item.level==oulevel)
+                    {
+                        oulevel_name=item.name;
+                    }
+                });
+                document.getElementById("orgunitdisplay").innerHTML="Facility: "+ouname +" "+oulevel_name;
+          
+
+
+        
+
+       document.getElementById("datedisplay").innerHTML="Start Date:"+ startDate;
+				if(endDate ==null)
+				{
+				endDate ="-";
+				}
+                document.getElementById("datedisplay1").innerHTML="End Date:"+ endDate;
+
+//        $.getJSON("../api/events.json?orgUnit="+ou+"&program=Ml0ZNj9APN0&ouMode=DESCENDANTS&startDate="+startDate+"&endDate="+endDate+"&skipPaging=true&order=eventDate:desc", function(data){
+//        $.getJSON("../api/sqlViews/aABHZ3xSINW/data.json?var=startDate:"+startDate+"&var=endDate:"+endDate+"&var=syndrome:ADD", function(data){
+
+
+		
+     
+						if(selection == 1){
+                            $.getJSON("http://139.162.61.147/nieodk/api/sqlViews/aABHZ3xSINW/data.json?var=startDate:"+startDate+"&var=endDate:"+endDate+"&var=syndrome:ADD", function(data) {
+                                length = data.rows.length;
+                                saveData(data, 0);
+                                printDate1(length, 0);
+                                document.getElementById("export1").disabled = false;
+                                $('#dr1_fever').show();
+                            });
+						}
+						else if(selection == 2){
+                            $.getJSON("http://139.162.61.147/nieodk/api/sqlViews/aABHZ3xSINW/data.json?var=startDate:"+startDate+"&var=endDate:"+endDate+"&var=syndrome:AFI", function(data) {
+                                length = data.rows.length;
+                                saveData(data,0);
+							printDate2(length,0);
+							document.getElementById("export2").disabled = false;
+							 $('#dr1_fever1').show();
+                            });
+						}
+						else{
+                            $.getJSON("../api/sqlViews/YD92a2cONvA/data.json?var=startDate:"+startDate+"&var=endDate:"+endDate, function(data) {
+                                length = data.rows.length;
+
+                                saveDataLab(data,0);
+							printDate3(length,0);
+							document.getElementById("export3").disabled = false;
+							$('#dr2_lab').show();
+                            });
+						}    
+
+
+			$("#hidden1").show();
+			$("#hidden2").show();       
+
+	   });
+		
+  });
+
+//        });
+     
+
+    }
+			var saveData = function(data,p){
+			if(p>=data.rows.length){
+			return;}
+			else{
+					 json =  data.rows[p];
+
+                    for(var p=0;p<data.rows.length;p++)
+                    {
+                            dateofAdd.push(data.rows[p][1].substring(0,10));
+                            //Basic_Information/Name
+                            patientname.push(data.rows[p][2]);
+                            //Age in years
+                            age.push(data.rows[p][4]);
+                            //Gender
+                            sex.push(data.rows[p][5]);
+                            //Gaurdian
+                        guardian.push(data.rows[p][6]);
+                            //Street_Information/Street
+                            street1.push(data.rows[p][7]);
+                            //Street_Information/Pincode
+                            street2.push(data.rows[p][8]);
+                            //District
+                            districtu.push(data.rows[p][13]);
+                           habitationu.push(data.rows[p][9].replace(/[^A-Za-z]+/g, ''));
+                            //Village
+                           village.push(data.rows[p][10]);
+                           //block
+                           block.push(data.rows[p][11]);
+                           //hud
+                           hud.push(data.rows[p][12]);
+                           //contact
+                        contactnumber.push(data.rows[p][14]);
+                        diagnosis.push(data.rows[p][15]);
+                        //GH
+                hospital.push(data.rows[p][16] ? data.rows[p][16].split('-')[1] : "-");
+                        //remarks
+                        remarks.push(data.rows[p][17]);
+                    }
+
+						if(dateofAdd[p]==null)
+                        {
+                            dateofAdd[p]="-";
+                        }
+						if(patientname[p]==null)
+                        {
+                            patientname[p]="-";
+                        }
+						if(age[p]==null)
+                        {
+                            age[p]="-";
+                        }
+						if(sex[p]==null)
+                        {
+                            sex[p]="-";
+                        }
+
+                if(!hospital[p])
+                {
+                    hospital[p]="-";
+                }
+
+                        if(street1[p]==null)
+                        {
+                            street1[p]="-";
+                        }
+						if(habitationu[p]==null)
+                        {
+                            habitationu[p]="-";
+                        }
+						if(village[p]==null)
+                        {
+                            village[p]="-";
+                        }
+						if(hud[p]==null)
+                        {
+                            hud[p]="-";
+                        }
+						if(block[p]==null)
+                        {
+                            block[p]="-";
+                        }
+						if(districtu[p]==null)
+                        {
+                            districtu[p]="-";
+                        }
+
+						saveData(data, p+1);
+}
+			};
+	
+			var saveDataLab = function(data,p){
+			if(p>=data.rows.length){
+			return;}
+			else {
+                for(var p=0;p<data.rows.length;p++)
+                {
+
+                dateofAdd.push(data.rows[p][3]);
+                //Basic_Information/Name
+                patientname.push(data.rows[p][2]);
+                //Age in years
+                age.push(data.rows[p][4]);
+                //Gender
+                sex.push(data.rows[p][5]);
+                //Gaurdian
+                guardian.push(data.rows[p][6]);
+                //Street_Information/Street
+                street1.push(data.rows[p][7]);
+                //Street_Information/Pincode
+                street2.push(data.rows[p][8]);
+                //District
+                districtu.push(data.rows[p][13]);
+                habitationu.push(data.rows[p][9].replace(/[^A-Za-z]+/g, ''));
+                //Village
+                village.push(data.rows[p][10]);
+                //block
+                block.push(data.rows[p][11]);
+                //hud
+                hud.push(data.rows[p][12]);
+                //district
+                contactnumber.push(data.rows[p][14]);
+
+                if (data.rows[p][15].includes("Dengue")) {
+                    diagnosis.push("Dengue");
+                }
+                if (data.rows[p][16].includes("Malaria")) {
+                    diagnosis.push("Malaria");
+                }
+                if (data.rows[p][17].includes("Leptosprirosis")) {
+                    diagnosis.push("Leptosprirosis");
+                }
+                if (data.rows[p][18].includes("scrub_typhus")) {
+                    diagnosis.push("scrub_typhus");
+                }
+
+                //GH
+                hospital.push(data.rows[p][19] ? data.rows[p][19].split('-')[1] : "-");
+                //remarks
+                remarks.push(data.rows[p][20]);
+            }
+                    }
+
+
+
+               
+						if(dateofAdd[p]==null)
+                        {
+                            dateofAdd[p]="-";
+                        }
+						if(patientname[p]==null)
+                        {
+                            patientname[p]="-";
+                        }
+						if(age[p]==null)
+                        {
+                            age[p]="-";
+                        }
+						if(sex[p]==null)
+                        {
+                            sex[p]="-";
+                        }
+                if(!hospital[p])
+                {
+                    hospital[p]="-";
+                }
+                        if(street1[p]==null)
+                        {
+                            street1[p]="-";
+                        }
+						if(habitationu[p]==null)
+                        {
+                            habitationu[p]="-";
+                        }
+						if(village[p]==null)
+                        {
+                            village[p]="-";
+                        }
+						if(hud[p]==null)
+                        {
+                            hud[p]="-";
+                        }
+						if(block[p]==null)
+                        {
+                            block[p]="-";
+                        }
+						if(districtu[p]==null)
+                        {
+                            districtu[p]="-";
+                        }
+						saveDataLab(data, p+1);
+}
+
+	
+	
+	
+	
+			var printDate1 = function(i,p){
+				if(p>=i){
+				$("#loader").hide();
+				return;}
+				else{
+				
+				if(flag==1){
+				var dateNew = dateofAdd[p].substring(0,10);
+					if(dateNew != startDate){}
+					else{
+						var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>ADD</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
+                        $(".table_fever").append(row);
+                        addcount++;
+					}
+				
+				}
+				else{
+				
+				
+                        var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>ADD</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
+                        $(".table_fever").append(row);
+                        addcount++;
+					}
+					}
+					printDate1(i,p+1)
+				};
+
+			var printDate2 = function(i,p){
+			json2= dateofAdd;
+				if(p>=i){
+				$("#loader").hide();
+				return;}
+				else{
+                   
+					if(flag==1){
+				var dateNew = dateofAdd[p].substring(0,10);
+					if(dateNew != startDate){}
+					else{
+						var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>ADD</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
+                        $(".table_fever").append(row);
+                        addcount++;
+					}
+				
+				}
+				else{
+				
+
+				   var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
+                        "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
+                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
+                        "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
+                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
+                        "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
+                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
+                        "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
+                        "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
+                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
+                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
+                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
+                        "<td  id = 'tablerowsh' colspan='1' id='td'>AFI</td>" +
+                        "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
+                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
+                        $(".table_fever").append(row);
+                        addcount++;
+					}
+}				
+				printDate2(i,p+1)
+				};
+			var printDate3 = function(i,p){
+				if(p>=i){
+				$("#loader").hide();
+				return;}
+				else{
+                   
+				if(flag==1){
+				var dateNew = dateofAdd[p].substring(0,10);
+					if(dateNew != startDate){}
+					else{
+						var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>ADD</td>" +
+                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
+                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
+                        $(".table_fever").append(row);
+                        addcount++;
+					}
+				
+				}
+				else{
+				
+				
+				   var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
+                            "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
+                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
+                            "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
+                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
+                            "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
+                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
+                            "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
+                            "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
+                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
+                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
+                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
+                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis[p] +"</td>" +
+                            "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
+                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
+                        $(".table_fever").append(row);
+                        addcount++;
+					}
+					}
+					printDate3(i,p+1)
+			};
+
+			
+			callApis(selection);
+			};
+  
+
+
+
+</script>
+<script type="text/javascript">
+
+    function exportExcel_dr1add(e) {
+        var a = document.createElement('a');
+        var data_type = 'data:application/vnd.ms-excel';
+        var table_div = document.getElementsByClassName('table_fever')[0];
+        var table_html = table_div.outerHTML.replace(/ /g, '%20');
+        a.href = data_type + ', ' + table_html;
+        a.download = 'Daily Report ADD.xls';
+        a.click();
+        e.preventDefault();
+    }
+    function exportExcel_dr1afi(e) {
+        var a = document.createElement('a');
+        var data_type = 'data:application/vnd.ms-excel';
+        var table_div = document.getElementsByClassName('table_fever')[0];
+        var table_html = table_div.outerHTML.replace(/ /g, '%20');
+        a.href = data_type + ', ' + table_html;
+        a.download = 'Daily Report AFI.xls';
+        a.click();
+        e.preventDefault();
+    }
+ function exportExcel_dr2lab(e) {
+        var a = document.createElement('a');
+        var data_type = 'data:application/vnd.ms-excel';
+        var table_div = document.getElementsByClassName('table_lab')[0];
+        var table_html = table_div.outerHTML.replace(/ /g, '%20');
+        a.href = data_type + ', ' + table_html;
+        a.download = 'Daily Report2 Lab.xls';
+        a.click();
+        e.preventDefault();
+    }
+
+</script>
+</body>
+
+</html>
+</div>          </div>
+    <script type="text/javascript">
+        </script>
+
+    <div id="rightBar">
+      <span id="hideRightBar"><a href="javascript:hideHelpContent()" title="Close">
+        <i class="fa fa-times leftBarIcon"></i></a>
+      </span>
+      <div id="rightBarContents"></div>
+    </div>
+
+    
+
+
+  </body>
+</html>
