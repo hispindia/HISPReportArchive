@@ -1,0 +1,100 @@
+<html>
+<head>
+    <title>Clusters</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript">
+
+
+
+        var startDate,endDate,clusterId,clusterType;
+	var base = location.host + "/"+location.pathname.split("/")[1];
+
+        $(document).ready(function(){
+            var startDat = document.getElementById("start").value;
+           var  endDat = document.getElementById("end").value;
+            if(startDat !="" && endDat!=""){
+                submit();
+            }
+
+
+        });
+        var submit =  function(){
+
+            startDate = document.getElementById("start").value;
+            endDate = document.getElementById("end").value;
+
+            $('.reporttable tbody').remove();
+            $('.reporttable tbody').detach();
+            var index=1;
+            $.getJSON("../api/trackedEntityInstances.json?program=mcnt7nqNrNw&ouMode=ALL&fields=*&programStartDate="+ startDate +"&programEndDate="+ endDate+"&skipPaging=true",function(data){
+                for(var i=0;i<data.trackedEntityInstances.length;i++) {
+                    var tei= data.trackedEntityInstances[i].trackedEntityInstance;
+                    if(data.trackedEntityInstances[i].attributes.length!=0) {
+
+                        for (var j = 0; j < data.trackedEntityInstances[i].attributes.length; j++) {
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster ID"){
+                                clusterId = data.trackedEntityInstances[i].attributes[j].value;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster Type"){
+                                clusterType = data.trackedEntityInstances[i].attributes[j].value;
+                            }
+                            var reportRow = $("<tbody><tr><td class='rowdata'>" + index + "</td><td class='rowdata'>"+clusterId+"</td><td class='rowdata'>"+clusterType+"</td><td class='rowdata' ><a href='http://"+base+"/dhis-web-reporting/generateHtmlReport.action?uid=DnjzL5wPJE5&tei="+tei+"' target='_self'>Click here to view report</a></td><td class='rowdata'><a href='http://139.162.61.147:8000/sendClusterInformationReport?ou=Hy4VgekLJWM&tei="+tei+"'&name=Cluster_report.pdf' target='_self'>Click here to send Mail</a></td></tr>");
+                        }
+                    }
+                    else{
+                        clusterId="";
+                        clusterType="";
+                        var reportRow = $("<tr><td class='rowdata'>" + index + "</td><td class='rowdata'>"+clusterId+"</td><td class='rowdata'>"+clusterType+"</td><td class='rowdata'><a href='http://"+base+"/dhis-web-reporting/generateHtmlReport.action?uid=DnjzL5wPJE5tei="+tei+"' target='_self'>Click here to view report</a></td></tr>");
+                    }
+                    $('.reporttable').append(reportRow);
+                    index++;
+                }
+            });
+        };
+    </script>
+    <style>
+        .reporttable{
+            border-collapse: collapse;
+            border:1px solid black;
+            width:600px;
+        }
+        .tablerows{
+            text-align: center;
+            font-size:15px;
+            background-color: #81969B;
+            border:1px solid black;
+            height:30px;
+            width:150px;
+        }
+        .rowdata{
+            border:1px solid black;
+        }
+        a{
+            cursor:pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="printing">
+    Start Date : <input type="date" id ="start" required><br><br>
+    End Date :  <input type="date" id ="end" required><br><br>
+
+    <button onClick="submit()" id="tap">Submit</button><br><br>
+
+    <table class="reporttable" style='border:1px solid black;border-collapse: collapse; text-align:center;'>
+        <thead>
+        <tr>
+            <td class="tablerows">S.No.</td>
+            <td class="tablerows">Clusters Id</td>
+            <td class="tablerows">Clusters Type</td>
+            <td class="tablerows">Link to report</td>
+            <td class="tablerows">Send Email</td>
+        </tr>
+        </thead>
+		
+    </table>
+</body>
+</html>
