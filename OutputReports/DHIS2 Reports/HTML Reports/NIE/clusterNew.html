@@ -1,0 +1,673 @@
+<html>
+<head>
+    <title>Cluster Report</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+    <script type="text/javascript">
+
+        var tei,url,ou,index=1;
+        var clusterId="None", clusterType="None";
+        var district,hud,block,phc,rrt="None";
+        var population, houseCount;
+		var orgUnitt;
+		var patients,patientsArray;
+        var Pname,Page,Pgender,Pdoor,Phabitation,Pvillage,Pmob,Ponset, Pdate, Pstreet, Plab=[],Plat,Plong;
+        var Pname_map=[],Plat_map=[],Plong_map=[],Pou_map=[];
+        $(document).ready(function(){
+            url = window.location.href;
+            tei = url.split('=')[2];
+
+			var getPopulation =  function(ou){
+			
+					  $.ajax({
+
+                        async : false,
+                        type: "GET",
+                        url: '../api/26/analytics.json?dimension=dx:mTvYEp87oQP&dimension=ou:'+ou+'&filter=pe:LAST_5_YEARS;THIS_YEAR&displayProperty=NAME&outputIdScheme=UID',
+                        success: function(data){
+				population = Math.round(data.rows[0][2]);
+								houseCount = Math.round(population / 4);
+}		
+		});
+			
+			};
+			
+            $.getJSON("../api/trackedEntityInstances/"+tei+".json?fields=*",function(data){
+                ou = data.orgUnit;
+			//	getPopulation(ou);
+                    if(data.attributes.length!=0) {
+                        for(var i=0;i<data.attributes.length;i++) {
+                        if (data.attributes[i].displayName == "Cluster ID") {
+                            clusterId = data.attributes[i].value;
+                        }
+                        if (data.attributes[i].displayName == "Cluster Type") {
+                            clusterType = data.attributes[i].value;
+                        }
+						orgUnitt = data.orgUnit;
+						if (data.attributes[i].displayName == "No of Houses") {
+                            houseCount = data.attributes[i].value;
+                        }
+						if (data.attributes[i].displayName == "Population At Risk") {
+                            population = data.attributes[i].value;
+                        }
+						if (data.attributes[i].displayName == "CasesUIDs") {
+                            patients = data.attributes[i].value;
+                        }
+						
+						
+                    }
+                        }
+                    else{
+                        clusterId="None";
+                        clusterType="None";
+                    }
+
+					patientsArray = patients.split(';');
+                   
+
+                    $.getJSON("../api/26/analytics/events/query/Ml0ZNj9APN0.json?dimension=pe:LAST_5_YEARS;THIS_YEAR&dimension=ou:mnbTnDyJ37p&dimension=xUhbNO2bQCz&dimension=pa6AUJ4s9li&dimension=xq2RxjLDbev&dimension=KSaU2NSe3ga&dimension=XYhSJWeyxQL&dimension=GIGDIz8ivwS&dimension=KQFdmU5Oqz6&dimension=IeAaU6tgIFl&dimension=mYQBPHZugDx&dimension=nOCIVMD4lOv&dimension=nOCIVMD4lOv&dimension=vN0BoElifvC&dimension=IXnRY4BQtQZ&dimension=jwmIajW8wa4&dimension=z4NPqwhOjDH&dimension=xvEO66y1BB4&dimension=ojqkjOup797&dimension=GJsrYvDPJG1&dimension=pQLz5yJ0AJQ&dimension=aWM069T9jXj&dimension=eezUUL7VZMd&stage=iWcQ5lxmsy4&displayProperty=NAME&outputType=EVENT&paging=false",function(data5){
+
+                       
+
+
+                    for(var h = 0; h < patientsArray.length-1; h++){
+                        var kk=0;
+                        for(var ii = 0; ii < data5.rows.length; ii++){
+                            if(data5.rows[ii][0] == patientsArray[h]){
+                                        Plat= data5.rows[ii][3];
+                                        Plong=data5.rows[ii][4];
+										Pname = data5.rows[ii][8];
+										Pgender = data5.rows[ii][9];
+										Page = data5.rows[ii][10];
+										Pstreet = data5.rows[ii][11];
+										Pdoor = data5.rows[ii][12] + data5.rows[ii][13];
+                                        Phabitation = data5.rows[ii][14];
+                                        Pvillage = data5.rows[ii][15];
+                                        Pmob = data5.rows[ii][16];
+                                        Ponset = data5.rows[ii][17];
+                                        Pdate = data5.rows[ii][18];
+                                        phc = data5.rows[ii][19];
+								Pname_map.push(Pname);
+								Plat_map.push(Plat);
+								Plong_map.push(Plong);
+								Pou_map.push(Pvillage);
+										for (var jj = 20; jj < data5.rows[ii].length; jj++) {
+											var checkVar = data5.rows[ii][jj];
+											if (checkVar.indexOf("Positive") > -1) {
+												Plab[kk] = data5.headers[jj].column;
+												kk++;
+											}
+										}
+							}
+						}
+										if (Plab.length == 0) {
+											Plab[0] = "none";
+										}
+						
+						var newAge = Math.round(Page);
+					var newStreet = Pstreet.split('-')[0];
+					var newStreet = Pstreet.split('-')[0];
+						var newDoor = Pdoor + newStreet;
+						var newVil = Pvillage.split('-')[1];
+						var newHab = Phabitation.split('-')[0];
+						if(phc != ""){
+						phc = phc.split('-')[1];
+							if(phc == 'undefined' || phc == NULL){
+								phc= "";
+							}
+						}
+						
+						
+                        var newRow = $("<tr><td class='tdrow' colspan='1'>"+index+"</td><td class='tdrow' colspan='1'>"+Pname+"</td><td class='tdrow' colspan='1'>"+newAge+"</td><td class='tdrow' colspan='1'>"+Pgender+"</td><td class='tdrow' colspan='1'>"+newDoor+"</td><td class='tdrow' colspan='1'>"+newHab+"</td><td class='tdrow' colspan='1'>"+newVil+"</td><td class='tdrow' colspan='1'>"+Pmob+"</td><td class='tdrow' colspan='1'>"+Ponset+"</td><td class='tdrow' colspan='1'>"+Pdate+"</td><td class='tdrow' colspan='1'>"+Plab+"</td><td class='tdrow' colspan='1'>"+phc+"</td></tr>");
+                        $('.reporttable').append(newRow);
+                        index++;
+
+                        }
+                        $.ajax({
+
+                        async : false,
+                        type: "GET",
+                        url: '../api/organisationUnits/'+orgUnitt+'?fields=ancestors[id,displayName,level],children[id,displayName,level]',
+                        success: function(data1){
+                            $.each(data1.ancestors, function (index, item) {
+                                if(item.level==3)
+                                {
+                                    district=item.displayName;
+
+                                }
+                                if(item.level==4)
+                                {
+                                    hud=item.displayName;
+
+                                }
+                                if(item.level==5)
+                                {
+                                    block=item.displayName;
+
+                                }
+								 if(item.level==6)
+                                {
+                                    phc=item.displayName;
+
+                                }
+
+                            });
+					
+  $.ajax({
+
+                        async : false,
+                        type: "GET",
+                        url: '../api/26/analytics.json?dimension=dx:mTvYEp87oQP&dimension=ou:'+ou+'&filter=pe:LAST_5_YEARS;THIS_YEAR&displayProperty=NAME&outputIdScheme=UID',
+                        success: function(data){
+				population = Math.round(data.rows[0][2]);
+								houseCount = Math.round(population / 4);
+
+	
+					
+				 document.getElementById('cid').innerHTML = clusterId;
+                    document.getElementById('ctype').innerHTML = clusterType;
+                    document.getElementById('rrt').innerHTML = rrt;
+                    document.getElementById('cdistrict').innerHTML = district;
+                    document.getElementById('cHUD').innerHTML = hud;
+                    document.getElementById('cblock').innerHTML = block;
+                    document.getElementById('cphc').innerHTML = phc;
+                    document.getElementById('chouses').innerHTML = houseCount;
+                    document.getElementById('cpop').innerHTML = population;
+
+                        },
+                        error: function(response){
+
+                        }
+                    });
+					}
+						});
+						
+						});
+						
+						
+                        });
+            //map
+
+            var cloudmade1 = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                maxZoom: 20,
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+                key: 'BC9A493B41014CAABB9dsfsdfds8F0471D759707'
+            });
+
+            var map1 = L.map('map1')
+                    .setView([13.232323, 79.8888], 9.5);
+
+
+            // control that shows state info on hover
+            var info = L.control();
+
+            info.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'info');
+                this.update();
+                return this._div;
+            };
+
+            info.update = function (props) {
+                this._div.innerHTML = '';
+            };
+
+            info.addTo(map1);
+
+
+            // get color depending on population density value
+            function getColor(d) {
+                var afi_3 = '../api/documents/ph7t8TbV1lJ/data';
+                var afi_5 = '../api/documents/KE87BJI62sC/data';
+                var lab_1 = '../api/documents/AafIibwti0p/data';
+                var add_3 = '../api/documents/fFkqutaksRw/data';
+                var manual = '../api/documents/dWIBuOQPMHq/data';
+                return d > '1 Lab confirmed case' ? lab_1 :
+                        d > '5 AFI cases (last 5 days)' ? afi_5 :
+                        d > '5 AFI cases (last 5 days)' ? add_3 :
+                                d > '3 ADD cases (last 2 days)' ? afi_3 :
+                                d > 'Manual Cluster' ? manual :
+                                        '#FFEDA0';
+            }
+
+//
+
+
+            function style(feature) {
+                return {
+                    weight: 2,
+                    opacity: 1,
+                    color: 'white',
+                    dashArray: '3',
+                    fillOpacity: 0.7,
+                    fillColor: getColor(feature.properties.density)
+                };
+            }
+
+
+            var legend = L.control({position: 'bottomright'});
+
+            legend.onAdd = function (map) {
+
+                var div = L.DomUtil.create('div', 'info legend'),
+                        grades = ['3 AFI cases (last 5 days)', '5 AFI cases (last 5 days)', '1 Lab confirmed case','3 ADD cases (last 2 days)','Manual CLuster'],
+                        labels = [],
+                        from = ['../api/documents/ph7t8TbV1lJ/data', '../api/documents/KE87BJI62sC/data', '../api/documents/AafIibwti0p/data','../api/documents/fFkqutaksRw/data','../api/documents/dWIBuOQPMHq/data'],
+                        to;
+
+                for (var i = 0; i < grades.length; i++) {
+//                from = grades[i];
+                    to = grades[i];
+
+                    labels.push(
+                            '<img src="' + (from[i]) + '"  style="width:20px;height: 20px ;"> ' + ( to ));
+                }
+
+                div.innerHTML = labels.join('<br>');
+                return div;
+            };
+
+            legend.addTo(map1);
+
+
+            var afi_3 = '../api/documents/ph7t8TbV1lJ/data';
+            var afi_5 = '../api/documents/KE87BJI62sC/data';
+            var lab_1 = '../api/documents/AafIibwti0p/data';
+            var add_3 = '../api/documents/fFkqutaksRw/data';
+            var manual = '../api/documents/dWIBuOQPMHq/data';
+
+
+            $.getJSON("../api/organisationUnits?filter=level:eq:5&fields=id,name,coordinates&paging=false", function (response) {
+
+                addOrgUnits(getCoordinatesFromOus(response.organisationUnits), style);
+
+            });
+
+            $.getJSON("../api/organisationUnits?filter=level:eq:6&fields=id,name,coordinates&paging=false", function (response) {
+
+                addOrgUnits1(getCoordinatesFromOus(response.organisationUnits), style);
+
+            });
+            $.getJSON("../api/organisationUnits?filter=level:eq:7&fields=id,name,coordinates&paging=false", function (response) {
+
+                addOrgUnits2(getCoordinatesFromOus(response.organisationUnits), style);
+
+            });
+
+            function addOrgUnits1(blockCoords, style) {
+                var mp = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "MultiPolygon",
+                        "coordinates": blockCoords
+                    },
+                    "properties": {
+                        "name": "MultiPolygon",
+                        key: "block"
+                    }
+                };
+                L.geoJson(mp, {
+                    style: function () {
+                        return {
+                            color: "gray",
+                            opacity: 0.75,
+                            dashArray: '5, 5',
+                            weight: 3
+
+                        }
+                    }
+                }).addTo(map1);
+            }
+
+            function addOrgUnits2(blockCoords, style) {
+                var mp = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "MultiPolygon",
+                        "coordinates": blockCoords
+                    },
+                    "properties": {
+                        "name": "MultiPolygon",
+                        key: "block"
+                    }
+                };
+                L.geoJson(mp, {
+                    style: function () {
+                        return {
+                            color: "gray",
+                            opacity: 0.75,
+
+                        }
+                    }
+                }).addTo(map1);
+            }
+
+            function addOrgUnits(blockCoords, style) {
+                var mp = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "MultiPolygon",
+                        "coordinates": blockCoords
+                    },
+                    "properties": {
+                        "name": "MultiPolygon",
+                        key: "block"
+                    }
+                };
+                L.geoJson(mp, {
+                    style: function () {
+                        return {
+                            color: "black",
+                            opacity: 0.75,
+                            fillColor: "blue",
+                            fillOpacity: 0.1,
+                            dashArray: '5, 5',
+                            weight: 3
+
+                        }
+                    }
+                }).addTo(map1);
+
+                var markers = new L.FeatureGroup();
+
+
+                map1.removeLayer(markers);
+                markers.clearLayers();
+                //           ../api/analytics/events/query/X2XfE0rYiwk.json?stage=apqU6esBuwV&dimension=pe:LAST_12_MONTHS&dimension=ou:WXW1rhM9hgR&dimension=ALvy8yTD1Np&dimension=gPGTS8eGa4i&dimension=oqTYHlWrWBh&dimension=oDg3FLcVw0R&dimension=J6uckqQfkyc&displayProperty=NAME
+
+                function getCustomIcon(path) {
+                    return new L.Icon({
+                        //  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                        iconUrl: path,
+                        //  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [30, 30],
+                        iconAnchor: [6, 1],
+                        popupAnchor: [1, -34],
+                    });
+
+                }
+
+                function getCustomIcon1(path) {
+                    return new L.Icon({
+                        //  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                        iconUrl: path,
+                        //  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [30, 30],
+                        iconAnchor: [4, 2],
+                        popupAnchor: [2, -25],
+                    });
+
+                }
+
+                function getCustomIcon2(path) {
+                    return new L.Icon({
+                        //  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                        iconUrl: path,
+                        //  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [30, 30],
+                        iconAnchor: [3, 1],
+                        popupAnchor: [3, -18],
+                    });
+
+                }
+//                for(var i=0;i<Pname_map.length;i++)
+//                {
+//
+//                    var marker = L.marker([Plong_map[i], Plat_map[i]], {
+//                    }).addTo(map1).bindPopup("</br><strong>Pname_map[i]</strong>");
+//                    markers.addLayer(marker);
+//
+//                }
+
+                $.getJSON("../api/trackedEntityInstances/"+tei+".json?fields=*", function (data) {
+
+                                for (var j = 0; j < data.attributes.length; j++) {
+                                    if (data.attributes[j].attribute == "vCeMi4DtfEC" && data
+                                                    .attributes[j].valueType == "TRUE_ONLY") {
+
+                                        for (var k = 0; k < data.attributes.length; k++) {
+                                            if (data.attributes[k].attribute == "sanq4S5uYdb") {
+                                                var coordinate = jQuery.parseJSON(data.attributes[
+                                                        k].value);
+                                                //  var marker = L.marker([coordinate.latitude,coordinate.longitude], {radius:5,fillColor: "#FF0000",color:"#FF0000"}).addTo(map1).bindPopup("</br><strong>Organisation unit:</strong>");
+                                                console.log("afi", coordinate.latitude);
+                                                var marker = L.marker([coordinate.latitude, coordinate.longitude], {
+                                                    icon: getCustomIcon(afi_3)
+                                                }).addTo(map1).bindPopup("</br><strong>3 AFI cases (last 5 days)</strong>");
+                                                markers.addLayer(marker);
+                                            }
+
+
+                                        }
+
+
+                                    } else if (data.attributes[j].attribute == "k0L2KR4ZrU2" &&
+                                            data.attributes[j].valueType == "TRUE_ONLY") {
+
+                                        for (var k = 0; k < data.attributes.length; k++) {
+                                            if (data.attributes[k].attribute == "sanq4S5uYdb") {
+                                                var coordinate = jQuery.parseJSON(data.attributes[
+                                                        k].value);
+                                                console.log("5afi", coordinate.latitude);
+                                                var marker = L.marker([coordinate.latitude, coordinate.longitude], {
+                                                    icon: getCustomIcon1(afi_5)
+                                                }).addTo(map1).bindPopup("</br><strong>5 AFI cases (last 7 days)</strong>");
+                                                markers.addLayer(marker);
+
+                                            }
+
+
+                                        }
+
+                                    }
+
+                                    else if (data.attributes[j].attribute == "nMC9jWaMUTA" &&
+                                            data.attributes[j].valueType == "TRUE_ONLY") {
+                                        for (var k = 0; k < data.attributes.length; k++) {
+                                            if (data.attributes[k].attribute == "sanq4S5uYdb") {
+                                                var coordinate = jQuery.parseJSON(data.attributes[
+                                                        k].value);
+                                                console.log("1lab", coordinate.latitude);
+                                                var marker = L.marker([coordinate.latitude, coordinate.longitude], {
+                                                    icon: getCustomIcon2(lab_1)
+                                                }).addTo(map1).bindPopup("</br><strong>1 Lab confirmed case</strong>");
+                                                markers.addLayer(marker);
+
+                                            }
+
+
+                                        }
+                                    }
+                                    else if (data.attributes[j].attribute == "ET5iMtBo5fV" &&
+                                            data.attributes[j].valueType == "TRUE_ONLY") {
+                                        for (var k = 0; k < data.attributes.length; k++) {
+                                            if (data.attributes[k].attribute == "sanq4S5uYdb") {
+                                                var coordinate = jQuery.parseJSON(data.attributes[
+                                                        k].value);
+                                                console.log("1lab", coordinate.latitude);
+                                                var marker = L.marker([coordinate.latitude, coordinate.longitude], {
+                                                    icon: getCustomIcon2(add_3)
+                                                }).addTo(map1).bindPopup("</br><strong>3 ADD cases (last 2 days)</strong>");
+                                                markers.addLayer(marker);
+
+                                            }
+
+
+                                        }
+                                    }
+                                    else if (data.attributes[j].attribute == "sBmb7HfvAau" &&
+                                            data.attributes[j].value == "MANUAL") {
+                                        for (var k = 0; k < data.attributes.length; k++) {
+                                            if (data.attributes[k].attribute == "sanq4S5uYdb") {
+                                                var coordinate = jQuery.parseJSON(data.attributes[
+                                                        k].value);
+                                                var marker = L.marker([coordinate.latitude, coordinate.longitude]).addTo(map1).bindPopup("</br><strong>3 ADD cases (last 2 days)</strong>");
+                                                markers.addLayer(marker);
+
+                                            }
+
+
+                                        }
+                                    }
+                                    map1.addLayer(markers);
+
+
+                                }
+
+
+
+                        });
+
+            }
+
+            function getCoordinatesFromOus(ous) {
+
+                var ouCoords = [];
+                for (var key in ous) {
+                    if (ous[key].coordinates) {
+                        var coords = JSON.parse(ous[key].coordinates);
+                        ouCoords.push(coords[0]);
+                    }
+                }
+                return ouCoords;
+            }
+
+
+        });
+
+    </script>
+    <style>
+        *{
+
+            margin:0;
+            padding:0;
+        }
+        #outerContainer{
+            background-color: white;
+        }
+        h1{
+            font-size:40px;
+            margin-top:30px;
+			margin-left:33%;
+        }
+        h2{
+            font-size:30px;
+            text-align: center;
+        }
+        #cluster {
+            margin:auto;
+            height:280px;
+            width:1000px;
+        }
+        .Cheading{
+            font-size:27px;
+        text-align: left;
+            margin-left:50px;
+        }
+        #clusterTable{
+            border-collapse: collapse;
+            border: 1px solid black;
+            width:900px;
+            height: 200px;
+            margin-left:50px;
+        }
+        table, td, tr {
+            border:1px solid black;
+        }
+        #patientdata{
+            margin:auto;
+            width:1200px;
+        }
+        .ctd {
+            height:50px;
+        }
+        .textc{
+            height:30px;
+            float:left;
+            width: 150px;
+            font-size: 20px;
+            padding: 2px 0px 4px 8px;
+        }
+		th {
+			text-align:center;
+		}
+        .headc{
+            float:left;
+            font-size:20px;
+            padding:2px 2px 2px 6px;
+        }
+        .reporttable{
+            border-collapse: collapse;
+            border:1px solid black;
+        }
+        .tablerows{
+            text-align: center;
+            font-size:16px;
+            background-color: #81969B;
+            border:1px solid black;
+            height:50px;
+            width:10%;
+        }
+        .tdrow{
+            text-align: center;
+            border:1px solid black;
+            width:10%;
+        }
+        input[value=Print], input[value=Back]{
+            display: none;
+        }
+		tr td{
+			height:40px;
+		}
+        #print, #back{
+            width:75px;
+            height: 30px;
+            margin:20px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="outerContainer">
+    <button id="print" style="float:left" onclick="window.print()">Print</button>
+    <button id="back" style="float:left" onClick="window.history.back()">Back</button><br>
+    <h1>Cluster Information for Public health response</h1>
+    <h2>GHSA Project, NIE-ICMR, Chennai-77</h2><br><br><br>
+    <div id="cluster"><p class="Cheading" style="margin-left:0"><b>Cluster Details :</b></p><br>
+        <table id="clusterTable">
+            <tr><td class="ctd"><p class="headc">Cluster id: </p><p class="textc" id="cid"></p></td>
+                <td class="ctd"><p class="headc">Cluster Type: </p><p class="textc" id="ctype"></p></td>
+                <td class="ctd"><p class="headc">RRT Assigned: </p><p class="textc" id="rrt"></p></td></tr>
+            <tr><td class="ctd"><p class="headc">District: </p><p class="textc" id="cdistrict"></p></td>
+                <td class="ctd"><p class="headc">Health Unit district: </p><p class="textc" id="cHUD"></p></td>
+                <td class="ctd"><p class="headc">Block: </p><p class="textc" id="cblock"></p></td></tr>
+            <tr><td class="ctd"><p class="headc">PHC: </p><p class="textc" id="cphc"></p></td>
+                <td class="ctd"><p class="headc">No. of houses: </p><p class="textc" id="chouses"></p></td>
+                <td class="ctd"><p class="headc">Population at risk: </p><p class="textc" id="cpop"></p></td></tr>
+        </table>
+    </div>
+    <div id="patientdata">
+        <p class="Cheading"><b>Line list of case patients :</b></p><br>
+        <table class="reporttable">
+            <thead>	<tr style='background-color:#81969B;border:1px solid black'>
+                <th class = 'tablerows' colspan='1' >S.No.</th>
+                <th class = 'tablerows' colspan='1' >Name</th>
+                <th class = 'tablerows' colspan='1' >Age(in years)</th>
+                <th class = 'tablerows' colspan='1' >Gender</th>
+                <th class = 'tablerows' colspan='1' >Door, Street Name</th>
+                <th class = 'tablerows' colspan='1' >Habitation</th>
+                <th class = 'tablerows' colspan='1' >Village</th>
+                <th class = 'tablerows' colspan='1' >Mobile Number</th>
+                <th class = 'tablerows' colspan='1' >Onset of AFI/ADD</th>
+                <th class = 'tablerows' colspan='1' >Date of Admission</th>
+                <th class = 'tablerows' colspan='1' >Lab Results</th>
+                <th class = 'tablerows' colspan='1' >Reported Institution</th>
+            </thead>
+        </table>
+    </div>
+
+</div><br><br>
+<p class="Cheading"><b>Spot Map</b></p><br><br>
+<div id="map1" style="width:1000px; height:450px;margin-left: 10%" ></div>
+</body>
+</html>
