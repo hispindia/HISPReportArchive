@@ -215,7 +215,7 @@
                     <structure>
                         <property name="position">12</property>
                         <property name="name">Total Time Taken</property>
-                        <property name="dataType">time</property>
+                        <property name="dataType">string</property>
                     </structure>
                 </list-property>
             </structure>
@@ -302,8 +302,8 @@
                     <property name="position">12</property>
                     <property name="name">Total Time Taken</property>
                     <property name="nativeName">Total Time Taken</property>
-                    <property name="dataType">time</property>
-                    <property name="nativeDataType">92</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
                 </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT ps.patient_id,CONCAT(ps.given_name,' ',ps.family_name) AS 'Name' ,ps.identifier AS 'Patient Id',ps.gender AS 'Gender',
@@ -333,7 +333,10 @@ CASE WHEN (YEAR(pat.date_created)-YEAR(ps.birthdate)>=1)
     END 
 END AS 'Age',cn.name AS 'Name Of OPD',TIME(pat.date_created) AS 'Registration Time',TIME(bpsb.created_date) AS 'Billing Time',
 TIME(o.obs_datetime) AS 'OPD Consultation Time',TIME(radtest.date) AS 'Radiology  Result Entry Time',TIME (ob1.obs_datetime) AS 'Laboratory  Result Entry Time',
-TIMEDIFF(MAX(enc2.encounter_datetime),MIN(enc2.encounter_datetime)) AS 'Total Time Taken'
+CONCAT(
+   MOD(HOUR(TIMEDIFF(MAX(enc2.encounter_datetime),MIN(enc2.encounter_datetime))), 24), ' hours, ',
+   MINUTE(TIMEDIFF(MAX(enc2.encounter_datetime),MIN(enc2.encounter_datetime))), ' minutes, ',
+   SECOND(TIMEDIFF(MAX(enc2.encounter_datetime),MIN(enc2.encounter_datetime))), ' seconds') AS 'Total Time Taken'
 FROM patient pat
 INNER JOIN patient_search ps ON ps.patient_id=pat.patient_id
 INNER JOIN billing_patient_service_bill bpsb ON bpsb.patient_id=ps.patient_id
@@ -729,7 +732,8 @@ GROUP BY ps.patient_id]]></xml-property>
                     <property name="name">Total Time Taken</property>
                     <text-property name="displayName">Total Time Taken</text-property>
                     <expression name="expression" type="javascript">dataSetRow["Total Time Taken"]</expression>
-                    <property name="dataType">time</property>
+                    <property name="dataType">string</property>
+                    <property name="allowExport">true</property>
                 </structure>
                 <structure>
                     <property name="name">Aggregation</property>
