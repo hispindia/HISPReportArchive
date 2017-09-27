@@ -1,0 +1,247 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+    crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn"
+    crossorigin="anonymous"></script>
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+</style>
+
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle;" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"><span
+        class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;
+    Download As Excel
+</button>
+
+<br><br>
+
+<div id="printing">
+    <div id='state'>
+        <table width="100%" id="dataTable" class="table table-bordered table-hover text-center" border="1" cellspacing="6" cellpadding="4">
+            <thead style="background:#ADD8E6;">
+                <tr>
+                    <td colspan="19">जननी सुरक्षा योजना तथा जननी शिशु सुरक्षा कार्यक्रम (जनपद स्तरीय प्रपत्र)</td>
+                </tr>
+                <tr>
+                    <td colspan="5" width="466">मण्डल का नाम:-&nbsp;<span id="ouname"></span></td>
+                    <td colspan="4" width="603">&nbsp;</td>
+                    <td colspan="10" width="1604">माह:-&nbsp;<span id="periodName"></span></td>
+                </tr>
+                <tr>
+                    <td width="100" rowspan="2" id="level1"></td>
+                    <td width="55" rowspan="2" id="level2"></td>
+                    <td colspan="2" width="195">विकास खण्ड स्तर एवं उससे ऊपर की सरकारी स्वास्थ्य इकाईयों में हुए प्रसवों की संख्या</td>
+                    <td width="77">48 घंटे रूकने वाले लाभार्थियों की संख्या</td>
+                    <td colspan="12" width="1827">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td colspan="12" width="1827">जननी शिशु सुरक्षा कार्यक्रम (श्रैैज्ञ) के अन्तर्गत आच्छादित प्रसव इकाइयों पर गर्भवती
+                                        महिलाओं को दी जा रही निःशुल्क सेवाएं</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="106">माह में</td>
+                    <td width="89">माह तक</td>
+                    <td width="77">माह में</td>
+                    <td width="139">निःशुल्क उपचार प्राप्त लाभार्थियों की संख्या</td>
+                    <td width="133">निःशुल्क भोजन प्राप्त लाभार्थियों की संख्या</td>
+                    <td width="155">निःशुल्क परिवहन सुविधा प्राप्त लाभार्थियों की संख्या</td>
+                    <td width="153">fu%'kqqYd vYVªklkm.M tk¡psa xHkZorh efgykvksasa dh la[;k</td>
+                    <td width="162">fu%'kqqYd jDr p&lt;+k;h x;h xHkZorh efgykvksasa dh la[;k&nbsp;</td>
+                    <td width="138">mipkj izkIr uotkr f'k'kqvksa dh la[;k&nbsp;&nbsp;</td>
+                    <td width="125">izkIr f'kdk;rksa dh la[;k fuLrkj.k&nbsp;</td>
+                    <td width="130">f'kdk;rksa dh la[;k ftudk fuLrkj.k fd;k x;k</td>
+                    <td width="173">?kj ls LokLF; bdkbZ rd fu%'kqqYd ifjogu lqfo/kk izkIr uotkr f'k'kqvksasa dh la[;k</td>
+                    <td width="173">fu%'kqqYd lUnHkZu lqfo/kk izkIr uotkr f'k'kqvksasa dh la[;k</td>
+                    <td width="173">LokLF; bdkbZ ls ?kj rd fu%'kqqYd ifjogu lqfo/kk izkIr uotkr f'k'kqvksasa dh la[;k</td>
+                    <td width="173">अभ्युक्ति</td>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
+
+<!-- Main Script -->
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+
+    var periodName = getPeriod(period);
+    console.log(periodName);
+
+    document.getElementById('periodName').innerHTML = periodName;
+
+
+    console.log(period);
+    var orgUnitChildren_Array = [];
+    var secondChildren_Array = [];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+
+    document.getElementById('ouname').innerHTML = orgUnit.name;
+
+    if (selOrgUnitLevel == 2) {
+        document.getElementById('level1').innerHTML = "Divison Name";
+        document.getElementById('level2').innerHTML = "District Name";
+    }
+    else if (selOrgUnitLevel == 3) {
+        document.getElementById('level1').innerHTML = "District Name";
+        document.getElementById('level2').innerHTML = "Block Name";
+    }
+    else if (selOrgUnitLevel == 4) {
+        document.getElementById('level1').innerHTML = "Block Name";
+        document.getElementById('level2').innerHTML = "Facility Name";
+    }
+
+
+    $.each(orgUnitChildren, function (i, val) {
+        orgUnitChildren_Array.push([val.id, val.name]);
+    });
+    orgUnitChildren_Array.sort(arraySorting);
+    // console.log(orgUnitChildren_Array);
+
+
+    for (var i = 0; i < orgUnitChildren_Array.length; i++) {
+
+        var ouid = orgUnitChildren_Array[i][0];
+        var ouidName = orgUnitChildren_Array[i][1];
+        // console.log(ouidName);
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: "http://uphmis.in/uphmis/api/organisationUnits/" + ouid + ".json?fields=children[id,name]&order=name:desc",
+            success: function (data1) {
+
+                // data1.sort(arraySorting);
+                $.each(data1, function (i, val) {
+                    secondChildren_Array.push([val.id, val.name]);
+                });
+
+                var data_district = data1;
+
+                $.each(data_district, function (i, data) {
+
+                    for (var x = 0; x < data.length; x++) {
+
+                        var district = data[x].name;
+                        // console.log(district);
+
+                        $.ajax({
+                            async: false,
+                            type: "GET",
+                            dataType: "json",
+                            contentType: "application/json",
+                            url: "http://uphmis.in/uphmis/api/25/analytics.json?dimension=dx:Nsll4RxgNlo.Ti9FJqkSK6J;ozzIeiddUyN.Ti9FJqkSK6J;v36o8edojih.s68zNh7ssqX;iOt7o3TvNG4.Ti9FJqkSK6J;xFbpDV663ak;svtwwOpurbg;xFbpDV663ak.QLxp2ax8CRL;K2tTwUh9NJy.svtwwOpurbg;qflIECaldR1.Ti9FJqkSK6J;v36o8edojih.s68zNh7ssqX;vuzSex7ZCxC.Ti9FJqkSK6J;uULzcMXOegs.Ti9FJqkSK6J;v36o8edojih.gBzmANHnG0n;v36o8edojih.Ac5cDgSX3j5;xFbpDV663ak.QLxp2ax8CRL&dimension=ou:" + data[x].id + "&filter=pe:" + period + "&displayProperty=NAME",
+                            success: function (data2) {
+
+                                var tabledata = '<tr>';
+
+                                var hmis = datavalue(data2, 'Nsll4RxgNlo.Ti9FJqkSK6J');
+                                var value1 = datavalue(data2, 'ozzIeiddUyN.Ti9FJqkSK6J', 'v36o8edojih.s68zNh7ssqX');
+                                var value2 = datavalue(data2, 'iOt7o3TvNG4.Ti9FJqkSK6J');
+                                var value3 = datavalue(data2, 'xFbpDV663ak.svtwwOpurbg', 'xFbpDV663ak.QLxp2ax8CRL');
+                                var value4 = datavalue(data2, 'K2tTwUh9NJy.svtwwOpurbg');
+                                var value5 = datavalue(data2, 'qflIECaldR1.Ti9FJqkSK6J');
+                                var value6 = datavalue(data2, 'v36o8edojih.s68zNh7ssqX');
+                                var value7 = datavalue(data2, 'vuzSex7ZCxC.Ti9FJqkSK6J');
+                                var value8 = datavalue(data2, 'uULzcMXOegs.Ti9FJqkSK6J');
+                                var value9 = datavalue(data2, 'v36o8edojih.gBzmANHnG0n');
+                                var value10 = datavalue(data2, 'v36o8edojih.Ac5cDgSX3j5');
+                                var value11 = datavalue(data2, 'xFbpDV663ak.QLxp2ax8CRL');
+
+                                tabledata += ("<td>" + ouidName + "</td><td>" + district + "</td><td></td><td></td><td>" + hmis + "</td><td>" + value1 + "</td><td>" + value2 + "</td><td>" + value3 + "</td><td>" + value4 + "</td><td>" + value5 + "</td><td>" + value6 + "</td><td>" + value7 + "</td><td>" + value8 + "</td><td>" + value9 + "</td><td>" + value10 + "</td><td>" + value11 + "</td>");
+
+                                tabledata += "<td></td></tr>";
+                                document.getElementById("dataTable").innerHTML += tabledata;
+                            },
+                            error: function (response) {
+                            }
+                        });
+
+
+                    }
+                });
+            },
+            error: function (response) {
+            }
+        });
+
+    }
+
+    function datavalue(dataJSON, id, id1) {
+
+
+        var value1 = 0;
+        var value2 = 0;
+        for (var i = 0; i < dataJSON.rows.length; i++) {
+            if (dataJSON.rows[i][0] == id) {
+                value1 = parseInt(dataJSON.rows[i][2]);
+            }
+            else {
+            }
+
+
+            if (id1 = undefined) {
+            }
+
+            if (dataJSON.rows[i][0] == id1) {
+                value2 = parseInt(dataJSON.rows[i][2]);
+            }
+
+        }
+
+        return (value1 + value2);
+
+    }
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1") strMonth = "January";
+        else if (month == "02" || month == "2") strMonth = "February";
+        else if (month == "03" || month == "3") strMonth = "March";
+        else if (month == "04" || month == "4") strMonth = "April";
+        else if (month == "05" || month == "5") strMonth = "May";
+        else if (month == "06" || month == "6") strMonth = "June";
+        else if (month == "07" || month == "7") strMonth = "July";
+        else if (month == "08" || month == "8") strMonth = "August";
+        else if (month == "09" || month == "9") strMonth = "September";
+        else if (month == "10") strMonth = "October";
+        else if (month == "11") strMonth = "November";
+        else if (month == "12") strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+</script>
