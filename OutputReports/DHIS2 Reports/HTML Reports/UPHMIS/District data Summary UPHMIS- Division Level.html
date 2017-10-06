@@ -37,6 +37,7 @@
     var periodidS;
     var district_Array = [];
     var division_Array = [];
+	var Block_Array = [];
     var SC_Array = [];
     var CHC_Array = [];
     var PHC_Array = [];
@@ -61,10 +62,10 @@
         showLoad();
 
        
-            $.each(orgUnitChildren, function (i, val) {
-                division_Array.push([val.id, val.name]);
+        $.each(orgUnitChildren, function (i, val) {
+                district_Array.push([val.id, val.name]);
             });
-            division_Array.sort(arraySorting);
+            district_Array.sort(arraySorting);
 
             $("#btnExport").click(function (e) {
                 var a = document.createElement('a');
@@ -131,8 +132,8 @@
 
 
     function loadOrgUnits() {
-        var districts_URL = "../api/organisationUnits.json?level=5&fields=[id,name,path]&paging=false";
-        var districts_URL2 = "../api/organisationUnits.json?level=4&fields=[id,name,path]&paging=false";
+        var block_URL = "../api/organisationUnits.json?level=5&fields=[id,name,path]&paging=false";
+        var districts_URL = "../api/organisationUnits.json?level=4&fields=[id,name,path]&paging=false";
         var CHC_URL = "../api/organisationUnitGroups/gBerHA2rUH0.json?fields=organisationUnits[id,name,path]";
         var PHC_URL = "../api/organisationUnitGroups/nIVbiyAyRrb.json?fields=organisationUnits[id,name,path]";
         var SC_URL = "../api/organisationUnitGroups/JRLIvJzK4H0.json?fields=organisationUnits[id,name,path]";
@@ -142,13 +143,13 @@
         var URLs = [];
         var ajaxReq = [];
 
-        URLs.push(districts_URL);
+        
         URLs.push(CHC_URL);
         URLs.push(PHC_URL);
         URLs.push(SC_URL);
         URLs.push(DH_URL);
         URLs.push(DHQ_URL);
-
+         URLs.push(block_URL);
         for (i = 0; i < URLs.length; i++) {
             ajaxReq.push($.ajax(URLs[i]));
         }
@@ -156,69 +157,77 @@
         $.when.apply($, ajaxReq).done(function () {
             console.log(arguments); //it is an array like object which can be looped*/
             $.each(arguments, function (i, data) {
-                if (i == 0) {
+                 if (i == 0) {
                     $.each(data[0].organisationUnits, function (i, item) {
-                        var divisionID = item.path.split("/")[4];
-                  //      var dID =  item.path.split("/")[5];
-                        district_Array.push([item.id, item.name, divisionID]);
-
-                    });
-                    district_Array.sort(arraySorting);
-                }
-                else if (i == 1) {
-                    $.each(data[0].organisationUnits, function (i, item) {
-                        if (item.path.split("/").length == 7) {
-                            var districtID = item.path.split("/")[5];
-                            var divisionID = item.path.split("/")[4];
-                            CHC_Array.push([item.id, item.name, districtID, divisionID]);
+                        if (item.path.split("/").length >= 7) {
+						var blockID = item.path.split("/")[5];
+                            var districtID = item.path.split("/")[4];
+                            var divisionID = item.path.split("/")[3];
+                            CHC_Array.push([item.id, item.name,blockID, districtID,divisionID]);
                             orgUnits_Array.push(item.id);
                         }
                     });
                     CHC_Array.sort(arraySorting);
                 }
-                else if (i == 2) {
+                else if (i == 1) {
                     $.each(data[0].organisationUnits, function (i, item) {
-                        if (item.path.split("/").length == 7) {
-                            var districtID = item.path.split("/")[5];
-                            var divisionID = item.path.split("/")[4];
-                            PHC_Array.push([item.id, item.name, districtID, divisionID]);
+                        if (item.path.split("/").length >= 7) {
+						var blockID = item.path.split("/")[5];
+                            var districtID = item.path.split("/")[4];
+                            var divisionID = item.path.split("/")[3];
+                            PHC_Array.push([item.id, item.name,blockID, districtID,divisionID]);
                             orgUnits_Array.push(item.id);
                         }
                     });
                     PHC_Array.sort(arraySorting);
                 }
-                else if (i == 3) {
+                else if (i == 2) {
                     $.each(data[0].organisationUnits, function (i, item) {
-                        if (item.path.split("/").length == 7) {
-                            var districtID = item.path.split("/")[5];
-                            var divisionID = item.path.split("/")[4];
-                            SC_Array.push([item.id, item.name, districtID, divisionID]);
+                        if (item.path.split("/").length >= 7) {
+						var blockID = item.path.split("/")[5];
+                            var districtID = item.path.split("/")[4];
+                            var divisionID = item.path.split("/")[3];
+							
+                            SC_Array.push([item.id, item.name, blockID,districtID,divisionID]);
                             orgUnits_Array.push(item.id);
                         }
                     });
                     SC_Array.sort(arraySorting);
                 }
-                else if (i == 4) {
+                else if (i == 3) {
                     $.each(data[0].organisationUnits, function (i, item) {
-                        if (item.path.split("/").length == 7) {
-                            var districtID = item.path.split("/")[5];
-                            var divisionID = item.path.split("/")[4];
-                            DH_Array.push([item.id, item.name, districtID, divisionID]);
+                        if (item.path.split("/").length >= 7) {
+						   var blockID = item.path.split("/")[5];
+                            var districtID = item.path.split("/")[4];
+                            var divisionID = item.path.split("/")[3];
+                            DH_Array.push([item.id, item.name,blockID, districtID,divisionID]);
                             orgUnits_Array.push(item.id);
                         }
                     });
                     DH_Array.sort(arraySorting);
                 }
-                else if (i == 5) {
+                else if (i == 4) {
                     $.each(data[0].organisationUnits, function (i, item) {
-                        if (item.path.split("/").length == 6) {
-                            var districtID = item.path.split("/")[5];
-                            var divisionID = item.path.split("/")[4];
-                            DHQ_Array.push([item.id, item.name, districtID, divisionID]);
+                        if (item.path.split("/").length >= 7) {
+						var blockID = item.path.split("/")[5];
+                            var districtID = item.path.split("/")[4];
+                            var divisionID = item.path.split("/")[3];
+                            DHQ_Array.push([item.id, item.name,blockID, districtID,divisionID]);
                             orgUnits_Array.push(item.id);
                         }
                     });
                     DHQ_Array.sort(arraySorting);
+                }
+				else if (i == 5) {
+                    $.each(data[0].organisationUnits, function (i, item) {
+                        if (item.path.split("/").length >= 6) {
+                            var districtID = item.path.split("/")[4];
+                            var divisionID = item.path.split("/")[3];
+                            Block_Array.push([item.id, item.name, districtID, divisionID]);
+                          
+                        }
+                    });
+                    Block_Array.sort(arraySorting);
                 }
 
             });
@@ -276,22 +285,23 @@
         $("#statusAsOn").html(dateStr.toDateString() + " " + dateStr.toTimeString());
         $("#periodTitle").append(testperiod);
 
-        $.each(division_Array, function (i, division) {
+      $.each(district_Array, function (j, district) {
             var tot;
 
 
             var flagDivision = false;
-            var districtCount = 0;
-            $.each(district_Array, function (j, district) {
-                if (district[2] == division[0]) {
-                    districtCount++;
+            var blockCount = 0;
+            $.each(Block_Array, function (j, block) {
+                if (block[2] == district[0]) {
+                    blockCount++;
                 }
             });
-            $.each(district_Array, function (j, district) {
+            $.each(Block_Array, function (j, block) {
                 var flagDistrict = false;
 
 
-                if (district[2] == division[0]) {
+              
+                if (block[2] == district[0]) {
                     $.each(facilityType, function (k, facility) {
 
                         var tempOrgUnit_Array = [];
@@ -299,7 +309,7 @@
                             case 0:
                                 {
                                     $.each(SC_Array, function (l, sc) {
-                                        if (sc[2] == district[0]) {
+                                        if (sc[2] == block[0]) {
                                             tempOrgUnit_Array.push(sc);
 
 
@@ -311,7 +321,7 @@
                             case 1:
                                 {
                                     $.each(PHC_Array, function (l, phc) {
-                                        if (phc[2] == district[0]) {
+                                        if (phc[2] == block[0]) {
                                             tempOrgUnit_Array.push(phc);
 
                                         }
@@ -322,7 +332,7 @@
                             case 2:
                                 {
                                     $.each(CHC_Array, function (l, chc) {
-                                        if (chc[2] == district[0]) {
+                                        if (chc[2] == block[0]) {
                                             tempOrgUnit_Array.push(chc);
 
                                         }
@@ -333,7 +343,7 @@
                             case 3:
                                 {
                                     $.each(DH_Array, function (l, dh) {
-                                        if (dh[2] == district[0]) {
+                                        if (dh[2] == block[0]) {
                                             tempOrgUnit_Array.push(dh);
 
                                         }
@@ -344,7 +354,7 @@
                             case 4:
                                 {
                                     $.each(DHQ_Array, function (l, dhq) {
-                                        if (dhq[2] == district[0]) {
+                                        if (dhq[2] == block[0]) {
                                             tempOrgUnit_Array.push(dhq);
 
                                         }
@@ -357,21 +367,21 @@
 
 
                                     $.each(SC_Array, function (l, sc) {
-                                        if (sc[2] == district[0]) {
+                                        if (sc[2] == block[0]) {
                                             tot = tempOrgUnit_Array.push(sc);
 
                                         }
 
                                     });
                                     $.each(PHC_Array, function (l, phc) {
-                                        if (phc[2] == district[0]) {
+                                        if (phc[2] == block[0]) {
                                             tot = tempOrgUnit_Array.push(phc);
 
                                         }
 
                                     });
                                     $.each(CHC_Array, function (l, chc) {
-                                        if (chc[2] == district[0]) {
+                                        if (chc[2] == block[0]) {
                                             tot = tempOrgUnit_Array.push(chc);
 
                                         }
@@ -379,7 +389,7 @@
                                     });
 
                                     $.each(DH_Array, function (l, dh) {
-                                        if (dh[2] == district[0]) {
+                                        if (dh[2] == block[0]) {
                                             tot = tempOrgUnit_Array.push(dh);
 
                                         }
@@ -387,7 +397,7 @@
                                     });
 
                                     $.each(DHQ_Array, function (l, dhq) {
-                                        if (dhq[2] == district[0]) {
+                                        if (dhq[2] == block[0]) {
                                             tot = tempOrgUnit_Array.push(dhq);
 
                                         }
@@ -408,12 +418,12 @@
                         htmlReport += "<tr>";
                         if (flagDivision == false) {
                             if (flagDistrict == false) {
-                                htmlReport += "<td rowspan='" + (districtCount * 6) + "'>" + division[1] + "</td>";
-                                htmlReport += "<td rowspan='6'>" + district[1] + "</td>";
+                                htmlReport += "<td rowspan='" + (blockCount * 6) + "'>" + district[1] + "</td>";
+                                htmlReport += "<td rowspan='6'>" + block[1] + "</td>";
                                 htmlReport += "<td>" + facility + "</td>";
                                 htmlReport += "<td align='center'>" + tempOrgUnit_Array.length + "</td>";
                                 $.each(periodArray, function (i, pe) {
-                                    output = getCellValue(district[1], facility, pe);
+                                    output = getCellValue(block[1], facility, pe);
                                     htmlReport += "<td width='200px' align='center'>" + output + "</td>";
                                 });
                                 htmlReport += "</tr>";
@@ -424,11 +434,11 @@
                         }
                         else {
                             if (flagDistrict == false) {
-                                htmlReport += "<td rowspan='6'>" + district[1] + "</td>";
+                                htmlReport += "<td rowspan='6'>" + block[1] + "</td>";
                                 htmlReport += "<td>" + facility + "</td>";
                                 htmlReport += "<td align='center'>" + tempOrgUnit_Array.length + "</td>";
                                 $.each(periodArray, function (i, pe) {
-                                    output = getCellValue(district[1], facility, pe);
+                                    output = getCellValue(block[1], facility, pe);
 
                                     htmlReport += "<td width='200px' align='center'>" + output + "</td>";
                                 });
@@ -439,7 +449,7 @@
                                 htmlReport += "<td>" + facility + "</td>";
                                 htmlReport += "<td align='center'>" + tempOrgUnit_Array.length + "</td>";
                                 $.each(periodArray, function (i, pe) {
-                                    output = getCellValue(district[1], facility, pe);
+                                    output = getCellValue(block[1], facility, pe);
                                     htmlReport += "<td width='200px' align='center'>" + output + "</td>";
                                 });
                                 htmlReport += "</tr>";
@@ -490,11 +500,11 @@
             $.each(facilityType, function (k, facility) {
 
                 var tempdiv = [];
-                switch (k) {
+                  switch (k) {
                     case 0:
                         {
                             $.each(SC_Array, function (l, sc) {
-                                if (sc[3] == orgUnit.id) {
+                                if (sc[4] == orgUnit.id) {
                                     tempdiv.push(sc);
 
 
@@ -506,7 +516,7 @@
                     case 1:
                         {
                             $.each(PHC_Array, function (l, phc) {
-                                if (phc[3] == orgUnit.id) {
+                                if (phc[4] == orgUnit.id) {
                                     tempdiv.push(phc);
 
                                 }
@@ -517,7 +527,7 @@
                     case 2:
                         {
                             $.each(CHC_Array, function (l, chc) {
-                                if (chc[3] == orgUnit.id) {
+                                if (chc[4] == orgUnit.id) {
                                     tempdiv.push(chc);
 
                                 }
@@ -528,7 +538,7 @@
                     case 3:
                         {
                             $.each(DH_Array, function (l, dh) {
-                                if (dh[3] == orgUnit.id) {
+                                if (dh[4] == orgUnit.id) {
                                     tempdiv.push(dh);
 
                                 }
@@ -539,7 +549,7 @@
                     case 4:
                         {
                             $.each(DHQ_Array, function (l, dhq) {
-                                if (dhq[3] == orgUnit.id) {
+                                if (dhq[4] == orgUnit.id) {
                                     tempdiv.push(dhq);
 
                                 }
@@ -552,21 +562,21 @@
 
 
                             $.each(SC_Array, function (l, sc) {
-                                if (sc[3] == orgUnit.id) {
+                                if (sc[4] == orgUnit.id) {
                                     tot = tempdiv.push(sc);
 
                                 }
 
                             });
                             $.each(PHC_Array, function (l, phc) {
-                                if (phc[3] == orgUnit.id) {
+                                if (phc[4] == orgUnit.id) {
                                     tot = tempdiv.push(phc);
 
                                 }
 
                             });
                             $.each(CHC_Array, function (l, chc) {
-                                if (chc[3] == orgUnit.id) {
+                                if (chc[4] == orgUnit.id) {
                                     tot = tempdiv.push(chc);
 
                                 }
@@ -574,7 +584,7 @@
                             });
 
                             $.each(DH_Array, function (l, dh) {
-                                if (dh[3] == orgUnit.id) {
+                                if (dh[4] == orgUnit.id) {
                                     tot = tempdiv.push(dh);
 
                                 }
@@ -582,7 +592,7 @@
                             });
 
                             $.each(DHQ_Array, function (l, dhq) {
-                                if (dhq[3] == orgUnit.id) {
+                                if (dhq[4] == orgUnit.id) {
                                     tot = tempdiv.push(dhq);
 
                                 }
