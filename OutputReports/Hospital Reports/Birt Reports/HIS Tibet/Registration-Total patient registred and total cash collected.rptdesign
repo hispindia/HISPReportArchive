@@ -196,7 +196,7 @@
                     <property name="name">Total Patient</property>
                     <property name="nativeName">Total Patient</property>
                     <property name="dataType">decimal</property>
-                    <property name="nativeDataType">3</property>
+                    <property name="nativeDataType">-5</property>
                 </structure>
                 <structure>
                     <property name="position">3</property>
@@ -220,15 +220,14 @@
                     <property name="nativeDataType">8</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[
-SELECT fin1.sub_cat AS 'Patient Category' ,IFNULL(pat,0) AS 'Total Patient',IFNULL(newValues,0) AS 'NEW PATIENTS' ,IFNULL(reValue,0) AS 'REVISIT PATIENTS ',
+            <xml-property name="queryText"><![CDATA[SELECT fin1.sub_cat AS 'Patient Category' ,IFNULL(pat,0) AS 'Total Patient',IFNULL(newValues,0) AS 'NEW PATIENTS' ,IFNULL(reValue,0) AS 'REVISIT PATIENTS ',
 IFNULL(cashs,0) 'TOTAL CASH COLLECTED' 
 FROM 
 (
 SELECT asd.name 'sub_cat'
 FROM
 (
-SELECT cn.name FROM concept_name cn
+SELECT cn.name,cn.concept_id FROM concept_name cn
 INNER JOIN concept_answer ca ON ca.answer_concept=cn.concept_id
 INNER JOIN concept_name cn1 ON cn1.concept_id=ca.concept_id
 WHERE cn1.name  IN ('Paid Category','Programs')
@@ -238,20 +237,21 @@ AND cn.concept_name_type LIKE 'fully_specified'
 )fin1
 LEFT JOIN(
 	SELECT sub_cat,SUM(sag1.values1) AS 'newValues',SUM(sag1.values) AS 'reValue',
-	SUM(total_pat) AS 'pat',SUM(cash) AS 'cashs'
+	COUNT(pers) AS 'pat',SUM(cash) AS 'cashs'
 	FROM   
 	( 
 	 SELECT sub_cat,SUM(sag.value1) AS 'values1',SUM(sag.values) AS 'values', SUM(IFNULL(sag.value1,sag.values)) AS 'cash',sag.date_created,
-	 sag.value_coded, COUNT(sag.value_coded) AS 'total_pat'
+	 sag.value_coded,pers
 	    FROM
 	    (
-		SELECT o.creator,pn.given_name,o.person_id,CASE WHEN o.value_coded LIKE '9' THEN IFNULL(o.value_numeric,0)  END AS 'value1',
+		SELECT o.creator,pn.given_name,ps.fullname,o.person_id AS pers,CASE WHEN o.value_coded LIKE '9' THEN IFNULL(o.value_numeric,0)  END AS 'value1',
 		CASE WHEN o.value_coded LIKE '945' THEN IFNULL(o.value_numeric,0) END AS 'values',
 		o.value_coded,DATE(o.date_created) AS 'date_created'
 		,cn1.name 'sub_cat'
 		FROM obs o
 		INNER JOIN users u ON u.user_id = o.creator
 		INNER JOIN person_name pn ON u.person_id=pn.person_id
+		INNER JOIN patient_search ps ON ps.patient_id=o.person_id
 		INNER JOIN person_attribute p1 ON p1.person_id = o.person_id
 		INNER JOIN concept_name cn1 ON o.value_text = cn1.concept_id 
 		WHERE DATE(o.date_created) BETWEEN ? AND ?
@@ -262,19 +262,18 @@ LEFT JOIN(
 			AND concept_name_type LIKE 'Fully_Specified'   AND locale LIKE 'en'
 			)
                  AND cn1.concept_name_type LIKE 'FULLY_SPECIFIED%'
-		AND (given_name LIKE ? OR ? LIKE "All Users")
+		AND (pn.given_name LIKE ? OR ? LIKE "All Users")
 		AND p1.person_attribute_type_id=28
-		GROUP BY o.obs_id,o.value_text,cn1.name
+		GROUP BY o.obs_id,o.value_text,cn1.name,o.person_id
 
 		)sag
- 	    GROUP BY value_coded,sub_cat
+ 	    GROUP BY value_coded,sub_cat,pers
  	    	)sag1
 	INNER JOIN concept_name cn ON cn.concept_id=sag1.value_coded
 	AND cn.concept_name_type LIKE 'Fully_Specified' AND cn.locale LIKE 'en'
 	GROUP BY sub_cat
 	)fin
-ON fin1.sub_cat=fin.sub_cat
-]]></xml-property>
+ON fin1.sub_cat=fin.sub_cat]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
   <Version>2.0</Version>
