@@ -52,7 +52,7 @@
                 </ex-property>
             </list-property>
             <property name="odaDriverClass">com.mysql.jdbc.Driver</property>
-            <property name="odaURL">jdbc:mysql://192.168.0.25/pgichd</property>
+            <property name="odaURL">jdbc:mysql://192.168.0.25/tvha</property>
             <property name="odaUser">birt</property>
             <encrypted-property name="odaPassword" encryptionID="base64">YmlydA==</encrypted-property>
         </oda-data-source>
@@ -140,10 +140,10 @@
                     <text-property name="heading">drug</text-property>
                 </structure>
                 <structure>
-                    <property name="columnName">value</property>
+                    <property name="columnName">name</property>
                     <property name="analysis">dimension</property>
-                    <text-property name="displayName">value</text-property>
-                    <text-property name="heading">value</text-property>
+                    <text-property name="displayName">name</text-property>
+                    <text-property name="heading">name</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">birthdate</property>
@@ -152,10 +152,10 @@
                     <text-property name="heading">birthdate</text-property>
                 </structure>
                 <structure>
-                    <property name="columnName">CONCAT_WS(' ',pn.given_name,pn.middle_name,pn.family_name)</property>
+                    <property name="columnName">pname</property>
                     <property name="analysis">dimension</property>
-                    <text-property name="displayName">CONCAT_WS(' ',pn.given_name,pn.middle_name,pn.family_name)</text-property>
-                    <text-property name="heading">CONCAT_WS(' ',pn.given_name,pn.middle_name,pn.family_name)</text-property>
+                    <text-property name="displayName">pname</text-property>
+                    <text-property name="heading">pname</text-property>
                 </structure>
             </list-property>
             <list-property name="parameters">
@@ -244,7 +244,7 @@
                     </structure>
                     <structure>
                         <property name="position">13</property>
-                        <property name="name">value</property>
+                        <property name="name">name</property>
                         <property name="dataType">string</property>
                     </structure>
                     <structure>
@@ -254,7 +254,7 @@
                     </structure>
                     <structure>
                         <property name="position">15</property>
-                        <property name="name">CONCAT_WS(' ',pn.given_name,pn.middle_name,pn.family_name)</property>
+                        <property name="name">pname</property>
                         <property name="dataType">string</property>
                     </structure>
                     <structure>
@@ -352,8 +352,8 @@
                 </structure>
                 <structure>
                     <property name="position">13</property>
-                    <property name="name">value</property>
-                    <property name="nativeName">value</property>
+                    <property name="name">name</property>
+                    <property name="nativeName">name</property>
                     <property name="dataType">string</property>
                     <property name="nativeDataType">12</property>
                 </structure>
@@ -366,25 +366,26 @@
                 </structure>
                 <structure>
                     <property name="position">15</property>
-                    <property name="name">CONCAT_WS(' ',pn.given_name,pn.middle_name,pn.family_name)</property>
-                    <property name="nativeName">CONCAT_WS(' ',pn.given_name,pn.middle_name,pn.family_name)</property>
+                    <property name="name">pname</property>
+                    <property name="nativeName">pname</property>
                     <property name="dataType">string</property>
                     <property name="nativeDataType">12</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[SELECT i.drug_id,i.formulation_id,SUM(i.issue_quantity),i.issue_quantity,idp.store_id,idp.patient_id,idp.identifier,i.created_on,idp.created_on,idf.name AS 'formulation',idf.dozage,idr.name'drug',pa.value,p.birthdate,CONCAT_WS(' ',pn.given_name,pn.middle_name,pn.family_name)
+            <xml-property name="queryText"><![CDATA[SELECT i.drug_id,i.formulation_id,SUM(i.issue_quantity),i.issue_quantity,idp.store_id,idp.patient_id,idp.identifier,i.created_on,idp.created_on,idf.name AS 'formulation',idf.dozage,idr.name'drug',cn.name,p.birthdate,CONCAT_WS(' ',ps.given_name,ps.middle_name,ps.family_name) AS pname
 FROM inventory_store_drug_transaction_detail i
 INNER JOIN inventory_store_drug_patient_detail isd ON i.id=isd.transaction_detail_id
 INNER JOIN inventory_store_drug_patient idp ON isd.store_drug_patient_id=idp.id
 INNER JOIN inventory_drug_formulation idf ON i.formulation_id=idf.id
 INNER JOIN inventory_drug idr ON i.drug_id=idr.id
 INNER JOIN person_attribute pa ON idp.patient_id=pa.person_id AND pa.person_attribute_type_id=(SELECT p.`person_attribute_type_id` FROM person_attribute_type p WHERE p.name='Patient category')
+INNER JOIN concept_name cn ON pa.value = cn.concept_id AND cn.concept_name_type = 'FULLY_SPECIFIED'
 INNER JOIN person p ON idp.patient_id=p.person_id
-INNER JOIN person_name pn ON p.person_id=pn.person_id
+INNER JOIN patient_search ps ON p.person_id=ps.patient_id
 INNER JOIN inventory_store_drug_transaction it ON i.transaction_id=it.id
 INNER JOIN inventory_store ist ON it.store_id=ist.id AND ist.name LIKE '%pharmacy%'
 WHERE  DATE(i.created_on) BETWEEN ? AND ?
-GROUP BY i.drug_id,idp.identifier,idf.id]]></xml-property>
+GROUP BY i.drug_id,idp.identifier,idf.id,DATE(i.created_on) ]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
   <Version>2.0</Version>
@@ -810,11 +811,6 @@ GROUP BY i.drug_id,idp.identifier,idf.id]]></xml-property>
                     <property name="dataType">string</property>
                 </structure>
                 <structure>
-                    <property name="name">value</property>
-                    <expression name="expression" type="javascript">dataSetRow["value"]</expression>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
                     <property name="name">birthdate</property>
                     <expression name="expression" type="javascript">dataSetRow["birthdate"]</expression>
                     <property name="dataType">date</property>
@@ -862,13 +858,6 @@ GROUP BY i.drug_id,idp.identifier,idf.id]]></xml-property>
                     <property name="allowExport">true</property>
                 </structure>
                 <structure>
-                    <property name="name">concat_ws(' ',pn.given_name,pn.middle_name,pn.family_name)</property>
-                    <text-property name="displayName">name</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["CONCAT_WS(' ',pn.given_name,pn.middle_name,pn.family_name)"]</expression>
-                    <property name="dataType">string</property>
-                    <property name="allowExport">true</property>
-                </structure>
-                <structure>
                     <property name="name">formulation</property>
                     <text-property name="displayName">formulation</text-property>
                     <expression name="expression" type="javascript">dataSetRow["formulation"]</expression>
@@ -878,6 +867,18 @@ GROUP BY i.drug_id,idp.identifier,idf.id]]></xml-property>
                     <property name="name">drug</property>
                     <text-property name="displayName">drug</text-property>
                     <expression name="expression" type="javascript">dataSetRow["drug"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">name</property>
+                    <text-property name="displayName">name</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["name"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">pname</property>
+                    <text-property name="displayName">pname</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["pname"]</expression>
                     <property name="dataType">string</property>
                 </structure>
             </list-property>
@@ -1164,7 +1165,7 @@ GROUP BY i.drug_id,idp.identifier,idf.id]]></xml-property>
                         <cell id="356">
                             <data id="382">
                                 <property name="fontWeight">bold</property>
-                                <property name="textAlign">right</property>
+                                <property name="textAlign">center</property>
                                 <property name="resultSetColumn">total units issued</property>
                             </data>
                         </cell>
@@ -1204,8 +1205,8 @@ GROUP BY i.drug_id,idp.identifier,idf.id]]></xml-property>
                         <property name="borderTopColor">#000000</property>
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">thin</property>
-                        <data id="396">
-                            <property name="resultSetColumn">concat_ws(' ',pn.given_name,pn.middle_name,pn.family_name)</property>
+                        <data id="423">
+                            <property name="resultSetColumn">pname</property>
                         </data>
                     </cell>
                     <cell id="312">
@@ -1239,9 +1240,9 @@ GROUP BY i.drug_id,idp.identifier,idf.id]]></xml-property>
                         <property name="borderTopColor">#000000</property>
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">thin</property>
-                        <data id="370">
+                        <data id="420">
                             <property name="textAlign">center</property>
-                            <property name="resultSetColumn">value</property>
+                            <property name="resultSetColumn">name</property>
                         </data>
                     </cell>
                     <cell id="314">
