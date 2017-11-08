@@ -1299,7 +1299,7 @@ SELECT  (SUM(bpsbi.actual_amount-((bpsb.waiver_percetage /100) * bpsbi.actual_am
 FROM  billing_patient_service_bill bpsb 
 INNER JOIN billing_patient_service_bill_item bpsbi ON bpsb.patient_service_bill_id = bpsbi.patient_service_bill_id
 INNER JOIN users u ON bpsb.creator = u.user_id
-WHERE DATE(bpsbi.voided_date) BETWEEN ? AND ?
+WHERE DATE(bpsb.created_date) BETWEEN ? AND ?
 AND (u.username LIKE ? OR ? LIKE "All users")
 AND bpsbi.voided = 1
 UNION ALL
@@ -1307,7 +1307,7 @@ SELECT
 bpsb.amount
 FROM  billing_ambulance_bill bpsb 
 INNER JOIN users u ON bpsb.creator = u.user_id
-WHERE DATE(bpsb.voided_date) BETWEEN ? AND ?
+WHERE DATE(bpsb.created_date) BETWEEN ? AND ?
 AND (u.username LIKE ? OR ? LIKE "All users")
 AND bpsb.voided = 1
 UNION ALL
@@ -1315,7 +1315,7 @@ SELECT
 bpsb.amount
 FROM  billing_tender_bill bpsb 
 INNER JOIN users u ON bpsb.creator = u.user_id
-WHERE DATE(bpsb.voided_date) BETWEEN ? AND ?
+WHERE DATE(bpsb.created_date) BETWEEN ? AND ?
 AND (u.username LIKE ? OR ? LIKE "All users")
 AND bpsb.voided = 1
 UNION ALL
@@ -1893,7 +1893,7 @@ AND bpsb.voided = 1) AS t]]></xml-property>
                     <property name="isOutput">false</property>
                 </structure>
                 <structure>
-                    <property name="name">param_3</property>
+                    <property name="name">param_4</property>
                     <property name="paramName">User Name</property>
                     <property name="nativeName"></property>
                     <property name="dataType">string</property>
@@ -1903,7 +1903,7 @@ AND bpsb.voided = 1) AS t]]></xml-property>
                     <property name="isOutput">false</property>
                 </structure>
                 <structure>
-                    <property name="name">param_4</property>
+                    <property name="name">param_3</property>
                     <property name="paramName">User Name</property>
                     <property name="nativeName"></property>
                     <property name="dataType">string</property>
@@ -2059,16 +2059,17 @@ SELECT COUNT(kapi.totalBills) AS totalBills,'bills'
 FROM
 (
 SELECT 
-bpsbi.patient_service_bill_id totalBills
+bpsb.patient_service_bill_id totalBills
 
 FROM  billing_patient_service_bill bpsb 
 INNER JOIN  billing_patient_service_bill_item bpsbi ON bpsb.receipt_id = bpsbi.patient_service_bill_id
 INNER JOIN  patient_identifier pi1 ON pi1.patient_id = bpsb.patient_id
 INNER JOIN users u ON u.user_id = bpsb.creator
-WHERE bpsb.receipt_id = ANY(SELECT bpsbi.patient_service_bill_id FROM billing_patient_service_bill_item bpsbi WHERE bpsbi.voided = b'1'  ) 
-AND DATE(bpsb.created_date) BETWEEN ? AND ?
+
+WHERE (DATE(bpsb.created_date) BETWEEN ? AND ?)
+
 AND (username LIKE ? OR ? LIKE "All users")
-AND bpsbi.voided = 1
+AND bpsb.voided = 0
 GROUP BY totalBills
 )kapi
 
@@ -2082,7 +2083,7 @@ FROM  billing_ambulance_bill bpsb
 LEFT JOIN users u ON u.user_id = bpsb.creator
 WHERE DATE(bpsb.created_date) BETWEEN ? AND ?
 AND (username LIKE ? OR ? LIKE "All users")
-AND bpsb.voided = 1
+AND bpsb.voided = 0
 GROUP BY u.username
 
 UNION
@@ -2093,7 +2094,7 @@ FROM  billing_tender_bill bpsb
 LEFT JOIN users u ON u.user_id = bpsb.creator
 WHERE DATE(bpsb.created_date) BETWEEN ? AND ?
 AND (username LIKE ? OR ? LIKE "All users")
-AND bpsb.voided = 1
+AND bpsb.voided = 0
 GROUP BY u.username
 
 UNION
@@ -2104,7 +2105,7 @@ FROM  billing_miscellaneous_service_bill bpsb
 LEFT JOIN users u ON u.user_id = bpsb.creator
 WHERE DATE(bpsb.created_date) BETWEEN ? AND ?
 AND (username LIKE ? OR ? LIKE "All users")
-AND bpsb.voided = 1
+AND bpsb.voided = 0
 GROUP BY u.username
 )asd
 ]]></xml-property>
@@ -2164,6 +2165,21 @@ GROUP BY u.username
           <design:identifier>
             <design:name></design:name>
             <design:position>4</design:position>
+          </design:identifier>
+          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
+          <design:precision>0</design:precision>
+          <design:scale>0</design:scale>
+          <design:nullability>Unknown</design:nullability>
+        </design:attributes>
+      </design:ParameterDefinition>
+    </parameter>
+    <parameter>
+      <design:ParameterDefinition>
+        <design:inOutMode>In</design:inOutMode>
+        <design:attributes>
+          <design:identifier>
+            <design:name></design:name>
+            <design:position>16</design:position>
           </design:identifier>
           <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
           <design:precision>0</design:precision>
@@ -2256,6 +2272,12 @@ GROUP BY u.username
                     <text-property name="heading">refund_amount</text-property>
                 </structure>
                 <structure>
+                    <property name="columnName">waiver_amount</property>
+                    <property name="analysis">dimension</property>
+                    <text-property name="displayName">waiver_amount</text-property>
+                    <text-property name="heading">waiver_amount</text-property>
+                </structure>
+                <structure>
                     <property name="columnName">username</property>
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">username</text-property>
@@ -2343,106 +2365,6 @@ GROUP BY u.username
                     <property name="isInput">true</property>
                     <property name="isOutput">false</property>
                 </structure>
-                <structure>
-                    <property name="name">param_9</property>
-                    <property name="paramName">Start Date</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">9</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_10</property>
-                    <property name="paramName">End Date</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">10</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_11</property>
-                    <property name="paramName">Start Date</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">11</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_12</property>
-                    <property name="paramName">End Date</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">12</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_13</property>
-                    <property name="paramName">Start Date</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">13</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_14</property>
-                    <property name="paramName">End Date</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">14</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_15</property>
-                    <property name="paramName">Start Date</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">15</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_16</property>
-                    <property name="paramName">End Date</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">16</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_17</property>
-                    <property name="paramName">User Name</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">string</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">17</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">param_18</property>
-                    <property name="paramName">User Name</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">string</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">18</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
             </list-property>
             <structure name="cachedMetaData">
                 <list-property name="resultSet">
@@ -2513,6 +2435,11 @@ GROUP BY u.username
                     </structure>
                     <structure>
                         <property name="position">14</property>
+                        <property name="name">waiver_amount</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
                         <property name="name">username</property>
                         <property name="dataType">string</property>
                     </structure>
@@ -2613,6 +2540,13 @@ GROUP BY u.username
                 </structure>
                 <structure>
                     <property name="position">14</property>
+                    <property name="name">waiver_amount</property>
+                    <property name="nativeName">waiver_amount</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
                     <property name="name">username</property>
                     <property name="nativeName">username</property>
                     <property name="dataType">string</property>
@@ -2622,19 +2556,19 @@ GROUP BY u.username
             <xml-property name="queryText"><![CDATA[SELECT * FROM 
 (
 SELECT pa.identifier pid,CONCAT(given_name,' ',family_name) AS NAME,bpsbi.patient_service_bill_id AS biill, bpsb.receipt_id bill_id, DATE(bpsb.created_date) date_bill, bpsb.voided voided_bill,
-IFNULL(DATE(bpsb.voided_date) ,DATE(bpsbi.voided_date)) date_edited, IFNULL(bpsb.description,'Edited Item') descripcion,SUM(bpsbi.actual_amount-((bpsb.waiver_percetage /100) * bpsbi.actual_amount)) bill_amount,
-bpsbi.patient_service_bill_item_id item_id, bpsbi.voided voided_item, max(DATE(bpsbi.voided_date)) edited_void, CASE WHEN bpsbi.voided = b'1' THEN 0 ELSE bpsb.amount_payable END AS refund_amount, u.username AS username
+IFNULL(DATE(bpsb.voided_date) ,DATE(bpsbi.voided_date)) date_edited, IFNULL(bpsb.description,'Edited Item') descripcion,SUM(bpsbi.unitPrice)-((bpsb.waiver_percetage /100) * SUM(bpsbi.unitPrice)) AS bill_amount,
+bpsbi.patient_service_bill_item_id item_id, bpsbi.voided voided_item, MAX(DATE(bpsbi.voided_date)) edited_void, CASE WHEN bpsb.voided = b'1' THEN 0 ELSE bpsb.amount_payable END AS refund_amount,bpsb.waiver_amount, u.username AS username
 
 FROM  billing_patient_service_bill bpsb
 
 INNER JOIN billing_patient_service_bill_item bpsbi ON bpsb.patient_service_bill_id = bpsbi.patient_service_bill_id
 INNER JOIN  patient_identifier pa ON pa.patient_id = bpsb.patient_id
-INNER JOIN  person_name pn ON pn.person_id = bpsb.patient_id
+INNER JOIN  patient_search pn ON pn.patient_id = bpsb.patient_id
 INNER JOIN users u ON bpsb.creator = u.user_id 
 
 WHERE bpsb.receipt_id = ANY(SELECT bpsbi.patient_service_bill_id FROM billing_patient_service_bill_item bpsbi WHERE bpsbi.voided = b'1'  )
 AND (DATE(bpsb.created_date) BETWEEN ? AND ?)
-OR (DATE(bpsbi.voided_date) BETWEEN ? AND ? )
+
 GROUP BY bill_id
 
 UNION
@@ -2649,13 +2583,13 @@ bpsb.amount bill_amount,
 bpsbi.ambulance__bill_item_id item_id,
 bpsbi.voided voided_item,
 DATE(bpsbi.voided_date) edited_void,
-bpsbi.amount item_amount,
+bpsbi.amount item_amount,'',
 us.username username
 FROM  billing_ambulance_bill bpsb
 INNER JOIN users us ON bpsb.creator = us.user_id
 INNER JOIN billing_ambulance_bill_item bpsbi ON bpsb.ambulance__bill_id = bpsbi.ambulance_bill_id
-WHERE ((DATE(bpsb.created_date) BETWEEN ? AND ?)
-OR (DATE(bpsbi.voided_date) BETWEEN ? AND ?))
+WHERE (DATE(bpsb.created_date) BETWEEN ? AND ?)
+
 UNION
 SELECT
 '',"Tender Bill" NAME,bpsbi.tender_bill_id,
@@ -2668,13 +2602,13 @@ bpsb.amount bill_amount,
 bpsbi.tender_bill_item_id,
 bpsbi.voided voided_item,
 DATE(bpsbi.voided_date) edited_void,
-bpsbi.amount item_amount,
+bpsbi.amount item_amount,'',
 us.username username
 FROM  billing_tender_bill bpsb
 INNER JOIN users us ON bpsb.creator = us.user_id
 INNER JOIN billing_tender_bill_item bpsbi ON bpsb.tender_bill_id = bpsbi.tender_bill_id
-WHERE ((DATE(bpsb.created_date) BETWEEN ? AND ?)
-OR (DATE(bpsbi.voided_date) BETWEEN ? AND ?))
+WHERE (DATE(bpsb.created_date) BETWEEN ? AND ?)
+
 UNION
 SELECT
 '',"Miscellaneous Service Bill" NAME,bpsb.id,
@@ -2687,17 +2621,16 @@ bpsb.amount bill_amount,
 NULL patient_service_bill_item_id,
 NULL voided_item,
 DATE('') edited_void,
-0 item_amount,
+0 item_amount,'',
 us.username username
 FROM  billing_miscellaneous_service_bill bpsb
 INNER JOIN users us ON bpsb.creator = us.user_id
-WHERE (
-(DATE(bpsb.created_date) BETWEEN ? AND ?)
-OR (DATE(bpsb.voided_date) BETWEEN ? AND ?))
+WHERE (DATE(bpsb.created_date) BETWEEN ? AND ?)
+
 
 ) AS t
 
-WHERE t.username LIKE ? OR ? LIKE "All users" 
+WHERE t.username LIKE 'All users' OR 'All users' LIKE "All users" 
 ]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
@@ -2815,156 +2748,6 @@ WHERE t.username LIKE ? OR ? LIKE "All users"
           <design:identifier>
             <design:name></design:name>
             <design:position>8</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>9</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>10</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>11</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>12</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>13</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>14</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>15</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>16</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>17</design:position>
-          </design:identifier>
-          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
-          <design:precision>0</design:precision>
-          <design:scale>0</design:scale>
-          <design:nullability>Unknown</design:nullability>
-        </design:attributes>
-      </design:ParameterDefinition>
-    </parameter>
-    <parameter>
-      <design:ParameterDefinition>
-        <design:inOutMode>In</design:inOutMode>
-        <design:attributes>
-          <design:identifier>
-            <design:name></design:name>
-            <design:position>18</design:position>
           </design:identifier>
           <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
           <design:precision>0</design:precision>
