@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" type="text/javascript"></script>
+    
+    <style>
+		.heading {
+			background: #1D9FDF;
+			height: 60px;
+			width: 100%;
+			padding-top: 2px;
+			padding-bottom: 2px;
+			color: white;
+			text-align: center;
+		}
+		#heading1 {
+			text-align: center;
+		}
+
+		.body {
+			width: 100%;
+		}
+		table {
+			width: 100%;
+			border: 1px solid black;
+		}
+		#thead{
+		background: #D3D3D3;
+		}
+
+		td {
+			border: 1px solid black;
+			height:20px;
+			width:280px;
+			text-align:center;
+			font-weight: bold;
+		}
+		 .reporttable {
+            border-collapse: collapse;
+        }
+		#export {
+		margin-left:50px;
+		}
+		#loader-wrapper {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 1000;
+
+			background-color:rgba(0, 0, 0, 0.3);
+		}
+
+		#loader{
+			display:block;
+			position: relative;
+			left:50%;
+			top:50%;
+			width:150px;
+			height: 150px;
+			margin: -75px 0 0 -75px;
+		}
+
+		#loader:before{
+			content: "";
+			position: absolute;
+			top:15px;
+			left:15px;
+			right:15px;
+			bottom: 15px;
+			border-radius: 50%;
+			border: 8px solid #bdbdbd;
+			border-top-color: #21618C  ;
+			border-left-color: #21618C    ;
+			border-bottom-color: #21618C    ;
+			--webkit-animation: spin 2s linear infinite; /* Chrome, Opera 15+, Safari 5+ */
+			animation: spin 2s linear infinite; /* Chrome, Firefox 16+, IE 10+, Opera */
+		}
+
+		#heading{
+			position: relative;
+			left:47%;
+			top:43%;
+			margin: 0 0 0 -15px;
+			color:white;
+
+		}
+
+		@-webkit-keyframes spin {
+			0%   {
+				-webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+				-ms-transform: rotate(0deg);  /* IE 9 */
+				transform: rotate(0deg);  /* Firefox 16+, IE 10+, Opera */
+			}
+			100% {
+				-webkit-transform: rotate(360deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+				-ms-transform: rotate(360deg);  /* IE 9 */
+				transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
+			}
+		}
+		@keyframes spin {
+			0%   {
+				-webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+				-ms-transform: rotate(0deg);  /* IE 9 */
+				transform: rotate(0deg);  /* Firefox 16+, IE 10+, Opera */
+			}
+			100% {
+				-webkit-transform: rotate(360deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+				-ms-transform: rotate(360deg);  /* IE 9 */
+				transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
+			}
+		}
+    </style>
+    <script type="text/javascript">
+		window.Loader = (function () {
+			selected=[];
+			increment=function(ths,value){
+			   if(selected[0]!=value && selected.length!=0)
+				{
+					selected=[];
+					head=document.getElementById("heading").innerHTML="";
+					head1=document.getElementById("heading").innerHTML=value+"%";
+
+				}else{
+					this.heading=document.createElement('h3');
+					this.heading.id="heading";
+					this.heading.innerHTML=value+"%";
+					ths.innerDiv.append(this.heading);
+				}
+				selected.push(value);
+			}
+
+			var Loader = {
+				showLoader: function () {
+					this.iDiv = document.createElement('div');
+					this.iDiv.id =this.selector='loader-wrapper';
+					this.iDiv.className =this.selector_load='loader-wrapper-load';
+					document.getElementsByTagName('body')[0].appendChild(this.iDiv);
+
+					this.innerDiv = document.createElement('div');
+					this.innerDiv.id = 'loader';
+
+					this.iDiv.appendChild(this.innerDiv);
+					document.getElementById(this.selector).style.visibility = 'visible';
+				},
+				hideLoader: function () {
+					var load=document.getElementsByClassName (this.selector_load);
+					for (var k = 0; k < load.length; k++) {
+						load[k].style.visibility = 'hidden';
+					}
+				},
+				increment:function(val){
+
+					return new increment(this,val);
+				}
+
+			};
+
+
+			return Loader;
+		}());
+		var selectedOrgunit = dhis2.report.organisationUnit.id;
+		var arr=[];
+		
+		var trackedEntityInstances=[];
+            $.ajax({
+                    async : false,
+                    type: "GET",
+                    url: "../api/trackedEntityInstances.json?fields=trackedEntityInstance,orgUnit,attributes[attribute,displayName,value]&ou="+selectedOrgunit+"&ouMode=DESCENDANTS&program=VCuHIFtJJSv&skipPaging=true",
+                    success: function(data){		
+                    for(var k=0;k<data.trackedEntityInstances.length;k++){
+                        trackedEntityInstances.push(data.trackedEntityInstances[k])
+                    }	
+                },
+            });
+			
+		for(var p1=0;p1<trackedEntityInstances.length;p1++)
+                {
+			        var trackEntityInstance=trackedEntityInstances[p1].trackedEntityInstance;
+									   
+					$.ajax({
+					async : false,
+					type: "GET",
+					url: "../api/events.json?fields=trackedEntityInstance,orgUnit,eventDate&trackedEntityInstance="+trackEntityInstance+"&order=eventDate:DESC&skipPaging=true",
+					success: function(data){
+					if(data.events.length>0){
+					var	lastEvent = data.events[0];
+					var lastEventDate1 = lastEvent.eventDate;
+					var lastEventDate2 = lastEventDate1.split("T");
+					var lastEventDate = lastEventDate2[0];
+					}
+					arr[trackEntityInstance]=lastEventDate;
+					}
+					});
+				}
+		
+		function convert() {
+			var date = new Date(),
+				mnth = ("0" + (date.getMonth()+1)).slice(-2),
+				day  = ("0" + date.getDate()).slice(-2);
+			return [ date.getFullYear(), mnth, day ].join("-");
+            };
+        var cuurentDate = convert();
+		var currentDatepart = cuurentDate.split("-");
+		var year = currentDatepart[0];
+		var month = currentDatepart[1];
+		var date = currentDatepart[2];
+		
+		$(document).ready(function () {
+		    $("input[type='button']").click(function(){
+			  Loader.showLoader();
+			  getSelection();
+		   });
+		   $("#export").click(function (e) {
+                e.preventDefault();
+                //getting data from our table
+                var data_type = 'data:application/vnd.ms-excel';
+                var table_div = document.getElementById('report_table');
+                var table_html = table_div.outerHTML.replace(/ /g, '%20');
+
+                var a = document.createElement('a');
+                a.href = data_type + ', ' + table_html;
+                a.download = 'NCD Program Lost to Follow-up Report.xls';
+                a.click();
+            });	
+		});
+		
+		function getSelection()
+		{
+		if(document.getElementById('four').checked)
+			{
+			if(month>4){
+			var newMonth = month - 4;
+			if(newMonth<10)
+			{
+			newMonth = "0"+newMonth
+			}
+			var fourMonthsOldDate = year+"-"+newMonth+"-"+date;
+			}
+			else{
+			var newMonth = month - 4 +12;
+			if(newMonth<10)
+			{
+			newMonth = "0"+newMonth
+			}
+			var newyear = year-1;
+			var fourMonthsOldDate = newyear+"-"+newMonth+"-"+date;
+			}
+			$('.reporttable tbody').html('');
+			getData(fourMonthsOldDate);
+			}
+		else if(document.getElementById('six').checked)
+			{
+			if(month>6){
+			var newMonth = month - 6;
+			if(newMonth<10)
+			{
+			newMonth = "0"+newMonth
+			}
+			var sixMonthsOldDate = year+"-"+newMonth+"-"+date;
+			}
+			else{
+			var newMonth = month - 6 +12;
+			if(newMonth<10)
+			{
+			newMonth = "0"+newMonth
+			}
+			var newyear = year-1;
+			var sixMonthsOldDate = newyear+"-"+newMonth+"-"+date;
+			}
+			$('.reporttable tbody').html('');
+			getData(sixMonthsOldDate);		
+			}
+		/*else{
+		alert("Please select above option first!");}*/
+		}
+		
+			function getData(monthsDate)
+			{
+			var index=1;		
+		
+			var orgUnitName = dhis2.report.organisationUnit.name;
+			document.getElementById("ouname").innerHTML = orgUnitName;
+									   
+					for(var key in arr)
+					{
+					if(arr[key] < monthsDate)
+						{
+						var mytei=key
+						for(var p1=0;p1<trackedEntityInstances.length;p1++)
+						{
+						if(trackedEntityInstances[p1].trackedEntityInstance == key)
+							{
+						for(var y1=0;y1<trackedEntityInstances[p1].attributes.length;y1++)
+						{
+						if(trackedEntityInstances[p1].attributes[y1].displayName == 'Patient identifier')
+							{
+							 patientIdentifier = trackedEntityInstances[p1].attributes[y1].value;
+							}
+						if(trackedEntityInstances[p1].attributes[y1].displayName == 'File number')
+							{
+							 fileNumber = trackedEntityInstances[p1].attributes[y1].value;
+							}
+						}
+						    }
+						}
+						
+						var row = "<tbody id='tbodyid'><tr>";
+                        row = row + "<td>" + index + "</td><td>" + patientIdentifier + "</td><td>" + fileNumber + "</td>";
+                        row = row + "<td>" + arr[key] + "</td>";
+						row = row + "</tr></tbody>";
+                        $('.reporttable').append(row);
+						index++;
+											
+					  }	
+				}
+				Loader.hideLoader();
+				}			
+    </script>
+</head>
+<body>
+	<div class="heading">
+	<div style="float:left;height:60px;width:20%">	
+	</div>
+		<div id="heading1" style="float:left;width:60%;">
+			<p style="font-size:22px; text-align:center;" >NCD Program Lost to Follow-up Report	</p>
+		</div>	
+	</div>
+<br>
+<button id="export">Export to Excel</button>
+<div align="center"> 
+<b><input type="radio" id="four" name="month" value="four"/> Four Months&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <input type="radio" id="six" name="month" value="six"/> Six Months<br><br></b>
+<input type="button" id="getSelect" value="Generate Report"/>
+</div>
+<div id="mydiv">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<table class="table table-bordered reporttable" id="report_table" width="100%">
+<thead id="thead">
+	<tr>
+	<td>Service Name:</td><td id="ouname" colspan="3"></td><tr>
+	<tr>
+		<td style="width:10%">S.No.</td>
+		<td>Patient Identifier</td>
+		<td>File Number</td>
+		<td>Last visit date</td>
+	</tr>
+	</thead>
+	<!--<div class="loader"></div>-->
+	<tbody></tbody>
+	</table>
+</div>
+</body>
+
+</html>
