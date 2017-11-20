@@ -1,0 +1,355 @@
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    var tableDX = [];
+    var deUIDs = "";
+    var orgUnitChildrenUIds = "";
+    var orgUnitChildrenArray = [];
+    var numOf_orgUnitCildren = 0;
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+
+    // jsonObj
+    var dataJsonObj;
+
+    var showTable = "dataTable";
+    var showRow = "r1";
+
+    $.each(orgUnitChildren, function (i) {
+        orgUnitChildrenArray.push([orgUnitChildren[i].id, orgUnitChildren[i].name]);
+        numOf_orgUnitCildren++;
+    });
+
+    orgUnitChildrenArray.sort(arraySorting);
+	
+	   
+       // document.getElementById('periodID2').innerHTML = getPeriod(gotPeriod);
+
+    $(document).ready(function () {
+	  $(".hideInPrint").hide();
+            $("#btnExport").click(function(e) {
+                window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+                e.preventDefault();
+            });
+	
+	
+	document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+        document.getElementById('period').innerHTML = getPeriod(gotPeriod);
+		
+        $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
+            orgUnitChildrenUIds += childOrgUnit[0] + ";";
+        });
+
+        $("#dataTable > tbody").find("tr").each(function (i, trID) {
+		 
+		
+		
+		if(trID==h1 || trID==h2){
+		
+		}
+        else{    var dxID = trID.id.split("-")[0];
+            var cocID = trID.id.split("-")[1];
+            deUIDs += dxID + ";";
+            tableDX.push([dxID, cocID]);
+		}	
+        });
+		console.log(tableDX);
+		console.log(numOf_orgUnitCildren);
+
+        loadData();
+    });
+
+    // function for load table data
+    function loadData() {
+        var url = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=ou:" + orgUnitChildrenUIds + "&dimension=co&filter=pe:" + period;
+        $.get(url, function(json){
+            dataJsonObj = json;
+			console.log(dataJsonObj);
+            loadTable();
+        });
+    }
+
+    function loadTable(){
+        console.info(numOf_orgUnitCildren);
+		$("#Title").attr('colspan', numOf_orgUnitCildren+4);
+		$("#orgUnitID").attr('colspan', numOf_orgUnitCildren+3);
+		$("#period").attr('colspan', numOf_orgUnitCildren+3);
+		$("#t1").attr('colspan', numOf_orgUnitCildren+1);
+		$("#t2").attr('colspan', numOf_orgUnitCildren+1);
+        var addOrgUnits = "";
+        $("#orgUnits").html();
+        $.each(orgUnitChildrenArray, function(i,child){
+            addOrgUnits += "<td>" + child[1] + "</td>";
+        });
+        $("#orgUnits").append(addOrgUnits);
+
+        $.each(tableDX, function(i, rowID){
+            var addTdata = "";
+            $("#" + rowID[0] + "-" + rowID[1]).html();
+            $.each(orgUnitChildrenArray, function(j, child){
+                addTdata += "<td align='center'>"  + getCellValue(rowID[0], child[0], rowID[1]) +"</td>";
+            });
+            $("#"  + rowID[0] + "-" + rowID[1]).append(addTdata);
+        });
+   
+        hideLoad();
+    }
+    // function for getting cell values
+    function getCellValue(de, ou, co){
+        var result=0;
+        for (var i=0; i < dataJsonObj.rows.length; i++){
+            if (dataJsonObj.rows[i][0] == de && dataJsonObj.rows[i][1] == co && dataJsonObj.rows[i][2] == ou && dataJsonObj.rows[i][3] != null)
+            {
+                result = dataJsonObj.rows[i][3];
+            }
+        }
+        return parseFloat(result);
+    }
+
+    // function to convert periods to more visible info
+    function getPeriod( pr ) {
+        var year = pr.substring(0,4);
+        var month = pr.substring(4,6);
+        var strMonth="";
+
+        if(month=="01" || month=="1") 		strMonth="January";
+        else if(month=="02" || month=="2")	strMonth="February";
+        else if(month=="03" || month=="3")	strMonth="March";
+        else if(month=="04" || month=="4")	strMonth="April";
+        else if(month=="05" || month=="5")	strMonth="May";
+        else if(month=="06" || month=="6")	strMonth="June";
+        else if(month=="07" || month=="7")	strMonth="July";
+        else if(month=="08" || month=="8")	strMonth="August";
+        else if(month=="09" || month=="9")	strMonth="September";
+        else if(month=="10")				strMonth="October";
+        else if(month=="11") 				strMonth="November";
+        else if(month=="12")				strMonth="December";
+
+        return strMonth + " " + year;
+    }
+
+    // function to hide loading animation
+	
+    function hideLoad() {
+        document.getElementById("cover").style.display="none";
+        document.getElementById("loads").style.display="none";
+        document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow="scroll";
+    }
+</script>
+
+<!-- Script for printing -->
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 10px 10px;
+                    font: Arial, Helvetica, sans-serif;
+                }
+
+                bd {
+                    border-style: solid;
+                    border-color: #000000;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align = center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width:1px;
+                    height: 50px;
+                    -ms-transform: rotate(90deg);
+                    -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    border-style: hidden;
+                }
+
+            </style>
+            <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+		    <div id="cover"></div>
+
+        </span></p>
+
+<div>
+    <table>
+        <tr>
+            <td>
+                <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reporting/displayViewReportForm.action'"/>
+                <input type="button"  onclick="printContent('printing');" value="Print"/>
+                <input type="button" id="btnExport" value=" Download Excel " />
+            </td>
+        </tr>
+    </table>
+</div>
+<br/>
+<div id="printing">
+    <div id="state">
+        <table  border="1" cellspacing="6" cellpadding="4"   id="dataTable"  width="100%"
+               style="border-collapse: collapse; border: 2px;border-color:#000;  font: Arial, Helvetica, sans-serif;">
+          <thead>  
+            <tr  bgcolor='#e1e1e1' >
+                <td id="Title"  colspan="4" style="text-align: center;font-size: 18px;" >Home Based Newborn Care (HBNC)</td>
+				
+            </tr>
+			
+            <tr >
+                <td bgcolor="#e1e1e1"  >Facility</td>
+                <td  id="orgUnitID" bgcolor="#e1e1e1" style="text-align: left;">&nbsp;</td>
+            </tr>
+			<tr>
+                <td bgcolor="#e1e1e1" >From</td>
+                <td   id="period" bgcolor="#e1e1e1" style="text-align: left;">&nbsp;</td>
+                
+            </tr>
+           
+        
+     
+            
+		 
+            <tr id="orgUnits" bgcolor='#d1d1d1' style='text-align: center; font-size: 16px;'>
+                <td colspan="1" width="10%"  >Sr No.</td>
+                <td  colspan="3"  >Data Elements</td>  
+            </tr>
+			</thead>
+		
+	
+			<tbody>
+            <tr id="h1" bgcolor='#e1e1e1' style='text-align: left; font-size: 14px;>'>
+                <td   style='text-align: center;'>1</td>
+                <td   colspan="3" width="90%" >Post Natal Care : -No. of Home visit by ASHA for New Born for Institutional Delivery</td>
+                <td id="t1" bgcolor="#e1e1e1">&nbsp;</td>
+            </tr>
+            <tr id="HpBI2QHJCTE-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>1.1</td>
+                <td colspan="3">3rd Day</td>
+                
+            </tr>
+            <tr id="h8jvoXtvuh9-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>1.2</td>
+                <td colspan="3">7th Day</td>
+               
+            </tr>
+            <tr id="RbFUvVYs3fP-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>1.3</td>
+                <td colspan="3">14th Day</td>
+                
+            </tr>
+            <tr id="XAACNl6Ce6b-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>1.4</td>
+                <td colspan="3">21st Day</td>
+                
+            </tr>
+            <tr  id="KogTapLBzzR-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>1.5</td>
+                <td colspan="3">28th Day</td>
+                
+            </tr>
+            <tr id="JLGHlMGHLIw-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td style='text-align: center;'>1.6</td>
+                <td colspan="3" >42nd Day</td>
+                
+            </tr>
+
+            <!-- 2nd main row -->
+            <tr id="h2" bgcolor='#e1e1e1' style='text-align: left; font-size: 14px;>'>
+                <td   style='text-align: center;'>2</td>
+                <td colspan="3" width="90%"  >Post Natal Care : -Post Natal Care : -No. of Home visit by ASHA for New Born for Home Delivery</td>
+                <td id="t2" bgcolor="#e1e1e1">&nbsp;</td>
+            </tr>
+            <tr id="Er3nlMZSFvG-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td   style='text-align: center;'>2.1</td>
+                <td colspan="3" >1st Day</td>
+                
+            </tr>
+            <tr id="q3Yc2I5aD3G-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>2.2</td>
+                <td colspan="3" >3rd Day</td>
+                
+            </tr>
+            <tr id="ftRzyZID9E9-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>2.3</td>
+                <td colspan="3" >7th Day</td>
+                
+            </tr>
+            <tr id="etlVVMXCo2Z-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td   style='text-align: center;'>2.4</td>
+                <td colspan="3" >14th Day</td>
+            
+			
+            </tr>
+            <tr id="bXiC5EUX6VV-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>2.5</td>
+                <td colspan="3" >21st Day</td>
+                
+            </tr>
+            <tr id="Okg5aIIcw6L-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>2.6</td>
+                <td colspan="3"  >28th Day</td>
+                
+            </tr>
+            <tr id="xZxTPTZcfHi-mI8uHaT7o47" bgcolor='#ffffff' style='text-align: left; font-size: 14px;>'>
+                <td  style='text-align: center;'>2.7</td>
+                <td colspan="3"  >42nd Day</td>
+                
+            </tr>
+			</tbody>
+        </table>
+    </div>
+</div>

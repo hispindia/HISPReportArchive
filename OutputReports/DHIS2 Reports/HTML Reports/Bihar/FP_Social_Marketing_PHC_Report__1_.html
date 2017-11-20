@@ -1,0 +1,337 @@
+<style>
+    td {
+        border: solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+    }
+
+    tr {
+        height: 25px;
+    }
+</style>
+<script src="javascript/DownloadAsExcel.js"></script>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+<style>
+    td {
+        border: solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        padding: 2px;
+    }
+
+</style>
+<script type="text/javascript">
+    console.log("fdsss");
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotPeriod = params[2];
+    var deUIDsString = "";
+    var gotOrg = params[3];
+
+    var cellUIDArray = [];
+    jQuery(document).ready(function () {
+        $(".hideInPrint").hide();
+        // Get all the inputs into an array...
+        var $inputs = $('#mytab :input');
+
+        $inputs.each(function (index) {
+            // For debugging purposes...
+
+            cellUIDArray.push($(this).attr('id'));
+
+
+        });
+
+        // An array of just the ids...
+        //var ids=[];
+        $("#btnExport").click(function (e) {
+            window.open('data:application/vnd.ms-excel,' + encodeURIComponent($('#printing').html()));
+            e.preventDefault();
+        });
+
+        $.each(cellUIDArray, function (index, val) {
+            var deUID = val.split("-")[0];
+            deUIDsString += deUID + ";";
+        });
+
+        var phcUrl = "../api/organisationUnitGroups/e92no7zLAM6.json?fields=organisationUnits[id,name]";
+        $.get(phcUrl, function (json1) {
+            load(json1);
+
+        });
+
+
+        document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+        document.getElementById('periodID').innerHTML = getPeriod(gotPeriod);
+
+
+    });
+
+    function load(json1) {
+        var phc = false;
+        for (var a = 0; a < json1.organisationUnits.length; a++) {
+            if (orgUnit.id == json1.organisationUnits[a].id) {
+                phc = true;
+                break;
+            }
+        }
+
+
+        if (phc == true  ) {
+            var url = "../api/analytics.json?dimension=dx:" + deUIDsString + "&dimension=co&filter=ou:" + orgUnit.id + "&filter=pe:" + gotPeriod;
+
+
+            $.get(url, function (json) {
+
+                $.each(cellUIDArray, function (index, val) {
+                    var deUID = val.split("-")[0];
+                    var cocUID = val.split("-")[1];
+                    var result = getCellValue(json, deUID, cocUID);
+
+                    $("#" + val).replaceWith(function () {
+                        return '<div id=' + this.id + '>' + parseInt(result) + '</div>'
+                    });
+
+                });
+            });
+
+        }
+        else {
+
+             alert("Please select a PHC");
+            window.history.back();
+
+        }
+
+
+    }
+
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+    function getCellValue(json, de, coc) {
+
+        var result = 0;
+        for (var i = 0; i < json.rows.length; i++) {
+            if (json.rows[i][0] == de && json.rows[i][1] == coc && json.rows[i][2] != null) {
+                result = json.rows[i][2];
+            }
+        }
+        return result;
+    }
+</script>
+
+<style type="text/css"><!--
+.style11 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12;
+}
+
+.style12 {
+    font-size: 12
+}
+
+-->
+</style>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+<style>
+    td {
+        border: solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+    }
+
+</style>
+<input type="button" id="btnBack" value=" Goto Report Selection Page"
+       onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+<input type="button" onclick="printContent('printing');" value="Print"/>
+<input type="button" id="btnExport" value=" Download Excel "/>
+
+<br>
+</br>
+<div id="printing">
+
+    <div id='state'>
+        <table id="mytab" border="1" bordercolor="#111111" cellpadding="0" cellspacing="0" height="399" id="AutoNumber1"
+               style="border-collapse: collapse;" width="40%">
+            <tbody>
+            <tr bgcolor="#CCCCCC">
+                <td style="text-align: center;" width="72"><strong><span class="style11">S.NO.</span></strong></td>
+                <td style="text-align: center;" width="347"><strong><span class="style11">Data Element</span></strong>
+                </td>
+                <td style="text-align: center;" width="135"><strong><span class="style11">Value</span></strong></td>
+            </tr>
+            <tr bgcolor="#CCCCCC">
+                <td colspan="3" style="text-align: center;"><strong><span class="style11">Status of Implementation of Social Marketing of Contraceptive Scheme by ASHA</span></strong>
+                </td>
+            </tr>
+            <tr bgcolor="#CCCCCC">
+                <td>
+                    <div align="center" class="style11"><strong>Facility</strong></div>
+                </td>
+                <td id="orgUnitID" colspan="2"><strong><span class="style11">&nbsp;</span></strong></td>
+            </tr>
+            <tr bgcolor="#CCCCCC">
+                <td>
+                    <div align="center" class="style11"><strong>Period</strong></div>
+                </td>
+                <td id="periodID" colspan="2"><strong><span class="style11">&nbsp;</span></strong></td>
+            </tr>
+            <tr bgcolor="#CCCCCC">
+                <td>
+                    <div align="center" class="style11"><strong>1</strong></div>
+                </td>
+                <td colspan="2"><strong><span class="style11">&nbsp;Opening Balance</span></strong></td>
+            </tr>
+            <tr bgcolor="#CCCCCC">
+                <td colspan="1">
+                    <div align="center" class="style11"><strong>Sr No</strong></div>
+                </td>
+                <td align="center" colspan="1"><strong><span class="style11">Data Element</span></strong></td>
+                <td align="center" colspan="1"><strong><span class="style11">Value</span></strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">1.1</div>
+                </td>
+                <td><span class="style11">&nbsp;Condoms(pcs)</span></td>
+                <td style="text-align: center;"><input id="qlTCkU7ekWL-BOhomrJImb2-val"
+                                                       style="width:7em;text-align:center"
+                                                       title="qlTCkU7ekWL - Number of Comdoms(pcs) - BOhomrJImb2 - (Opening Balance Stock) - int"
+                                                       value="[ Number of Comdoms(pcs) (Opening Balance Stock) ]"/></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">1.2</div>
+                </td>
+                <td><span class="style11">&nbsp;OCP (cycles)</span></td>
+                <td style="text-align: center;"><input id="rxcX4WXFUJs-BOhomrJImb2-val"
+                                                       style="width:7em;text-align:center"
+                                                       title="rxcX4WXFUJs - Number of OCP(pcs) - BOhomrJImb2 - (Opening Balance Stock) - int"
+                                                       value="[ Number of OCP(pcs) (Opening Balance Stock) ]"/></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">&nbsp;1.3</div>
+                </td>
+                <td><span class="style11">&nbsp;ECP (packs)</span></td>
+                <td style="text-align: center;"><input id="a1kdEwpc7LS-BOhomrJImb2-val"
+                                                       style="width:7em;text-align:center"
+                                                       title="a1kdEwpc7LS - Number of ECP(pcs) - BOhomrJImb2 - (Opening Balance Stock) - int"
+                                                       value="[ Number of ECP(pcs) (Opening Balance Stock) ]"/></td>
+            </tr>
+            <tr bgcolor="#CCCCCC">
+                <td>
+                    <div align="center" class="style11"><strong>2</strong></div>
+                </td>
+                <td colspan="2"><strong><span class="style11">&nbsp;Stock Received</span></strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">2.1</div>
+                </td>
+                <td><span class="style11">&nbsp;Condoms(pcs)</span></td>
+                <td style="text-align: center;"><input id="qlTCkU7ekWL-CYeCL20ssXB-val"
+                                                       style="width:7em;text-align:center"
+                                                       title="qlTCkU7ekWL - Number of Comdoms(pcs) - CYeCL20ssXB - (Received Stock) - int"
+                                                       value="[ Number of Comdoms(pcs) (Received Stock) ]"/></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">2.2</div>
+                </td>
+                <td><span class="style11">&nbsp;OCP (cycles)</span></td>
+                <td style="text-align: center;"><input id="rxcX4WXFUJs-CYeCL20ssXB-val"
+                                                       style="width:7em;text-align:center"
+                                                       title="rxcX4WXFUJs - Number of OCP(pcs) - CYeCL20ssXB - (Received Stock) - int"
+                                                       value="[ Number of OCP(pcs) (Received Stock) ]"/></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">2.3</div>
+                </td>
+                <td><span class="style11">&nbsp;ECP (packs)</span></td>
+                <td style="text-align: center;"><input id="a1kdEwpc7LS-CYeCL20ssXB-val"
+                                                       style="width:7em;text-align:center"
+                                                       title="a1kdEwpc7LS - Number of ECP(pcs) - CYeCL20ssXB - (Received Stock) - int"
+                                                       value="[ Number of ECP(pcs) (Received Stock) ]"/></td>
+            </tr>
+            <tr bgcolor="#CCCCCC">
+                <td>
+                    <div align="center" class="style11"><strong>3</strong></div>
+                </td>
+                <td colspan="2"><strong><span class="style11">&nbsp;Stock Distributed (Utilised)</span></strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">3.1</div>
+                </td>
+                <td><span class="style11">&nbsp;Condoms(pcs)</span></td>
+                <td style="text-align: center;"><input id="qlTCkU7ekWL-MXNT70ZHONK-val" onchange="validateCondoms();"
+                                                       style="width:7em;text-align:center"
+                                                       title="qlTCkU7ekWL - Number of Comdoms(pcs) - MXNT70ZHONK - (Distributed Stock) - int"
+                                                       value="[ Number of Comdoms(pcs) (Distributed Stock) ]"/></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">3.2</div>
+                </td>
+                <td><span class="style11">&nbsp;OCP (cycles)</span></td>
+                <td style="text-align: center;"><input id="rxcX4WXFUJs-MXNT70ZHONK-val" onchange="validateOCP();"
+                                                       style="width:7em;text-align:center"
+                                                       title="rxcX4WXFUJs - Number of OCP(pcs) - MXNT70ZHONK - (Distributed Stock) - int"
+                                                       value="[ Number of OCP(pcs) (Distributed Stock) ]"/></td>
+            </tr>
+            <tr>
+                <td>
+                    <div align="center" class="style11">3.3</div>
+                </td>
+                <td><span class="style11">&nbsp;ECP (packs)</span></td>
+                <td style="text-align: center;"><input id="a1kdEwpc7LS-MXNT70ZHONK-val" onchange="validateECP();"
+                                                       style="width:7em;text-align:center"
+                                                       title="a1kdEwpc7LS - Number of ECP(pcs) - MXNT70ZHONK - (Distributed Stock) - int"
+                                                       value="[ Number of ECP(pcs) (Distributed Stock) ]"/></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<p>&nbsp;</p>

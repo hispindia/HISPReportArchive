@@ -1,0 +1,592 @@
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<script type="text/javascript">
+console.log("fdsss");
+	var periods = dhis2.report.periods;
+	var period = periods[0];
+	var orgUnit = dhis2.report.organisationUnit;
+		
+			
+		
+	var url = window.location.href;
+	var params = url.split('=');
+	var gotPeriod=params[2];
+	var gotPeriode=params[2];
+	var gotOrg=params[3];
+	
+	var cellUIDArray=[];
+	var cellUIDArray2=[];
+	
+	jQuery( document ).ready( function(){
+		$(".hideInPrint").hide();
+            $("#btnExport").click(function(e) {
+                window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+                e.preventDefault();
+            });
+		// Get all the inputs into an array...
+         var $inputs = $('#dataTable :input');
+
+         // An array of just the ids...
+         //var ids=[];
+
+         $inputs.each(function (index)
+         {
+             // For debugging purposes...
+             //alert(index + ': ' + $(this).attr('id'));
+				cellUIDArray.push($(this).attr('id'));
+				
+             //ids[$(this).attr('name')] = $(this).attr('id');
+         });
+		 //console.log(ids);
+		console.log(cellUIDArray);
+		console.log( orgUnit );
+		
+		document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+		document.getElementById('periodID').innerHTML = getPeriod(period);		
+		console.log(cellUIDArray);
+		var deUIDsString = "";
+		$.each( cellUIDArray, function ( index, val ) {
+			var deUID = val.split("-")[0];
+			deUIDsString += deUID + ";";
+		});
+		
+		var url = "../api/analytics.json?dimension=dx:"+deUIDsString+"&dimension=co&filter=ou:"+orgUnit.id+"&filter=pe:"+period;
+		console.log( url );
+		
+		$.get( url ,function(json){				
+			
+			$.each( cellUIDArray, function ( index, val ) {
+				var deUID = val.split("-")[0];
+				var cocUID = val.split("-")[1];
+				var result = getCellValue( json, deUID, cocUID );
+				
+				$("#"+val).replaceWith(function(){
+					return '<div id='+this.id+'>'+parseInt( result )+'</div>'
+				});
+					
+			});
+		});
+		
+		
+hideLoad();		
+	
+		
+	});
+	
+	function getCellValue( json, de, coc )
+	{
+	
+		var result=0;
+		for (var i=0; i < json.rows.length; i++)
+		{
+			if (json.rows[i][0] == de && json.rows[i][1] == coc && json.rows[i][2]!= null)
+			{
+				result=json.rows[i][2];
+			}
+		}		
+		return result;
+	}
+	function getPeriod( pr ) {
+    var year = pr.substring(0,4);
+    var month = pr.substring(4,6);
+    var strMonth="";
+
+    if(month=="01" || month=="1") 		strMonth="January";
+    else if(month=="02" || month=="2")	strMonth="February";
+    else if(month=="03" || month=="3")	strMonth="March";
+    else if(month=="04" || month=="4")	strMonth="April";
+    else if(month=="05" || month=="5")	strMonth="May";
+    else if(month=="06" || month=="6")	strMonth="June";
+    else if(month=="07" || month=="7")	strMonth="July";
+    else if(month=="08" || month=="8")	strMonth="August";
+    else if(month=="09" || month=="9")	strMonth="September";
+    else if(month=="10")				strMonth="October";
+    else if(month=="11") 				strMonth="November";
+	else if(month=="12")				strMonth="December";
+
+    return strMonth + " " + year;
+	
+}
+	    // function to hide loading animation
+
+    function hideLoad() {
+        document.getElementById("cover").style.display="none";
+        document.getElementById("loads").style.display="none";
+        document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow="scroll";
+    }  
+
+</script>
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font: Arial, Helvetica, sans-serif;
+                }
+
+                bd {
+                    border-style: solid;
+                    border-color: #000000;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align = center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width: 1px;
+                    height: 50px;
+                    -ms-transform: rotate(90deg);
+                    -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    border-style: hidden;
+                }
+          </style>
+        </span></p>
+
+<div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+		    <div id="cover"></div>
+
+<table>
+    <tr>
+        <td>
+            <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+            <input type="button"  onclick="printContent('printing');" value="Print"/>
+            <input type="button" id="btnExport" value=" Download Excel " />
+        </td>
+    </tr>
+</table>
+
+<br>
+
+
+<div id="state">
+<style type="text/css">
+.style3 {font-family: Arial, Helvetica, sans-serif; font-size: 12; }
+.style4 {font-size: 12}
+</style>
+
+<div id="printing">
+<table  id="dataTable" width="100%" border="1"  cellspacing="6" cellpadding="4" style="border-collapse:collapse" class="style3">
+	<tbody>
+		<tr>
+					<tr>
+						<td colspan="3" rowspan="2" style="height: 40px; width: 897px; text-align: center;" bgcolor="#cccccc"><span style="font-size:15px;"><strong>District Level Monthly Reporting Format For Tobacco Control Programme</strong></span></td>
+					</tr>
+					<tr>
+					</tr>
+		</tr>
+		<tr>
+			<td align="centre" bgcolor="#cccccc" ><strong>Facility</strong></td>
+		    <td  id= "orgUnitID" colspan="2" bgcolor="#cccccc"><strong>&nbsp;</strong></span></td>
+			</tr>
+		<tr>
+			<td align="centre" bgcolor="#cccccc" ><span ><strong>Period</strong></span></td>
+			<td  id= "periodID" colspan="2" bgcolor="#cccccc"><span ><strong>&nbsp;</strong></span></td>
+		</tr>
+		<tr>
+			<td align="centre" bgcolor="#cccccc"><span ><strong>S. No.</strong></span></td>
+			<td align="centre" bgcolor="#cccccc"><span ><strong>Data Elements (Regarding Different sections of &nbsp;COTPA - 2003)</strong></span></td>
+			<td align="centre" bgcolor="#cccccc"><span ><strong>Values</strong></span></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;"><strong>1</strong></td>
+			<td ><span ><strong>Section 4 (Prohibition of Smoking in Public Places)</strong></span></td>
+			<td >&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">1.1</td>
+			<td>Number of Persons Fined</td>
+			<td><input align="centre" id="ef18ARnUyE6-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ef18ARnUyE6 - Number of People Fined for Prohibition of Smoking in Public Places - mI8uHaT7o47 - (default) - int" value="[ Number of People Fined for Prohibition of Smoking in Public Places (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">1.2</td>
+			<td>Fine amount collected during the Month</td>
+			<td><input align="centre" id="Jdrleg15rXO-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Jdrleg15rXO - Fine Amount Collected During the Month Due to Prohibition of Smoking in Public Places - mI8uHaT7o47 - (default) - int" value="[ Fine Amount Collected During the Month Due to Prohibition of Smoking in Public Places (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">1.3</td>
+			<td>Whether mandatory &ldquo;No Smoking&rdquo; signage is present at point of sale and Public Places? &nbsp;<strong>[If yes, please specify number of signage present, otherwise enter &quot;0&quot;]</strong></td>
+			<td><input align="centre" id="rqWtHBslIOI-mI8uHaT7o47-val" style="width:7em;text-align:center" title="rqWtHBslIOI - Number of Mandatory “No Smoking” Signage Present at Point of Sale and Public Places? - mI8uHaT7o47 - (default) - int" value="[ Number of Mandatory “No Smoking” Signage Present at Point of Sale and Public Places? (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">1.4</td>
+			<td><strong>Number of IEC done for Prohibition of Smoking in Public Places: -</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">a)</td>
+			<td>Poster</td>
+			<td><input align="centre" id="B5h3vqp2H0u-mI8uHaT7o47-val" style="width:7em;text-align:center" title="B5h3vqp2H0u - Number of IEC Done for Prohibition of Smoking in Public Places Through Posters - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Smoking in Public Places Through Posters (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">b)</td>
+			<td>Pamphlet</td>
+			<td><input align="centre"id="yLss0T6n60r-mI8uHaT7o47-val" style="width:7em;text-align:center" title="yLss0T6n60r - Number of IEC Done for Prohibition of Smoking in Public Places Through Pamphlet - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Smoking in Public Places Through Pamphlet (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">c)</td>
+			<td>Hoarding</td>
+			<td><input align="centre" id="aSSKiMjCf7F-mI8uHaT7o47-val" style="width:7em;text-align:center" title="aSSKiMjCf7F - Number of IEC Done for Prohibition of Smoking in Public Places Through Hoardings - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Smoking in Public Places Through Hoardings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">d)</td>
+			<td>&#39;No Smoking&#39; sign board display</td>
+			<td><input align="centre" id="c1oWsq01QAZ-mI8uHaT7o47-val" style="width:7em;text-align:center" title="c1oWsq01QAZ - Number of IEC Done for Prohibition of Smoking in Public Places Through &quot;No Smoking&quot; Sign Board Display - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Smoking in Public Places Through &quot;No Smoking&quot; Sign Board Display (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">e)</td>
+			<td>Others</td>
+			<td><input align="centre" id="fGkhtlLWrzN-mI8uHaT7o47-val" style="width:7em;text-align:center" title="fGkhtlLWrzN - Number of IEC Done for Prohibition of Smoking in Public Places Through Other Activities - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Smoking in Public Places Through Other Activities (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center"><strong>2</strong></td>
+			<td ><strong>Section 6 (a) (Prohibition on sale of Tobacco products to and by minors)</strong></td>
+			<td align="centre">&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">2.1</td>
+			<td>Whether mandatory signage at shops has been installed?<strong> [If yes, please specify number of signage present, otherwise enter &quot;0&quot;]</strong></td>
+			<td><input align="centre" id="dEQEDfM7Guy-mI8uHaT7o47-val" style="width:7em;text-align:center" title="dEQEDfM7Guy - Number of Mandatory Signage Installed at Shops for Prohibition on Sale of Tobacco Products to and by Minors - mI8uHaT7o47 - (default) - int" value="[ Number of Mandatory Signage Installed at Shops for Prohibition on Sale of Tobacco Products to and by Minors (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">2.2</td>
+			<td>Number of &nbsp;Persons Fined</td>
+			<td><input align="centre" id="pjd7VChvbH5-mI8uHaT7o47-val" style="width:7em;text-align:center" title="pjd7VChvbH5 - Number of  Persons Fined Under Prohibition on Sale of Tobacco Products to and by Minors - mI8uHaT7o47 - (default) - int" value="[ Number of  Persons Fined Under Prohibition on Sale of Tobacco Products to and by Minors (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">2.3</td>
+			<td>Fine amount collected during the Month</td>
+			<td><input align="centre" id="CflphyybOgS-mI8uHaT7o47-val" style="width:7em;text-align:center" title="CflphyybOgS - Fine Amount Collected During the Month Under Prohibition on Sale of Tobacco Products to and by Minors - mI8uHaT7o47 - (default) - int" value="[ Fine Amount Collected During the Month Under Prohibition on Sale of Tobacco Products to and by Minors (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">2.4</td>
+			<td><strong>Number of IEC done for Prohibition on sale of Tobacco products to and by minors: -</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">a)</td>
+			<td>Poster</td>
+			<td><input align="centre" id="HnQllav4kqC-mI8uHaT7o47-val" style="width:7em;text-align:center" title="HnQllav4kqC - Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Posters - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Posters (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">b)</td>
+			<td>Pamphlet</td>
+			<td><input align="centre" id="JZzgmlRcL5W-mI8uHaT7o47-val" style="width:7em;text-align:center" title="JZzgmlRcL5W - Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Pamphlets - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Pamphlets (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">c)</td>
+			<td>Hoarding</td>
+			<td><input align="centre" id="sjpKNmsaDRu-mI8uHaT7o47-val" style="width:7em;text-align:center" title="sjpKNmsaDRu - Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Hoardings - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Hoardings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">d)</td>
+			<td>Mandatory sign board display</td>
+			<td><input align="centre" id="E3yUb8I8vJX-mI8uHaT7o47-val" style="width:7em;text-align:center" title="E3yUb8I8vJX - Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Mandatory Sign Board Display - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Mandatory Sign Board Display (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">e)</td>
+			<td>Others</td>
+			<td><input align="centre" id="tjbslkPSNma-mI8uHaT7o47-val" style="width:7em;text-align:center" title="tjbslkPSNma - Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Other Activities - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products to and by Minors Through Other Activities (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center; background-color: rgb(204, 204, 204);"><strong>3</strong></td>
+			<td style="height: 30px; background-color: rgb(204, 204, 204);"><strong>Section 6 (b) (Prohibition on sale of Tobacco products around 100 yards of the Educational Institutions)</strong></td>
+			<td style="background-color: rgb(204, 204, 204);">&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">3.1</td>
+			<td>Number of shops Fined for selling tobacco products around 100 yards of the educational institution?</td>
+			<td><input align="centre" id="kSTVtR0vUNM-mI8uHaT7o47-val" style="width:7em;text-align:center" title="kSTVtR0vUNM - Number of Shops Fined for Selling Tobacco Products Around 100 Yards of the Educational Institution - mI8uHaT7o47 - (default) - int" value="[ Number of Shops Fined for Selling Tobacco Products Around 100 Yards of the Educational Institution (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">3.2</td>
+			<td>Fine amount collected during the Month</td>
+			<td><input align="centre" id="oFN4ObUeWPX-mI8uHaT7o47-val" style="width:7em;text-align:center" title="oFN4ObUeWPX - Fine Amount Collected for Selling Tobacco Products Around 100 Yards of the Educational Institution - mI8uHaT7o47 - (default) - int" value="[ Fine Amount Collected for Selling Tobacco Products Around 100 Yards of the Educational Institution (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">3.3</td>
+			<td>Whether mandatory signage at Educational institutions has been installed? &nbsp;<strong>[If yes, please specify number of signage present, otherwise enter &quot;0&quot;]</strong></td>
+			<td><input align="centre" id="JxrlXWXj8dh-mI8uHaT7o47-val" style="width:7em;text-align:center" title="JxrlXWXj8dh - Number of Mandatory Signage Installed at Educational Institution - mI8uHaT7o47 - (default) - int" value="[ Number of Mandatory Signage Installed at Educational Institution (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">3.4</td>
+			<td>Number of Educational Institution fined for not displaying mandatory signage board?</td>
+			<td><input align="centre" id="ibDEOiqRY25-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ibDEOiqRY25 - Number of Educational Institution Fined for Not Displaying Mandatory Signage Board Against Selling of Tobacco Products - mI8uHaT7o47 - (default) - int" value="[ Number of Educational Institution Fined for Not Displaying Mandatory Signage Board Against Selling of Tobacco Products (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">3.5</td>
+			<td>Fine amount collected during the Month</td>
+			<td><input align="centre" id="dish04L2qCy-mI8uHaT7o47-val" style="width:7em;text-align:center" title="dish04L2qCy - Fine Amount Collected During the Month Under Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions - mI8uHaT7o47 - (default) - int" value="[ Fine Amount Collected During the Month Under Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">3.6</td>
+			<td><strong>Number of IEC done for Prohibition on sale of Tobacco products around 100 yards of the Educational Institutions: -</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">a)</td>
+			<td>Poster</td>
+			<td><input align="centre" id="PGDxXjB5Mf8-mI8uHaT7o47-val" style="width:7em;text-align:center" title="PGDxXjB5Mf8 - Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Posters - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Posters (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">b)</td>
+			<td>Pamphlet</td>
+			<td><input align="centre" id="XGd1TPmPb1n-mI8uHaT7o47-val" style="width:7em;text-align:center" title="XGd1TPmPb1n - Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Pamphlet - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Pamphlet (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">c)</td>
+			<td>Hoarding</td>
+			<td><input align="centre" id="GDW0MniVUSz-mI8uHaT7o47-val" style="width:7em;text-align:center" title="GDW0MniVUSz - Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Hoardings - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Hoardings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">d)</td>
+			<td>Mandatory sign board display</td>
+			<td><input align="centre" id="BrJdWxdymWb-mI8uHaT7o47-val" style="width:7em;text-align:center" title="BrJdWxdymWb - Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Mandatory Sign Board Display - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Mandatory Sign Board Display (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">e)</td>
+			<td>Others</td>
+			<td><input align="centre" id="V0JaaSAVbyD-mI8uHaT7o47-val" style="width:7em;text-align:center" title="V0JaaSAVbyD - Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Other Activities - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition on Sale of Tobacco Products Around 100 Yards of the Educational Institutions Through Other Activities (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center; background-color: rgb(204, 204, 204);"><strong>4</strong></td>
+			<td style="height: 30px; background-color: rgb(204, 204, 204);"><strong>Section 5 (Prohibition of Advertisement of tobacco products)</strong></td>
+			<td style="background-color: rgb(204, 204, 204);">&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">4.1</td>
+			<td>Whether District Monitoring Committee has been formed? <strong>[If yes, please specify no of meetings held, otherwise enter &quot;0&quot;]</strong></td>
+			<td><input align="centre" id="y2uZcEkLgON-mI8uHaT7o47-val" style="width:7em;text-align:center" title="y2uZcEkLgON - Number of Meetings of District Monitoring Committee - mI8uHaT7o47 - (default) - int" value="[ Number of Meetings of District Monitoring Committee (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">4.2</td>
+			<td>Number of &nbsp;Cases booked against violation of section 5</td>
+			<td><input align="centre" id="goUswsxlzZ6-mI8uHaT7o47-val" style="width:7em;text-align:center" title="goUswsxlzZ6 - Number of Cases Booked Against Violation of Prohibition on Advertisement of Tobacco Products - mI8uHaT7o47 - (default) - int" value="[ Number of Cases Booked Against Violation of Prohibition on Advertisement of Tobacco Products (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">4.3</td>
+			<td><strong>Status of the Cases booked against violation of section 5</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">a)</td>
+			<td>Number of cases filed</td>
+			<td><input align="centre" id="JXWbEqylL0L-mI8uHaT7o47-val" style="width:7em;text-align:center" title="JXWbEqylL0L - Number of Cases Filed Against Violation of Prohibition on Advertisement of Tobacco Products - mI8uHaT7o47 - (default) - int" value="[ Number of Cases Filed Against Violation of Prohibition on Advertisement of Tobacco Products (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">b)</td>
+			<td>Number of cases disposed</td>
+			<td><input align="centre" id="uqwFxiQdagJ-mI8uHaT7o47-val" style="width:7em;text-align:center" title="uqwFxiQdagJ - Number of Cases Disposed of Those Booked Against Violation of Prohibition on Advertisement of Tobacco Products - mI8uHaT7o47 - (default) - int" value="[ Number of Cases Disposed of Those Booked Against Violation of Prohibition on Advertisement of Tobacco Products (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">c)</td>
+			<td>Pending cases</td>
+			<td><input align="centre" id="noKirfgz9q0-mI8uHaT7o47-val" style="width:7em;text-align:center" title="noKirfgz9q0 - Number of Cases Pending of Those Booked Against Violation of Prohibition on Advertisement of Tobacco Products - mI8uHaT7o47 - (default) - int" value="[ Number of Cases Pending of Those Booked Against Violation of Prohibition on Advertisement of Tobacco Products (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">4.4</td>
+			<td><strong>Number of IEC done for Prohibition of Advertisement of tobacco products: -</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">a)</td>
+			<td>Poster</td>
+			<td><input align="centre" id="f7FtWthAGhw-mI8uHaT7o47-val" style="width:7em;text-align:center" title="f7FtWthAGhw - Number of IEC Done for Prohibition of Advertisement of Tobacco Products Through Posters - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Advertisement of Tobacco Products Through Posters (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">b)</td>
+			<td>Pamphlet</td>
+			<td><input align="centre" id="o5dYPsQxgbc-mI8uHaT7o47-val" style="width:7em;text-align:center" title="o5dYPsQxgbc - Number of IEC Done for Prohibition of Advertisement of Tobacco Products Through Pamphlets - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Advertisement of Tobacco Products Through Pamphlets (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">c)</td>
+			<td>Hoarding</td>
+			<td><input align="centre" id="mC6W74acd07-mI8uHaT7o47-val" style="width:7em;text-align:center" title="mC6W74acd07 - Number of IEC Done for Prohibition of Advertisement of Tobacco Products Through Hoardings - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Advertisement of Tobacco Products Through Hoardings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">d)</td>
+			<td>Others</td>
+			<td><input align="centre" id="YhuxSczXVYY-mI8uHaT7o47-val" style="width:7em;text-align:center" title="YhuxSczXVYY - Number of IEC Done for Prohibition of Advertisement of Tobacco Products Through Other Activities - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Prohibition of Advertisement of Tobacco Products Through Other Activities (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center; background-color: rgb(204, 204, 204);"><strong>5</strong></td>
+			<td style="background-color: rgb(204, 204, 204); height: 30px;"><strong>Section 7 (Specified Pictorial Health Warnings)</strong></td>
+			<td style="background-color: rgb(204, 204, 204);">&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">5.1</td>
+			<td>Whether mandatory pictorial health warnings on the packs/label has been printed on all tobacco products? <strong>[0 - No, 1 - Yes]</strong></td>
+			<td><input align="centre" id="OFp2ROE0IDv-mI8uHaT7o47-val" style="width:7em;text-align:center" title="OFp2ROE0IDv - Whether Mandatory Pictorial Health Warnings on the Packs/ Label has Been Printed on All Tobacco Products? - mI8uHaT7o47 - (default) - int" value="[ Whether Mandatory Pictorial Health Warnings on the Packs/ Label has Been Printed on All Tobacco Products? (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">5.2</td>
+			<td>Number of &nbsp;Cases booked against violation of section 7</td>
+			<td><input align="centre" id="ZLsyfK0YEZ7-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ZLsyfK0YEZ7 - Number of  Cases Booked Against Violation of Specified Pictorial Health Warnings - mI8uHaT7o47 - (default) - int" value="[ Number of  Cases Booked Against Violation of Specified Pictorial Health Warnings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">5.3</td>
+			<td><strong>Status of the Cases booked against violation of section 7</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">a)</td>
+			<td>Number of cases filed</td>
+			<td><input align="centre" id="dgXdx1x5btm-mI8uHaT7o47-val" style="width:7em;text-align:center" title="dgXdx1x5btm - Number of  Cases Filed Against Violation of Specified Pictorial Health Warnings - mI8uHaT7o47 - (default) - int" value="[ Number of  Cases Filed Against Violation of Specified Pictorial Health Warnings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">b)</td>
+			<td>Number of cases disposed</td>
+			<td><input align="centre" id="Tc7tb3ueo3z-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Tc7tb3ueo3z - Number of  Cases Disposed of Those Booked Against Violation of Specified Pictorial Health Warnings - mI8uHaT7o47 - (default) - int" value="[ Number of  Cases Disposed of Those Booked Against Violation of Specified Pictorial Health Warnings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">c)</td>
+			<td>Pending cases</td>
+			<td><input align="centre" id="Jg9Dg6nVYDU-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Jg9Dg6nVYDU - Number of  Cases Pending of Those Booked Against Violation of Specified Pictorial Health Warnings - mI8uHaT7o47 - (default) - int" value="[ Number of  Cases Pending of Those Booked Against Violation of Specified Pictorial Health Warnings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">5.4</td>
+			<td><strong>Number of IEC done for Specified Pictorial Health Warnings: -</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">a)</td>
+			<td>Poster</td>
+			<td><input align="centre" id="vD9e8n3wuBz-mI8uHaT7o47-val" style="width:7em;text-align:center" title="vD9e8n3wuBz - Number of IEC Done for Specified Pictorial Health Warnings Through Posters - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Specified Pictorial Health Warnings Through Posters (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">b)</td>
+			<td>Pamphlet</td>
+			<td><input align="centre" id="LNdHIMRgTyt-mI8uHaT7o47-val" style="width:7em;text-align:center" title="LNdHIMRgTyt - Number of IEC Done for Specified Pictorial Health Warnings Through Pamphlets - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Specified Pictorial Health Warnings Through Pamphlets (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">c)</td>
+			<td>Hoarding</td>
+			<td><input align="centre" id="R7DYmPBAcnV-mI8uHaT7o47-val" style="width:7em;text-align:center" title="R7DYmPBAcnV - Number of IEC Done for Specified Pictorial Health Warnings Through Hoardings - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Specified Pictorial Health Warnings Through Hoardings (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">d)</td>
+			<td>Others</td>
+			<td><input align="centre" id="MxOkcsSJGR0-mI8uHaT7o47-val" style="width:7em;text-align:center" title="MxOkcsSJGR0 - Number of IEC Done for Specified Pictorial Health Warnings Through Other Activities - mI8uHaT7o47 - (default) - int" value="[ Number of IEC Done for Specified Pictorial Health Warnings Through Other Activities (default) ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="3" style="text-align: center; height: 30px; background-color: rgb(204, 204, 204);"><strong>KEY ACTIVITIES</strong></td>
+		</tr>
+		<tr>
+			<td style="text-align: center; background-color: rgb(204, 204, 204);"><strong>6</strong></td>
+			<td style="height: 30px; background-color: rgb(204, 204, 204);"><strong>Total Number of training/ workshops/meetings on Tobacco Control at &nbsp;District [ including District / Block / Village levels ]&nbsp;</strong></td>
+			<td style="background-color: rgb(204, 204, 204);">&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">6.1</td>
+			<td>Trainings &nbsp;on Tobacco Control in the District</td>
+			<td><input align="centre" id="n4OnRSQ40Wo-mI8uHaT7o47-val" style="width:7em;text-align:center" title="n4OnRSQ40Wo - Total Number of Trainings  on Tobacco Control in the District - mI8uHaT7o47 - (default) - int" value="[ Total Number of Trainings  on Tobacco Control in the District (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">6.2</td>
+			<td>Workshops &nbsp;on Tobacco Control in the District</td>
+			<td><input align="centre" id="f27nJyLgQF9-mI8uHaT7o47-val" style="width:7em;text-align:center" title="f27nJyLgQF9 - Total Number of Workshops on Tobacco Control in the District - mI8uHaT7o47 - (default) - int" value="[ Total Number of Workshops on Tobacco Control in the District (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">6.3</td>
+			<td>Meetings &nbsp;on Tobacco Control in the District</td>
+			<td><input align="centre" id="qK35fptx7ae-mI8uHaT7o47-val" style="width:7em;text-align:center" title="qK35fptx7ae - Total Number of Meetings on Tobacco Control in the District - mI8uHaT7o47 - (default) - int" value="[ Total Number of Meetings on Tobacco Control in the District (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center; background-color: rgb(204, 204, 204);"><strong>7</strong></td>
+			<td style="height: 30px; background-color: rgb(204, 204, 204);"><strong>SCHOOL HEALTH PROGRAMME</strong></td>
+			<td style="background-color: rgb(204, 204, 204);">&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">7.1</td>
+			<td>Total Number of Educational Institution (Schools/Colleges) in the district</td>
+			<td><input align="centre" id="rLUjR4VMtEI-mI8uHaT7o47-val" style="width:7em;text-align:center" title="rLUjR4VMtEI - Total Number of Educational Institutions (Schools / Colleges) in the District - mI8uHaT7o47 - (default) - int" value="[ Total Number of Educational Institutions (Schools / Colleges) in the District (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">7.2</td>
+			<td>Total Number of Tobacco Free Educational Institutions in the district</td>
+			<td><input align="centre" id="piXc5p1TcVt-mI8uHaT7o47-val" style="width:7em;text-align:center" title="piXc5p1TcVt - Total Number of Tobacco Free Educational Institutions in the District - mI8uHaT7o47 - (default) - int" value="[ Total Number of Tobacco Free Educational Institutions in the District (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center; background-color: rgb(204, 204, 204);"><strong>8</strong></td>
+			<td style="height: 30px; background-color: rgb(204, 204, 204);"><strong>TOBACCO CESSATION CENTRE&nbsp;</strong></td>
+			<td style="background-color: rgb(204, 204, 204);">&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">8.1</td>
+			<td>Total Number of Tobacco Cessation Centres (TCC) &nbsp;in &nbsp;the District&nbsp;</td>
+			<td><input align="centre" id="sXM5lm93xU1-mI8uHaT7o47-val" style="width:7em;text-align:center" title="sXM5lm93xU1 - Total Number of Tobacco Cessation Centres (TCC) in the District - mI8uHaT7o47 - (default) - int" value="[ Total Number of Tobacco Cessation Centres (TCC) in the District (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">8.2</td>
+			<td>Total Number of functional Tobacco Cessation Centres &nbsp;in &nbsp;the District&nbsp;</td>
+			<td><input align="centre" id="coMlgu9mUZI-mI8uHaT7o47-val" style="width:7em;text-align:center" title="coMlgu9mUZI - Total Number of Functional Tobacco Cessation Centres (TCC) in the District - mI8uHaT7o47 - (default) - int" value="[ Total Number of Functional Tobacco Cessation Centres (TCC) in the District (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">8.3</td>
+			<td>Total number of persons counselled for tobacco cessation&nbsp;</td>
+			<td><input align="centre" id="fY1BGvtSbg3-mI8uHaT7o47-val" style="width:7em;text-align:center" title="fY1BGvtSbg3 - Total Number of People Counselled for Tobacco Cessation - mI8uHaT7o47 - (default) - int" value="[ Total Number of People Counselled for Tobacco Cessation (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">8.4</td>
+			<td><strong>Total number of persons trained on Tobacco Cessation Methodologies</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">a)</td>
+			<td>Medical Officers</td>
+			<td><input align="centre" id="rxEeZmUBEhF-mI8uHaT7o47-val" style="width:7em;text-align:center" title="rxEeZmUBEhF - Total Number of Medical Officers Trained on Tobacco Cessation Methodologies - mI8uHaT7o47 - (default) - int" value="[ Total Number of Medical Officers Trained on Tobacco Cessation Methodologies (default) ]" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: center;">b)</td>
+			<td>Paramedical Staff</td>
+			<td><input align="centre" id="avBwrEVoDch-mI8uHaT7o47-val" style="width:7em;text-align:center" title="avBwrEVoDch - Total Number of Paramedical Staff Trained on Tobacco Cessation Methodologies - mI8uHaT7o47 - (default) - int" value="[ Total Number of Paramedical Staff Trained on Tobacco Cessation Methodologies (default) ]" /></td>
+		</tr>
+	</tbody>
+</table>
+

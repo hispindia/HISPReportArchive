@@ -1,0 +1,477 @@
+﻿<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selectedOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    var tableDX = [];
+    var deUIDs = "";
+    var orgUnitChildrenUIds = "";
+    var orgUnitChildrenArray = [];
+    var no_of_orgUnitChildren = 0;
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2].substring(0,6);
+
+    // jsonObj
+    var dataJsonObj;
+
+    var showTable = "dataTable";
+    var showRow = "r1";
+
+    $.each(orgUnitChildren, function (i) {
+        orgUnitChildrenArray.push([orgUnitChildren[i].id, orgUnitChildren[i].name]);
+        no_of_orgUnitChildren++;
+    });
+
+    orgUnitChildrenArray.sort(arraySorting);
+
+    $(document).ready(function () {
+
+        if(selectedOrgUnitLevel == 2 || selectedOrgUnitLevel == 3 || selectedOrgUnitLevel == 4){
+            $(".hideInPrint").hide();
+            $("#btnExport").click(function(e) {
+                window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+                e.preventDefault();
+            });
+            document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+            document.getElementById('period').innerHTML = getPeriod(gotPeriod);
+
+            $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
+                orgUnitChildrenUIds += childOrgUnit[0] + ";";
+            });
+
+            $("#dataTable > tbody").find("tr").each(function (i, trID) {
+                var dxID = trID.id.split("-")[0];
+                var cocID = trID.id.split("-")[1];
+                deUIDs += dxID + ";";
+                tableDX.push([dxID, cocID]);
+            });
+
+            loadData();
+        }
+        else{
+            $(".hideInPrint").hide();
+            $("#buttonTable").html("");
+            $("#dataTable").html("");
+            alert("Please select State, District or Block");
+            window.history.back();
+        }
+
+    });
+
+    // function for load table data
+    function loadData() {
+        if(no_of_orgUnitChildren != 0) {
+            var url = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=ou:" + orgUnitChildrenUIds + "&dimension=co&filter=pe:" + gotPeriod + "&skipMeta=true";
+            $.get(url, function (json) {
+                dataJsonObj = json;
+                loadTable();
+            });
+        }
+        else {
+            $(".hideInPrint").hide();
+            $("#buttonTable").html("");
+            $("#dataTable").html("");
+            alert(orgUnit.name + " doesn't have children organisation units!!");
+            window.history.back();
+        }
+    }
+
+    function loadTable() {
+
+
+        $("#reportTitle").attr('colspan', no_of_orgUnitChildren + 4);
+        $("#period").attr('colspan', no_of_orgUnitChildren + 1);
+        $("#reportHeader").attr('colspan', no_of_orgUnitChildren + 4);
+
+        if (selectedOrgUnitLevel == 2) {
+            $("#reportTitle").html("State Compiled Report for VHSND services");
+        }
+        else if (selectedOrgUnitLevel == 3) {
+            $("#reportTitle").html("District Compiled Report for VHSND services");
+        }
+        else if (selectedOrgUnitLevel == 4) {
+            $("#reportTitle").html("Block Compiled Report for VHSND services");
+        }
+        var addOrgUnits = "";
+        $("#orgUnits").html();
+        $.each(orgUnitChildrenArray, function (i, child) {
+            addOrgUnits += "<td style='text-align: center'>" + child[1] + "</td>";
+        });
+        $("#orgUnits").append(addOrgUnits);
+
+        $.each(tableDX, function (i, rowID) {
+            var addTdata = "";
+            $("#" + rowID[0] + "-" + rowID[1]).html();
+            $.each(orgUnitChildrenArray, function (j, child) {
+                addTdata += "<td>" + getCellValue(rowID[0], child[0], rowID[1]) + "</td>";
+            });
+            $("#" + rowID[0] + "-" + rowID[1]).append(addTdata);
+        });
+        hideLoad();
+    }
+
+    // function for getting cell values
+    function getCellValue(de, ou, co){
+        var result=0;
+        for (var i=0; i < dataJsonObj.rows.length; i++){
+            if (dataJsonObj.rows[i][0] == de && dataJsonObj.rows[i][1] == co && dataJsonObj.rows[i][2] == ou && dataJsonObj.rows[i][3] != null)
+            {
+                result = dataJsonObj.rows[i][3];
+            }
+        }
+        return parseInt(result);
+    }
+
+    // function to convert periods to more visible info
+    function getPeriod( pr ) {
+        var year = pr.substring(0,4);
+        var month = pr.substring(4,6);
+        var strMonth="";
+
+        if(month=="01" || month=="1") 		strMonth="January";
+        else if(month=="02" || month=="2")	strMonth="February";
+        else if(month=="03" || month=="3")	strMonth="March";
+        else if(month=="04" || month=="4")	strMonth="April";
+        else if(month=="05" || month=="5")	strMonth="May";
+        else if(month=="06" || month=="6")	strMonth="June";
+        else if(month=="07" || month=="7")	strMonth="July";
+        else if(month=="08" || month=="8")	strMonth="August";
+        else if(month=="09" || month=="9")	strMonth="September";
+        else if(month=="10")				strMonth="October";
+        else if(month=="11") 				strMonth="November";
+        else if(month=="12")				strMonth="December";
+
+        return strMonth + " " + year;
+    }
+
+    // function to hide loading animation
+    function hideLoad() {
+        document.getElementById("cover").style.display="none";
+        document.getElementById("loads").style.display="none";
+        document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow="scroll";
+    }
+</script>
+
+<!-- Script for printing -->
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font: Arial, Helvetica, sans-serif;
+                }
+
+                bd {
+                    border-style: solid;
+                    border-color: #000000;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align = center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width:1px;
+                    height: 50px;
+                    -ms-transform: rotate(90deg);
+                    -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    border-style: hidden;
+                }
+
+            </style>
+            <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+		    <div id="cover"></div>
+
+        </span></p>
+
+<div>
+    <table id="buttonTable">
+        <tr>
+            <td>
+                <input type="button" id="btnBack" value=" Goto Report Selection Page"
+                       onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+                <input type="button" onclick="printContent('printing');" value="Print"/>
+                <input type="button" id="btnExport" value=" Download Excel "/>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<br/>
+
+<div id="printing">
+    <div id="state">
+        <table id="dataTable" border="1" cellspacing="6" cellpadding="4" width="100%"
+               style="border-collapse: collapse; font: Arial, Helvetica, sans-serif;">
+
+            <!-- Table Header -->
+            <thead>
+            <tr>
+                <td id="reportTitle" bgcolor="#ababab" colspan="4" style="text-align: center; font-size: 20px;"><b>Compiled Report for
+                    VHSND services</b>
+                </td>
+            </tr>
+            <tr bgcolor="#c3c3c3" style="text-align: center; font-size: 16px;">
+                <td width="12%"><b>&nbsp;&nbsp;State Name</b></td>
+                <td colspan="3" id="orgUnitID" bgcolor="#e1e1e1" style="text-align: left;">&nbsp;&nbsp;</td>
+                <td><b>&nbsp;&nbsp;Period</b></td>
+                <td id="period" bgcolor="#e1e1e1" style="text-align: left;">&nbsp;&nbsp;</td>
+            </tr>
+            <tr>
+                <td id="reportHeader" bgcolor="#d1d1d1" colspan="4" style="text-align: center; font-size: 16px;"><b>Family Planing Operation
+                    Status</b>
+                </td>
+            </tr>
+            <tr id="orgUnits" bgcolor='#d1d1d1' style='text-align: left; font-size: 16px;'>
+                <td width="12%" style="text-align: center"><b>Sr No.</b></td>
+                <td width="38%" colspan="3"><b>Data Elements</b></td>
+            </tr>
+            </thead>
+
+            <!-- Table Body -->
+            <tbody>
+            <tr id="MJjUidIJKwU-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>1</td>
+                <td colspan="3" style="text-align: left">Session Planned</td>
+            </tr>
+
+            <tr id="f0Yy1MkwHfb-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>2</td>
+                <td colspan="3" style="text-align: left">Session Held</td>
+            </tr>
+
+            <tr id="pLfCNZMtpMG-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>3</td>
+                <td colspan="3" style="text-align: left">No of pregnancy kit used (Nishchay Kit)</td>
+            </tr>
+
+            <!-- ANC Services -->
+            <!-- ANC -->
+            <tr id="ptp9S4r3IpA-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>4</td>
+                <td rowspan="16">ANC Service</td>
+                <td rowspan="4">ANC</td>
+                <td style="text-align: left">Up to 12 week (1st)</td>
+            </tr>
+            <tr id="sLRcDOI9jZY-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>5</td>
+                <td style="text-align: left">13 to 24 week (2nd)</td>
+            </tr>
+            <tr id="URQGJ6oJ7Mk-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>6</td>
+                <td style="text-align: left">25 to 34 week (3rd)</td>
+            </tr>
+            <tr id="uvXDwQmBSVF-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>7</td>
+                <td style="text-align: left"> More than 35 week (4th)</td>
+            </tr>
+            <!-- Height -->
+            <tr id="PGD1Xqbh7Vk-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>8</td>
+                <td rowspan="3">Height</td>
+                <td style="text-align: left"> Up to 145 CM</td>
+            </tr>
+            <tr id="kEEUJGBnPji-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>9</td>
+                <td style="text-align: left">146-150 CM</td>
+            </tr>
+            <tr id="ST8UwmgL2wU-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>10</td>
+                <td style="text-align: left">150+ CM</td>
+            </tr>
+            <!-- Weight -->
+            <tr id="xBpHaV4DqXn-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>11</td>
+                <td rowspan="3">Weight</td>
+                <td style="text-align: left">up to 40 Kg</td>
+            </tr>
+            <tr id="n2PSqToLvlS-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>12</td>
+                <td style="text-align: left">41-50 Kg</td>
+            </tr>
+            <tr id="o1MlElHjh7N-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>13</td>
+                <td style="text-align: left">50 + Kg</td>
+            </tr>
+            <!-- Blood Pressure -->
+            <tr id="dqNIg7d0oNI-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>14</td>
+                <td rowspan="3">Blood Pressure</td>
+                <td style="text-align: left">Up to 120/80</td>
+            </tr>
+            <tr id="XM5vpGaLn8R-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>15</td>
+                <td style="text-align: left">More than 120/80 and up to 140/90</td>
+            </tr>
+            <tr id="ENQ3ycWnRNp-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>16</td>
+                <td style="text-align: left">More than 140/90</td>
+            </tr>
+            <!-- Haemoglobin -->
+            <tr id="bdUZj0Qs5vh-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>17</td>
+                <td rowspan="3">Haemoglobin</td>
+                <td style="text-align: left">Below 7 gm</td>
+            </tr>
+            <tr id="qSYpHDrc4pk-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>18</td>
+                <td style="text-align: left">7-11 gm</td>
+            </tr>
+            <tr id="UUoN1pdCs3h-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>19</td>
+                <td style="text-align: left">11+ gm</td>
+            </tr>
+
+            <tr id="btYSe3xCG0r-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>20</td>
+                <td colspan="3" style="text-align: left">No of IFA- Large tablet distributed to Pregnant women,
+                    lactating women and adolescent girl
+                </td>
+            </tr>
+
+            <tr id="dEgM85yc88w-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>21</td>
+                <td colspan="3" style="text-align: left">No of women received PNC</td>
+            </tr>
+
+            <!-- 0 to 1 month child weighted -->
+            <tr id="f0m0YAIpPth-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>22</td>
+                <td colspan="2" rowspan="2" style="text-align: left">0 to 1 month child weighted</td>
+                <td style="text-align: left">Below 2.5 kg</td>
+            </tr>
+            <tr id="bq7rg210M3F-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>23</td>
+                <td style="text-align: left">More than 2.5 kg</td>
+            </tr>
+
+            <tr id="XHPDKIQvrfi-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>24</td>
+                <td colspan="3" style="text-align: left">0 to 1 month child along with breast feeding taking water,
+                    milk, honey etc.
+                </td>
+            </tr>
+
+            <!-- 1 month to 5 years child growth monitoring -->
+            <tr id="fNrlMeypFVn-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>25</td>
+                <td colspan="2" rowspan="4" style="text-align: left">1 month to 5 years child growth monitoring</td>
+                <td style="text-align: left">Grade I</td>
+            </tr>
+            <tr id="rojLPS4M9sb-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>26</td>
+                <td style="text-align: left">Grade II</td>
+            </tr>
+            <tr id="ZBtmraEhoKX-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>27</td>
+                <td style="text-align: left">Grade III & IV</td>
+            </tr>
+            <tr id="Ak7LZB2QlSQ-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>28</td>
+                <td style="text-align: left">No of Malnurished children identified and referred</td>
+            </tr>
+
+            <tr id="injm5m2ZhOS-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>29</td>
+                <td colspan="3" style="text-align: left">No of Diarreaoh cases identified</td>
+            </tr>
+
+            <tr id="IKo59uH78E2-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>30</td>
+                <td colspan="3" style="text-align: left">No of ORS packet distributed</td>
+            </tr>
+
+            <tr id="gcPqwpQHJ0v-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>31</td>
+                <td colspan="3" style="text-align: left">No of De-worming tablet distributed</td>
+            </tr>
+
+            <tr id="OUmyMjLNovL-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>32</td>
+                <td colspan="3" style="text-align: left">No of Iron -small tablet distributed</td>
+            </tr>
+
+            <!-- Family planing  -->
+            <tr id="qxyUeEV5dU3-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>33</td>
+                <td colspan="2" rowspan="5" style="text-align: left">Family planing</td>
+                <td style="text-align: left">No of Condom pieces distributed</td>
+            </tr>
+            <tr id="GwtlkNmHynU-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>34</td>
+                <td style="text-align: left">No of OCP Cycle distributed</td>
+            </tr>
+            <tr id="a6z7KMDN3vF-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>35</td>
+                <td style="text-align: left">No of Emergency contraceptive Pills distributed</td>
+            </tr>
+            <tr id="nbj885DAzCn-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>36</td>
+                <td style="text-align: left">No of Copper- T inserted</td>
+            </tr>
+            <tr id="YdceDQMRofz-mI8uHaT7o47" style="text-align: center; font-size: 14px">
+                <td>37</td>
+                <td style="text-align: left">No of women motivated/ refferred for Starlisation</td>
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
+</div>

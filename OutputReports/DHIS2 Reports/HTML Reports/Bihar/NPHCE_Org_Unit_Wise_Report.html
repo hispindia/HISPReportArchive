@@ -1,0 +1,480 @@
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<script type="text/javascript">
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+    var orgUnit = dhis2.report.organisationUnit;
+
+    var children = dhis2.report.organisationUnitChildren;
+
+    var deUIDs = "";
+    var ouIDs = "";
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var deUIDArray = [];
+    var coID = [];
+	var orgUnitChildrenArray = [];
+    var numOf_orgUnitCildren = 0;
+	
+	function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+
+    //get the selected date via URL
+    var windowUrl = window.location.href;
+    var params = windowUrl.split('=');
+    var gotPeriod = params[2];
+
+    var deIDs = [];
+	
+	$.each(orgUnitChildren, function (i) {
+        orgUnitChildrenArray.push([orgUnitChildren[i].id, orgUnitChildren[i].name]);
+        numOf_orgUnitCildren++;
+    });
+
+    orgUnitChildrenArray.sort(arraySorting);
+
+    jQuery(document).ready(function () {
+	
+		
+        var numOf_orgUnitChildren = orgUnitChildren.length;
+        if (numOf_orgUnitChildren == 0) {
+            alert("Selected Facility is not having any childrens");
+            window.history.back();
+        }
+        $("#reportTitle").attr('colspan', numOf_orgUnitChildren + 3);
+        $("#reportTitle2").attr('colspan', numOf_orgUnitChildren + 3);
+        $("#orgID").attr('colspan', numOf_orgUnitChildren + 2);
+        $("#periodID").attr('colspan', numOf_orgUnitChildren + 2);
+        $("#npc").attr('colspan', numOf_orgUnitChildren + 3);
+        $(".blank").append('<td class="cellblank"></td>');
+        $(".blank2").append('<td bgcolor="#F5F5F0" class="cellblank"></td>');
+
+        $(".cellblank").attr('colspan', numOf_orgUnitChildren+1);
+
+        $("#mytab > tbody").find("tr").each(function (i, trID) {
+            deIDs.push(trID.id);
+        });
+
+        //console.log(deIDs);
+        if(selOrgUnitLevel == 2 || selOrgUnitLevel == 3) {
+
+            $(".hideInPrint").hide();
+            console.log(orgUnitChildrenArray);
+            document.getElementById('orgID').innerHTML = orgUnit.name;
+            document.getElementById('periodID').innerHTML = getPeriod(gotPeriod);
+
+            $("#btnExport").click(function (e) {
+                window.open('data:application/vnd.ms-excel,' + encodeURIComponent($('#printing').html()));
+                e.preventDefault();
+            });
+
+
+            $.each(deIDs, function (index, val) {
+                if (val != "") {
+                    var deUID = val.split("-")[0];
+                    deUIDs += deUID + ";";
+                }
+            });
+            console.log(deUIDs);
+            $.each(deIDs, function (index, val) {
+                if (val != "") {
+                    deUIDArray.push(val.split("-")[0]);
+                    coID.push(val.split("-")[1]);
+                }
+            });
+            $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
+                ouIDs += childOrgUnit[0] + ";";
+            });
+
+
+            var url = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:" + ouIDs + "&filter=pe:" + period;
+            loadData(url);
+
+        } else {
+                alert(" Please select State or District as an organisation Unit");
+                window.history.back();
+            }
+    });
+	
+    var j;
+    var check = 0;
+	var cal_totalArray = [];
+    function loadData(url) {
+        $.get(url, function (json) {
+            var l = orgUnitChildrenArray.length;
+            //sdocument.getElementById("bbb").colSpan = l;
+            console.log(deIDs);
+            for (var i = 0; i < l; i++) {
+                j = 0;
+                var showTable = "mytab";
+                var data = "";
+                $("childOrg").html();
+                data += "<td align='center' bgcolor='#CCCCCC' width='100'><b>" + orgUnitChildrenArray[i][1] + "</b></td>"
+                $("#childOrg").append(data);
+                for (var k = 0; k < deIDs.length; k++) {
+                    if (deIDs[k] != "") {
+
+
+                        if (deIDs[k] == "tot1" || deIDs[k] == "tot2" || deIDs[k] == "tot3" || deIDs[k] == "tot4" || deIDs[k] == "tot5" || deIDs[k] == "tot6") {
+                            var showRow = "";
+                            showRow = deIDs[k];
+                            $("#" + showRow).html();
+                            var addTdata = "";
+
+                            var val1 = getValueForCategoryOption(json, deUIDArray[j + 1], orgUnitChildrenArray[i][0], coID[j + 1]);
+                            var val2 = getValueForCategoryOption(json, deUIDArray[j + 2], orgUnitChildrenArray[i][0], coID[j + 2]);
+                            var sum = val1 + val2;
+							cal_totalArray.push(sum);
+                            addTdata += "<td align='center'>" + " " + +sum + "</td>";
+                            $("#" + showRow).append(addTdata);
+
+                        }
+
+
+                        else {
+                            var showRow = "";
+                            showRow = deIDs[k];
+
+                            var addTdata = "";
+                            $("#" + showRow).html();
+                            var val = getValueForCategoryOption(json, deUIDArray[j], orgUnitChildrenArray[i][0], coID[j]);
+							cal_totalArray.push(val);
+                            addTdata += "<td align='center'>" + " " + +val + "</td>";
+                            $("#" + showRow).append(addTdata);
+                        }
+                        j++;
+
+                    }
+
+                }
+            }
+			console.log(cal_totalArray);
+			var hdata = "";
+                $("childOrg").html();
+                hdata += "<td  bgcolor='#CCCCCC' align='center'  width='100'><b>" + orgUnit.name + " Total" + "</b></td>"
+                $("#childOrg").append(hdata);
+			
+			//console.log(l);
+			var uidsArray = [];
+			$.each(deIDs, function(idx, uid){
+				if(uid != ""){
+					uidsArray.push(uid);
+				}
+			});
+			var len = uidsArray.length;
+			for(var j=0; j<len; j++){
+			var data = "";
+			var showRow = "";
+			showRow = uidsArray[j];
+				var total= 0;
+				for(var i=j; i<cal_totalArray.length; i=i+len){
+					total=total+cal_totalArray[i];
+				}
+				
+				data += "<td align='center'> " + total +"</td>";
+				$("#" + showRow).append(data);
+			}
+        });
+
+        hideLoad();
+    }
+
+
+    //change date format
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+
+    //retrieve value for category options
+    function getValueForCategoryOption(json, de, orgUnit, coc) {
+        var result = 0;
+
+        for (var i = 0; i < json.rows.length; i++) {
+            if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][3] != null) {
+                result += parseInt(json.rows[i][3]);
+            }
+        }
+        return result;
+    }
+
+
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+        document.getElementById("loading").style.display = "none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+
+</script>
+
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<p><span style="font-size:12px;">
+<style>
+	
+	td
+	{
+		padding: 5px 10px;
+		font:Arial, Helvetica, sans-serif;
+	}
+	
+	bd
+	{
+		border-style: solid;
+		border-color:#000000;
+	}	
+	
+	#cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+			.vtext{
+			/*width:1px;
+			height: 50px;
+			-ms-transform: rotate(90deg);
+			-webkit-transform: rotate(90deg); 
+			transform: rotate(90deg); 
+			border-style: hidden;*/
+	}
+		
+</style>
+    <div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
+    <div id="cover" > </div>
+
+</span></p>
+
+<style>
+    td{
+        border:solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+    }
+
+</style>
+
+
+<div>
+  
+        
+                <input type="button" id="btnBack" value=" Goto Report Selection Page"
+                       onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+                <input type="button" onclick="printContent('printing');" value="Print"/>
+                <input type="button" id="btnExport" value=" Download Excel "/>
+          
+  
+</div>
+
+<br/>
+
+<div id="printing">
+    <div id="state">
+        <table id="mytab" border="1" cellspacing="6" cellpadding="4" width="100%"
+               style="border-collapse: collapse; font: Arial, Helvetica, sans-serif;">
+
+            <thead>
+            <td id="reportTitle" bgcolor='#CCCCCC' align="center" colspan="2"><strong>State Health Society,
+                Bihar</strong></td>
+            </tr>
+            <tr>
+                <td id="reportTitle2" bgcolor='#CCCCCC' align="center" colspan="2"><strong>(Monthly Data Entry Format -
+                    Entry Level: DH/SDH/PHC/CHC/SC )</strong></td>
+
+            </tr>
+            <tr>
+                <td align="center" colspan="1" bgcolor='#CCCCCC'><strong>Facility</strong></td>
+                <td id="orgID" align="left" bgcolor='#CCCCCC'>&nbsp;</td>
+
+            </tr>
+            <tr>
+                <td align="center" colspan="1" bgcolor='#CCCCCC'><strong>Period</strong></td>
+                <td id="periodID" align="left" bgcolor='#CCCCCC'>&nbsp;</td>
+            </tr>
+
+
+            <tr id="childOrg">
+                <td bgcolor='#CCCCCC'><b>Serial No.</b></td>
+                <td bgcolor='#CCCCCC'><b>Data Elements</b></td>
+
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr class="blank2">
+                <td bgcolor="#F5F5F0" colspan="1">
+                    <div align="center" bgcolor="#F5F5F0" class="style3">1</div>
+                </td>
+                <td bgcolor="#F5F5F0" colspan="1"><span class="style3">Services Provided</span></td>
+
+            </tr>
+            <tr id="EOfC2iKY1T0-mI8uHaT7o47">
+                <td align="center">1.1</td>
+                <td>Total Number of Days Geriatric Clinic (once/week) Held</td>
+
+            </tr>
+
+
+            <tr id="tot1">
+                <td align="center">1.2</td>
+                <td>Total Number of OPD Cases in Geriatric Clinic</td>
+
+            </tr>
+
+            <tr id="HX4xcKOWjv3-mI8uHaT7o47">
+                <td align="right">a)</td>
+                <td>Female</td>
+
+            </tr>
+            <tr id="fq5G5PBTcBo-mI8uHaT7o47">
+                <td align="right">b)</td>
+                <td>Male</td>
+
+            </tr>
+
+            <tr id="r0GypAw7aOY-mI8uHaT7o47">
+                <td align="center">1.3</td>
+                <td>Total Number of Home Visits Made</td>
+
+            </tr>
+
+            <tr id="tot2">
+                <td align="center"><b>1.4</b></td>
+                <td>Total Number of People Provided with Home-Based Care</td>
+
+            </tr>
+            <tr id="zW1mVelRbMN-mI8uHaT7o47">
+                <td align="right">a)</td>
+                <td>Female</td>
+
+            </tr>
+            <tr id="CwPcQFsTuKm-mI8uHaT7o47">
+                <td align="right">b)</td>
+                <td>Male</td>
+
+            <tr id="tot3">
+                <td align="center"><strong>1.5</strong></td>
+                <td>Total Number of Elderly Provided with & Used Supportive Devices</td>
+
+            </tr>
+            <tr id="zEdMS8sqajO-mI8uHaT7o47">
+                <td align="right">a)</td>
+                <td>Female</td>
+
+            </tr>
+            <tr id="HAUXE2EzW8f-mI8uHaT7o47">
+                <td align="right">b)</td>
+                <td>Male</td>
+
+            </tr>
+
+
+            <tr id="tot4">
+                <td align="center">1.6</td>
+                <td>Total Number of Cases Referred to RH/Sadar Hospitals /Medical Colleges</td>
+
+            </tr>
+            <tr id="r0gSjcw2J87-mI8uHaT7o47">
+                <td align="right">a)</td>
+                <td>Female</td>
+
+            </tr>
+            <tr id="o4jQBKhaGS0-mI8uHaT7o47">
+                <td align="right">b)</td>
+                <td>Male</td>
+
+            </tr>
+
+            <tr class="blank2">
+               <td bgcolor="#F5F5F0" colspan="1">
+                    <div align="center" bgcolor="#F5F5F0" class="style3">2</div>
+                </td>
+                <td bgcolor="#F5F5F0" colspan="1"><span class="style3">Geriatric Camps</span></td>
+
+
+            </tr>
+            <tr id="nqlbr3b7Yhd-mI8uHaT7o47">
+                <td align="center">2.1</td>
+                <td>Total Number of Camps Planned</td>
+
+            </tr>
+
+            <tr id="ZuiKPQItFVl-mI8uHaT7o47">
+                <td align="center">2.2</td>
+                <td>Total Number of Camps Held</td>
+
+            </tr>
+
+
+            <tr id="tot5">
+                <td align="center">2.3</td>
+                <td>Total Number of People to whom Services were Provided During the Camp</td>
+
+            </tr>
+
+            <tr id="CMqNxVo1Sv1-mI8uHaT7o47">
+                <td align="right">a)</td>
+                <td>Female</td>
+
+            </tr>
+            <tr id="BtfCsJEVUJk-mI8uHaT7o47">
+                <td align="right">b)</td>
+                <td>Male</td>
+
+            </tr>
+
+            <tr class="blank2">
+                <td bgcolor="#F5F5F0" colspan="1">
+                    <div align="center" bgcolor="#F5F5F0" class="style3">3</div>
+                </td>
+                <td bgcolor="#F5F5F0" colspan="1"><span class="style3">In Patients( Applicable only for Sadar Hospital)</span></td>
+            </tr>
+
+            <tr id="tot6">
+                <td align="center">3.1</td>
+                <td>Total Number of in patients Admitted in Geriatric Ward</td>
+
+            </tr>
+
+            <tr id="JWbj7TuLgWa-mI8uHaT7o47">
+                <td align="right">a)</td>
+                <td>Female</td>
+
+            </tr>
+            <tr id="nm5jMbQanlE-mI8uHaT7o47">
+                <td align="right">b)</td>
+                <td>Male</td>
+
+            </tr>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

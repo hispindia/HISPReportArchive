@@ -1,0 +1,693 @@
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    var tableDX = [];
+    var deids = [];
+    var deUIDs = "";
+    var orgUnitChildrenUIds = "";
+    var orgUnitChildrenArray = [];
+    var numOf_orgUnitCildren = 0;
+    var dataArray = [];
+    var deUIDsArray = [];
+    var deUIDsStr = "";
+    var trIDsArray = [];
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+
+    // jsonObj
+    var dataJsonObj;
+    var dataArray = [];
+    var dataJSONArray = [];
+    var orgUnitsArray =[];
+    var showTable = "dataTable";
+    var showRow = "r1";
+
+    $.each(orgUnitChildren, function (i) {
+        orgUnitChildrenArray.push([orgUnitChildren[i].id, orgUnitChildren[i].name]);
+        numOf_orgUnitCildren++;
+    });
+
+    orgUnitChildrenArray.sort(arraySorting);
+
+
+    $(document).ready(function () {
+        $(".hideInPrint").hide();
+        $("#btnExport").click(function (e) {
+            window.open('data:application/vnd.ms-excel,' + encodeURIComponent($('#printing').html()));
+            e.preventDefault();
+        });
+
+
+        document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+        document.getElementById('period').innerHTML = getPeriod(gotPeriod);
+        //document.getElementById('period2').innerHTML = getPeriod(gotPeriod);
+
+        $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
+            orgUnitChildrenUIds += childOrgUnit[0] + ";";
+        });
+
+
+        $("#dataTable > tbody").find("tr").each(function (i, trID) {
+            deids.push(trID.id);
+        });
+        //console.log(deids);
+
+        $.each(deids, function (i, val) {
+            if (val != "") {
+                if (val != "NA") {
+                    if (val.indexOf("total") == -1) {
+                        if (val.indexOf("_") == -1) {
+                            if (val.indexOf("-") > -1) {
+                                if ($.inArray(val.split('-')[0], deUIDsArray) == -1) {
+                                    deUIDsArray.push(val.split('-')[0]);
+                                }
+                            }
+                        }
+                        else {
+                            var UIDsArray = val.split('_');
+                            $.each(UIDsArray, function (j, uid) {
+                                if (uid.search("-") > -1) {
+                                    if ($.inArray(uid.split('-')[0], deUIDsArray) == -1) {
+                                        deUIDsArray.push(uid.split('-')[0]);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        });
+
+        loadData();
+    });
+
+        // function for load table data
+        function loadData() {
+            if (deUIDsArray.length > 150) {
+                var noOf_iterations = deUIDsArray.length / 150;
+                var stepsCount = 0;
+                var urls = [];
+                var ajaxReq = [];
+
+                for (var i = 0; i < noOf_iterations; i++) {
+                    deUIDsStr = "";
+                    for (var j = stepsCount; j < (stepsCount + 150); j++) {
+                        if (j == deUIDsArray.length) break;
+                        else deUIDsStr += deUIDsArray[j] + ";";
+                    }
+                    urls.push("../api/analytics.json?dimension=dx:" + deUIDsStr + "&dimension=co&dimension=ou:" + orgUnitChildrenUIds + "&filter=pe:" + period + "&skipMeta=true");
+                    stepsCount += 150;
+                }
+                //console.info(urls);
+                for (i = 0; i < urls.length; i++) {
+                    ajaxReq.push($.ajax(urls[i]));
+                }
+                //console.info(ajaxReq);
+
+                $.when.apply($, ajaxReq).done(function () {
+                    /*console.log(arguments); //it is an array like object which can be looped*/
+                    $.each(arguments, function (i, data) {
+                        //console.log(data); //data is the value returned by each of the ajax requests
+                        $.each(data[0].rows, function (j, rowData) {
+                            dataJSONArray.push([rowData[0], rowData[1], rowData[2], rowData[3]]);
+                        });
+                    });
+                    //console.log(dataJSONArray);
+                    loadTable();
+                });
+            }
+            else {
+                deUIDsStr = "";
+                $.each(deUIDsArray, function (i, val) {
+                    deUIDsStr += val + ";";
+                });
+                var dataUrl = "../api/analytics.json?dimension=dx:" + deUIDsStr + "&dimension=co&dimension=ou:" + orgUnitChildrenUIds + "&filter=pe:" + period + "&skipMeta=true";
+                     
+				$.get(dataUrl, function (json) {
+                    $.each(json.rows, function (j, rowData) {
+                        dataJSONArray.push([rowData[0], rowData[1], rowData[2], rowData[3]]);
+                    });
+                    loadTable();
+                });
+            }
+        }
+
+        function loadTable() {
+            var htmlReport = "";
+
+            $("#title").attr('colspan', numOf_orgUnitCildren + 11);
+			$("#title2").attr('colspan', numOf_orgUnitCildren + 11);
+            $("#orgUnitID").attr('colspan', numOf_orgUnitCildren+ 10 );
+            $("#period").attr('colspan', numOf_orgUnitCildren + 10);
+            $(".blank").append('<td bgcolor="#cccccc" class="cellblank"></td>');
+            $(".cellblank").attr('colspan', numOf_orgUnitCildren + 10 );
+
+            var addOrgUnits = "";
+            var selectedFacility = "";
+            $("#orgUnits").html();
+
+            $.each(orgUnitChildrenArray, function (i, child) {
+                addOrgUnits += "<td width='20%' align='center' bgcolor='#cccccc' >" + child[1] + "</td>";
+            });
+            //selectedFacility += "<td width +'20%' align='center' >" + "<strong>" + orgUnit.name + " " + "Total" + "</strong>" + "</td>";
+
+            $.each(deids, function (idx, trID) {
+
+                var unitTotal = 0;
+                $.each(orgUnitChildrenArray, function (i, child) {
+
+                    var result = 0;
+                    if (trID != "") {
+                        if (trID != "NA") {
+                            if (trID.indexOf('total') == -1) {
+                                var uidsArray = trID.split('_');
+                                if($('#' + trID).hasClass('minusClass')){
+                                    // true
+                                    var val1 = parseInt(getCellValue(uidsArray[0].split('-')[0],uidsArray[0].split('-')[1], child[0] ));
+                                    var val2 = parseInt(getCellValue(uidsArray[1].split('-')[0],uidsArray[1].split('-')[1], child[0] ));
+                                    var val3 = parseInt(getCellValue(uidsArray[2].split('-')[0],uidsArray[2].split('-')[1], child[0] ));
+                                   // var val4 = parseInt(getCellValue(uidsArray[3].split('-')[0],uidsArray[3].split('-')[1], child[0] ));
+                                    result = val1 + val2 - val3 ;
+
+                                }
+                                else {
+                                    // false
+                                    $.each(uidsArray, function (j, uid) {
+                                         result += parseInt(getCellValue(uid.split('-')[0], uid.split('-')[1], child[0]));
+                                    });
+                                }
+                            }
+                            
+
+                        }
+                    }
+                    $("#" + trID).append('<td style="text-align: center;">' + result + '</td>');
+
+                });
+              //  $("#" + trID).append('<td style="text-align: center;">' + unitTotal + '</td>')
+            });
+            $("#orgUnits").append(addOrgUnits);
+            $("#orgUnits").append(selectedFacility);
+
+            hideLoad();
+        }
+
+
+        // function for getting cell values
+        function getCellValue(de, cocID, ou) {
+            var result = 0;
+            for (var i = 0; i < dataJSONArray.length; i++) {
+                if (dataJSONArray[i][0] == de && dataJSONArray[i][1] == cocID && dataJSONArray[i][2] == ou && dataJSONArray[i][3] != null) {
+                    result = dataJSONArray[i][3];
+                }
+            }
+            return parseInt(result);
+        }
+
+        // function to convert periods to more visible info
+        function getPeriod(pr) {
+            var year = pr.substring(0, 4);
+            var month = pr.substring(4, 6);
+            var strMonth = "";
+
+            if (month == "01" || month == "1")        strMonth = "January";
+            else if (month == "02" || month == "2")    strMonth = "February";
+            else if (month == "03" || month == "3")    strMonth = "March";
+            else if (month == "04" || month == "4")    strMonth = "April";
+            else if (month == "05" || month == "5")    strMonth = "May";
+            else if (month == "06" || month == "6")    strMonth = "June";
+            else if (month == "07" || month == "7")    strMonth = "July";
+            else if (month == "08" || month == "8")    strMonth = "August";
+            else if (month == "09" || month == "9")    strMonth = "September";
+            else if (month == "10")                strMonth = "October";
+            else if (month == "11")                strMonth = "November";
+            else if (month == "12")                strMonth = "December";
+
+            return strMonth + " " + year;
+        }
+
+        // function to hide loading animation
+        function hideLoad() {
+            document.getElementById("cover").style.display = "none";
+            document.getElementById("loads").style.display = "none";
+            document.getElementsByTagName("body")[0].style.overflow = "scroll";
+        }
+</script>
+
+<!-- Script for printing -->
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font: Arial, Helvetica, sans-serif;
+                }
+
+                bd {
+                    border-style: solid;
+                    border-color: #000000;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align = center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width:1px;
+                    height: 50px;
+                    -ms-transform: rotate(90deg);
+                    -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    border-style: hidden;
+                }
+
+            </style>
+            <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+		    <div id="cover"></div>
+
+        </span></p>
+
+<div>
+    <table id="buttonTable">
+        <tr>
+            <td>
+                <input type="button" id="btnBack" value=" Goto Report Selection Page"
+                       onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+                <input type="button" onclick="printContent('printing');" value="Print"/>
+                <input type="button" id="btnExport" value=" Download Excel "/>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<br/>
+<div id="printing">
+    <div id="state">
+	<table id="dataTable" border="1" bordercolor="#111111" cellpadding="0" cellspacing="0" height="300" id="AutoNumber1" style="border-collapse: collapse;" style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000">
+
+<thead>
+	<tr>
+		<td id="title"  height="30" align="center" valign=middle bgcolor="#A6A6A6"><b><font color="#000000">State Health Society Bihar</font></b></td>
+		
+	</tr>
+	<tr>
+		<td id="title2"  height="30" align="center" valign=middle><b><font color="#000000">State Organisation Unit Wise Report: Family Planning </font></b></td>
+		
+	</tr>
+	<tr>
+		<td  height="29" align="center" valign=middle><b><font color="#000000">Facility</font></b></td>
+		<td  id="orgUnitID"  align="left" valign=middle><font face="Arial"><br></font></td>
+		
+	</tr>
+	<tr>
+		<td  height="31" align="center" valign=middle><b><font color="#000000">Period</font></b></td>
+		<td  id="period"  align="left" valign=middle bgcolor="#FFFFFF"><b><br></b></td>
+		
+	</tr>
+	<tr  id="orgUnits" >
+			<td bgcolor="#cccccc">
+			<div align="center" class="style3"><strong>Serial No.</strong></div>
+			</td>
+			<td bgcolor="#cccccc" colspan="10">
+			<div align="center" class="style3"><strong>Data Elements</strong></div>
+			</td>
+	
+   </tr>
+	</thead>
+	
+	<tbody>
+	
+	<tr class="blank" >
+		<td  colspan="20" height="20" align="left" valign=middle bgcolor="#BFBFBF"><b><font color="#000000">A. Family Planning</font></b></td>
+		</tr>
+	<tr class="blank">
+		<td  height="20" align="center" valign=middle bgcolor="#C0C0C0" sdval="1" sdnum="1033;"><font color="#000000">1</font></td>
+		<td  align="left"   valign=bottom bgcolor="#C0C0C0"><b><font color="#000000">Female Sterilization Camps</font></b></td>
+		</tr>
+	<tr id="mRlzeBBSt25-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="1.1" sdnum="1033;"><font color="#000000">1.1</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Camps Planned</font></td>
+		</tr>
+	<tr id="jE6srU8FGEp-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="1.2" sdnum="1033;"><font color="#000000">1.2</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Camps Held</font></td>
+	</tr>
+	<tr id="KJcnCun4OaQ-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="1.3" sdnum="1033;"><font color="#000000">1.3</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Sterlization done in these Camps</font></td>
+	</tr>
+	<tr class="blank">
+		<td  height="20" align="left" valign=middle bgcolor="#C0C0C0" sdval="2" sdnum="1033;"><font color="#000000">2</font></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#C0C0C0"><b><font color="#000000">Male Sterilization Camps</font></b></td>
+	</tr>
+	<tr id="DsWa3pwXzCQ-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="2.1" sdnum="1033;"><font color="#000000">2.1</font></td>
+		<td  align="left"  colspan="10" valign=bottom><font color="#000000">No. of Camps Planned</font></td>
+	</tr>
+	<tr id="sp2rP8d6Agu-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="2.2" sdnum="1033;"><font color="#000000">2.2</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Camps Held</font></td>
+		</tr>
+	<tr id="U2iSFIbV5mZ-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="2.3" sdnum="1033;"><font color="#000000">2.3</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Sterlization done in these Camps</font></td>
+	</tr>
+	<tr class="blank">
+		<td  height="20" align="left" valign=middle bgcolor="#C0C0C0" sdval="3" sdnum="1033;"><font color="#000000">3</font></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#C0C0C0"><b><font color="#000000">IUCD Camps</font></b></td>
+		</tr>
+	<tr id="wUgG5fb8NFs-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="3.1" sdnum="1033;"><font color="#000000">3.1</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Camps Planned</font></td>
+		</tr>
+	<tr id="F3s58gRqG4a-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="3.2" sdnum="1033;"><font color="#000000">3.2</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Camps Held</font></td>
+		</tr>
+	<tr id="Aq4sNQvTeZi-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="3.3" sdnum="1033;"><font color="#000000">3.3</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of IUCD inserted in these Camps</font></td>
+		</tr>
+	<tr class="blank">
+		<td  colspan="20" height="20" align="left" valign=middle bgcolor="#BFBFBF"><b><font color="#000000">B. Status of Implementation of Social Marketing of Contraceptive Scheme by ASHA</font></b></td>
+	</tr>
+	<tr class="blank">
+		<td  height="20" align="center" valign=middle bgcolor="#BFBFBF" sdval="1" sdnum="1033;"><font color="#000000">1</font></td>
+		<td  align="left" colspan="20" valign=middle bgcolor="#BFBFBF"><b><font color="#000000">Opening Balance</font></b></td>
+	</tr>
+	<tr id="qlTCkU7ekWL-BOhomrJImb2">
+		<td  height="20" align="center" valign=middle sdval="1.1" sdnum="1033;"><font color="#000000">1.1</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">Condoms(pcs) </font></td>
+		</tr>
+	<tr id="rxcX4WXFUJs-BOhomrJImb2">
+		<td  height="20" align="center" valign=middle sdval="1.2" sdnum="1033;"><font color="#000000">1.2</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">OCP (cycles) </font></td>
+	</tr>
+	<tr id="a1kdEwpc7LS-BOhomrJImb2">
+		<td  height="20" align="center" valign=middle sdval="1.3" sdnum="1033;"><font color="#000000">1.3</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">ECP (packs)</font></td>
+		</tr>
+	<tr class="blank">
+		<td  height="20" align="center" valign=middle bgcolor="#BFBFBF" sdval="2" sdnum="1033;"><font color="#000000">2</font></td>
+		<td  align="left" colspan="20" valign=middle bgcolor="#BFBFBF"><b><font color="#000000">Stock Received</font></b></td>
+		</tr>
+	<tr id="qlTCkU7ekWL-CYeCL20ssXB">
+		<td  height="20" align="center" valign=middle sdval="2.1" sdnum="1033;"><font color="#000000">2.1</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">Condoms(pcs)</font></td>
+	</tr>
+	<tr id="rxcX4WXFUJs-CYeCL20ssXB">
+		<td  height="20" align="center" valign=middle sdval="2.2" sdnum="1033;"><font color="#000000">2.2</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">OCP (cycles)</font></td>
+		</tr>
+	<tr id="a1kdEwpc7LS-CYeCL20ssXB">
+		<td  height="20" align="center" valign=middle sdval="2.3" sdnum="1033;"><font color="#000000">2.3</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">ECP (packs)</font></td>
+		</tr>
+	<tr class="blank">
+		<td  height="20" align="center" valign=middle bgcolor="#BFBFBF" sdval="3" sdnum="1033;"><font color="#000000">3</font></td>
+		<td  align="left" colspan="20" valign=middle bgcolor="#BFBFBF"><b><font color="#000000">Stock Distributed (Utilised)</font></b></td>
+		</tr>
+	<tr id="qlTCkU7ekWL-MXNT70ZHONK">
+		<td  height="20" align="center" valign=middle sdval="3.1" sdnum="1033;"><font color="#000000">3.1</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">Condoms(pcs)</font></td>
+			</tr>
+	<tr id="rxcX4WXFUJs-MXNT70ZHONK">
+		<td  height="20" align="center" valign=middle sdval="3.2" sdnum="1033;"><font color="#000000">3.2</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">OCP (cycles)</font></td>
+		</tr>
+	<tr id="a1kdEwpc7LS-MXNT70ZHONK">
+		<td  height="20" align="center" valign=middle sdval="3.3" sdnum="1033;"><font color="#000000">3.3</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">ECP (packs)</font></td>
+		</tr>
+	<tr class="blank">
+		<td  height="20" align="center" valign=middle bgcolor="#BFBFBF" sdval="4" sdnum="1033;"><font color="#000000">4</font></td>
+		<td  align="left" colspan="20" valign=middle bgcolor="#BFBFBF"><b><font color="#000000">Balance Available</font></b></td>
+		</tr>
+	<tr class="minusClass" id="qlTCkU7ekWL-BOhomrJImb2_qlTCkU7ekWL-CYeCL20ssXB_qlTCkU7ekWL-MXNT70ZHONK">
+		<td  height="20" align="center" valign=middle sdval="4.1" sdnum="1033;"><font color="#000000">4.1</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">Condoms(pcs)</font></td>
+			</tr>
+	<tr class="minusClass" id="rxcX4WXFUJs-BOhomrJImb2_rxcX4WXFUJs-CYeCL20ssXB_rxcX4WXFUJs-MXNT70ZHONK">
+		<td  height="20" align="center" valign=middle sdval="4.2" sdnum="1033;"><font color="#000000">4.2</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">OCP (cycles)</font></td>
+		</tr>
+	<tr class="minusClass" id="a1kdEwpc7LS-BOhomrJImb2_a1kdEwpc7LS-CYeCL20ssXB_a1kdEwpc7LS-MXNT70ZHONK">
+		<td  height="20" align="center" valign=middle sdval="4.3" sdnum="1033;"><font color="#000000">4.3</font></td>
+		<td  align="left" colspan="10" valign=middle bgcolor="#FFFFFF"><font color="#000000">ECP (packs)</font></td>
+		</tr>
+	<tr class="blank">
+		<td  colspan='20' height="30" align="left" valign=middle bgcolor="#BFBFBF"><b><font color="#000000">C. Family Planning District Head Quarter Report </font></b></td>
+		</tr>
+	<tr class="blank">
+		<td  height="20" align="left" valign=middle bgcolor="#C0C0C0"><font color="#000000"><br></font></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#C0C0C0"><b><font color="#000000">Quality Assurance Committees.</font></b></td>
+		</tr>
+	<tr id="eDTfPIsLKor-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="1" sdnum="1033;"><font color="#000000">1</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of DQAC meetings done at district level.</font></td>
+	</tr>
+	<tr>
+		<td  height="20" align="center" valign=middle sdval="2" sdnum="1033;"><font color="#000000">2</font></td>
+		<td  align="left" colspan="20" valign=middle><font color="#000000">No. of Health Facilities visited by DQAC nominated members during the month.  </font></td>
+		</tr>
+	<tr id="H0eDGfjElqK-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle><font color="#000000"><br></font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">(a). Government Facilities</font></td>
+		</tr>
+	<tr id="erlHrSOzmL8-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle><font color="#000000"><br></font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">(b). Private Accredited Facilities</font></td>
+		</tr>
+	<tr id="AGp2cd9u16T-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle><font color="#000000"><br></font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">(c )  Family Planning camps</font></td>
+	</tr>
+	<tr id="H0eDGfjElqK-mI8uHaT7o47_erlHrSOzmL8-mI8uHaT7o47_AGp2cd9u16T-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle><font color="#000000"><br></font></td>
+		<td  align="center" colspan="10" valign=bottom><b><font color="#000000">Total (a + b + c )</font></b></td>
+		</tr>
+	<tr class="blank">
+		<td  height="20" align="left" valign=middle bgcolor="#C0C0C0"><font color="#000000"><br></font></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#C0C0C0"><b><font color="#000000">Family Planning Insurance Scheme (FPIS)</font></b></td>
+		</tr>
+	<tr >
+		<td  height="20" align="center" valign=middle sdval="1" sdnum="1033;"><font color="#000000">1</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">Total Number of complications following sterilization</font></td>
+		</tr>
+	<tr id="B3qsGmLWOHg-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="2" sdnum="1033;"><font color="#000000">2</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. Claims submitted against complication following sterilization</font></td>
+		</tr>
+	<tr >
+		<td  height="20" align="center" valign=middle sdval="3" sdnum="1033;"><font color="#000000">3</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">Total Number of failures following sterilization</font></td>
+		</tr>
+	<tr id="mkwXN4e3u0s-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="4" sdnum="1033;"><font color="#000000">4</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. Claims submitted against  failure following sterilization</font></td>
+	</tr>
+	<tr>
+		<td  height="20" align="center" valign=middle sdval="5" sdnum="1033;"><font color="#000000">5</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">Total Number of deaths following sterilization</font></td>
+	</tr>
+	<tr id="z90DXcAol7L-mI8uHaT7o47">
+		<td  height="20" align="center" valign=middle sdval="6" sdnum="1033;"><font color="#000000">6</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. Claims submitted against  Deaths following sterilization</font></td>
+	</tr>
+	<tr class="blank">
+		<td  colspan="21" height="20" align="left" valign=bottom bgcolor="#BFBFBF"><b><font color="#000000">D. Performance of Fixed day Static Services</font></b></td>
+	</tr>
+	<tr class="blank">
+		<td  rowspan=2 height="77" align="center" valign=middle bgcolor="#BFBFBF" sdval="1" sdnum="1033;"><b><font color="#000000">1</font></b></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#BFBFBF"><b><font color="#000000">Functional Fixed day centres for family planning</font></b></td>
+		</tr>
+	<tr class="blank">
+		<td  align="left" colspan="20" valign=bottom bgcolor="#BFBFBF"><b><font color="#000000">* include facilities where doctor is posted for FP Operations on permanent basis on fixed days(Tuesdays, Thrusdays or any other days fixed at facility level) and not being called from other health facilities.</font></b></td>
+	</tr>
+	<tr id="eo7jjbiZ2tY-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(a)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of PHCs </font></td>
+	</tr>
+	<tr id="T7NCtzftUGu-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(b)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Sub-divisional hospitals</font></td>
+	</tr>
+	<tr id="N1GVMLoMu4g-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(c)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of District Hospitals</font></td>
+		</tr>
+	<tr id="YTjLj6sDtIw-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(d)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">Other State Owned Public Institutions</font></td>
+		</tr>
+	<tr class="blank">
+		<td  height="43" align="center" valign=bottom bgcolor="#CCCCCC" sdval="2" sdnum="1033;"><b><font color="#000000">2</font></b></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#CCCCCC"><b><font color="#000000">Total no. of Female Sterilization done at Fixed day centers (include data of Fixed days centers only)</font></b></td>
+		</tr>
+	<tr id="RrCgxvS0GGo-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(a)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At PHCs </font></td>
+			</tr>
+	<tr id="RQBIqIXWCc0-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(b)</font></td>
+		<td  align="left"  colspan="10" valign=bottom><font color="#000000">At Sub-divisional hospitals</font></td>
+	</tr>
+	<tr id="AAG0w5UWqRS-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(c)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At District Hospitals</font></td>
+	</tr>
+	<tr id="cxrwH5dkmeI-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(d)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At State Owned Public Institutions</font></td>
+		</tr>
+	<tr class="blank">
+		<td  height="40" align="center" valign=bottom bgcolor="#CCCCCC" sdval="3" sdnum="1033;"><b><font color="#000000">3</font></b></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#CCCCCC"><b><font color="#000000">Total no. of Male Sterilization done at Fixed day centers (include data of Fixed days centers only)</font></b></td>
+		</tr>
+	<tr id="zvnRLIo2wYR-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(a)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At PHCs </font></td>
+		</tr>
+	<tr id="QmYg2kzT6nM-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(b)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At Sub-divisional hospitals</font></td>
+		</tr>
+	<tr id="syDWL9Pgkop-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(c)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At District Hospitals</font></td>
+	</tr>
+	<tr id="VdPSPhtilnS-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(d)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At State Owned Public Institutions</font></td>
+	</tr>
+	<tr class="blank">
+		<td  height="20" align="center" valign=bottom bgcolor="#CCCCCC" sdval="4" sdnum="1033;"><b><font color="#000000">4</font></b></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#CCCCCC"><b><font color="#000000">Total no.of IUCD inserted at Fixed day centres (include data of Fixed days centers only)</font></b></td>
+	</tr>
+	<tr id="HHyJNfMWYj3-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(a)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At PHCs </font></td>
+		</tr>
+	<tr id="pX5IjmMp9J6-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(b)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At Sub-divisional hospitals</font></td>
+			</tr>
+	<tr id="tMEDSnb4tpp-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(c)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At District Hospitals</font></td>
+	</tr>
+	<tr id="lL06AXQkKER-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(d)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">At State Owned Public Institutions</font></td>
+	</tr>
+	<tr class="blank">
+		<td  height="20" align="center" valign=bottom bgcolor="#CCCCCC" sdval="5" sdnum="1033;"><b><font color="#000000">5</font></b></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#CCCCCC"><b><font color="#000000">Family Planning Status</font></b></td>
+	</tr>
+	<tr id="qYCk7qY9IyV-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(a)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Private Nursing home / hospital accredited with DHS</font></td>
+	</tr>
+	<tr id="h5m3IaTRslP-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(b)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">Number of Fresh Application for Family Planning</font></td>
+		</tr>
+	<tr id="qRPATEFiW61-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(c)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No of sites Accreditated for Family Planning</font></td>
+		</tr>
+	<tr id="P7Bxjf9n3AW-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(d)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No of applications pending For Family Planning</font></td>
+		</tr>
+	<tr id="LEWdxZaP2Ls-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(e)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">Remarks (Y / N) For Family Planning</font></td>
+		</tr>
+	<tr class="blank">
+		<td  height="20" align="center" valign=bottom bgcolor="#CCCCCC" sdval="6" sdnum="1033;"><b><font color="#000000">6</font></b></td>
+		<td  align="left" colspan="20" valign=bottom bgcolor="#CCCCCC"><b><font color="#000000">Yukti Status</font></b></td>
+		</tr>
+	<tr id="mIBiSG5yNet-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(a)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No. of Sites accredited with DHS for Yukti Status</font></td>
+	</tr>
+	<tr id="xPCUb6SouyK-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(b)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">Number of Fresh Application for Yukti Status</font></td>
+		
+	</tr>
+	<tr id="sRXoPLlYMEq-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(c)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No of sites Accreditated for Yukti Planning</font></td>
+		</tr>
+	<tr id="qdOW4exicj1-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(d)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">No of applications pending For Yukti Planning</font></td>
+	</tr>
+	<tr id="KRNASkLeHCY-mI8uHaT7o47">
+		<td  height="20" align="center" valign=bottom><font color="#000000">(e)</font></td>
+		<td  align="left" colspan="10" valign=bottom><font color="#000000">Remarks (Y / N) For Yukti Planning</font></td>
+		</tr>
+	
+</table>
+<!-- ************************************************************************** -->
+</tbody>
+
+</html>

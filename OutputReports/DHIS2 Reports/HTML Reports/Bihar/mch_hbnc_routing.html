@@ -1,0 +1,258 @@
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var selectOrgUnitLevel=dhis2.report.organisationUnitHierarchy.length;
+
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotPeriod=params[2];
+    var gotPeriode=params[2];
+    var gotOrg=params[3];
+
+    var cellUIDArray=[];
+    jQuery( document ).ready( function(){
+
+        if(selectOrgUnitLevel!=2 && selectOrgUnitLevel!=3){
+            alert("Please Select the State or a District");
+            window.history.back();
+        }
+        else{
+            $(".hideInPrint").hide();
+            // Get all the inputs into an array...
+            var $inputs = $('#mytab :input');
+
+            // An array of just the ids...
+
+
+            $inputs.each(function (index)
+            {
+
+                cellUIDArray.push($(this).attr('id'));
+
+
+            });
+            $("#btnExport").click(function(e) {
+                window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+                e.preventDefault();
+            });
+
+            //console.log(ids);
+            console.log(cellUIDArray);
+            console.log( orgUnit );
+
+            document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+            document.getElementById('periodID').innerHTML = getPeriod(period);
+            console.log(cellUIDArray);
+            var deUIDsString = "";
+            $.each( cellUIDArray, function ( index, val ) {
+                var deUID = val.split("-")[0];
+                deUIDsString += deUID + ";";
+            });
+            console.log(deUIDsString);
+
+            var url = "../api/analytics.json?dimension=dx:"+deUIDsString+"&dimension=co&filter=ou:"+orgUnit.id+"&filter=pe:"+period;
+            console.log( url );
+
+            $.get( url ,function(json){
+
+                $.each( cellUIDArray, function ( index, val ) {
+                    var deUID = val.split("-")[0];
+                    var cocUID = val.split("-")[1];
+                    var result = getCellValue( json, deUID, cocUID );
+
+                    $("#"+val).replaceWith(function(){
+                        return '<div id='+this.id+'>'+parseInt( result )+'</div>'
+                    });
+
+                });
+            });
+
+        }
+
+
+
+
+
+    });
+
+    function getPeriod( pr )
+    {
+        var year = pr.substring(0,4);
+        var month = pr.substring(4,6);
+        var strMonth="";
+
+        if(month=="01" || month=="1") 		strMonth="January";
+        else if(month=="02" || month=="2")	strMonth="February";
+        else if(month=="03" || month=="3")	strMonth="March";
+        else if(month=="04" || month=="4")	strMonth="April";
+        else if(month=="05" || month=="5")	strMonth="May";
+        else if(month=="06" || month=="6")	strMonth="June";
+        else if(month=="07" || month=="7")	strMonth="July";
+        else if(month=="08" || month=="8")	strMonth="August";
+        else if(month=="09" || month=="9")	strMonth="September";
+        else if(month=="10")				strMonth="October";
+        else if(month=="11") 				strMonth="November";
+        else if(month=="12")				strMonth="December";
+
+        return strMonth + " " +year;
+    }
+
+
+    function getCellValue( json, de, coc )
+    {
+
+        var result=0;
+        for (var i=0; i < json.rows.length; i++)
+        {
+            if (json.rows[i][0] == de && json.rows[i][1] == coc && json.rows[i][2]!= null)
+            {
+                result=json.rows[i][2];
+            }
+        }
+        return result;
+    }
+</script>
+
+
+<style>
+    td{
+        border:solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        padding: 5px;
+    }
+
+</style>
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+
+
+<container>
+    <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+    <input type="button"  onclick="printContent('printing');" value="Print"/>
+    <input type="button" id="btnExport" value=" Download Excel " />
+
+
+    </br></br>
+
+    <div id="printing">
+
+        <div id='state'>
+
+            <table id="mytab" align="center" border="1" bordercolor="#111111" cellpadding="0" cellspacing="0" id="AutoNumber1" style="border-collapse: collapse; width: 50%; height: 100%;" >
+            <tbody>
+    <tr>
+        <td bgcolor="gray"  colspan="3">
+            <div align="center" class="style1"><strong>State Health Society Bihar</strong></div>
+        </td>
+    </tr>
+    <tr>
+        <td bgcolor="gray" colspan="3">
+            <div align="center" class="style1"><strong>Home Based New Born Care - Entry Level: All Facilities (except medical college)</strong></div>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <div align="center" class="style2"><strong>Facility</strong></div>
+        </td>
+        <td align="center" id="orgUnitID" colspan="1"><strong> &nbsp </strong></td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <div align="center" class="style2"><strong>Period</strong></div>
+        </td>
+        <td align="center" id="periodID" colspan="1"><strong> &nbsp </strong></td>
+    </tr>
+    <tr >
+        <td bgcolor="gray" class="style3" style="width: 97px; text-align: center; "><strong>1</strong></td>
+        <td bgcolor="gray" class="style3" colspan="2"><strong>Post Natal Care- No. of Home visit by ASHA for New Born</strong></td>
+    </tr>
+    <tr  >
+        <td bgcolor="gray"  class="style3" style="width: 97px; text-align: center; "><strong>1.1</strong></td>
+        <td bgcolor="gray" class="style3" colspan="2"><strong>For Institutional Delivery (No. of New Born)</strong></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.1.1</td>
+        <td class="style2" style="width: 677px; text-align: center; ">3rd Day</td>
+        <td class="style2" style="text-align: center; "><input id="HpBI2QHJCTE-mI8uHaT7o47-val" style="width:7em;text-align:center" title="HpBI2QHJCTE - 3rd Day For Institutional Delivery  - mI8uHaT7o47 - (default) - int" value="[ 3rd Day For Institutional Delivery  (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.1.2</td>
+        <td class="style2" style="width: 677px; text-align: center; ">7th Day</td>
+        <td class="style2" style="text-align: center; "><input id="h8jvoXtvuh9-mI8uHaT7o47-val" style="width:7em;text-align:center" title="h8jvoXtvuh9 - 7th Day For Institutional Delivery  - mI8uHaT7o47 - (default) - int" value="[ 7th Day For Institutional Delivery  (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.1.3</td>
+        <td class="style2" style="width: 677px; text-align: center; ">14th Day</td>
+        <td class="style2" style="text-align: center; "><input id="RbFUvVYs3fP-mI8uHaT7o47-val" style="width:7em;text-align:center" title="RbFUvVYs3fP - 14th Day For Institutional Delivery  - mI8uHaT7o47 - (default) - int" value="[ 14th Day For Institutional Delivery  (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.1.4</td>
+        <td class="style2" style="width: 677px; text-align: center; ">21st Day</td>
+        <td class="style2" style="text-align: center; "><input id="XAACNl6Ce6b-mI8uHaT7o47-val" style="width:7em;text-align:center" title="XAACNl6Ce6b - 21st Day For Institutional Delivery  - mI8uHaT7o47 - (default) - int" value="[ 21st Day For Institutional Delivery  (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.1.5</td>
+        <td class="style2" style="width: 677px; text-align: center; ">28th Day</td>
+        <td class="style2" style="text-align: center; "><input id="KogTapLBzzR-mI8uHaT7o47-val" style="width:7em;text-align:center" title="KogTapLBzzR - 28th Day For Institutional Delivery  - mI8uHaT7o47 - (default) - int" value="[ 28th Day For Institutional Delivery  (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.1.6</td>
+        <td class="style2" style="width: 677px; text-align: center; ">42nd Day</td>
+        <td class="style2" style="text-align: center; "><input id="JLGHlMGHLIw-mI8uHaT7o47-val" style="width:7em;text-align:center" title="JLGHlMGHLIw - 42nd Day For Institutional Delivery  - mI8uHaT7o47 - (default) - int" value="[ 42nd Day For Institutional Delivery  (default) ]" /></td>
+    </tr>
+    <tr >
+        <td bgcolor="gray"  class="style3" style="width: 97px; text-align: center; "><strong>1.2</strong></td>
+        <td bgcolor="gray"  class="style3" colspan="2" style=""><strong>For Home Delivery </strong><strong>(No. of New Born)</strong></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.2.1</td>
+        <td class="style2" style="width: 677px; text-align: center; ">1st Day</td>
+        <td class="style2" style="text-align: center; "><input id="Er3nlMZSFvG-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Er3nlMZSFvG - 1st Day For Home Delivery - mI8uHaT7o47 - (default) - int" value="[ 1st Day For Home Delivery (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.2.2</td>
+        <td class="style2" style="width: 677px; text-align: center; ">3rd Day</td>
+        <td class="style2" style="text-align: center; "><input id="q3Yc2I5aD3G-mI8uHaT7o47-val" style="width:7em;text-align:center" title="q3Yc2I5aD3G - 3rd Day For Home Delivery - mI8uHaT7o47 - (default) - int" value="[ 3rd Day For Home Delivery (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.2.3</td>
+        <td class="style2" style="width: 677px; text-align: center; ">7th Day</td>
+        <td class="style2" style="text-align: center; "><input id="ftRzyZID9E9-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ftRzyZID9E9 - 7th Day For Home Delivery - mI8uHaT7o47 - (default) - int" value="[ 7th Day For Home Delivery (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.2.4</td>
+        <td class="style2" style="width: 677px; text-align: center; ">14th Day</td>
+        <td class="style2" style="text-align: center; "><input id="etlVVMXCo2Z-mI8uHaT7o47-val" style="width:7em;text-align:center" title="etlVVMXCo2Z - 14th Day For Home Delivery - mI8uHaT7o47 - (default) - int" value="[ 14th Day For Home Delivery (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.2.5</td>
+        <td class="style2" style="width: 677px; text-align: center; ">21st Day</td>
+        <td class="style2" style="text-align: center; "><input id="bXiC5EUX6VV-mI8uHaT7o47-val" style="width:7em;text-align:center" title="bXiC5EUX6VV - 21st Day For Home Delivery - mI8uHaT7o47 - (default) - int" value="[ 21st Day For Home Delivery (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.2.6</td>
+        <td class="style2" style="width: 677px; text-align: center; ">28th Day</td>
+        <td class="style2" style="text-align: center; "><input id="Okg5aIIcw6L-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Okg5aIIcw6L - 28th Day For Home Delivery - mI8uHaT7o47 - (default) - int" value="[ 28th Day For Home Delivery (default) ]" /></td>
+    </tr>
+    <tr>
+        <td class="style3" style="width: 97px; text-align: center; ">1.2.7</td>
+        <td class="style2" style="width: 677px; text-align: center; ">42nd Day</td>
+        <td class="style2" style="text-align: center; "><input id="xZxTPTZcfHi-mI8uHaT7o47-val" style="width:7em;text-align:center" title="xZxTPTZcfHi - 42nd Day For Home Delivery - mI8uHaT7o47 - (default) - int" value="[ 42nd Day For Home Delivery (default) ]" /></td>
+    </tr>
+    </tbody>
+</table>
+</div>
+        </div>
+    </container>
+<p>&nbsp;</p>

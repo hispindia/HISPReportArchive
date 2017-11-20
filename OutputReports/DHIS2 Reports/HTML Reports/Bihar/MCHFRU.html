@@ -1,0 +1,544 @@
+<script type="text/javascript">
+
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+
+
+    var orgUnit = dhis2.report.organisationUnit;
+
+    var children = dhis2.report.organisationUnitChildren;
+	var orgUnitChildrenArray = [];
+
+    var deUIDs = "";
+    var ouIDs = "";
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var deUIDArray = [];
+    var coID = [];
+
+	function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+	
+    //get the selected date via URL
+    var windowUrl = window.location.href;
+    var params = windowUrl.split('=');
+    var gotPeriod = params[2];
+
+    var deIDs = [];
+	$.each(orgUnitChildren, function (i) {
+        orgUnitChildrenArray.push([orgUnitChildren[i].id, orgUnitChildren[i].name]);
+    });
+	
+    orgUnitChildrenArray.sort(arraySorting);
+
+    jQuery(document).ready(function () {
+		$(".hideInPrint").hide();
+
+        var numOf_orgUnitChildren = orgUnitChildren.length;
+        if (numOf_orgUnitChildren == 0) {
+            alert("Selected Facility is not having any childrens");
+            window.history.back();
+        }
+        $("#title").attr('colspan', numOf_orgUnitChildren + 2);
+		$("#title2").attr('colspan', numOf_orgUnitChildren + 2);
+        $("#FacilityID").attr('colspan', numOf_orgUnitChildren + 1);
+        $("#periodID").attr('colspan', numOf_orgUnitChildren + 1);
+        $("#npc").attr('colspan', numOf_orgUnitChildren + 2);
+        $(".blank").append('<td class="cellblank"></td>');
+        $(".cellblank").attr('colspan', numOf_orgUnitChildren);
+
+        $("#table1 > tbody").find("tr").each(function (i, trID) {
+            deIDs.push(trID.id);
+        });
+
+        //console.log(deIDs);
+
+        console.log(orgUnitChildren);
+        document.getElementById('FacilityID').innerHTML = orgUnit.name;
+        document.getElementById('periodID').innerHTML = getPeriod(gotPeriod);
+
+        $("#btnExport").click(function(e) {
+            window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+            e.preventDefault();
+        });
+
+
+        $.each(deIDs, function (index, val) {
+            if (val != "") {
+                var deUID = val.split("-")[0];
+                deUIDs += deUID + ";";
+            }
+        });
+        console.log(deUIDs);
+        $.each(deIDs, function (index, val) {
+            if (val != "") {
+                deUIDArray.push(val.split("-")[0]);
+                coID.push(val.split("-")[1]);
+            }
+        });
+		
+	$.each(orgUnitChildrenArray, function (i, childOrgUnit) {
+            ouIDs += childOrgUnit[0] + ";";
+        });
+        
+        var url = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:" + ouIDs + "&filter=pe:" + period;
+        loadData(url);
+
+
+    });
+    var j;
+    var check = 0;
+    function loadData(url) {
+        $.get(url, function (json) {
+            var l = orgUnitChildrenArray.length;
+            //sdocument.getElementById("bbb").colSpan = l;
+            console.log(deIDs);
+            for (var i = 0; i < l; i++) {
+                j = 0;
+                var showTable = "table1";
+                var data = "";
+                $("childOrg").html();
+                data += "<td  width='20%' bgcolor='#B0B0B0' align='center'>" + orgUnitChildrenArray[i][1] + "</td>"
+                $("#childOrg").append(data);
+                for (var k = 0; k < deIDs.length; k++) {
+                    if (deIDs[k] != "") {
+
+
+                            var showRow = "";
+                            showRow = deIDs[k];
+
+                            var addTdata = "";
+                            $("#" + showRow).html();
+                            var val = getValueForCategoryOption(json, deUIDArray[j], orgUnitChildrenArray[i][0], coID[j]);
+
+                            addTdata += "<td align='center'>" + " " + +val + "</td>";
+                            $("#" + showRow).append(addTdata);
+                        j++;
+
+                    }	
+                }
+            }
+        });
+		hideLoad();
+    }
+
+
+    //change date format
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+
+    //retrieve value for category options
+    function getValueForCategoryOption(json, de, orgUnit, coc) {
+        var result = 0;
+
+        for (var i = 0; i < json.rows.length; i++) {
+            if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][3] != null) {
+                result += parseInt(json.rows[i][3]);
+            }
+        }
+        return result;
+    }
+
+
+    // function to hide loading animation
+    function hideLoad() {
+        document.getElementById("cover").style.display="none";
+        document.getElementById("loads").style.display="none";
+        //document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow="scroll";
+    }
+
+</script>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<style>
+    td{
+        border:solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+    }
+    tr{
+        height:25px;
+    }
+</style>
+<style>
+    td {
+        border: solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+    }
+
+    tr {
+        height: 25px;
+    }
+</style>
+
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                .vtext {
+                    width:1px;
+                    height: 50px;
+                    -ms-transform: rotate(-90deg);
+                    -webkit-transform: rotate(-90deg);
+                    transform: rotate(-90deg);
+                    border-style: solid;
+                }
+
+            </style>
+            <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+		    <div id="cover"></div>
+
+        </span></p>
+
+
+<table>
+            <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+            <input type="button"  onclick="printContent('printing');" value="Print"/>
+            <input type="button" id="btnExport" value="Download Excel"/>
+</table>
+<br>
+ <div id='state'>
+<div id="printing">
+
+	<table id="table1" border="1" bordercolor="black" cellspacing="6" cellpadding="4"  style="border-collapse:collapse; border:2px; font:Arial, Helvetica, sans-serif">
+	<thead>
+		<tr>
+			<td id="title" colspan="2" align="center" style="font-size: 16px"><strong>State Health Society Bihar</strong></td>
+		</tr>
+		<tr>
+			<td id="title2" colspan="2" align="center" style="font-size: 16px"><strong>Staff Position at First Refferal Unit [FRU]</strong></td>
+		</tr>
+		<tr align="center">
+			<td  colspan="1"><strong>Facilty</strong></td>
+			<td id="FacilityID" colspan="1">&nbsp;</td>
+		</tr>
+		<tr align="center">
+			<td colspan="1"><strong>Period</strong></td>
+			<td id="periodID" colspan="1">&nbsp;</td>
+		</tr>
+		<!--<tr  bgcolor="#FFCCFF" align="center">
+			<td id="npc" colspan="2"><strong>NPCDCS</strong></td>
+		</tr>-->
+		<tr id="childOrg" bgcolor="#B0B0B0" align="center">
+			<td colspan="1"><strong>Serial No:</strong></td>
+			<td colspan="1"><strong>Data Elements</strong></td>
+		</tr>
+	</thead>
+	<tbody>
+	    <tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1"><strong>1</strong></td>
+			<td colspan="1"><strong>&nbsp; Staff position in facilities</strong> </td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.1</td>
+			<td colspan="1">&nbsp; OBG Specialist </td>
+		</tr>
+		<tr id="AEPZZ0BnG7F-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="AEPZZ0BnG7F-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.2</td>
+			<td colspan="1">&nbsp;Anaesthetist</td>
+		</tr>
+		<tr id="jMRbmfTqs1H-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="jMRbmfTqs1H-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.3</td>
+			<td colspan="1">&nbsp;Paediatrician</td>
+		</tr>
+		<tr id="fyRZju8Gcxg-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="fyRZju8Gcxg-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.4</td>
+			<td colspan="1">&nbsp;MOs trained in Comprehensive EmOC</td>
+		</tr>
+		<tr id="QmjFdSwDlzA-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="QmjFdSwDlzA-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.5</td>
+			<td colspan="1">&nbsp;MOs trained in LSASEOC</td>
+		</tr>
+		<tr id="t4m0ByzbOfj-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="t4m0ByzbOfj-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.6</td>
+			<td colspan="1">&nbsp;MOs trained in Blood Storage </td>
+		</tr>
+		<tr id="OWiBRSeC0gU-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="OWiBRSeC0gU-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.7</td>
+			<td colspan="1">&nbsp;MOs trained in Basic EmOC</td>
+		</tr>
+		<tr id="gUkDJlFpMDB-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="gUkDJlFpMDB-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.8</td>
+			<td colspan="1">&nbsp;Staff Nurses</td>
+		</tr>
+		<tr id="iiOxwkVwq0r-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="iiOxwkVwq0r-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.9</td>
+			<td colspan="1">&nbsp;MOs trained in RTI/ STI management</td>
+		</tr>
+		<tr id="FtVXSf1n7J3-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="FtVXSf1n7J3-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.10</td>
+			<td colspan="1">&nbsp;Staff nurses trainde in RTI/ STI management</td>
+		</tr>
+		<tr id="OgY7mPxaWxg-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="OgY7mPxaWxg-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.11</td>
+			<td colspan="1">&nbsp;LTs trained in RTI/ STI diagnosis</td>
+		</tr>
+		<tr id="Vl0pnwVPmnB-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="Vl0pnwVPmnB-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.12</td>
+			<td colspan="1">&nbsp;MOs trainde in MTP</td>
+		</tr>
+		<tr id="iexYDWEfRJp-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="iexYDWEfRJp-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.13</td>
+			<td colspan="1">&nbsp;LTs trained in blood storage </td>
+		</tr>
+		<tr id="QHBbu0y0zcE-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="QHBbu0y0zcE-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.14</td>
+			<td colspan="1">&nbsp;Doctors trained in NSV</td>
+		</tr>
+		<tr id="d6gYOKl3FZ3-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="d6gYOKl3FZ3-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.15</td>
+			<td colspan="1">&nbsp;Doctors trained in Lap Ligation</td>
+		</tr>
+		<tr id="Igs4xAZwGUY-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="Igs4xAZwGUY-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1">1.16</td>
+			<td colspan="1">&nbsp;Staf nurses trained in SBA </td>
+		</tr>
+		<tr id="jpl0m7O3nHa-mFqS8E7RqsD">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp; Required</td>
+		</tr>
+		<tr id="jpl0m7O3nHa-migXKMvv0yz">
+			<td align="center" colspan="1"></td>
+			<td colspan="1">&nbsp;Available</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1"><strong>2</strong></td>
+			<td colspan="1"><strong>&nbsp; Service Type(UN Process Indicators):No.of mother provided Services</strong> </td>
+		</tr>
+		<tr id="CycOpwclcm1-mI8uHaT7o47">
+			<td align="center" colspan="1">2.1</td>
+			<td colspan="1">&nbsp;Injectable Sedatives</td>
+		</tr>
+		<tr id="q8QhoBdoqUb-mI8uHaT7o47">
+			<td align="center" colspan="1">2.2</td>
+			<td colspan="1">&nbsp;Manual Removal of Placenta</td>
+		</tr>
+		<tr id="KWp8RX7nUYr-mI8uHaT7o47">
+			<td align="center" colspan="1">2.3</td>
+			<td colspan="1">&nbsp;Removal of Product of Pregenancy (Incomplete Abortion)</td>
+		</tr>
+		<tr id="fJU6EE8Jj99-mI8uHaT7o47">
+			<td align="center" colspan="1">2.4</td>
+			<td colspan="1">&nbsp;Assistend Vaginal delivery (Foreceps or Vaccum delivery)</td>
+		</tr>
+		<tr id="FtTs7RqNB3I-mI8uHaT7o47">
+			<td align="center" colspan="1">2.5</td>
+			<td colspan="1">&nbsp;Blood Transfusion</td>
+		</tr>
+		<tr class="blank" bgcolor="#B0B0B0" >
+			<td align="center" colspan="1"><strong>3</strong></td>
+			<td colspan="1"><strong>&nbsp; Other Required Details at FRU</strong> </td>
+		</tr>
+		<tr id="pDik0xBHiMe-mI8uHaT7o47">
+			<td align="center" colspan="1">3.1</td>
+			<td colspan="1">&nbsp;Blood Storage facility functional (with adequate linkages to RBTC) (Yes/ No)</td>
+		</tr>
+		<tr id="ZpOLfyZ2fC7-mI8uHaT7o47">
+			<td align="center" colspan="1">3.2</td>
+			<td colspan="1">&nbsp;Total No. of Obstetric cases given blood Transfusion</td>
+		</tr>
+		<tr id="jDhbgF4Lool-mI8uHaT7o47">
+			<td align="center" colspan="1">3.3</td>
+			<td colspan="1">&nbsp;Whether Facility accredited as Mother & Child friendly Hospital</td>
+		</tr>
+		<tr id="a9KnixVuGdg-mI8uHaT7o47">
+			<td align="center" colspan="1">3.4</td>
+			<td colspan="1">&nbsp;Total No. of Delivery cases referred to Higher Centers</td>
+		</tr>
+		<tr id="CKvww6S3ezt-mI8uHaT7o47">
+			<td align="center" colspan="1">3.5</td>
+			<td colspan="1">&nbsp;Total No. of Mother treated for Sepsis</td>
+		</tr>
+	</table>
+	</div></div></br>

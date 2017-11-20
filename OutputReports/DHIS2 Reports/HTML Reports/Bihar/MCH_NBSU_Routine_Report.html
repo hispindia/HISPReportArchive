@@ -1,0 +1,915 @@
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+
+
+
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotPeriod=params[2];
+    var gotPeriode=params[2];
+    var gotOrg=params[3];
+    var k=0;
+    var cellUIDArray=[];
+    jQuery( document ).ready( function(){
+
+        var phcUrl="../api/organisationUnitGroups/mv6GTkxrwTe.json?fields=organisationUnits";
+        $.get(phcUrl,function(json){
+           for(var a=0;a<json.organisationUnits.length;a++){
+               if(orgUnit.id==json.organisationUnits[a].id){
+                   k++;
+               }
+           }
+            if (k==0){
+                alert("Please select a RH functional unit")
+                window.history.back();
+            }
+
+            else{
+                $(".hideInPrint").hide();
+                // Get all the inputs into an array...
+                var $inputs = $('#mytab :input');
+
+                // An array of just the ids...
+
+
+                $inputs.each(function (index)
+                {
+
+                    cellUIDArray.push($(this).attr('id'));
+
+
+                });
+                $("#btnExport").click(function(e) {
+                    window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+                    e.preventDefault();
+                });
+
+                //console.log(ids);
+                console.log(cellUIDArray);
+                console.log( orgUnit );
+
+                document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+                document.getElementById('periodID').innerHTML = getPeriod(period);
+                console.log(cellUIDArray);
+                var deUIDsString = "";
+                $.each( cellUIDArray, function ( index, val ) {
+                    var deUID = val.split("-")[0];
+                    deUIDsString += deUID + ";";
+                });
+                console.log(deUIDsString);
+
+                var url = "../api/analytics.json?dimension=dx:"+deUIDsString+"&dimension=co&filter=ou:"+orgUnit.id+"&filter=pe:"+period;
+                console.log( url );
+
+                $.get( url ,function(json){
+
+                    $.each( cellUIDArray, function ( index, val ) {
+                        var deUID = val.split("-")[0];
+                        var cocUID = val.split("-")[1];
+                        var result = getCellValue( json, deUID, cocUID );
+
+                        $("#"+val).replaceWith(function(){
+                            return '<div id='+this.id+'>'+parseInt( result )+'</div>'
+                        });
+
+                    });
+                });
+
+            }
+
+        });
+
+
+
+
+    });
+
+    function getPeriod( pr )
+    {
+        var year = pr.substring(0,4);
+        var month = pr.substring(4,6);
+        var strMonth="";
+
+        if(month=="01" || month=="1") 		strMonth="January";
+        else if(month=="02" || month=="2")	strMonth="February";
+        else if(month=="03" || month=="3")	strMonth="March";
+        else if(month=="04" || month=="4")	strMonth="April";
+        else if(month=="05" || month=="5")	strMonth="May";
+        else if(month=="06" || month=="6")	strMonth="June";
+        else if(month=="07" || month=="7")	strMonth="July";
+        else if(month=="08" || month=="8")	strMonth="August";
+        else if(month=="09" || month=="9")	strMonth="September";
+        else if(month=="10")				strMonth="October";
+        else if(month=="11") 				strMonth="November";
+        else if(month=="12")				strMonth="December";
+
+        return strMonth + " " +year;
+    }
+
+
+    function getCellValue( json, de, coc )
+    {
+
+        var result=0;
+        for (var i=0; i < json.rows.length; i++)
+        {
+            if (json.rows[i][0] == de && json.rows[i][1] == coc && json.rows[i][2]!= null)
+            {
+                result=json.rows[i][2];
+            }
+        }
+        return result;
+    }
+</script>
+
+
+<style>
+    td{
+        border:solid black 1px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        padding: 5px;
+    }
+
+</style>
+
+<!-- Script for printing -->
+<script type="text/javascript">
+    function printContent(el){
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<container>
+    <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+    <input type="button"  onclick="printContent('printing');" value="Print"/>
+    <input type="button" id="btnExport" value=" Download Excel " />
+
+
+    </br></br>
+
+    <div id="printing">
+
+        <div id='state'>
+
+            <table id="mytab" align="center" border="1" bordercolor="#111111" cellpadding="0" cellspacing="0" id="AutoNumber1" style="border-collapse: collapse; width: 50%; height: 100%;" >
+<tbody>
+		<tr>
+			<td colspan="4">
+			<div align="center"><strong>State Health Society&nbsp;Bihar</strong></div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="4">
+			<div align="center"><strong>Monthly Data Entry Format: NBSU RH</strong>/<strong> SDH</strong></div>
+			</td>
+		</tr>
+		 <tr>
+            <td colspan="2">
+                <div align="center" class="style2"><strong>Facility</strong></div>
+            </td>
+            <td align="center" id="orgUnitID" colspan="2"><strong> &nbsp </strong></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div align="center" class="style2"><strong>Period</strong></div>
+            </td>
+            <td align="center" id="periodID" colspan="2"><strong> &nbsp </strong></td>
+        </tr>
+		<tr>
+			<td bgcolor="#cccccc">
+			<div align="center" class="style3"><strong>Serial No.</strong></div>
+			</td>
+			<td bgcolor="#cccccc" colspan="2">
+			<div align="center" class="style3"><strong>Data Elements</strong></div>
+			</td>
+			<td bgcolor="#cccccc">
+			<div align="center" class="style3"><strong>Value</strong></div>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">
+			<div align="center">1</div>
+			</td>
+			<td colspan="3"><strong>Still Birth</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">Fresh</td>
+			<td ><input id="QK8dtKJPAAm-mI8uHaT7o47-val" style="width:7em;text-align:center" title="QK8dtKJPAAm - Number of Still Births- Fresh at CHC - mI8uHaT7o47 - (default) - int" value="[ Number of Still Births- Fresh at CHC (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">Macerated</td>
+			<td ><input id="A8dPfMrjZvL-mI8uHaT7o47-val" style="width:7em;text-align:center" title="A8dPfMrjZvL - Number of Still Births- Macerated at CHC - mI8uHaT7o47 - (default) - int" value="[ Number of Still Births- Macerated at CHC (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">Term Babies</td>
+			<td ><input id="rBnM4qZg7VO-mI8uHaT7o47-val" style="width:7em;text-align:center" title="rBnM4qZg7VO - Number of Term Babies in CHC - mI8uHaT7o47 - (default) - int" value="[ Number of Term Babies in CHC (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: right;">2. &nbsp;&nbsp;</td>
+			<td colspan="3" style="text-align: right; background-color: rgb(204, 204, 204);">
+			<div style="text-align: left;"><span style="font-size:14px;"><strong>Birth weight /weight at admission*(Inborn - Record the birth weight/Outborn&nbsp;- Record &nbsp;birth weight &nbsp;if available;if &nbsp;it is not available, record &nbsp;and report weight at admission)</strong></span></div>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: right;">&nbsp;</td>
+			<td colspan="2">&gt; 2500 gms</td>
+			<td><input id="YTAy2ii9vAA-mI8uHaT7o47-val" style="width:7em;text-align:center" title="YTAy2ii9vAA - Number of Newborns Weighing more than 2500 gms at admission in NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Weighing more than 2500 gms at admission in NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">1500 - 2499 gms</td>
+			<td><input id="jmPC6JBvBWH-mI8uHaT7o47-val" style="width:7em;text-align:center" title="jmPC6JBvBWH - Number of Newborns Weighing between 1500 and 2499 gms at admission in NBSU at RH  - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Weighing between 1500 and 2499 gms at admission in NBSU at RH  (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">1000 - 1499 gms</td>
+			<td><input id="zGPbPk3KIdq-mI8uHaT7o47-val" style="width:7em;text-align:center" title="zGPbPk3KIdq - Number of Newborns Weighing between 1000 and 1499 gms at admission in NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Weighing between 1000 and 1499 gms at admission in NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">&lt; 1000 gms</td>
+			<td><input id="SUsrHm5asCD-mI8uHaT7o47-val" style="width:7em;text-align:center" title="SUsrHm5asCD - Number of Newborns Weighing less than 1000 gms at admission in NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Weighing less than 1000 gms at admission in NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: right;">3. &nbsp;&nbsp;</td>
+			<td colspan="3" style="text-align: center; background-color: rgb(204, 204, 204);">
+			<p><span style="font-size:14px;"><strong>Gestation</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: right;">&nbsp;</td>
+			<td colspan="2">&gt; 37 Weeks</td>
+			<td><input id="lwnKpwAEr4Z-mI8uHaT7o47-val" style="width:7em;text-align:center" title="lwnKpwAEr4Z - Number of Newborns Born after 37 weeks of Gestation Admitted at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Born after 37 weeks of Gestation Admitted at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">&lt; 37&nbsp;Weeks</td>
+			<td><input id="nhZze3brKrp-mI8uHaT7o47-val" style="width:7em;text-align:center" title="nhZze3brKrp - Number of Newborns Born before 34 weeks of Gestation Admitted at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Born before 34 weeks of Gestation Admitted at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">34 to 37 Weeks</td>
+			<td><input id="dfYnwy2v455-mI8uHaT7o47-val" style="width:7em;text-align:center" title="dfYnwy2v455 - Number of Newborns Born between 34 to 37 weeks of Gestation Admitted at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Born between 34 to 37 weeks of Gestation Admitted at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">No. of newborns who required resuscitation at birth</td>
+			<td><input id="ibZvxbpCUdC-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ibZvxbpCUdC - Number of Neworns who Required Resuscitation at Birth at CHC - mI8uHaT7o47 - (default) - int" value="[ Number of Neworns who Required Resuscitation at Birth at CHC (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">No.of referrals made (to higher facilities)*</td>
+			<td><input id="DUNloEVR0eo-mI8uHaT7o47-val" style="width:7em;text-align:center" title="DUNloEVR0eo - Number of Referrals Made (to higher facilities)* From NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Referrals Made (to higher facilities)* From NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp;</td>
+			<td colspan="2">Total No. of newborn deaths [0-28 days]</td>
+			<td><input id="nLQRqw1pJ26-mI8uHaT7o47-val" style="width:7em;text-align:center" title="nLQRqw1pJ26 - Number of New Born Deaths (0-28 Days) at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of New Born Deaths (0-28 Days) at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">4</td>
+			<td colspan="3" rowspan="1" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Human Resource</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">4.1</td>
+			<td colspan="3" rowspan="1" style="text-align: center;">
+			<p><strong>MO</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2" style="text-align: left;">Sanctioned</td>
+			<td ><input id="Fm7grSM8hA2-mI8uHaT7o47-val" style="width:7em;text-align:centre" title="Fm7grSM8hA2 - Number of Posts Sanctioned for Medical Officer at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Posts Sanctioned for Medical Officer at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2" style="text-align: left;">In Place</td>
+			<td><input id="cCciSGmmzay-mI8uHaT7o47-val" style="width:7em;text-align:centre" title="cCciSGmmzay - Number of Medical Officers in Place at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Medical Officers in Place at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">
+			<p>4.2</p>
+			</td>
+			<td colspan="3" rowspan="1" style="text-align: center;"><strong>SN</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2" style="text-align: left;">Sanctioned</td>
+			<td ><input id="J0KQoA0JYHT-mI8uHaT7o47-val" style="width:7em;text-align:centre" title="J0KQoA0JYHT - Number of Posts Sanctioned for Staff Nurse at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Posts Sanctioned for Staff Nurse at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2" style="text-align: left;">In Place</td>
+			<td><input id="mKuPlrDq9zl-mI8uHaT7o47-val" style="width:7em;text-align:centre" title="mKuPlrDq9zl - Number of Staff Nurses in Place at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Staff Nurses in Place at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">5</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>&nbsp; &nbsp; &nbsp; &nbsp; Human Resource Trained</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">5.1</td>
+			<td colspan="3" rowspan="1" style="text-align: center;">
+			<p><strong>MO</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Number of MOs trained in F-IMNCI</td>
+			<td><input id="Fwrc3sylCJd-mI8uHaT7o47-val" style="width:7em;text-align:left" title="Fwrc3sylCJd - Number of Medical Officers Trained in F-IMNCI at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Medical Officers Trained in F-IMNCI at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">5.2</td>
+			<td colspan="3" rowspan="1" style="text-align: center;">
+			<p><strong>SN</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Number of Staff Nurses trained in F-IMNCI</td>
+			<td><input id="k93Czjug1kJ-mI8uHaT7o47-val" style="width:7em;text-align:left" title="k93Czjug1kJ - Number of Staff Nurses Trained in F-IMNCI at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Staff Nurses Trained in F-IMNCI at NBSU at RH (default) ]" /><br />
+			&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">6.</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><strong><span style="font-size:14px;">Admissions in the Unit</span></strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">6.1</td>
+			<td colspan="3" rowspan="1" style="text-align: center;">
+			<p><strong>Male</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2" style="text-align: left;">Inborn</td>
+			<td><input id="DwxfhOeKVwL-mI8uHaT7o47-val" style="width:7em;text-align:centre" title="DwxfhOeKVwL - Number of Inborn Admissions- Male in NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Admissions- Male in NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">&nbsp;b)&nbsp;&nbsp; &nbsp;</td>
+			<td colspan="2" style="text-align: left;">Outborn</td>
+			<td><input id="hT1leO5p3GA-mI8uHaT7o47-val" style="width:7em;text-align:centre" title="hT1leO5p3GA - Number of Outborn Admissions- Male in NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Admissions- Male in NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: right;">&nbsp;6.2 &nbsp;&nbsp;</td>
+			<td colspan="3" rowspan="1" style="text-align: center;">
+			<p><strong>Female</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: right;">a) &nbsp; &nbsp;</td>
+			<td colspan="2" style="text-align: left;">Inborn</td>
+			<td><input id="CtNkmQ96P9A-mI8uHaT7o47-val" style="width:7em;text-align:center" title="CtNkmQ96P9A - Number of Inborn Admissions- Female in NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Admissions- Female in NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2" style="text-align: left;">Outborn</td>
+			<td><input id="sIhkxim3pfL-mI8uHaT7o47-val" style="width:7em;text-align:center" title="sIhkxim3pfL - Number of Outborn Admissions- Female in NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Admissions- Female in NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: right;">&nbsp;9. &nbsp;&nbsp;</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Morbidity Profile&nbsp;</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: right;">a) &nbsp;&nbsp;</td>
+			<td height="20" colspan="2" style="height: 20px; width: 461px; text-align: left;">Respiratory distress syndrome</td>
+			<td><input id="G5vGFj1PKIv-mI8uHaT7o47-val" style="width:7em;text-align:center" title="G5vGFj1PKIv - Number of Newborns Admitted due to Respiratory Distress Syndrome at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to Respiratory Distress Syndrome at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; b)</td>
+			<td height="20" colspan="2" style="height: 20px; width: 461px; text-align: left;">Meconium aspiration syndrome</td>
+					
+			<td><input id="wvyK29XzBwg-mI8uHaT7o47-val" style="width:7em;text-align:center" title="wvyK29XzBwg - Number of Newborns Admitted due to Meconium Aspiration Syndrome at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to Meconium Aspiration Syndrome at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; c)</td>
+			<td colspan="2" height="20" style="height: 20px; width: 461px; text-align: left;">Other causes of respiratory distress</td>
+			<td><input id="U8w0USgQw4Q-mI8uHaT7o47-val" style="width:7em;text-align:center" title="U8w0USgQw4Q - Number of Newborns Admitted due to Other Causes of Respiratory Distress at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to Other Causes of Respiratory Distress at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; d)</td>
+			<td height="20" colspan="2" style="height: 20px; width: 461px; text-align: left;">HIE/Moderate-severe birth asphyxia</td>
+					
+			<td><input id="Fs1UHOUFbPA-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Fs1UHOUFbPA - Number of Newborns Admitted due to HIE/Moderate-Severe Birth Asphyxia at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to HIE/Moderate-Severe Birth Asphyxia at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; e)</td>
+			<td height="20" colspan="2" style="height: 20px; width: 461px; text-align: left;">Sepsis/Pneumonia/Meningitis</td>
+					
+			<td><input id="CgR2Sa8i1t4-mI8uHaT7o47-val" style="width:7em;text-align:center" title="CgR2Sa8i1t4 - Number of Newborns Admitted due to Sepsis/ Pneumonia/ Meningitis at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to Sepsis/ Pneumonia/ Meningitis at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; &nbsp;f)</td>
+			<td height="20" colspan="2" style="height: 20px; width: 461px; text-align: left;">Major congenital malformation</td>
+					
+			<td><input id="dGirzSFZQtD-mI8uHaT7o47-val" style="width:7em;text-align:center" title="dGirzSFZQtD - Number of Newborns Admitted due to Major Congenital Malformation at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to Major Congenital Malformation at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; &nbsp;g)</td>
+			<td height="20" colspan="2" style="height: 20px; width: 461px; text-align: left;">Jaundice requiring phototherapy</td>
+					
+			<td><input id="IjhpUNMKjnt-mI8uHaT7o47-val" style="width:7em;text-align:center" title="IjhpUNMKjnt - Number of Newborns Admitted due to Jaundice Requiring Phototherapy at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to Jaundice Requiring Phototherapy at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; &nbsp;h)</td>
+			<td height="20" colspan="2" style="height: 20px; width: 461px; text-align: left;">Hypothermia</td>
+					
+			<td><input id="fWU0XQEctCL-mI8uHaT7o47-val" style="width:7em;text-align:center" title="fWU0XQEctCL - Number of Newborns Admitted due to Hypothermia at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to Hypothermia at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; &nbsp; i)</td>
+			<td height="20" colspan="2" style="height: 20px; width: 461px; text-align: left;">Others</td>
+				
+			<td><input id="JCQWaQZOts3-mI8uHaT7o47-val" style="width:7em;text-align:center" title="JCQWaQZOts3 - Number of Newborns Admitted due to Other Causes at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Admitted due to Other Causes at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp;10.&nbsp;</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>New Born Care Management (Number of Babies who received)</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; &nbsp;a)</td>
+			<td colspan="2">Phototherapy</td>
+			<td><input id="Rv2ll6vAK55-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Rv2ll6vAK55 - Number of Newborns who received Phototherapy at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns who received Phototherapy at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; &nbsp;b)</td>
+			<td colspan="2">Antibiotics</td>
+			<td><input id="fC9r82QMcGG-mI8uHaT7o47-val" style="width:7em;text-align:center" title="fC9r82QMcGG - Number of Newborns who received Antibiotics at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns who received Antibiotics at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; &nbsp;c)</td>
+			<td colspan="2">Oxygen&nbsp;</td>
+			<td><input id="ZRoq3ki7jPl-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ZRoq3ki7jPl - Number of Newborns who received Oxygen at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns who received Oxygen at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp;11.&nbsp;</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Step Down Care</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; a)</td>
+			<td colspan="2" height="36" style="height:36px;width:461px;">Number of Babies Managed in the Unit From Postnatal Ward/Step-Down</td>
+					
+			<td><input id="UKRYWdUIech-mI8uHaT7o47-val" style="width:7em;text-align:center" title="UKRYWdUIech - Number of Newborns Managed in the Unit from Postnatal Ward/Step-down at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Managed in the Unit from Postnatal Ward/Step-down at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp; b)</td>
+			<td colspan="2" height="20" style="height:20px;width:461px;">Number&nbsp;of Babies Managed in the Step Down from SNCU</td>
+			<td><input id="mWk0Eos4Y1s-mI8uHaT7o47-val" style="width:7em;text-align:center" title="mWk0Eos4Y1s - Number of Newborns Managed in the Step Down from NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Managed in the Step Down from NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">&nbsp; &nbsp;12.</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Outcome</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Discharge</td>
+			<td><input id="sDWyjdZWaX5-mI8uHaT7o47-val" style="width:7em;text-align:center" title="sDWyjdZWaX5 - Number of Newborns Discharged from NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Discharged from NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Referral</td>
+			<td><input id="yyvkTKDHZUO-mI8uHaT7o47-val" style="width:7em;text-align:center" title="yyvkTKDHZUO - Number of Newborns Referred from NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns Referred from NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">c)</td>
+			<td colspan="2">Left Against Medical Advice (LAMA)</td>
+			<td><input id="ABajVGC4qqp-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ABajVGC4qqp - Number of Newborns that Left Against Medical Advice (LAMA) from NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns that Left Against Medical Advice (LAMA) from NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">d)</td>
+			<td colspan="2">Died</td>
+			<td><input id="XCvRuQ87E5X-mI8uHaT7o47-val" style="width:7em;text-align:center" title="XCvRuQ87E5X - Number of Newborn Deaths at  NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborn Deaths at  NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">13.</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Duration of Stay</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Less than 1 Day</td>
+			<td><input id="QmodXbaxANA-mI8uHaT7o47-val" style="width:7em;text-align:center" title="QmodXbaxANA - Number of Newborns with Duration of Stay Less Than 1 day at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns with Duration of Stay Less Than 1 day at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Between 1 - 3 Days</td>
+			<td><input id="I3rLIk8v2w6-mI8uHaT7o47-val" style="width:7em;text-align:center" title="I3rLIk8v2w6 - Number of Newborns with Duration of Stay Between 1 to 3 Days at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns with Duration of Stay Between 1 to 3 Days at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">c)</td>
+			<td colspan="2">Between 4 - 7 Days</td>
+			<td><input id="gIPKOYnacTW-mI8uHaT7o47-val" style="width:7em;text-align:center" title="gIPKOYnacTW - Number of Newborns with Duration of Stay Between 4 to 7 Days at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns with Duration of Stay Between 4 to 7 Days at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">d)</td>
+			<td colspan="2">More than 7 Days</td>
+			<td><input id="pMEb9HnbXuO-mI8uHaT7o47-val" style="width:7em;text-align:center" title="pMEb9HnbXuO - Number of Newborns with Duration of Stay More Than 7 Days at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Newborns with Duration of Stay More Than 7 Days at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">14.</td>
+			<td colspan="3" rowspan="1" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Number of Non Functional Equipment</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Phototherapy Unit</td>
+			<td><input id="qFvNPfUU2cO-mI8uHaT7o47-val" style="width:7em;text-align:center" title="qFvNPfUU2cO - Number of Non-Functional Phototherapy Units at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Non-Functional Phototherapy Units at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Radiant Warmer</td>
+			<td><input id="d0sZdMCt8Fm-mI8uHaT7o47-val" style="width:7em;text-align:center" title="d0sZdMCt8Fm - Number of Non-Functional Radiant Warmers at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Non-Functional Radiant Warmers at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">c)</td>
+			<td colspan="2">Suction Machine</td>
+			<td><input id="cdnJ4zHIS5H-mI8uHaT7o47-val" style="width:7em;text-align:center" title="cdnJ4zHIS5H - Number of Non-Functional Suction Machines at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Non-Functional Suction Machines at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">d)</td>
+			<td colspan="2">Oxygen Concentrator</td>
+			<td><input id="gscBxcYx8nx-mI8uHaT7o47-val" style="width:7em;text-align:center" title="gscBxcYx8nx - Number of Non-Functional Oxygen Concentrators at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Non-Functional Oxygen Concentrators at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">e)</td>
+			<td colspan="2">Generator / Invertor</td>
+			<td><input id="M3Jd0eF2Ist-mI8uHaT7o47-val" style="width:7em;text-align:center" title="M3Jd0eF2Ist - Number of Non-Functional Generators/Invertors at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Non-Functional Generators/Invertors at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">15.</td>
+			<td colspan="3" style="text-align: center; background-color: rgb(204, 204, 204);">
+			<p><span style="font-size:14px;"><strong>NBSU Death Records</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc"><strong>15.1</strong></td>
+			<td colspan="2" height="20" style="height:20px;width:461px;"><strong>Respiratory distress syndrome</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="Z9QH9pZtTpf-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Z9QH9pZtTpf - Number of Inborn Deaths due to Respiratory Distress Syndrome at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths due to Respiratory Distress Syndrome at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="pF1LQiy5iDd-mI8uHaT7o47-val" style="width:7em;text-align:center" title="pF1LQiy5iDd - Number of Outborn Deaths due to Respiratory Distress Syndrome at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths due to Respiratory Distress Syndrome at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">15.2</td>
+			<td colspan="2" height="20" style="height:20px;width:461px;"><strong>Meconium aspiration syndrome</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="IUUxz9y7Ryr-mI8uHaT7o47-val" style="width:7em;text-align:center" title="IUUxz9y7Ryr - Number of Inborn Deaths due to Meconium aspiration syndrome at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths due to Meconium aspiration syndrome at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="iSz88WNebFt-mI8uHaT7o47-val" style="width:7em;text-align:center" title="iSz88WNebFt - Number of Outborn Deaths due to Meconium aspiration syndrome at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths due to Meconium aspiration syndrome at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc"><strong>15.3</strong></td>
+			<td colspan="2" height="20" style="height:20px;width:461px;"><strong>HIE/Moderate-Severe birth asphyxia</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="c9RRhAUdsti-mI8uHaT7o47-val" style="width:7em;text-align:center" title="c9RRhAUdsti - Number of Inborn Deaths due to HIE/Moderate-Severe birth asphyxia at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths due to HIE/Moderate-Severe birth asphyxia at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="YuyfEZLJEb7-mI8uHaT7o47-val" style="width:7em;text-align:center" title="YuyfEZLJEb7 - Number of Outborn Deaths due to HIE/Moderate-Severe birth asphyxia at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths due to HIE/Moderate-Severe birth asphyxia at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">15.4</td>
+			<td colspan="2" height="20" style="height:20px;width:461px;"><strong>Sepsis/Pneumonia/Meningitis</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="OyiPRMQSRtC-mI8uHaT7o47-val" style="width:7em;text-align:center" title="OyiPRMQSRtC - Number of Inborn Deaths due to Sepsis/Pneumonia/Meningitis at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths due to Sepsis/Pneumonia/Meningitis at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="YQDxeviOxE5-mI8uHaT7o47-val" style="width:7em;text-align:center" title="YQDxeviOxE5 - Number of Outborn Deaths due to Sepsis/Pneumonia/Meningitis at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths due to Sepsis/Pneumonia/Meningitis at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc"><strong>15.5</strong></td>
+			<td colspan="2" height="20" style="height:20px;width:461px;"><strong>Major congenital malformation</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="leXRKUJ52xF-mI8uHaT7o47-val" style="width:7em;text-align:center" title="leXRKUJ52xF - Number of Inborn Deaths due to Major congenital malformation at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths due to Major congenital malformation at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="z3wULCnlvdj-mI8uHaT7o47-val" style="width:7em;text-align:center" title="z3wULCnlvdj - Number of Outborn Deaths due to Major congenital malformation at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths due to Major congenital malformation at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc"><strong>15.6</strong></td>
+			<td colspan="2" height="20" style="height:20px;width:461px;"><strong>Prematurity</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="LITrkRnQD9n-mI8uHaT7o47-val" style="width:7em;text-align:center" title="LITrkRnQD9n - Number of Inborn Deaths due to Prematurity at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths due to Prematurity at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="AlxxbvXoACw-mI8uHaT7o47-val" style="width:7em;text-align:center" title="AlxxbvXoACw - Number of Outborn Deaths due to Prematurity at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths due to Prematurity at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc"><strong>15.7</strong></td>
+			<td colspan="2" height="20" style="height:20px;width:461px;"><strong>Others</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="MqgOQKW7r6D-mI8uHaT7o47-val" style="width:7em;text-align:center" title="MqgOQKW7r6D - Number of Inborn Deaths due to Other Causes at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths due to Other Causes at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="KlvangkzZne-mI8uHaT7o47-val" style="width:7em;text-align:center" title="KlvangkzZne - Number of Outborn Deaths due to Other Causes at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths due to Other Causes at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">15.8</td>
+			<td colspan="2" height="20" style="height:20px;width:461px;"><strong>Cause not established</strong></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="k952SRXflJj-mI8uHaT7o47-val" style="width:7em;text-align:center" title="k952SRXflJj - Number of Inborn Deaths due to Cause not established at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths due to Cause not established at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="tFsOI7S9l8j-mI8uHaT7o47-val" style="width:7em;text-align:center" title="tFsOI7S9l8j - Number of Outborn Deaths due to Cause not established at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths due to Cause not established at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">16.</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Duration between Time of Death and Admission</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">16.1</td>
+			<td colspan="3" rowspan="1"><strong>Less than 1 Day</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="D3jYp3vHQ59-mI8uHaT7o47-val" style="width:7em;text-align:center" title="D3jYp3vHQ59 - Number of Inborn Deaths with Duration Less Than 1 Day between Time of Admission and Death at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Duration Less Than 1 Day between Time of Admission and Death at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="WyGk9Gatenc-mI8uHaT7o47-val" style="width:7em;text-align:center" title="WyGk9Gatenc - Number of Outborn Deaths with Duration Less Than 1 Day between Time of Admission and Death at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Duration Less Than 1 Day between Time of Admission and Death at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">16.2</td>
+			<td colspan="3" rowspan="1"><strong>Between 1 - 3 Days</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="wprBUWYVmpj-mI8uHaT7o47-val" style="width:7em;text-align:center" title="wprBUWYVmpj - Number of Inborn Deaths with Duration of 1-3 Days between Time of Admission and Death at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Duration of 1-3 Days between Time of Admission and Death at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="irFpU9wFHbw-mI8uHaT7o47-val" style="width:7em;text-align:center" title="irFpU9wFHbw - Number of Outborn Deaths with Duration of 1-3 Days between Time of Admission and Death at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Duration of 1-3 Days between Time of Admission and Death at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">16.3</td>
+			<td colspan="3" rowspan="1"><strong>Between 4 - 7 Days</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">
+			<p style="text-align: center;">a)</p>
+			</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="D1Dh4tsQbsO-mI8uHaT7o47-val" style="width:7em;text-align:center" title="D1Dh4tsQbsO - Number of Inborn Deaths with Duration of 4-7 Days between Time of Admission and Death at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Duration of 4-7 Days between Time of Admission and Death at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="d4vP0q16qro-mI8uHaT7o47-val" style="width:7em;text-align:center" title="d4vP0q16qro - Number of Outborn Deaths with Duration of 4-7 Days between Time of Admission and Death at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Duration of 4-7 Days between Time of Admission and Death at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc"><b>16.4</b></td>
+			<td colspan="3" rowspan="1"><strong>More than 7 Days</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="oJqGI5Sbqrr-mI8uHaT7o47-val" style="width:7em;text-align:center" title="oJqGI5Sbqrr - Number of Inborn Deaths with Duration More Than 7 Days between Time of Admission and Death at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Duration More Than 7 Days between Time of Admission and Death at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="PVcpobBtpWO-mI8uHaT7o47-val" style="width:7em;text-align:center" title="PVcpobBtpWO - Number of Outborn Deaths with Duration More Than 7 Days between Time of Admission and Death at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Duration More Than 7 Days between Time of Admission and Death at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">17.</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Age at Death</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">17.1</td>
+			<td colspan="3" rowspan="1"><strong>Less than 1 Day</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="MZrDlnBO3gu-mI8uHaT7o47-val" style="width:7em;text-align:center" title="MZrDlnBO3gu - Number of Inborn Deaths with Age at Death Less Than 1 Day at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Age at Death Less Than 1 Day at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="dpJgNvdqyTx-mI8uHaT7o47-val" style="width:7em;text-align:center" title="dpJgNvdqyTx - Number of Outborn Deaths with Age at Death Less Than 1 Day at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Age at Death Less Than 1 Day at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">17.2</td>
+			<td colspan="3" rowspan="1"><strong>Between 1 -6 Days</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="fopWNisSPm4-mI8uHaT7o47-val" style="width:7em;text-align:center" title="fopWNisSPm4 - Number of Inborn Deaths with Age at Death Between 1-6 Days at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Age at Death Between 1-6 Days at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="Lc89TfSbnZz-mI8uHaT7o47-val" style="width:7em;text-align:center" title="Lc89TfSbnZz - Number of Outborn Deaths with Age at Death Between 1-6 Days at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Age at Death Between 1-6 Days at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">17.3</td>
+			<td colspan="3" rowspan="1"><strong>7 or more Days</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="QJMce9uFmAu-mI8uHaT7o47-val" style="width:7em;text-align:center" title="QJMce9uFmAu - Number of Inborn Deaths with Age at Death 7 Days at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Age at Death 7 Days at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="d2Iv01sNFVr-mI8uHaT7o47-val" style="width:7em;text-align:center" title="d2Iv01sNFVr - Number of Outborn Deaths with Age at Death 7 Days at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Age at Death 7 Days at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">18</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><span style="font-size:14px;"><strong>Birth Weight / Weight at the Time of Death</strong></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">18.1</td>
+			<td colspan="3" rowspan="1"><strong>More than 2500 gms</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="drWIXSoyEVi-mI8uHaT7o47-val" style="width:7em;text-align:center" title="drWIXSoyEVi - Number of Inborn Deaths with Weight at Time of Death More Than 2500 gms at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Weight at Time of Death More Than 2500 gms at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="ZI7ifQS6z7C-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ZI7ifQS6z7C - Number of Outborn Deaths with Weight at Time of Death More Than 2500 gms at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Weight at Time of Death More Than 2500 gms at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">18.2</td>
+			<td colspan="3" rowspan="1"><strong>Between 1500&nbsp;- 2499 gms</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="incyysG5e6C-mI8uHaT7o47-val" style="width:7em;text-align:center" title="incyysG5e6C - Number of Inborn Deaths with Weight at Time of Death between 1500 gms and 2499 gms at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Weight at Time of Death between 1500 gms and 2499 gms at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="snVZsDiVthb-mI8uHaT7o47-val" style="width:7em;text-align:center" title="snVZsDiVthb - Number of Outborn Deaths with Weight at Time of Death between 1500 gms and 2499 gms at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Weight at Time of Death between 1500 gms and 2499 gms at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">18.3</td>
+			<td colspan="3" rowspan="1"><strong>Between 1000 - 1499 gms</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="wuDnpo3136x-mI8uHaT7o47-val" style="width:7em;text-align:center" title="wuDnpo3136x - Number of Inborn Deaths with Weight at Time of Death between 1000 gms and 1499 gms at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Weight at Time of Death between 1000 gms and 1499 gms at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="S28c4CIpnjJ-mI8uHaT7o47-val" style="width:7em;text-align:center" title="S28c4CIpnjJ - Number of Outborn Deaths with Weight at Time of Death between 1000 gms and 1499 gms at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Weight at Time of Death between 1000 gms and 1499 gms at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">18.4</td>
+			<td colspan="3" rowspan="1"><strong>Less than 1000 gms</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="FhTwYaN0bKJ-mI8uHaT7o47-val" style="width:7em;text-align:center" title="FhTwYaN0bKJ - Number of Inborn Deaths with Weight at Time of Death Less Than 1000 gms at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Inborn Deaths with Weight at Time of Death Less Than 1000 gms at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="wH7DCRSM92j-mI8uHaT7o47-val" style="width:7em;text-align:center" title="wH7DCRSM92j - Number of Outborn Deaths with Weight at Time of Death Less Than 1000 gms at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Outborn Deaths with Weight at Time of Death Less Than 1000 gms at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">19</td>
+			<td colspan="3" style="background-color: rgb(204, 204, 204);">
+			<p style="text-align: center;"><strong><span style="font-size:14px;">Gestation</span></strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">19.1</td>
+			<td colspan="3" rowspan="1"><strong>Term</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="fPXt9ePUeIx-mI8uHaT7o47-val" style="width:7em;text-align:center" title="fPXt9ePUeIx - Number of Term Births- Inborn at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Term Births- Inborn at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="BFnxJ6auYlb-mI8uHaT7o47-val" style="width:7em;text-align:center" title="BFnxJ6auYlb - Number of Term Births- Outborn at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Term Births- Outborn at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">19.2</td>
+			<td colspan="3" rowspan="1"><strong>Pre Term</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="yYSBfe9FGul-mI8uHaT7o47-val" style="width:7em;text-align:center" title="yYSBfe9FGul - Number of Preterm Births- Inborn at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Preterm Births- Inborn at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="ScAnFrLYUu1-mI8uHaT7o47-val" style="width:7em;text-align:center" title="ScAnFrLYUu1 - Number of Preterm Births- Outborn at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Preterm Births- Outborn at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc">19.3</td>
+			<td colspan="3" rowspan="1"><strong>Post Term</strong></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">a)</td>
+			<td colspan="2">Inborn</td>
+			<td><input id="sruiheNBxeK-mI8uHaT7o47-val" style="width:7em;text-align:center" title="sruiheNBxeK - Number of Post Term Births- Inborn at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Post Term Births- Inborn at NBSU at RH (default) ]" /></td>
+		</tr>
+		<tr>
+			<td bgcolor="#cccccc" style="text-align: center;">b)</td>
+			<td colspan="2">Outborn</td>
+			<td><input id="V99150w6LbM-mI8uHaT7o47-val" style="width:7em;text-align:center" title="V99150w6LbM - Number of Post Term Births- Outborn at NBSU at RH - mI8uHaT7o47 - (default) - int" value="[ Number of Post Term Births- Outborn at NBSU at RH (default) ]" /></td>
+		</tr>
+	</tbody>
+</table>
+</div>
+
+<p>&nbsp;</p>
