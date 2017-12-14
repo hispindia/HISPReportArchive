@@ -4,9 +4,9 @@
     thead>tr>td {
         font-weight: bold;
     }
-     /* Center the loader */
+     /* Center the loader  */
 
-     #loader {
+    #loader {
         position: absolute;
         left: 50%;
         top: 50%;
@@ -72,7 +72,7 @@
         }
     }
 
-    #printing {
+    */ #printing {
         display: none;
         text-align: center;
     }
@@ -146,12 +146,87 @@
 
 <!-- Main Script -->
 <script>
+    // How to force async functions to execute sequentially 
+    // by using deferred pipe chaining.
+
+    // The master deferred.
+    var dfd = $.Deferred(),  // Master deferred
+        dfdNext = dfd; // Next deferred in the chain
+    x = 0, // Loop index
+        values = [], // Saves loop values because functions are called after loop finishes
+
+
+        // Simulates $.ajax, but with predictable behaviour.
+        // You only need to understand that higher 'value' param will finish earlier.
+        simulateAjax = function (value) {
+            var dfdAjax = $.Deferred();
+            // console.log('simulateAjax with value: ' + value);
+            // console.log('simulateAjax DONE with value: ' + value);
+
+            var res4 = $.ajax(
+                {
+                    type: "GET",
+                    url: "../api/25/analytics.json?dimension=dx:aRueVYr35yM&dimension=FmDv7glZ1V0:UBuxUMmdz1U&dimension=ou:" + value + "&filter=pe:" + periodcumulative + "&displayProperty=NAME",
+                    data: JSON,
+                    success: function (data4, status) {
+
+                        $.ajax(
+                            {
+                                type: "GET",
+                                url: " ../api/25/analytics.json?dimension=dx:aRueVYr35yM&dimension=FmDv7glZ1V0:QF8UiPqHevI;FGrQvTRmfeb;nIVbiyAyRrb;gBerHA2rUH0&dimension=ou:" + value + "&filter=pe:" + periodcumulative + "&displayProperty=NAME",
+                                data: JSON,
+                                success: function (data5, status) {
+                                    $.ajax(
+                                            {
+                                             type: "GET",
+                                            url: " ../api/25/analytics.json?dimension=dx:aRueVYr35yM&dimension=FmDv7glZ1V0:JRLIvJzK4H0&dimension=ou:" + value + "&filter=pe:" + periodcumulative + "&displayProperty=NAME",
+                                             data: JSON,
+                                             success: function (data6, status) {
+                                                $.ajax(
+                                                         {
+                                                        type: "GET",
+                                                         url: "../api/25/analytics.json?dimension=dx:xOtxEYpvemK.Ti9FJqkSK6J;cyLwa0q6QNd.Ti9FJqkSK6J;IEPIolCiRdh.Ti9FJqkSK6J;vWSHWWYkYvt.Ti9FJqkSK6J;aSvhWxQO8Ck.Ti9FJqkSK6J;tYMFDM3VHbc.Ti9FJqkSK6J;iq79Esv2oDH.Ti9FJqkSK6J;ixBYYYjxXPP.Ti9FJqkSK6J&dimension=ou:" + value + "&filter=pe:" + periodcumulative + "&displayProperty=NAME",
+                                                        data: JSON,
+                                                        success: function (data7, status) {
+                                                        dfdAjax.resolve(data4, data5, data6, data7);
+                                                            }
+                                                        });
+                                             }
+                                     });
+                                    
+                                }
+                            });
+
+                    }
+                });
+
+
+
+            // dfdAjax.resolve(res4, res5);
+
+            return dfdAjax.promise();
+        },
+
+        // This would be a user function that makes an ajax request
+        requestAjax = function (value) {
+            // console.log('requestAjax with value: ' + value);
+            return simulateAjax(value);
+        };
+
+
+    // Start the pipe chain.  You should be able to do this anywhere in the program, even
+    // at the end,and it should still give the same results.
+    // console.log('Setting off the pipes...');
+    dfd.resolve();
+
+
+
     var periods = dhis2.report.periods;
     var period = periods[0];
+
     var periodName = getPeriod(period);
-    console.log(periodName);
-	
-	document.getElementById('periodName').innerHTML = periodName;
+
+    document.getElementById('periodName').innerHTML = periodName;
 
 
     var url = window.location.href;
@@ -163,8 +238,7 @@
     var periodcumulative = periodcum.replace(/,/g, "");
 
 
-/****************************************************************************************/
-var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
 
 
     if (selOrgUnitLevel == 2) {
@@ -180,8 +254,12 @@ var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
         document.getElementById('level2').innerHTML = "Facility Name";
     }
 
-    
-var i = 0;
+
+
+
+var count = 0;
+
+    var i = 0;
     var dhsumm = 0;
     var phcchcsumm = 0;
     var scsumm = 0;
@@ -197,7 +275,10 @@ var i = 0;
     var sum10m = 0;
     var sum56m = 0;
 
-    
+  var ddh ;
+  var phhc;
+  var ssc;
+
 	value0 = 0;
 	value00 = 0;
 	value1 = 0;//
@@ -236,156 +317,140 @@ var i = 0;
 					var ssc =0;
 
 
-    // console.log(period);
+
     var orgUnitChildren_Array = [];
     var secondChildren_Array = [];
     var orgUnit = dhis2.report.organisationUnit;
     var orgUnitChildren = dhis2.report.organisationUnitChildren;
     var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
 
-    var count = 0;
-    var count2 = 0;
+
 
     document.getElementById('ouname').innerHTML = orgUnit.name;
 
-    if (selOrgUnitLevel == 2) {
-        document.getElementById('level1').innerHTML = "Divison Name";
-        document.getElementById('level2').innerHTML = "District Name";
-    }
-    else if (selOrgUnitLevel == 3) {
-        document.getElementById('level1').innerHTML = "District Name";
-        document.getElementById('level2').innerHTML = "Block Name";
-    }
-    else if (selOrgUnitLevel == 4) {
-        window.alert('You have Selected Wrong oragnisation unit Please select State');
-    }
 
 
     $.each(orgUnitChildren, function (i, val) {
         orgUnitChildren_Array.push([val.id, val.name]);
     });
     orgUnitChildren_Array.sort(arraySorting);
-     console.log(orgUnitChildren_Array);
 
 
-/**************************** new code ************************************/
-   
-var count1 = 0;
 
-    orgUnitChildren_Array.forEach(function (element, index) {
+    // New Code start from here
+    var count = 0;
+    var count1 = 0;
+    var secondChild = [];
+    var count4 = 0;
+
+
+    $.each(orgUnitChildren_Array, function (index, element) {
         var ouid = element[0];
-        var ouidName = element[1];
 
 
-        $.when(
-            $.getJSON("../api/organisationUnits/" + ouid + ".json?fields=children[id,name]&order=name:desc", {
-                format: "json"
-            })
-        ).then(function (res1) {
-            count1++;
-            console.log(res1);
-            sample(res1, ouidName, count1);
+        var orgUnitAPI = $.ajax(
+            {
+                type: "GET",
+                async: 'false',
+                url: "../api/organisationUnits/" + ouid + ".json?fields=children[id,name]&order=name:desc",
+                data: JSON,
+                success: function (data, status) {
+                }
+            });
+        $.when(orgUnitAPI).then(function (res) {
+            var ouidName = element[1];
+            count4++;
+
+
+            var values1 = [];
+            var count3 = 0;
+            for (var x = 0; x < res.children.length; x++) {
+
+                values.push(res.children[x].id);
+                values1.push(res.children[x].name);
+
+                dfdNext = dfdNext.pipe(function () {
+
+                    var divName = values1.shift();
+                    var value = values.shift();
+
+                    return requestAjax(value).
+                        done(function (response, response1, response2, response3) {
+                            count++;
+                            count3++;
+
+                            finalvalue(response, response1,response2, response3, ouidName, divName, count);
+
+                            if (count3 == res.children.length) {
+                                finalvalue(0, 0, 0, 0, 0, 0, 0);
+                            }
+
+                            if (index == orgUnitChildren_Array.length - 1 && count3 == res.children.length) {
+                                finalvalue(0, 0, 0, 0, 0, 0, undefined, 00);
+                            }
+
+                        });
+                });
+
+            }
 
         });
 
-    }, this)
 
 
-    function sample(res, ouidName, count1) {
-        res.children.forEach(function (element, index) {
+    })
 
-            $.when(
-                $.getJSON("../api/25/analytics.json?dimension=dx:aRueVYr35yM&dimension=FmDv7glZ1V0:UBuxUMmdz1U&dimension=ou:" + element.id + "&filter=pe:" + periodcumulative + "&displayProperty=NAME", {
-                    format: "json"
-                }),
-                $.getJSON("../api/25/analytics.json?dimension=dx:aRueVYr35yM&dimension=FmDv7glZ1V0:QF8UiPqHevI;FGrQvTRmfeb;nIVbiyAyRrb;gBerHA2rUH0&dimension=ou:" + element.id + "&filter=pe:" + periodcumulative + "&displayProperty=NAME", {
-                    format: "json"
-                }),
-                $.getJSON("../api/25/analytics.json?dimension=dx:aRueVYr35yM&dimension=FmDv7glZ1V0:JRLIvJzK4H0&dimension=ou:" + element.id + "&filter=pe:" + periodcumulative + "&displayProperty=NAME", {
-                    format: "json"
-                }),
-                $.getJSON("../api/25/analytics.json?dimension=dx:xOtxEYpvemK.Ti9FJqkSK6J;cyLwa0q6QNd.Ti9FJqkSK6J;IEPIolCiRdh.Ti9FJqkSK6J;vWSHWWYkYvt.Ti9FJqkSK6J;aSvhWxQO8Ck.Ti9FJqkSK6J;tYMFDM3VHbc.Ti9FJqkSK6J;iq79Esv2oDH.Ti9FJqkSK6J;ixBYYYjxXPP.Ti9FJqkSK6J&dimension=ou:" + element.id + "&filter=pe:" + periodcumulative + "&displayProperty=NAME", {
-                    format: "json"
-                })
 
-            ).then(function (res3, res4, res5,res2) {
-                            dh=0;
-                                for (var i = 0; i < res3[0].rows.length; i++) {
-                                    ddh = parseInt(res3[0].rows[i][3]);
+
+
+
+
+    function finalvalue(res4, res5, res6, res7, ouidName, name, count, count1) {
+        if (count != 0 && count != undefined) {
+
+
+            dh=0;
+                                for (var i = 0; i < res4.rows.length; i++) {
+                                    ddh = parseInt(res4.rows[i][3]);
                                     dh += ddh;
                                 }
                                 console.log(dh+" -- dh");
                                 console.log(ddh+" -- ddh")
                             phcchc=0;
-                                for (var i = 0; i < res4[0].rows.length; i++) {
-                                    phhc = parseInt(res4[0].rows[i][3]);
+                                for (var i = 0; i < res5.rows.length; i++) {
+                                    phhc = parseInt(res5.rows[i][3]);
                                     phcchc += phhc;
                                 }
                             sc=0;
-                                for (var i = 0; i < res5[0].rows.length; i++) {
-                                    ssc = parseInt(res5[0].rows[i][3]);
+                                for (var i = 0; i < res6.rows.length; i++) {
+                                    ssc = parseInt(res6.rows[i][3]);
                                     sc += ssc;
                                 }
 
-                count++;
-                finalvalue(res3, res4, res5,res2, ouidName, element.name, count,count1);
-                if (res.children.length - 1 == index) {
-                    finalvalue(0, 0, 0,0,0, 0, 0, count1);
-                }
+                                 value0 = datavalue(res7, 'aRueVYr35yM-Ti9FJqkSK6J');
+                                value00 = datavalue(res7, 'aRueVYr35yM-Ti9FJqkSK6J');
+                                value1 = datavalue(res7, 'xOtxEYpvemK.Ti9FJqkSK6J');//
+                                value2 = datavalue(res7, 'cyLwa0q6QNd.Ti9FJqkSK6J');//
 
-            });
+                                value3 = datavalue(res7, 'IEPIolCiRdh.Ti9FJqkSK6J');//sum of this one
+                                value4 = datavalue(res7, 'vWSHWWYkYvt.Ti9FJqkSK6J');//and this one
 
+                                value5 = datavalue(res7, 'aSvhWxQO8Ck.Ti9FJqkSK6J');// //here also sum of value3 and value4 and value5
 
-        })
+                                value56 = datavalue(res7, 'ixBYYYjxXPP.Ti9FJqkSK6J'); //New Addition
 
-
-    }
-
-
-
-    function finalvalue(res3, res4, res5, res2, ouidName, name, count, count1) {
-
-        console.log(count1);
-        
-        if (count != 0) {
-            
-                                value0 = datavalue(res2[0], 'aRueVYr35yM-Ti9FJqkSK6J');
-                                value00 = datavalue(res2[0], 'aRueVYr35yM-Ti9FJqkSK6J');
-                                value1 = datavalue(res2[0], 'xOtxEYpvemK.Ti9FJqkSK6J');//
-                                value2 = datavalue(res2[0], 'cyLwa0q6QNd.Ti9FJqkSK6J');//
-
-                                value3 = datavalue(res2[0], 'IEPIolCiRdh.Ti9FJqkSK6J');//sum of this one
-                                value4 = datavalue(res2[0], 'vWSHWWYkYvt.Ti9FJqkSK6J');//and this one
-
-                                value5 = datavalue(res2[0], 'aSvhWxQO8Ck.Ti9FJqkSK6J');// //here also sum of value3 and value4 and value5
-
-                                value56 = datavalue(res2[0], 'ixBYYYjxXPP.Ti9FJqkSK6J'); //New Addition
-
-                                value6 = datavalue(res2[0], 'tYMFDM3VHbc.Ti9FJqkSK6J');//
-                                value7 = datavalue(res2[0], 'iq79Esv2oDH.Ti9FJqkSK6J');//
-
-
-                              /*  ddh = parseInt(res3[0].rows[i][3]);
-                                    dh += ddh;
-
-                                    phhc = parseInt(res4[0].rows[i][3]);
-                                    phcchc += phhc;
-
-                                    ssc = parseInt(res5[0].rows[i][3]);
-                                    sc += ssc;*/
-
+                                value6 = datavalue(res7, 'tYMFDM3VHbc.Ti9FJqkSK6J');//
+                                value7 = datavalue(res7, 'iq79Esv2oDH.Ti9FJqkSK6J');//
 
             var tabledata = '<tr>';
+
+                tabledata += ("<td>" + ouidName + "</td><td>" + name + "</td><td></td><td>" + dh + "</td><td>" + phcchc + "</td><td>" + sc + "</td><td>" + value1 + "</td><td>" + value2 + "</td><td>" + value3 + "</td><td>" + value4 + "</td><td>" + (value3 + value4) + "</td><td>" + value5 + "</td><td>" + (value3 + value4 + value5) + "</td><td>" + value56 + "</td><td>" + value6 + "</td><td>" + value7 + "</td><td>" + (value6 - value7) + "</td>");
                 
-                    tabledata += ("<td>" + ouidName + "</td><td>" + name + "</td><td></td><td>" + dh + "</td><td>" + phcchc + "</td><td>" + sc + "</td><td>" + value1 + "</td><td>" + value2 + "</td><td>" + value3 + "</td><td>" + value4 + "</td><td>" + (value3 + value4) + "</td><td>" + value5 + "</td><td>" + (value3 + value4 + value5) + "</td><td>" + value56 + "</td><td>" + value6 + "</td><td>" + value7 + "</td><td>" + (value6 - value7) + "</td>");
-                    
             tabledata += "</tr>";
             document.getElementById("dataTable").innerHTML += tabledata;
-        
-          /* dh = 0;
-           phcchc = 0;
-           sc = 0;*/
-           
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("printing").style.display = "block";
+
             sum1 += value1;
             sum2 += value2;
             sum3 += value3;
@@ -400,45 +465,35 @@ var count1 = 0;
             phcchcsum += phcchc;
             scsum += sc;
             dhsum += dh;
+
+
         }
 
 
 
         else if (count == 0) {
 
-            
+
             tabledata = ("<tr style='background:#ADD8E6'><td colspan='3' > Total</td><td>" + dhsum + "</td><td>" + phcchcsum + "</td><td>" + scsum + "</td><td>" + sum1 + "</td><td>" + sum2 + "</td><td>" + sum3 + "</td><td>" + sum4 + "</td><td>" + sum34 + "</td><td>" + sum5 + "</td><td>" + sum345 + "</td><td>" + sum56 + "</td><td>" + sum6 + "</td><td>" + sum7 + "</td><td>" + dif67 + "</td>");
                 document.getElementById("dataTable").innerHTML += tabledata;
-   
 
             dhsumm += dhsum;
-            phcchcsumm += phcchcsum;
-            scsumm += scsum;
-            sum1m += sum1;
-            sum2m += sum2;
-            sum3m += sum3;
-            sum4m += sum4;
-            sum5m += sum34;
-            sum56m += sum56;
-            sum6m += sum5;
-            sum7m += sum345;
-            sum8m += sum6;
-            sum9m += sum7;
-            sum10m += dif67;
-            if (count1 == orgUnitChildren_Array.length) {
-
-                setTimeout(function () {
-                    tabledata = ("<tr style='background:#ADD8E6'><td colspan='3' >Grand Total</td><td>" + dhsumm + "</td><td>" + phcchcsumm + "</td><td>" + scsumm + "</td><td>" + sum1m + "</td><td>" + sum2m + "</td><td>" + sum3m + "</td><td>" + sum4m + "</td><td>" + sum5m + "</td><td>" + sum6m + "</td><td>" + sum7m + "</td><td>" + sum56m + "</td><td>" + sum8m + "</td><td>" + sum9m + "</td><td>" + sum10m + "</td>");
-                        document.getElementById("dataTable").innerHTML += tabledata;
-                    document.getElementById("loader").style.display = "none";
-                    document.getElementById("printing").style.display = "block";
-                }, 1000);
+                    phcchcsumm += phcchcsum;
+                    scsumm += scsum;
+                    sum1m += sum1;
+                    sum2m += sum2;
+                    sum3m += sum3;
+                    sum4m += sum4;
+                    sum5m += sum34;
+                    sum56m += sum56;
+                    sum6m += sum5;
+                    sum7m += sum345;
+                    sum8m += sum6;
+                    sum9m += sum7;
+                    sum10m += dif67;
 
 
-            }
-
-                 
-            sum1 = 0;
+                    sum1 = 0;
             sum2 = 0;
             sum3 = 0;
             sum4 = 0;
@@ -455,13 +510,19 @@ var count1 = 0;
             dh = 0;
             phcchc = 0;
             sc = 0;
-        
+
+
+        }
+
+        if (count1 == 00) {
+            tabledata = ("<tr style='background:#ADD8E6'><td colspan='3' >Grand Total</td><td>" + dhsumm + "</td><td>" + phcchcsumm + "</td><td>" + scsumm + "</td><td>" + sum1m + "</td><td>" + sum2m + "</td><td>" + sum3m + "</td><td>" + sum4m + "</td><td>" + sum5m + "</td><td>" + sum6m + "</td><td>" + sum7m + "</td><td>" + sum56m + "</td><td>" + sum8m + "</td><td>" + sum9m + "</td><td>" + sum10m + "</td>");
+                document.getElementById("dataTable").innerHTML += tabledata;
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("printing").style.display = "block";
         }
 
 
-
     }
-
 
 /****************************************************************************************/
 
