@@ -88,48 +88,62 @@
                     <property name="columnName">Patient Identifier</property>
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">Patient Identifier</text-property>
+                    <property name="onColumnLayout">false</property>
                     <text-property name="heading">Patient Identifier</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">Patient Name</property>
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">Patient Name</text-property>
+                    <property name="onColumnLayout">false</property>
                     <text-property name="heading">Patient Name</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">Age</property>
                     <property name="analysis">measure</property>
                     <text-property name="displayName">Age</text-property>
+                    <property name="onColumnLayout">false</property>
                     <text-property name="heading">Age</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">DateTimeofRegistration</property>
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">DateTimeofRegistration</text-property>
+                    <property name="onColumnLayout">false</property>
                     <text-property name="heading">DateTimeofRegistration</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">Gender</property>
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">Gender</text-property>
+                    <property name="onColumnLayout">false</property>
                     <text-property name="heading">Gender</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">Occupation</property>
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">Occupation</text-property>
+                    <property name="onColumnLayout">false</property>
                     <text-property name="heading">Occupation</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">subcat</property>
+                    <property name="analysis">dimension</property>
+                    <text-property name="displayName">subcat</text-property>
+                    <text-property name="heading">subcat</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">Type of Patient</property>
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">Type of Patient</text-property>
+                    <property name="onColumnLayout">false</property>
                     <text-property name="heading">Type of Patient</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">Amount</property>
                     <property name="analysis">measure</property>
                     <text-property name="displayName">Amount</text-property>
+                    <property name="onColumnLayout">false</property>
                     <text-property name="heading">Amount</text-property>
                 </structure>
             </list-property>
@@ -219,11 +233,16 @@
                     </structure>
                     <structure>
                         <property name="position">7</property>
-                        <property name="name">Type of Patient</property>
+                        <property name="name">subcat</property>
                         <property name="dataType">string</property>
                     </structure>
                     <structure>
                         <property name="position">8</property>
+                        <property name="name">Type of Patient</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
                         <property name="name">Amount</property>
                         <property name="dataType">float</property>
                     </structure>
@@ -275,13 +294,20 @@
                 </structure>
                 <structure>
                     <property name="position">7</property>
+                    <property name="name">subcat</property>
+                    <property name="nativeName">name</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
                     <property name="name">Type of Patient</property>
                     <property name="nativeName">Type of Patient</property>
                     <property name="dataType">string</property>
                     <property name="nativeDataType">12</property>
                 </structure>
                 <structure>
-                    <property name="position">8</property>
+                    <property name="position">9</property>
                     <property name="name">Amount</property>
                     <property name="nativeName">Amount</property>
                     <property name="dataType">float</property>
@@ -315,7 +341,7 @@ SELECT ps.identifier AS 'Patient Identifier' ,ps.fullname AS 'Patient Name' ,CAS
     END 
 END AS 'Age' ,CASE WHEN et.name LIKE 'REGINITIAL' 
 THEN e.encounter_datetime  ELSE CASE WHEN et.name LIKE 'REGREVISIT' THEN e.encounter_datetime END END AS 'DateTimeofRegistration',ps.gender AS 'Gender' ,
-cn.name  AS 'Occupation',
+cn.name  AS 'Occupation',cn2.name as 'subcat',
 CASE WHEN et.name LIKE 'REGINITIAL' THEN et.name ELSE CASE WHEN et.name LIKE 'REGREVISIT' THEN et.name ELSE 'REGINITIAL' END END AS 'Type of Patient',
 IFNULL(o.value_numeric,0) AS 'Amount'
 FROM patient_search ps
@@ -604,7 +630,7 @@ GROUP BY et.name,ps.identifier ,e.encounter_datetime
         <simple-master-page name="Simple MasterPage" id="2">
             <property name="type">custom</property>
             <property name="height">11in</property>
-            <property name="width">12in</property>
+            <property name="width">13in</property>
             <page-footer>
                 <text id="3">
                     <property name="contentType">html</property>
@@ -677,6 +703,12 @@ GROUP BY et.name,ps.identifier ,e.encounter_datetime
                     <expression name="expression" type="javascript">dataSetRow["Patient Identifier"]</expression>
                     <property name="dataType">string</property>
                 </structure>
+                <structure>
+                    <property name="name">subcat</property>
+                    <text-property name="displayName">subcat</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["subcat"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
             </list-property>
             <column id="36">
                 <property name="width">0.7395833333333334in</property>
@@ -705,6 +737,9 @@ GROUP BY et.name,ps.identifier ,e.encounter_datetime
             <column id="44">
                 <property name="width">0.96875in</property>
             </column>
+            <column id="121">
+                <property name="width">0.96875in</property>
+            </column>
             <header>
                 <row id="65">
                     <property name="backgroundColor">#C0C0C0</property>
@@ -721,7 +756,20 @@ GROUP BY et.name,ps.identifier ,e.encounter_datetime
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">1px</property>
                         <label id="75">
-                            <text-property name="text">REGISTRATION-NAME WISE CASH DETAIL</text-property>
+                            <text-property name="text">CREDIT REGISTRATION-NAME WISE CASH DETAIL</text-property>
+                        </label>
+                    </cell>
+                    <cell id="116">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <label id="122">
+                            <text-property name="text"></text-property>
                         </label>
                     </cell>
                 </row>
@@ -813,6 +861,16 @@ GROUP BY et.name,ps.identifier ,e.encounter_datetime
                         </data>
                     </cell>
                     <cell id="64">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="117">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
                         <property name="borderLeftStyle">solid</property>
@@ -929,6 +987,16 @@ GROUP BY et.name,ps.identifier ,e.encounter_datetime
                         <property name="borderTopWidth">1px</property>
                     </cell>
                     <cell id="54">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="118">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
                         <property name="borderLeftStyle">solid</property>
@@ -1059,6 +1127,19 @@ GROUP BY et.name,ps.identifier ,e.encounter_datetime
                         <property name="borderTopWidth">1px</property>
                         <label id="87">
                             <text-property name="text">Amount </text-property>
+                        </label>
+                    </cell>
+                    <cell id="119">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <label id="124">
+                            <text-property name="text">Subcategory</text-property>
                         </label>
                     </cell>
                 </row>
@@ -1196,6 +1277,20 @@ GROUP BY et.name,ps.identifier ,e.encounter_datetime
                         <property name="textAlign">center</property>
                         <data id="92">
                             <property name="resultSetColumn">Amount</property>
+                        </data>
+                    </cell>
+                    <cell id="120">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <property name="textAlign">center</property>
+                        <data id="123">
+                            <property name="resultSetColumn">subcat</property>
                         </data>
                     </cell>
                 </row>
