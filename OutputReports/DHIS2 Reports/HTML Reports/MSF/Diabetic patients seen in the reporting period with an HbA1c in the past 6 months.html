@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" type="text/javascript"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+	 crossorigin="anonymous"></script>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb"
+	 crossorigin="anonymous">
+	<script type="text/javascript">
+
+
+
+
+		var getDate = function (y, q) {
+			var edate = "";
+			var sdate = "";
+			if (q == 1) {
+				sdate = y + "-01-01"
+				edate = y + "-03-31"
+			}
+			if (q == 2) {
+				sdate = y + "-04-01"
+				edate = y + "-06-30"
+			}
+			if (q == 3) {
+				sdate = y + "-07-01"
+				edate = y + "-09-30"
+			}
+			if (q == 4) {
+				sdate = y + "-10-01"
+				edate = y + "-12-31"
+			}
+			return [sdate, edate];
+		};
+
+		var url = window.location.href;
+		var arrayUrl = url.split('=');
+		var ou = arrayUrl[3];
+		var arrayUrl1 = arrayUrl[2].split('&');
+		var pe = arrayUrl1[0];
+		var year = pe.split('Q')[0];
+		var quarter = pe.split('Q')[1];
+		var prog_id = "VCuHIFtJJSv";
+		var dates = getDate(year, quarter);
+		var startdate = dates[0];
+		var enddate = dates[1];
+		var totalevent, totalEndevent = 0, totalEndevent2 = 0, activeatendevent;
+
+
+		var checkStatus = function (data) {
+			data.enrollments.forEach(function (element, index) {
+				var tei = element.trackedEntityInstance;
+				var count = 0, count2 = 0, count22 = 0, count3 = 0,flag =0;
+				$.when(
+					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true&endDate=" + enddate, {
+						format: "json"
+					}),
+					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=HvBZokNtaEZ&trackedEntityInstance=" + tei + "&skipPaging=true", {
+						format: "json"
+					}),
+					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=kwXu1zEDMEe&trackedEntityInstance=" + tei + "&skipPaging=true", {
+						format: "json"
+					})
+
+				).then(function (data1, data2, data22) {
+					if (data1[0].events.length == 0) {
+						count = 1;
+					}
+					else if (data1.httpStatusCode == 409 || data1.httpStatusCode == "409") { count = 0; }
+					else {
+						var date = data1[0].events[0].eventDate;
+						var first = date.split('T')[0];
+						var expireDate = new Date(first);
+						if (new Date(enddate) < expireDate) {
+							count = 1;
+						}
+					}
+					if (data2[0].events.length == 0) {
+						count2 = 0;
+					}
+					else if (data2.httpStatusCode == 409 || data2.httpStatusCode == "409") { count2 = 0; }
+					else {
+						for (var b = 0; b < data2[0].events.length; b++) {
+							var date = data2[0].events[b].eventDate;
+							var first = date.split('T')[0];
+							var expireDate = new Date(first);
+							var dateSixMonthsAgo = new Date(enddate);
+							dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
+							if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+								var currentEventAttr = data2[0].events[b].dataValues;
+								for (var j = 0; j < currentEventAttr.length; j++) {
+									if ((currentEventAttr[j].dataElement == "lzBg6QalyhT" || currentEventAttr[j].dataElement == "rwDJebu16Fu" || currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+										count2 = 1;
+										flag =1;
+									}
+								}
+							}
+						}
+
+
+						if(flag == 1){
+						for (var b = 0; b < data2[0].events.length; b++) {
+							var date = data2[0].events[b].eventDate;
+							var first = date.split('T')[0];
+							var expireDate = new Date(first);
+							var dateSixMonthsAgo = new Date(enddate);
+							dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
+							if (new Date(enddate) >= expireDate && expireDate >= dateSixMonthsAgo) {
+								var currentEventAttr = data2[0].events[b].dataValues;
+								for (var j = 0; j < currentEventAttr.length; j++) {
+									if ((currentEventAttr[j].dataElement == "lzBg6QalyhT" || currentEventAttr[j].dataElement == "rwDJebu16Fu" || currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+										for (var p = 0; p < currentEventAttr.length; p++) {
+											if (currentEventAttr[p].dataElement == "bXscwHKrKci" && currentEventAttr[p].value == "true") {
+												count3 = 1;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+
+					if (data22[0].events.length == 0) {
+						count2 = 0;
+					}
+					else if (data22.httpStatusCode == 409 || data22.httpStatusCode == "409") { count2 = 0; }
+					else {
+						for (var b = 0; b < data22[0].events.length; b++) {
+							var date = data22[0].events[b].eventDate;
+							var first = date.split('T')[0];
+							var expireDate = new Date(first);
+							var dateSixMonthsAgo = new Date(enddate);
+							dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
+							if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+								var currentEventAttr = data22[0].events[b].dataValues;
+								for (var j = 0; j < currentEventAttr.length; j++) {
+									if ((currentEventAttr[j].dataElement == "lzBg6QalyhT" || currentEventAttr[j].dataElement == "rwDJebu16Fu" || currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+										count2 = 1;
+										flag = 1;
+									}
+								}
+							}
+						}
+
+						if(flag == 1){
+						for (var b = 0; b < data22[0].events.length; b++) {
+							var date = data22[0].events[b].eventDate;
+							var first = date.split('T')[0];
+							var expireDate = new Date(first);
+							var dateSixMonthsAgo = new Date(enddate);
+							dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
+							if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+								var currentEventAttr = data22[0].events[b].dataValues;
+								for (var j = 0; j < currentEventAttr.length; j++) {
+									if ((currentEventAttr[j].dataElement == "lzBg6QalyhT" || currentEventAttr[j].dataElement == "rwDJebu16Fu" || currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+										for (var p = 0; p < currentEventAttr.length; p++) {
+											if ((currentEventAttr[p].dataElement == "bXscwHKrKci" || currentEventAttr[p].dataElement == "zNrOSpdcQm3") && currentEventAttr[p].value == "true") {
+												count3 = 1;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					if (count == 1 && count2 == 1) { totalEndevent2++; }
+					if (count == 1 && count3 == 1) { totalEndevent++; }
+					document.getElementById('totalNumber').innerHTML = totalEndevent;
+					document.getElementById('totalNumber2').innerHTML = totalEndevent2;
+					if (data.enrollments.length - 1 == index) {
+						document.getElementById('loader').style.display = "none";
+					}
+				});
+
+			});
+
+		};
+
+		$(document).ready(function () {
+
+			$.when(
+				$.getJSON("../api/enrollments.json?ou=" + ou + "&ouMode=DESCENDANTS&program=" + prog_id + "&fields=trackedEntityInstance&skipPaging=true", {
+					format: "json"
+				})
+			).then(function (data1) {
+				checkStatus(data1);
+
+			});
+		});
+	</script>
+	<style>
+		table {
+			table-layout: fixed;
+			word-wrap: break-word;
+			text-align: center;
+		}
+
+		/* Absolute Center Spinner */
+
+		.loading {
+			position: fixed;
+			z-index: 999;
+			height: 2em;
+			width: 2em;
+			overflow: show;
+			margin: auto;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+		}
+
+		/* Transparent Overlay */
+
+		.loading:before {
+			content: '';
+			display: block;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.3);
+		}
+
+		/* :not(:required) hides these rules from IE9 and below */
+
+		.loading:not(:required) {
+			/* hide "loading..." text */
+			font: 0/0 a;
+			color: transparent;
+			text-shadow: none;
+			background-color: transparent;
+			border: 0;
+		}
+
+		.loading:not(:required):after {
+			content: '';
+			display: block;
+			font-size: 10px;
+			width: 1em;
+			height: 1em;
+			margin-top: -0.5em;
+			-webkit-animation: spinner 1500ms infinite linear;
+			-moz-animation: spinner 1500ms infinite linear;
+			-ms-animation: spinner 1500ms infinite linear;
+			-o-animation: spinner 1500ms infinite linear;
+			animation: spinner 1500ms infinite linear;
+			border-radius: 0.5em;
+			-webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+			box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+		}
+
+		/* Animation */
+
+		@-webkit-keyframes spinner {
+			0% {
+				-webkit-transform: rotate(0deg);
+				-moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-o-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+				-moz-transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-o-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		@-moz-keyframes spinner {
+			0% {
+				-webkit-transform: rotate(0deg);
+				-moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-o-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+				-moz-transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-o-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		@-o-keyframes spinner {
+			0% {
+				-webkit-transform: rotate(0deg);
+				-moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-o-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+				-moz-transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-o-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		@keyframes spinner {
+			0% {
+				-webkit-transform: rotate(0deg);
+				-moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-o-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+				-moz-transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-o-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		button {
+			cursor: pointer;
+		}
+	</style>
+
+	<body>
+		<div class="loading" id="loader">Loading&#8230;</div>
+
+		<br>
+		<table class="table table-bordered table-hover reporttable">
+			<thead>
+				<tr>
+					<td style="width:50%">Number of diabetic patients seen in the reporting period with an HbA1c in the past 6 months</td>
+					<td style="width:50%" id="totalNumber"></td>
+				</tr>
+				<tr>
+					<td style="width:50%">Total number of diabetic patients seen in the reporting period</td>
+					<td style="width:50%" id="totalNumber2"></td>
+				</tr>
+			</thead>
+		</table>
+	</body>
+
+</html>

@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <style>
+        .heading td {
+            background: #1D9FDF;
+            color: white;
+            text-align: center;
+            border: none;
+        }
+
+        #heading {
+            text-align: center;
+        }
+
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td {
+            border: 1px solid black;
+            height: 30px;
+            width: 280px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .noBorder td {
+            border: none;
+            background: lightgray;
+        }
+
+        .silverTr td {
+            background-color: #f4f3cc;
+            min-width: 120px;
+            min-height: 40px;
+        }
+
+        table thead {
+            background: gray;
+        }
+
+        .reporttable {
+            border-collapse: collapse;
+        }
+    </style>
+
+
+    <script>
+        var json = 0;
+        var district = 0;
+        var checkOuLevel = function (ou) {
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/organisationUnits/" + ou + ".json",
+                success: function (data) {
+                    json = data;
+
+                }
+            });
+            return json;
+        };
+
+        var checkDataset = function (ou) {
+            var count = 0;
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/organisationUnits/" + ou + ".json",
+                success: function (data) {
+                    //     json = data;
+
+
+                    for (var p = 0; p < data.dataSets.length; p++) {
+                        if (data.dataSets[p].id === "PFHKrQJxO85") {
+                            count = 1;
+                        }
+                    }
+                }
+            });
+            if (count == 1) { return 1; }
+            else { return 0; }
+            //     return 0;
+        };
+
+        var getPeriodArray = function (pe, ouPe) {
+            var array = 0;
+            pe = parseInt(pe);
+
+            while (pe != 201700) {
+                array = array + pe + ";";
+                pe -= 1;
+            }
+            array = array + ouPe;
+            return array;
+        };
+        var month;
+        var getMonth = function (a) {
+            if (a == "1" || a == "01") { month = "January" }
+            if (a == "2" || a == "02") { month = "February" }
+            if (a == "3" || a == "03") { month = "March" }
+            if (a == "4" || a == "04") { month = "April" }
+            if (a == "5" || a == "05") { month = "May" }
+            if (a == "6" || a == "06") { month = "June" }
+            if (a == "7" || a == "07") { month = "July" }
+            if (a == "8" || a == "08") { month = "August" }
+            if (a == "9" || a == "09") { month = "September" }
+            if (a == "10") { month = "october" }
+            if (a == "11") { month = "November" }
+            if (a == "12") { month = "December" }
+        };
+
+        var getDistrict = function (ou) {
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/organisationUnits/" + ou + ".json?fields=ancestors[id,name,level]",
+                success: function (data) {
+                    for (var i = 0; i < data.ancestors.length; i++) {
+                        if (data.ancestors[i].level == 2) {
+                            district = data.ancestors[i].name;
+                        }
+                    }
+
+                }
+            });
+            return district;
+        };
+
+        $(document).ready(function () {
+            var url = window.location.href;
+            var pe1 = url.split("&")[1];
+            var pe = pe1.split("=")[1];
+            var ppe = parseInt(pe) - 1;
+            var monthCode = pe.substr(4, 6);
+            getMonth(monthCode);
+            var year = pe.substr(0, 4);
+            var ou1 = url.split("&")[2];
+            var ou = ou1.split("=")[1];
+            var ouLeveldata = checkOuLevel(ou);
+            var ouLevel = ouLeveldata.level;
+            var index = 1;
+            //var ouLeveldata5 = checkOuLevel(ou);
+            //var ouPeriod = ouLeveldata5.openingDate;
+            //var ouPe1 = ouPeriod.split('T')[0];
+            //var ouPe2 = ouPe1.split('-');
+            //var ouPe = ouPe2[0] + ouPe2[1];
+
+               $("#export").click(function (e) {
+                    e.preventDefault();
+
+                    //getting data from our table
+                    var data_type = 'data:application/vnd.ms-excel';
+                    var table_div = document.getElementById('report_table');
+                    var table_html = table_div.outerHTML.replace(/ /g, '%20');
+
+                    var a = document.createElement('a');
+                    a.href = data_type + ', ' + table_html;
+                    a.download = 'Physical vs Financial Progress.xls';
+                    a.click();
+                });
+
+
+
+            var periodArray = getPeriodArray(pe);
+            var periodArray2 = getPeriodArray(ppe);
+
+            var printData = function (ou, i) {
+
+                var oqc1 = 0, oqc2 = 0, oqc3 = 0, oqc4 = 0, oqc5 = 0, oqc6 = 0, oqc7 = 0, oqc8 = 0, oqc9 = 0, oqc10 = 0, oqc11 = 0;
+                var oqc12 = 0, oqc13 = 0, oqc14 = 0, oqc15 = 0, oqc16 = 0, oqc17 = 0, oqc18 = 0, oqc19 = 0, oqc20 = 0, oqc21 = 0 ,  oqc22 = 0; 
+
+
+                var orc1 = 0, orc2 = 0, orc3 = 0, orc4 = 0, orc5 = 0, orc6 = 0, orc7 = 0, orc8 = 0, orc9 = 0, orc10 = 0, orc11 = 0;
+                var orc12 = 0, orc13 = 0, orc14 = 0, orc15 = 0, orc16 = 0, orc17 = 0, orc18 = 0, orc19 = 0, orc20 = 0, orc21 = 0 , orc22 = 0;
+
+
+                var oac1 = 0, oac2 = 0, oac3 = 0, oac4 = 0, oac5 = 0, oac6 = 0, oac7 = 0, oac8 = 0, oac9 = 0, oac10 = 0, oac11 = 0;
+                var oac12 = 0, oac13 = 0, oac14 = 0, oac15 = 0, oac16 = 0, oac17 = 0, oac18 = 0, oac19 = 0, oac20 = 0, oac21 = 0 , oac22 = 0;
+                var t1 = 0 , t2 = 0 , t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0 ;
+                //original contract
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    url: "../api/26/analytics.json?dimension=pe:" + year + "&dimension=dx:ZT4A6hJO0fC;GyKDUkqWkp6;YhuJgV28eGu;TeeXNhLzaVd;YSCcJOUlS1E;g7TvvAOMzB0;sZd9jG7oAhU;RjVsVQhoivE;CoSDuE8bCzT;OGZwSPOgYqz;XN0CshjMCRD;u6u1jt3K9Ls;IycrQISjZ0Y;xDtaqXEEGgG;wvBmN3MacMd;PzqGgWp9WHv;nzuNz3D0e7d;nN6u9dcIW8o;sU2zaGHCZ2H;i2BMkkGsK7X;OMfBnMCNP68;VoUN4HMWnw1;sQcwghNHVPe;lScEJ9LKwPZ;ztEKuNRpDh4;bcaglgkgnUK;oOJcS6VVGy6;Yt0ZOR4CBik;dl2O4fBZSou;DxR3D25ODPA;wu1n7d548YB;LIAJ9yNi1Cf;t9MeIiVJFJJ;b4hEAzULyz4;OLMTy83i8l4;e4m2rBTbegh;cKYjMs85EFw;cgeifs0TXk5;vddLGTCPWRi;SosfwBQJ48g;DAJcTZ7uDBQ;TDtrRboOrYa;vfZDTh0zmwz;uVfRecmLEWW;cw2x1P8kPj2&filter=ou:" + ou + "&displayProperty=SHORTNAME&outputIdScheme=Name",
+                    success: function (data) {
+                        for (var i = 0; i < data.rows.length; i++) {
+
+                            //quantity
+                            if (data.rows[i][0] == "PFP_General items_Quantity (targets)") {
+                                oqc1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Quantity (target)") {
+                                oqc2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearance_Quantity (target)") {
+                                oqc3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Quantity (target)") {
+                                oqc4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Quantity (target)") {
+                                oqc5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Quantity (target)") {
+                                oqc6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures_Quantity (target)") {
+                                oqc7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Stone masonry_Quantity (target)") {
+                                oqc8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Gabion_Quantity (target)") {
+                                oqc9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _PCC/RCC_Quantity (target)") {
+                                oqc10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _RCC hume pipe_Quantity (target)") {
+                                oqc11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Quantity (target)") {
+                                oqc12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Sub base_Quantity (target)") {
+                                oqc13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Quantity (target)") {
+                                oqc14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Premix bituminous carpeting_Quantity (target)") {
+                                oqc15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Quantity (target)") {
+                                oqc16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Quantity (target)") {
+                                oqc17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_Quantity (target)") {
+                                oqc18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Quantity (target)") {
+                                oqc19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Quantity (target)") {
+                                oqc20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide Built up Drawing as completed_Quantity (target)") {
+                                oqc21 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Provisional sum_Quantity (Target)") {
+                                oqc22 += parseFloat(data.rows[i][2]);
+                            }
+                           
+
+
+
+                            //rate
+                            if (data.rows[i][0] == "PFP_General items_Rate") {
+                                orc1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Rate") {
+                                orc2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearance_Rate") {
+                                orc3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Rate") {
+                                orc4 += parseFloat(data.rows[i][2]);
+                                console.log("cedfdf===" + orc4);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Rate") {
+                                orc5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Rate") {
+                                orc6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Rate") {
+                                orc7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Stone masonry_Rate") {
+                                orc8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Gabion_Rate") {
+                                orc9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _PCC/RCC_Rate") {
+                                orc10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _RCC hume pipe_Rate") {
+                                orc11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Rate") {
+                                orc12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Rate") {
+                                orc13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Rate") {
+                                orc14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Premix bituminous carpeting_Rate") {
+                                orc15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Rate") {
+                                orc16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Rate") {
+                                orc17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_Rate") {
+                                orc18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Rate") {
+                                orc19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Rate") {
+                                orc20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide Built up Drawing as completed_Rate") {
+                                orc21 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Provisional sum_Rate") {
+                                orc22 += parseFloat(data.rows[i][2]);
+                            }
+
+                        }
+
+                        oac1 = oqc1 * orc1;
+                        oac2 = oqc2 * orc2;
+                        oac3 = oqc3 * orc3;
+                        oac4 = oqc4 * orc4;
+                        oac5 = oqc5 * orc5;
+                        oac6 = oqc6 * orc6;
+                        oac7 = oqc7 * orc7;
+                        oac8 = oqc8 * orc8;
+                        oac9 = oqc9 * orc9;
+                        oac10 = oqc10 * orc10;
+                        oac11 = oqc11 * orc11;
+                        oac12 = oqc12 * orc12;
+                        oac13 = oqc13 * orc13;
+                        oac14 = oqc14 * orc14;
+                        oac15 = oqc15 * orc15;
+                        oac16 = oqc16 * orc16;
+                        oac17 = oqc17 * orc17;
+                        oac18 = oqc18 * orc18;
+                        oac19 = oqc19 * orc19;
+                        oac20 = oqc20 * orc20;
+                        oac21 = oqc21 * orc21;
+                        oac22 = oqc22 * orc22;
+                    }
+                });
+                //physical col1
+                var pq1c1 = 0, pq1c2 = 0, pq1c3 = 0, pq1c4 = 0, pq1c5 = 0, pq1c6 = 0, pq1c7 = 0, pq1c8 = 0, pq1c9 = 0, pq1c10 = 0, pq1c11 = 0;
+                var pq1c12 = 0, pq1c13 = 0, pq1c14 = 0, pq1c15 = 0, pq1c16 = 0, pq1c17 = 0, pq1c18 = 0, pq1c19 = 0, pq1c20 = 0, pq1c21 = 0 ,pq1c22 = 0;
+
+                var pa1c1 = 0, pa1c2 = 0, pa1c3 = 0, pa1c4 = 0, pa1c5 = 0, pa1c6 = 0, pa1c7 = 0, pa1c8 = 0, pa1c9 = 0, pa1c10 = 0, pa1c11 = 0;
+                var pa1c12 = 0, pa1c13 = 0, pa1c14 = 0, pa1c15 = 0, pa1c16 = 0, pa1c17 = 0, pa1c18 = 0, pa1c19 = 0, pa1c20 = 0, pa1c21 = 0 , pa1c22 = 0;
+
+                var ftqc1 = 0, ftqc2 = 0, ftqc3 = 0, ftqc4 = 0, ftqc5 = 0, ftqc6 = 0, ftqc7 = 0, ftqc8 = 0, ftqc9 = 0, ftqc10 = 0, ftqc11 = 0;
+                var ftqc12 = 0, ftqc13 = 0, ftqc14 = 0, ftqc15 = 0, ftqc16 = 0, ftqc17 = 0, ftqc18 = 0, ftqc19 = 0, ftqc20 = 0, ftqc21 = 0 , ftqc22 = 0;
+
+                var ftac1 = 0, ftac2 = 0, ftac3 = 0, ftac4 = 0, ftac5 = 0, ftac6 = 0, ftac7 = 0, ftac8 = 0, ftac9 = 0, ftac10 = 0, ftac11 = 0;
+                var ftac12 = 0, ftac13 = 0, ftac14 = 0, ftac15 = 0, ftac16 = 0, ftac17 = 0, ftac18 = 0, ftac19 = 0, ftac20 = 0, ftac21 = 0 , ftac22 = 0;
+
+                var rc1 = "", rc2 = "", rc3 = "", rc4 = "", rc5 = "", rc6 = "", rc7 = "", rc8 = "", rc9 = "", rc10 = "", rc11 = "";
+                var rc12 = "", rc13 = "", rc14 = "", rc15 = "", rc16 = "", rc17 = "", rc18 = "", rc19 = "", rc20 = "", rc21 = "" , rc22 = "";
+
+                var ppcc1 = 0, ppcc2 = 0, ppcc3 = 0, ppcc4 = 0, ppcc5 = 0, ppcc6 = 0, ppcc7 = 0, ppcc8 = 0, ppcc9 = 0, ppcc10 = 0, ppcc11 = 0;
+                var ppcc12 = 0, ppcc13 = 0, ppcc14 = 0, ppcc15 = 0, ppcc16 = 0, ppcc17 = 0, ppcc18 = 0, ppcc19 = 0, ppcc20 = 0, ppcc21 = 0, ppcc22 = 0;
+
+                var fpcc1 = 0, fpcc2 = 0, fpcc3 = 0, fpcc4 = 0, fpcc5 = 0, fpcc6 = 0, fpcc7 = 0, fpcc8 = 0, fpcc9 = 0, fpcc10 = 0, fpcc11 = 0;
+                var fpcc12 = 0, fpcc13 = 0, fpcc14 = 0, fpcc15 = 0, fpcc16 = 0, fpcc17 = 0, fpcc18 = 0, fpcc19 = 0, fpcc20 = 0, fpcc21 = 0 , fpcc22 = 0;
+
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    url: "../api/26/analytics.json?dimension=pe:" + pe + "&dimension=dx:Fe41rju3zQx;i2BMkkGsK7X;x4HAWtoXNOY;Ec5HsHAuBmb;owdf11tiDrc;gn9tKHun8ib;EnDTVT3NvLr;CT8wUhUrfSk;S014C70uGAH;OeT4lFlSBjM;eK65174WmKs;LGsWA7cHFx9;OUrBwBysYgY;kyKO9ijqNRv;xOd5zCJ2viQ;qcNp6nCk5xW;f9dYG2ZhisF;sU2zaGHCZ2H;vAvLovwIS0M;P90LcPHA3T8;r75hWUhQGbO;YnPDKLM8k53;HDzCzc4ncba;g20Vwu4MeYl;r3x9euKnJ3e;p0F31lZA1KM;wWVydalESET;T5mTFuyXgP0;oEg57K2N4NF;jkukyhXdGnS;A5N7Uig3Wvz;aVLV0ATu9kQ;P2duTxauT7f;FNbkoluiE1j;shV9RAKw0iK;akNs7HYk7gX;y2On2EGmYKZ;sScLfgMbOno;g9uCtL5Cnrw;uWjcCigYGkt;Qi9LCchkVnG;sN9ywv7jNXR;mEhZcDEYikL;IRu58qKLR02;yJh2RYJzylX;Wxix18JLL7a;BgMmuhMlnRk;LfuAuxmD275;kwtnPrv02Bx;E03eIjK5aoM;CMP2226krLd;LY800TCgSsF;xAA5nws20Bz;uRnZWCcPjSZ;O2ZK9SjMso6;ErJEh341INf;KQyZNGbfDZ6;q4gm7XpQSrL;bAIeZMOk1yA;LIqvBl1SQ2e;QtgBZdXRpO1;vK16X0ZJdXa;UEKyUZrBvhb;X1qzQA6Inir;yidbj6XzhBA;nRdOiuz4QIL;M5KVwBdipc3;NUWHQDfqo6i;N19wHhSAC9K;dI6SVd6n6kk;VVoFUadQZsO;QYtSIeELYSm;LvqsGjJTbqg;kuP4KmtFAfL;aIS11ORfoov;OKLCMm7TzjB;HxgmpOyE05v;pLoYtveZCDB;bUbFnaQeArr;Q2YZFmiCRs3;LbPbSegQy67;b7shwmkHEZc;yVjUim0jtNF;LdDQpjtaWyn;ssKAySmKoLb;t7AmrHMu1vB;rxkrsybLRNt;iNTQnnuDFGA;tjuYDHveyGC;xhZdmTm8Uu7;tXw3ODluKZ3;tpN3LzMk9i1;jsaitNAa3mR;Nef1rT1UC7n;ogUFBiuQgpO;hG95Nn4rCzF;n4OfYCtHeyV;ziwRhfWWSEX;KDtzrOYZyuP;QxbRQBP5MMR;QHaUbF7JZOm;nMdRyMdWHr8;ySHaIs4AE99;EU4G8whtIDW;clEcMvYNEqF;mFhGvBcjlyN;M3oGl5jSi57;QMDxpSSthYq;B8SBDMggHUV;fzesgZHgvlS;sIyueytwmXy;UrUDzNWMGbt;os1KG7qiltX;dWO71tSt9Lf;XskFsOIEejA&filter=ou:" + ou + "&displayProperty=SHORTNAME&outputIdScheme=NAME",
+                    success: function (data) {
+
+                        for (var i = 0; i < data.rows.length; i++) {
+                            //quantity
+                            if (data.rows[i][0] == "PFP_General items_Quantity") {
+                                pq1c1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Quantity") {
+                                pq1c2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearance_Quantity") {
+                                pq1c3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Quantity") {
+                                pq1c4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Quantity") {
+                                pq1c5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Quantity") {
+                                pq1c6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Quantity") {
+                                pq1c7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Stone masonry_Quantity") {
+                                pq1c8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Gabion_Quantity") {
+                                pq1c9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _PCC/RCC_Quantity") {
+                                pq1c10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _RCC hume pipe_Quantity") {
+                                pq1c11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Quantity") {
+                                pq1c12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Quantity") {
+                                pq1c13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Quantity") {
+                                pq1c14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_premix bituminous carpeting_Quantity") {
+                                pq1c15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Quantity") {
+                                pq1c16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Quantity") {
+                                pq1c17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_Quantity") {
+                                pq1c18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Quantity") {
+                                pq1c19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Quantity") {
+                                pq1c20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide Built up Drawing as completed_Quantity") {
+                                pq1c21 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Provisional sum_Quantity") {
+                                pq1c22 += parseFloat(data.rows[i][2]);
+                            }
+
+
+                            //Amount
+                            if (data.rows[i][0] == "PFP_General items_Amount") {
+                                pa1c1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Amount") {
+                                pa1c2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearance_Amount") {
+                                pa1c3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Amount") {
+                                pa1c4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Amount") {
+                                pa1c5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Amount") {
+                                pa1c6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Amount") {
+                                pa1c7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Stone masonry_Amount") {
+                                pa1c8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Gabion_Amount") {
+                                pa1c9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _PCC/RCC_Amount") {
+                                pa1c10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _RCC hume pipe_Amount") {
+                                pa1c11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Amount") {
+                                pa1c12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Amount") {
+                                pa1c13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Amount") {
+                                pa1c14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Premix bituminous carpeting_Amount") {
+                                pa1c15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Amount") {
+                                pa1c16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Amount") {
+                                pa1c17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_Amount") {
+                                pa1c18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Amount") {
+                                pa1c19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Amount") {
+                                pa1c20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide built up drawing as completed_Amount") {
+                                pa1c21 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Provisional sum_Amount") {
+                                pa1c22 += parseFloat(data.rows[i][2]);
+                            }
+
+                            //remarks
+                            if (data.rows[i][0] == "PFP_General itmes_Remark") {
+                                rc1 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Remark") {
+                                rc2 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearence_ Remark") {
+                                rc3 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_ Remark") {
+                                rc4 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Remark") {
+                                rc5 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Remark") {
+                                rc6 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Structures_Remark") {
+                                rc7 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Structures Stone masonry_Remark") {
+                                rc8 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Structures Gabion_Remark") {
+                                rc9 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Structures PCC/RCC_Remark") {
+                                rc10 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Structures RCC hume pipe_Remark") {
+                                rc11 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Remark") {
+                                rc12 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Remark") {
+                                rc13 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Remark") {
+                                rc14 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_premix bituminous carpeting_Remark") {
+                                rc15 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Remark") {
+                                rc16 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Remark") {
+                                rc17 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_ Remark") {
+                                rc18 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_ Remark") {
+                                rc19 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_ Remark") {
+                                rc20 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide Built up Drawing as completed_Remark") {
+                                rc21 = data.rows[i][2];
+                            }
+                            if (data.rows[i][0] == "PFP_Provisional sum_Remark") {
+                                rc22 = data.rows[i][2];
+                            }
+                           
+
+                           
+
+
+                            //financial progress total qty
+                            if (data.rows[i][0] == "PFP_General itmes_Total Qty claimed as per latest IPC") {
+                                ftqc1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Total Qty claimed as per latest IPC") {
+                                ftqc2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearence_Total Qty claimed as per latest IPC") {
+                                ftqc3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Total Qty claimed as per latest IPC") {
+                                ftqc4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Total Qty claimed as per latest IPC") {
+                                ftqc5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Total Qty claimed as per latest IPC") {
+                                ftqc6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures_Total Qty claimed as per latest IPC") {
+                                ftqc7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures Stone masonry_Total Qty claimed as per latest IPC") {
+                                ftqc8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures Gabion_Total Qty claimed as per latest IPC") {
+                                ftqc9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures PCC/RCC_Total Qty claimed as per latest IPC") {
+                                ftqc10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures RCC hume pipe_Total Qty claimed as per latest IPC") {
+                                ftqc11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Total Qty claimed as per latest IPC") {
+                                ftqc12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Total Qty claimed as per latest IPC") {
+                                ftqc13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Total Qty claimed as per latest IPC") {
+                                ftqc14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_premix bituminous carpeting_Total Qty claimed as per latest IPC") {
+                                ftqc15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Total Qty claimed as per latest IPC") {
+                                ftqc16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Total Qty claimed as per latest IPC") {
+                                ftqc17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture  and traffic safety measures_Total Qty claimed as per latest IPC") {
+                                ftqc18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Total Qty claimed as per latest IPC") {
+                                ftqc19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Total Qty claimed as per latest IPC") {
+                                ftqc20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide Built up Drawing as completed_Total Qty claimed as per latest IPC") {
+                                ftqc21 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Provisional sum_Total quantity claim") {
+                                ftqc22 += parseFloat(data.rows[i][2]);
+                            }
+
+
+
+
+                            //financial progress total amount
+                            if (data.rows[i][0] == "PFP_General itmes_ Total amount claimed as per latest IPC") {
+                                ftac1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Total Amount claimed as per latest IPC") {
+                                ftac2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearence_ Total amount claimed as per latest IPC") {
+                                ftac3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_ Total amount claimed as per latest IPC") {
+                                ftac4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Total Qty claimed as per latest IPC") {
+                                ftac5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Total Amount claimed as per latest IPC") {
+                                ftac6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures_ Total amount claimed as per latest IPC") {
+                                ftac7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures Stone masonry_Total Amount claimed as per latest IPC") {
+                                ftac8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures Gabion_Total Amount claimed as per latest IPC") {
+                                ftac9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures PCC/RCC_Total Amount claimed as per latest IPC") {
+                                ftac10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures RCC hume pipe_Total Amount claimed as per latest IPC") {
+                                ftac11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_ Total amount claimed as per latest IPC") {
+                                ftac12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Total Amount claimed as per latest IPC") {
+                                ftac13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Total Amount claimed as per latest IPC") {
+                                ftac14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_premix bituminous carpeting_Total Amount claimed as per latest IPC") {
+                                ftac15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Total Amount claimed as per latest IPC") {
+                                ftac16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Total Amount claimed as per latest IPC") {
+                                ftac17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture  and traffic safety measures_ Total amount claimed as per latest IPC") {
+                                ftac18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_ Total amount claimed as per latest IPC") {
+                                ftac19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_ Total amount claimed as per latest IPC") {
+                                ftac20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide Built up Drawing as completed_Total Amount claimed as per latest IPC") {
+                                ftac21 += parseFloat(data.rows[i][2]);
+                            }
+
+                            if (data.rows[i][0] == "PFP_Provisional sum_Total amount claimed as per latest IPC") {
+                                 ftac22 += parseFloat(data.rows[i][2]);
+
+                            }
+                        }
+                    }
+
+                });
+
+                //physical col2
+                var pq2c1 = 0, pq2c2 = 0, pq2c3 = 0, pq2c4 = 0, pq2c5 = 0, pq2c6 = 0, pq2c7 = 0, pq2c8 = 0, pq2c9 = 0, pq2c10 = 0, pq2c11 = 0;
+                var pq2c12 = 0, pq2c13 = 0, pq2c14 = 0, pq2c15 = 0, pq2c16 = 0, pq2c17 = 0, pq2c18 = 0, pq2c19 = 0, pq2c20 = 0, pq2c21 = 0 , pq2c22 = 0;
+
+                var pa2c1 = 0, pa2c2 = 0, pa2c3 = 0, pa2c4 = 0, pa2c5 = 0, pa2c6 = 0, pa2c7 = 0, pa2c8 = 0, pa2c9 = 0, pa2c10 = 0, pa2c11 = 0;
+                var pa2c12 = 0, pa2c13 = 0, pa2c14 = 0, pa2c15 = 0, pa2c16 = 0, pa2c17 = 0, pa2c18 = 0, pa2c19 = 0, pa2c20 = 0, pa2c21 = 0 , pa2c22 = 0;
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    url: "../api/26/analytics.json?dimension=pe:" + periodArray2 + "&dimension=dx:Fe41rju3zQx;i2BMkkGsK7X;x4HAWtoXNOY;Ec5HsHAuBmb;owdf11tiDrc;gn9tKHun8ib;EnDTVT3NvLr;CT8wUhUrfSk;S014C70uGAH;OeT4lFlSBjM;eK65174WmKs;LGsWA7cHFx9;OUrBwBysYgY;kyKO9ijqNRv;xOd5zCJ2viQ;qcNp6nCk5xW;f9dYG2ZhisF;sU2zaGHCZ2H;vAvLovwIS0M;P90LcPHA3T8;r75hWUhQGbO;YnPDKLM8k53;HDzCzc4ncba;g20Vwu4MeYl;r3x9euKnJ3e;p0F31lZA1KM;wWVydalESET;T5mTFuyXgP0;oEg57K2N4NF;jkukyhXdGnS;A5N7Uig3Wvz;aVLV0ATu9kQ;P2duTxauT7f;FNbkoluiE1j;shV9RAKw0iK;akNs7HYk7gX;y2On2EGmYKZ;sScLfgMbOno;g9uCtL5Cnrw;uWjcCigYGkt;Qi9LCchkVnG;sN9ywv7jNXR;mEhZcDEYikL;yJh2RYJzylX;BgMmuhMlnRk;kwtnPrv02Bx;E03eIjK5aoM;CMP2226krLd;LY800TCgSsF;IRu58qKLR02;Wxix18JLL7a;LfuAuxmD275;xAA5nws20Bz;uRnZWCcPjSZ;O2ZK9SjMso6;ErJEh341INf;KQyZNGbfDZ6;q4gm7XpQSrL;bAIeZMOk1yA;LIqvBl1SQ2e;QtgBZdXRpO1;vK16X0ZJdXa;UEKyUZrBvhb;X1qzQA6Inir;yidbj6XzhBA;nRdOiuz4QIL;M5KVwBdipc3;NUWHQDfqo6i;N19wHhSAC9K;dI6SVd6n6kk;VVoFUadQZsO;QYtSIeELYSm;LvqsGjJTbqg;kuP4KmtFAfL;aIS11ORfoov;OKLCMm7TzjB;HxgmpOyE05v;pLoYtveZCDB;bUbFnaQeArr;Q2YZFmiCRs3;LbPbSegQy67;b7shwmkHEZc;yVjUim0jtNF;LdDQpjtaWyn;ssKAySmKoLb;t7AmrHMu1vB;rxkrsybLRNt;iNTQnnuDFGA;tjuYDHveyGC;xhZdmTm8Uu7;tXw3ODluKZ3;tpN3LzMk9i1;jsaitNAa3mR;Nef1rT1UC7n;ogUFBiuQgpO;hG95Nn4rCzF;n4OfYCtHeyV;ziwRhfWWSEX;KDtzrOYZyuP;QxbRQBP5MMR;QHaUbF7JZOm;nMdRyMdWHr8;ySHaIs4AE99;EU4G8whtIDW;clEcMvYNEqF;mFhGvBcjlyN;M3oGl5jSi57;QMDxpSSthYq;B8SBDMggHUV;fzesgZHgvlS;sIyueytwmXy;UrUDzNWMGbt;os1KG7qiltX;dWO71tSt9Lf;XskFsOIEejA&filter=ou:" + ou + "&displayProperty=SHORTNAME&outputIdScheme=NAME",
+                    success: function (data) {
+
+
+                        for (var i = 0; i < data.rows.length; i++) {
+                            //quantity
+                            if (data.rows[i][0] == "PFP_General items_Quantity") {
+                                pq2c1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Quantity") {
+                                pq2c2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearance_Quantity") {
+                                pq2c3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Quantity") {
+                                pq2c4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Quantity") {
+                                pq2c5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Quantity") {
+                                pq2c6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Quantity") {
+                                pq2c7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Stone masonry_Quantity") {
+                                pq2c8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Gabion_Quantity") {
+                                pq2c9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _PCC/RCC_Quantity") {
+                                pq2c10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _RCC hume pipe_Quantity") {
+                                pq2c11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Quantity") {
+                                pq2c12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Quantity") {
+                                pq2c13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Quantity") {
+                                pq2c14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_premix bituminous carpeting_Quantity") {
+                                pq2c15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Quantity") {
+                                pq2c16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Quantity") {
+                                pq2c17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_Quantity") {
+                                pq2c18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Quantity") {
+                                pq2c19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Quantity") {
+                                pq2c20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide Built up Drawing as completed_Quantity") {
+                                pq2c21 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == " PFP_Provisional sum_Quantity") {
+                                pq2c22 += parseFloat(data.rows[i][2]);
+                            }
+                           
+
+
+                            //Amount
+                            if (data.rows[i][0] == "PFP_General items_Amount") {
+                                pa2c1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Amount") {
+                                pa2c2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearance_Amount") {
+                                pa2c3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Amount") {
+                                pa2c4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Amount") {
+                                pa2c5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Amount") {
+                                pa2c6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Amount") {
+                                pa2c7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Stone masonry_Amount") {
+                                pa2c8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Gabion_Amount") {
+                                pa2c9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _PCC/RCC_Amount") {
+                                pa2c10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _RCC hume pipe_Amount") {
+                                pa2c11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Amount") {
+                                pa2c12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Amount") {
+                                pa2c13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Amount") {
+                                pa2c14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Premix bituminous carpeting_Amount") {
+                                pa2c15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Amount") {
+                                pa2c16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Amount") {
+                                pa2c17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_Amount") {
+                                pa2c18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Amount") {
+                                pa2c19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Amount") {
+                                pa2c20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide built up drawing as completed_Amount") {
+                                pa2c21 += parseFloat(data.rows[i][2]);
+                                
+                                if (data.rows[i][0] == "PFP_Provisional sum_Amount") {
+                                    pa2c22 += parseFloat(data.rows[i][2]);
+                                }
+                            }
+                        }
+
+                    }
+
+                });
+
+                //physical col3
+                var pq3c1 = 0, pq3c2 = 0, pq3c3 = 0, pq3c4 = 0, pq3c5 = 0, pq3c6 = 0, pq3c7 = 0, pq3c8 = 0, pq3c9 = 0, pq3c10 = 0, pq3c11 = 0;
+                var pq3c12 = 0, pq3c13 = 0, pq3c14 = 0, pq3c15 = 0, pq3c16 = 0, pq3c17 = 0, pq3c18 = 0, pq3c19 = 0, pq3c20 = 0, pq3c21 = 0 , pq3c22 = 0;
+
+                var pa3c1 = 0, pa3c2 = 0, pa3c3 = 0, pa3c4 = 0, pa3c5 = 0, pa3c6 = 0, pa3c7 = 0, pa3c8 = 0, pa3c9 = 0, pa3c10 = 0, pa3c11 = 0;
+                var pa3c12 = 0, pa3c13 = 0, pa3c14 = 0, pa3c15 = 0, pa3c16 = 0, pa3c17 = 0, pa3c18 = 0, pa3c19 = 0, pa3c20 = 0, pa3c21 = 0 , pa3c22 = 0;
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    url: "../api/26/analytics.json?dimension=pe:" + periodArray + "&dimension=dx:Fe41rju3zQx;x4HAWtoXNOY;i2BMkkGsK7X;Ec5HsHAuBmb;owdf11tiDrc;gn9tKHun8ib;EnDTVT3NvLr;CT8wUhUrfSk;S014C70uGAH;OeT4lFlSBjM;eK65174WmKs;LGsWA7cHFx9;OUrBwBysYgY;kyKO9ijqNRv;xOd5zCJ2viQ;qcNp6nCk5xW;f9dYG2ZhisF;sU2zaGHCZ2H;vAvLovwIS0M;P90LcPHA3T8;r75hWUhQGbO;YnPDKLM8k53;HDzCzc4ncba;g20Vwu4MeYl;r3x9euKnJ3e;p0F31lZA1KM;wWVydalESET;T5mTFuyXgP0;oEg57K2N4NF;jkukyhXdGnS;A5N7Uig3Wvz;aVLV0ATu9kQ;P2duTxauT7f;FNbkoluiE1j;shV9RAKw0iK;akNs7HYk7gX;y2On2EGmYKZ;sScLfgMbOno;g9uCtL5Cnrw;uWjcCigYGkt;Qi9LCchkVnG;sN9ywv7jNXR;mEhZcDEYikL;yJh2RYJzylX;BgMmuhMlnRk;kwtnPrv02Bx;E03eIjK5aoM;CMP2226krLd;LY800TCgSsF;xAA5nws20Bz;IRu58qKLR02;Wxix18JLL7a;LfuAuxmD275;uRnZWCcPjSZ;O2ZK9SjMso6;ErJEh341INf;KQyZNGbfDZ6;q4gm7XpQSrL;bAIeZMOk1yA;LIqvBl1SQ2e;QtgBZdXRpO1;vK16X0ZJdXa;UEKyUZrBvhb;X1qzQA6Inir;yidbj6XzhBA;nRdOiuz4QIL;M5KVwBdipc3;NUWHQDfqo6i;N19wHhSAC9K;dI6SVd6n6kk;VVoFUadQZsO;QYtSIeELYSm;LvqsGjJTbqg;kuP4KmtFAfL;aIS11ORfoov;OKLCMm7TzjB;HxgmpOyE05v;pLoYtveZCDB;bUbFnaQeArr;Q2YZFmiCRs3;LbPbSegQy67;b7shwmkHEZc;yVjUim0jtNF;LdDQpjtaWyn;ssKAySmKoLb;t7AmrHMu1vB;rxkrsybLRNt;iNTQnnuDFGA;tjuYDHveyGC;xhZdmTm8Uu7;tXw3ODluKZ3;tpN3LzMk9i1;jsaitNAa3mR;Nef1rT1UC7n;ogUFBiuQgpO;hG95Nn4rCzF;n4OfYCtHeyV;ziwRhfWWSEX;KDtzrOYZyuP;QxbRQBP5MMR;QHaUbF7JZOm;nMdRyMdWHr8;ySHaIs4AE99;EU4G8whtIDW;clEcMvYNEqF;mFhGvBcjlyN;M3oGl5jSi57;QMDxpSSthYq;B8SBDMggHUV;fzesgZHgvlS;sIyueytwmXy;UrUDzNWMGbt;os1KG7qiltX;dWO71tSt9Lf;XskFsOIEejA&filter=ou:" + ou + "&displayProperty=SHORTNAME&outputIdScheme=NAME",
+                    success: function (data) {
+
+
+                        for (var i = 0; i < data.rows.length; i++) {
+                            //quantity
+                            if (data.rows[i][0] == "PFP_General items_Quantity") {
+                                pq3c1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Quantity") {
+                                pq3c2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearance_Quantity") {
+                                pq3c3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Quantity") {
+                                pq3c4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Quantity") {
+                                pq3c5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Quantity") {
+                                pq3c6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Quantity") {
+                                pq3c7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Stone masonry_Quantity") {
+                                pq3c8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Gabion_Quantity") {
+                                pq3c9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _PCC/RCC_Quantity") {
+                                pq3c10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _RCC hume pipe_Quantity") {
+                                pq3c11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Quantity") {
+                                pq3c12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Quantity") {
+                                pq3c13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Quantity") {
+                                pq3c14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_premix bituminous carpeting_Quantity") {
+                                pq3c15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Quantity") {
+                                pq3c16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Quantity") {
+                                pq3c17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_Quantity") {
+                                pq3c18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Quantity") {
+                                pq3c19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Quantity") {
+                                pq3c20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide Built up Drawing as completed_Quantity") {
+                                pq3c21 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Provisional sum_Quantity") {
+                                pq3c22 += parseFloat(data.rows[i][2]);
+                            }
+
+
+                            //Amount
+                            if (data.rows[i][0] == "PFP_General items_Amount") {
+                                pa3c1 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_General items_Relocation of services_Amount") {
+                                pa3c2 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Site clearance_Amount") {
+                                pa3c3 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Amount") {
+                                pa3c4 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in excavation (Road, drain & Structure)_Amount") {
+                                pa3c5 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Earthworks_Earthwork in filling_Amount") {
+                                pa3c6 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Amount") {
+                                pa3c7 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Stone masonry_Amount") {
+                                pa3c8 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _Gabion_Amount") {
+                                pa3c9 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _PCC/RCC_Amount") {
+                                pa3c10 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Structures _RCC hume pipe_Amount") {
+                                pa3c11 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Amount") {
+                                pa3c12 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Subbase_Amount") {
+                                pa3c13 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Crushed stones base_Amount") {
+                                pa3c14 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Premix bituminous carpeting_Amount") {
+                                pa3c15 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_DBST_Amount") {
+                                pa3c16 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Pavement works_Asphalt (bituminous) concrete_Amount") {
+                                pa3c17 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Road furniture and traffic safety measures_Amount") {
+                                pa3c18 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Bio-engineering works_Amount") {
+                                pa3c19 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Amount") {
+                                pa3c20 += parseFloat(data.rows[i][2]);
+                            }
+                            if (data.rows[i][0] == "PFP_Day works_Provide built up drawing as completed_Amount") {
+                                pa3c21 += parseFloat(data.rows[i][2]);
+                            }
+                                if (data.rows[i][0] == "PFP_Provisional sum_Amount") {
+                                pa3c22 += parseFloat(data.rows[i][2]);
+                            }
+                            
+                        }
+
+                    }
+
+                });
+                ppcc1 = ((pa3c1 /oac1 ) * 100).toFixed(2);
+                ppcc2 = ((pa3c2 / oac2) * 100).toFixed(2);
+                ppcc3 = ((pa3c3 / oac3) * 100).toFixed(2);
+                ppcc4 = ((pa3c4 / oac4) * 100).toFixed(2);
+                ppcc5 = ((pa3c5 / oac5) * 100).toFixed(2);
+                ppcc6 = ((pa3c6 / oac6) * 100).toFixed(2);
+                ppcc7 = ((pa3c7 / oac7) * 100).toFixed(2);
+                ppcc8 = ((pa3c8 / oac8) * 100).toFixed(2);
+                ppcc9 = ((pa3c9 / oac9) * 100).toFixed(2);
+                ppcc10 = ((pa3c10 / oac10) * 100).toFixed(2);
+                ppcc11 = ((pa3c11 / oac11) * 100).toFixed(2);
+                ppcc12 = ((pa3c12 / oac12) * 100).toFixed(2);
+                ppcc13 = ((pa3c13 / oac13) * 100).toFixed(2);
+                ppcc14 = ((pa3c14 / oac14) * 100).toFixed(2);
+                ppcc15 = ((pa3c15 / oac15) * 100).toFixed(2);
+                ppcc16 = ((pa3c16 / oac16) * 100).toFixed(2);
+                ppcc17 = ((pa3c17 / oac17) * 100).toFixed(2);
+                ppcc18 = ((pa3c18 / oac18) * 100).toFixed(2);
+                ppcc19 = ((pa3c19 / oac19) * 100).toFixed(2);
+                ppcc20 = ((pa3c20 / oac20) * 100).toFixed(2);
+                ppcc21 = ((pa3c21 / oac21) * 100).toFixed(2);
+                ppcc22 = ((pa3c22 / oac22) * 100).toFixed(2);
+
+                fpcc1 = ((ftac1 / oac1) * 100).toFixed(2);
+                fpcc2 = ((ftac2 / oac2) * 100).toFixed(2);
+                fpcc3 = ((ftac3 / oac3) * 100).toFixed(2);
+                fpcc4 = ((ftac4 / oac4) * 100).toFixed(2);
+                fpcc5 = ((ftac5 / oac5) * 100).toFixed(2);
+                fpcc6 = ((ftac6 / oac6) * 100).toFixed(2);
+                fpcc7 = ((ftac7 / oac7) * 100).toFixed(2);
+                fpcc8 = ((ftac8 / oac8) * 100).toFixed(2);
+                fpcc9 = ((ftac9 / oac9) * 100).toFixed(2);
+                fpcc10 = ((ftac10 / oac10) * 100).toFixed(2);
+                fpcc11 = ((ftac11 / oac11) * 100).toFixed(2);
+                fpcc12 = ((ftac12 / oac12) * 100).toFixed(2);
+                fpcc13 = ((ftac13 / oac13) * 100).toFixed(2);
+                fpcc14 = ((ftac14 / oac14) * 100).toFixed(2);
+                fpcc15 = ((ftac15 / oac15) * 100).toFixed(2);
+                fpcc16 = ((ftac16 / oac16) * 100).toFixed(2);
+                fpcc17 = ((ftac17 / oac17) * 100).toFixed(2);
+                fpcc18 = ((ftac18 / oac18) * 100).toFixed(2);
+                fpcc19 = ((ftac19 / oac19) * 100).toFixed(2);
+                fpcc20 = ((ftac20 / oac20) * 100).toFixed(2);
+                fpcc21 = ((ftac21 / oac21) * 100).toFixed(2);
+                fpcc22 = ((ftac22 / oac22) * 100).toFixed(2);
+
+ t1 = oqc1 + oqc3 + oqc4 + oqc7 + oqc12 + oqc18 +oqc19 + oqc20 + oqc22;
+  t2 = orc1 + orc3 + orc4 + orc7 + orc12 + orc18 + orc19 + orc20 + orc22;
+  t3 = oac1 + oac3 + oac4 + oac7 + oac12 + oac18 + oac19 + oac20 + oac22;
+ t4 = pq1c1 + pq1c3 + pq1c4 + pq1c7 + pq1c12 + pq1c18 + pq1c19 + pq1c22;
+ t5 =  pa2c1 +  pa2c3 + pa2c4 + pa2c7 + pa2c12 + pa2c18 + pa2c19 + pa2c22;
+ t6 = pq2c1 + pq2c3 + pq2c4 + pq2c7 + pq2c12 + pq2c18 + pq2c19 + pq2c22;
+ t7 = pa1c1  + pa1c3 + pa1c4  + pa1c7 + pa1c12  + pa1c18 + pa1c19  + pa1c22;
+ t8 =pq3c1  +pq3c3 + pq3c4 + pq3c7 + pq3c12  +pq3c18 + pq3c19 + pq3c22;  
+ t9 =pa3c1  + pa3c3 +  pa3c4  + pa3c7 +  pa3c12  + pa3c18+ pa3c19  + pa3c22;
+ t10 = ppcc1 +  ppcc3 +  ppcc4 +  ppcc7  + ppcc12 +  ppcc18 +  ppcc19 +  ppcc22; 
+t11 = ftqc1 + ftqc3 + ftqc4 + ftqc7 + ftqc12 + ftqc18 + ftqc19 + ftqc22;
+ t12 = ftac1  + ftac3 + ftac4 + ftac7 + ftac12 + ftac18 + ftac19 + ftac22;
+ t13 = fpcc1 + fpcc3 + fpcc4 + fpcc7 + fpcc12 + fpcc18 + fpcc19 + fpcc22;
+  t14 = rc1 + rc3 + rc4 + rc7 + rc9 +rc12 + rc18 + rc19 + rc22;
+
+                var row = 0;
+                var getName = checkOuLevel(ou);
+                var ouname = getName.name;
+                var districtt = getDistrict(ou);
+                var table = "<table class='reporttable_" + i + "' border='1'></table>";
+                $(".tableattach").append(table);
+                //name of ou
+                var row = "<tr  bgcolor='lightgray'><td colspan= '3'>District :</td><td colspan='3'>" + districtt + "</td><td colspan='3'>Sub-project :</td><td colspan='3'>" + ouname + "</td><td colspan='3'>Period :</td><td colspan='3'>" + month + " " + year + "</td></tr>";
+
+                //heading
+                row = row + "<tr><td rowspan='3'>Item no.</td><td rowspan='3'>Spec. Clause ref.</td><td rowspan='3'>Description of items</td><td rowspan='3'>Unit</td><td colspan='3'>Original contract</td><td colspan='7'>Physical progress</td><td colspan='3'>Financical progress</td><td rowspan='3'>Remarks</td></tr>";
+                row = row + "<tr><td rowspan='2'>Quantity</td><td rowspan='2'>Rate NRs.</td><td rowspan='2'>Amount (NRs)</td><td colspan='2'>Progress upto previous month</td><td colspan='2'>Progress of this month</td><td colspan='2'>Cumulative progress to date</td><td rowspan='2'>% completed</td><td rowspan='2'>Total Qty claimed as per latest IPC</td><td rowspan='2'>Total ammount claimed as per latest IPC</td><td rowspan='2'>% completed</td></tr>";
+                row = row + "<tr><td>Quantity</td><td>Amount (NRs)</td><td>Quantity</td><td>Amount (NRs)</td><td>Quantity</td><td>Amount (NRs)</td></tr>";
+
+                // left column data
+                row = row + "<tr class='silverTr'><td>1</td><td></td><td><b>GENERAL ITEMS</b></td><td></td><td class='colm1'>" + oqc1 + "</td><td class='colm2'>" + orc1 + "</td><td class='colm3'>" + oac1 + "</td><td class='colm4'>" + pq1c1 + "</td><td class='colm5'>" + pa2c1 + "</td><td class='colm6'>" + pq2c1 + "</td><td class='colm7'>" + pa1c1 + "</td><td class='colm8'>" + pq3c1 + "</td><td class='colm9'>" + pa3c1 + "</td><td>" + ppcc1 + "</td><td class='colm11'>" + ftqc1 + "</td><td class='colm12'>" + ftac1 + "</td><td>" + fpcc1 + "</td><td>" + rc1 + "</td></tr>";
+                console.log("oqc1 = " + oqc1);
+    console.log("orc1 =" + orc1);
+    console.log("oac1 = " + oac1);
+    console.log("pq1c1 =" + pq1c1);
+    console.log("pa1c1 =" + pa1c1);
+    console.log("pq2c1 =" + pq2c1);
+    console.log("pa2c1 =" + pa2c1);
+
+    console.log("pq3c1 =" + pq3c1);
+    console.log("pa3c1 =" + pa3c1);
+
+    
+                row = row + "<tr><td></td><td></td><td>Relocation of services</td><td>PS</td><td>" + oqc2 + "</td><td>" + orc2 + "</td><td>" + oac2 + "</td><td>" + pq1c2 + "</td><td>" + pa2c2 + "</td><td>" + pq2c2 + "</td><td>" + pa1c2 + "</td><td>" + pq3c2 + "</td><td>" + pa3c2 + "</td><td>" + ppcc2 + "</td><td>" + ftqc2 + "</td><td>" + ftac2 + "</td><td>" + fpcc2 + "</td><td>" + rc2 + "</td></tr>";
+    console.log("oqc2 = " + oqc2);
+    console.log("orc2 =" + orc2);
+    console.log("oac2 = " + oac2);
+    console.log("pq1c2 =" + pq1c2);
+
+    console.log("pa1c2 =" + pa1c2);
+    console.log("pq2c2 =" + pq2c2);
+    console.log("pa2c2 =" + pa2c2);
+
+
+
+
+                row = row + "<tr class='silverTr'><td>2</td><td></td><td><b>SITE CLEARANCE</b></td><td></td><td class='colm1'>" + oqc3 + "</td><td class='colm2'>" + orc3 + "</td><td class='colm3'>" + oac3 + "</td><td class='colm4'>" + pq1c3 + "</td><td class='colm5'>" + pa2c3 + "</td><td class='colm6'>" + pq2c3 + "</td><td class='colm7'>" + pa1c3 + "</td><td class='colm8'>" + pq3c3 + "</td><td class='colm9'>" + pa3c3 + "</td><td>" + ppcc3 + "</td><td class='colm11'>" + ftqc3 + "</td><td class='colm12'>" + ftac3 + "</td><td>" + fpcc3 + "</td><td>" + rc3 + "</td></tr>";
+
+                row = row + "<tr class='silverTr'><td>3</td><td></td><td><b>EARTHWORKS</b></td><td></td><td class='colm1'>" + oqc4 + "</td><td class='colm2'>" + orc4 + "</td><td class='colm3'>" + oac4 + "</td><td class='colm4'>" + pq1c4 + "</td><td class='colm5'>" + pa2c4 + "</td><td class='colm6'>" + pq2c4 + "</td><td class='colm7'>" + pa1c4 + "</td><td class='colm8'>" + pq3c4 + "</td><td class='colm9'>" + pa3c4 + "</td><td>" + ppcc4 + "</td><td class='colm11'>" + ftqc4 + "</td><td class='colm12'>" + ftac4 + "</td><td>" + fpcc4 + "</td><td>" + rc4 + "</td></tr>";
+               console.log("orc4=========" + orc4.toFixed(6))
+
+                row = row + "<tr><td></td><td></td><td>Earthwork in excavation (Road, drain & Structure)</td><td>cumulative</td><td>" + oqc5 + "</td><td>" + orc5 + "</td><td>" + oac5 + "</td><td>" + pq1c5 + "</td><td>" + pa2c5 + "</td><td>" + pq2c5 + "</td><td>" + pa1c5 + "</td><td>" + pq3c5 + "</td><td>" + pa3c5 + "</td><td>" + ppcc5 + "</td><td>" + ftqc5 + "</td><td>" + ftac5 + "</td><td>" + fpcc5 + "</td><td>" + rc5 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td>Earthwork in filling</td><td>cumulative</td><td>" + oqc6 + "</td><td>" + orc6 + "</td><td>" + oac6 + "</td><td>" + pq1c6 + "</td><td>" + pa2c6 + "</td><td>" + pq2c6 + "</td><td>" + pa1c6 + "</td><td>" + pq3c6 + "</td><td>" + pa3c6 + "</td><td>" + ppcc6 + "</td><td>" + ftqc6 + "</td><td>" + ftac6 + "</td><td>" + fpcc6 + "</td><td>" + rc6 + "</td></tr>";
+
+                row = row + "<tr class='silverTr'><td>4</td><td></td><td><b>STRUCTURES (STABILITY, SIDE DRAINAGE AND CROSS DRAINAGE)</b></td><td></td><td  class='colm1'>" + oqc7 + "</td><td class='colm2'>" + orc7 + "</td><td class='colm3'>" + oac7 + "</td><td class='colm4'>" + pq1c7 + "</td><td class='colm5'>" + pa2c7 + "</td><td class='colm6'>" + pq2c7 + "</td><td class='colm7'>" + pa1c7 + "</td><td class='colm8'>" + pq3c7 + "</td><td class='colm9'>" + pa3c7 + "</td><td>" + ppcc7 + "</td><td class='colm12'>" + ftqc7 + "</td><td>" + ftac7 + "</td><td>" + fpcc7 + "</td><td>" + rc7 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td>Stone masonry</td><td>cumulative</td><td>" + oqc8 + "</td><td>" + orc8 + "</td><td>" + oac8 + "</td><td>" + pq1c8 + "</td><td>" + pa2c8 + "</td><td>" + pq2c8 + "</td><td>" + pa1c8 + "</td><td>" + pq3c8 + "</td><td>" + pa3c8 + "</td><td>" + ppcc8 + "</td><td>" + ftqc8 + "</td><td>" + ftac8 + "</td><td>" + fpcc8 + "</td><td>" + rc8 + "</td></tr>";
+               
+                row = row + "<tr><td></td><td></td><td>Gabion</td><td>cumulative</td><td>" + oqc9 + "</td><td>" + orc9 + "</td><td>" + oac9 + "</td><td>" + pq1c9 + "</td><td>" + pa2c9 + "</td><td>" + pq2c9 + "</td><td>" + pa1c9 + "</td><td>" + pq3c9 + "</td><td>" + pa3c9 + "</td><td>" + ppcc9 + "</td><td>" + ftqc9 + "</td><td>" + ftac9 + "</td><td>" + fpcc9 + "</td><td>" + rc9 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td>PCC/RCC</td><td>cumulative</td><td>" + oqc10 + "</td><td>" + orc10 + "</td><td>" + oac10 + "</td><td>" + pq2c10 + "</td><td>" + pa2c10 + "</td><td>" + pq1c10 + "</td><td>" + pa1c10 + "</td><td>" + pq3c10 + "</td><td>" + pa3c10 + "</td><td>" + ppcc10 + "</td><td>" + ftqc10 + "</td><td>" + ftac10 + "</td><td>" + fpcc10 + "</td><td>" + rc10 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td>RCC hume pipe</td><td></td><td>" + oqc11 + "</td><td>" + orc11 + "</td><td>" + oac11 + "</td><td>" + pq2c11 + "</td><td>" + pa1c11 + "</td><td>" + pq1c11 + "</td><td>" + pa2c11 + "</td><td>" + pq3c11 + "</td><td>" + pa3c11 + "</td><td>" + ppcc11 + "</td><td>" + ftqc11 + "</td><td>" + ftac11 + "</td><td>" + fpcc11 + "</td><td>" + rc11 + "</td></tr>";
+
+                row = row + "<tr class='silverTr'><td>5</td><td></td><td><b>PAVEMENT WORKS</b></td><td></td><td  class='colm1'>" + oqc12 + "</td><td class='colm2'>" + orc12 + "</td><td class='colm3'>" + oac12 + "</td><td class='colm4'>" + pq1c12 + "</td><td class='colm5'>" + pa2c12 + "</td><td class='colm6'>" + pq2c12 + "</td><td class='colm7'>" + pa1c12 + "</td><td class='colm8'>" + pq3c12 + "</td><td class='colm9'>" + pa3c12 + "</td><td>" + ppcc12 + "</td><td class='colm11'>" + ftqc12 + "</td><td class='colm12'>" + ftac12 + "</td><td>" + fpcc12 + "</td><td>" + rc12 + "</td></tr>";
+                
+                row = row + "<tr><td></td><td></td><td>Subbase</td><td>cumulative</td><td>" + oqc13 + "</td><td>" + orc13 + "</td><td>" + oac13 + "</td><td>" + pq1c13 + "</td><td>" + pa2c13 + "</td><td>" + pq2c13 + "</td><td>" + pa1c13 + "</td><td>" + pq3c13 + "</td><td>" + pa3c13 + "</td><td>" + ppcc13 + "</td><td>" + ftqc13 + "</td><td>" + ftac13 + "</td><td>" + fpcc13 + "</td><td>" + rc13 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td>Crushed stones base</td><td>cumulative</td><td>" + oqc14 + "</td><td>" + orc14 + "</td><td>" + oac14 + "</td><td>" + pq1c14 + "</td><td>" + pa2c14 + "</td><td>" + pq2c14 + "</td><td>" + pa1c14 + "</td><td>" + pq3c14 + "</td><td>" + pa3c14 + "</td><td>" + ppcc14 + "</td><td>" + ftqc14 + "</td><td>" + ftac14 + "</td><td>" + fpcc14 + "</td><td>" + rc14 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td>premix bituminous carpeting</td><td>cumulative</td><td>" + oqc15 + "</td><td>" + orc15 + "</td><td>" + oac15 + "</td><td>" + pq1c15 + "</td><td>" + pa2c15 + "</td><td>" + pq2c15 + "</td><td>" + pa1c15 + "</td><td>" + pq3c15 + "</td><td>" + pa3c15 + "</td><td>" + ppcc15 + "</td><td>" + ftqc15 + "</td><td>" + ftac15 + "</td><td>" + fpcc15 + "</td><td>" + rc15 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td>DBST</td><td></td><td>" + oqc16 + "</td><td>" + orc16 + "</td><td>" + oac16 + "</td><td>" + pq1c16 + "</td><td>" + pa2c16 + "</td><td>" + pq2c16 + "</td><td>" + pa1c16 + "</td><td>" + pq3c16 + "</td><td>" + pa3c16 + "</td><td>" + ppcc16 + "</td><td>" + ftqc16 + "</td><td>" + ftac16 + "</td><td>" + fpcc16 + "</td><td>" + rc16 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td>Asphalt (bituminous) concrete</td><td>cumulative</td><td>" + oqc17 + "</td><td>" + orc17 + "</td><td>" + oac17 + "</td><td>" + pq1c17 + "</td><td>" + pa2c17 + "</td><td>" + pq2c17 + "</td><td>" + pa1c17 + "</td><td>" + pq3c17 + "</td><td>" + pa3c17 + "</td><td>" + ppcc17 + "</td><td>" + ftqc17 + "</td><td>" + ftac17 + "</td><td>" + fpcc17 + "</td><td>" + rc17 + "</td></tr>";
+
+                row = row + "<tr class='silverTr'><td>6</td><td></td><td><b>ROAD FURNITURE AND TRAFFIC SAFETY MEASURES</b></td><td></td><td  class='colm1'>" + oqc18 + "</td><td class='colm2'>" + orc18 + "</td><td class='colm3'>" + oac18 + "</td><td class='colm4'>" + pq1c18 + "</td><td class='colm5'>" + pa2c18 + "</td><td class='colm6'>" + pq2c18 + "</td><td class='colm7'>" + pa1c18 + "</td><td class='colm8'>" + pq3c18 + "</td><td class='colm9'>" + pa3c18 + "</td><td>" + ppcc18 + "</td><td class='colm11'>" + ftqc18 + "</td><td class='colm12'>" + ftac18 + "</td><td>" + fpcc18 + "</td><td>" + rc18 + "</td></tr>";
+
+                row = row + "<tr class='silverTr'><td>7</td><td></td><td><b>BIO-ENGINEERING WORKS</b></td><td>PS</td><td  class='colm1'>" + oqc19 + "</td><td class='colm2'>" + orc19 + "</td><td class='colm3'>" + oac19 + "</td><td class='colm4'>" + pq1c19 + "</td><td class='colm5'>" + pa2c19 + "</td><td class='colm6'>" + pq2c19 + "</td><td class='colm7'>" + pa1c19 + "</td><td class='colm8'>" + pq3c19 + "</td><td class='colm9'>" + pa3c19 + "</td><td>" + ppcc19 + "</td><td class='colm11'>" + ftqc19 + "</td><td class='colm12'>" + ftac19 + "</td><td>" + fpcc19 + "</td><td>" + rc19 + "</td></tr>";
+
+                row = row + "<tr class='silverTr'><td>8</td><td></td><td><b>DAY WORKS</b></td><td></td><td  class='colm1'>" + oqc20 + "</td><td class='colm2'>" + orc20 + "</td><td class='colm3'>" + oac20 + "</td><td class='colm4'>" + pq1c20 + "</td><td class='colm5'>" + pa2c20 + "</td><td class='colm6'>" + pq2c20 + "</td><td class='colm7'>" + pa1c20 + "</td><td class='colm8'>" + pq3c20 + "</td><td class='colm9'>" + pa3c20 + "</td><td>" + ppcc20 + "</td><td class='colm11'>" + ftqc20 + "</td><td class='colm12'>" + ftac20 + "</td><td>" + fpcc20 + "</td><td>" + rc20 + "</td></tr>";
+                row = row + "<tr><td></td><td></td><td><b>Provide Built up Drawing as completed</b></td><td>LS</td><td  class='colm1'>" + oqc21 + "</td><td>" + orc21 + "</td><td>" + oac21 + "</td><td>" + pq1c21 + "</td><td>" + pa2c21 + "</td><td>" + pq2c21 + "</td><td>" + pa1c21 + "</td><td>" + pq3c21 + "</td><td>" + pa3c21 + "</td><td>" + ppcc21 + "</td><td>" + ftqc21 + "</td><td>" + ftac21 + "</td><td>" + fpcc21 + "</td><td>" + rc21 + "</td></tr>";
+                
+
+                ///////
+
+                row = row + "<tr class='silverTr'><td>9</td><td></td><td><b>PROVISION SUM</b></td><td></td><td  class='colm1'>" + oqc22 + "</td><td class='colm2'>" + orc22 + "</td><td class='colm3'>" + oac22 + "</td><td class='colm4'>" + pq1c22 + "</td><td class='colm5'>" + pa2c22 + "</td><td class='colm6'>" + pq2c22 + "</td><td class='colm7'>" + pa1c22 + "</td><td class='colm8'>" + pq3c22 + "</td><td class='colm9'>" + pa3c22 + "</td><td>" + ppcc22 + "</td><td class='colm11'>" + ftqc22 + "</td><td class='colm12'>" + ftac22 + "</td><td>" + fpcc22 + "</td><td>" + rc22 + "</td></tr>";
+                
+                // ///TOTAL
+                // row = row + "<tr class='silverTr'><td>9</td><td></td><td><b>TOTAL</b></td><td></td><td  class='colm1'>" + t1 + "</td><td class='colm2'>" + t2 + "</td><td class='colm3'>" + t3 + "</td><td class='colm4'>" + t4 + "</td><td class='colm5'>" + t5 + "</td><td class='colm6'>" + t6 + "</td><td class='colm7'>" + t7 + "</td><td class='colm8'>" + t8 + "</td><td class='colm9'>" + t9 + "</td><td>" + t10 + "</td><td class='colm11'>" + t11 + "</td><td class='colm12'>" + t12 + "</td><td>" + t13 + "</td><td>" + t14 + "</td></tr>";
+                
+                
+                $(".reporttable_" + i).append(row);
+            };
+
+            if (ouLevel == 1) {
+                for (var p = 0; p < ouLeveldata.children.length; p++) {
+                    var tempOu = ouLeveldata.children[p].id;
+                    var tempOuData = checkOuLevel(tempOu);
+                    if (tempOuData.children.length !== 0) {
+                        for (var l = 0; l < tempOuData.children.length; l++) {
+                            var tempOu2 = tempOuData.children[l].id;
+                            var tempOuData2 = checkOuLevel(tempOu2);
+                            if (tempOuData2.children.length !== 0) {
+                                for (var m = 0; m < tempOuData2.children.length; m++) {
+                                    ouu = tempOuData2.children[m].id;
+                                    printData(ouu, index);
+                                    index++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            else if (ouLevel == 2) {
+
+                for (var p = 0; p < ouLeveldata.children.length; p++) {
+                    var tempOu = ouLeveldata.children[p].id;
+                    var tempOuData = checkOuLevel(tempOu);
+                    if (tempOuData.children.length !== 0) {
+                        for (var l = 0; l < tempOuData.children.length; l++) {
+                            ouu = tempOuData.children[l].id;
+                            printData(ouu, index);
+                            index++;
+                        }
+                    }
+                }
+            }
+            else if (ouLevel == 3) {
+                for (var p = 0; p < ouLeveldata.children.length; p++) {
+                    ouu = ouLeveldata.children[p].id;
+                    printData(ouu, index);
+                    index++;
+                }
+            }
+            else if (ouLevel == 4) {
+                printData(ou, 1);
+            }
+
+
+        });
+    </script>
+</head>
+
+<body>
+    <div id="body">
+        <center><button id="export">Export to Excel</button></center>
+        <br>
+        <table class="table table-bordered" width="167%">
+            <thead>
+                <tr class="heading">
+                    <td colspan="1" rowspan="3"><img src="../dhis-web-commons/security/DRILP_Logo.jpg" width="90%" height="400%"></td>
+                    <td colspan="4" rowspan="1">
+                        <p style="font-size:16px;">Earthquake Emergency Assistance Project (EEAP)</p>
+                    </td>
+                    <td colspan="1" rowspan="3"></td>
+                </tr>
+                <tr class="heading">
+                    <td colspan="4" rowspan="1">
+                        <p style="font-size:20px;">Rehabilitation and Reconstruction of District Roads</p>
+                    </td>
+                </tr>
+                <tr class="heading">
+                    <td colspan="4" rowspan="1">
+                        <p style="font-size:16px;">Physical vs Financial Progress</p>
+                    </td>
+                </tr>
+            </thead>
+        </table>
+        <table id="report_table" class="tableattach"></table>
+        <br>
+    </div>
+</body>
+
+</html>

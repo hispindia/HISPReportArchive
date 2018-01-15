@@ -1,0 +1,427 @@
+<html>
+
+<head>
+    <title>HIV Care and ART Treatment-Individual Patient Summary</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <style>
+        .heading1 {
+            background-color: gray;
+        }
+
+        .heading2 {
+            background-color: lightgray;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td {
+            border: 1px solid black;
+            height: 30px;
+            width: 280px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .noBorder td {
+            border: none;
+            background: lightgray;
+        }
+
+        table thead tr td {
+            height: 30px;
+            min-width: 100px;
+        }
+
+        .reporttable {
+            border-collapse: collapse;
+        }
+    </style>
+    <script>
+        var getTEIdata = function (tei) {
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/trackedEntityInstances/" + tei + ".json",
+                success: function (data2) {
+                    console.log(data2);
+                },
+            });
+        };
+
+        var checkOuLevel = function (ou) {
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/organisationUnits/" + ou + ".json",
+                success: function (data) {
+                    json = data;
+
+                }
+            });
+            return json;
+        };
+
+        var getLatestArtData = function (tei) {
+            var response;
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/events.json?&program=L78QzNqadTV&programStage=YRSdePjzzfs&trackedEntityInstance=" + tei,
+                success: function (data) {
+                    console.log(data);
+                    if (data.events.length == 0) {
+                        response = 0;
+                    }
+                    else if (data.events.length == 1) {
+                        response = data.events[0];
+                    }
+                    else {
+                        var LatestEvent = data.events[0];
+                        for (var k = 0; k < data.events.length - 1; k++) {
+                            if (data.events[k].eventDate) {
+                                var date1 = data.events[k].eventDate;
+                                var first = date1.split('T')[0];
+                                var date2 = data.events[k + 1].eventDate;
+                                var second = date2.split('T')[0];
+                                if (new Date(first) > new Date(second)) {
+                                    LatestEvent = data.events[k];
+                                }
+                                else {
+                                    LatestEvent = data.events[k + 1];
+                                }
+                            }
+                        }
+                        response = LatestEvent;
+                    }
+                }
+            });
+            return response;
+        };
+
+        var getRetentionName = function (code) {
+            var name = "";
+            if (code == "on_treatment") { name = "On treatment" }
+            if (code == "stop_treatment") { name = "Stop treatment" }
+            if (code == "treatment_restarted") { name = "Treatment restarted" }
+            if (code == "transfer_out") { name = "Transfer out" }
+            return name;
+        };
+
+        var getLatestMedicalData = function (tei) {
+            var response;
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/events.json?&program=L78QzNqadTV&programStage=zRUw1avYEvI&trackedEntityInstance=" + tei,
+                success: function (data) {
+                    //  console.log(data);
+                    if (data.events.length == 0) {
+                        response = 0;
+                    }
+                    else if (data.events.length == 1) {
+                        response = data.events[0];
+                    }
+                    else {
+                        var LatestEvent = data.events[0];
+                        for (var k = 0; k < data.events.length - 1; k++) {
+
+                            if (data.events[k].eventDate) {
+                                var date1 = data.events[k].eventDate;
+                                var first = date1.split('T')[0];
+                                var date2 = data.events[k + 1].eventDate;
+                                var second = date2.split('T')[0];
+                                if (new Date(first) > new Date(second)) {
+                                    LatestEvent = data.events[k];
+                                }
+                                else {
+                                    LatestEvent = data.events[k + 1];
+                                }
+                            }
+                        }
+                        response = LatestEvent;
+                    }
+                }
+            });
+            return response;
+        };
+
+        var getLatestEidData = function (tei) {
+            var response;
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/events.json?&program=L78QzNqadTV&programStage=DgAKrnlkpHc&trackedEntityInstance=" + tei,
+                success: function (data) {
+                    //  console.log(data);
+                    if (data.events.length == 0) {
+                        response = 0;
+                    }
+                    else if (data.events.length == 1) {
+                        response = data.events[0];
+                    }
+                    else {
+                        var LatestEvent = data.events[0];
+                        for (var k = 0; k < data.events.length - 1; k++) {
+                            if (data.events[k].eventDate) {
+                                var date1 = data.events[k].eventDate;
+                                var first = date1.split('T')[0];
+                                var date2 = data.events[k + 1].eventDate;
+                                var second = date2.split('T')[0];
+                                if (new Date(first) > new Date(second)) {
+                                    LatestEvent = data.events[k];
+                                }
+                                else {
+                                    LatestEvent = data.events[k + 1];
+                                }
+                            }
+                        }
+                        response = LatestEvent;
+                    }
+                }
+            });
+            return response;
+        };
+        var getLatestARTHIVData = function (tei) {
+            var response;
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/events.json?&program=L78QzNqadTV&programStage=zLxGw3kEplq&trackedEntityInstance=" + tei,
+                success: function (data) {
+                    //  console.log(data);
+                    if (data.events.length == 0) {
+                        response = 0;
+                    }
+                    else if (data.events.length == 1) {
+                        response = data.events[0];
+                    }
+                    else {
+                        var LatestEvent = data.events[0];
+                        for (var k = 0; k < data.events.length - 1; k++) {
+                            if (data.events[k].eventDate) {
+                                var date1 = data.events[k].eventDate;
+                                var first = date1.split('T')[0];
+                                var date2 = data.events[k + 1].eventDate;
+                                var second = date2.split('T')[0];
+                                if (new Date(first) > new Date(second)) {
+                                    LatestEvent = data.events[k];
+                                }
+                                else {
+                                    LatestEvent = data.events[k + 1];
+                                }
+                            }
+                        }
+                        response = LatestEvent;
+                    }
+                }
+            });
+            return response;
+        };
+
+
+        var getTeidata = function (tei) {
+            var response;
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/trackedEntityInstances/" + tei + ".json",
+                success: function (data) {
+                    //console.log(data);
+                    for (var p = 0; p < data.attributes.length; p++) {
+                        if (data.attributes[p].displayName == "Client code") {
+                            response = data.attributes[p].value;
+                        }
+                    }
+                }
+            });
+            return response;
+        };
+        var getOntimePickup = function (data) {
+            var date1 = data.eventDate;
+            var first = date1.split('T')[0];
+            var date2 = data.dueDate;
+            var second = date2.split('T')[0];
+
+            if (new Date(first) > new Date(second)) {
+                return "No";
+            }
+            else {
+                return "Yes";
+            }
+        };
+        var getEnrollments = function (ouu) {
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/enrollments.json?&program=L78QzNqadTV&ou=" + ouu + "&programStartDate=" + startDate + "&programEndDate=" + endDate,
+                success: function (data) {
+                    var data = data.enrollments;
+                    var row = "<tbody>";
+                    for (var i = 0; i < data.length; i++) {
+                        var x = data[i].enrollmentDate;
+                        enrollmentDate = x.split('T')[0];
+                        orgUnit = data[i].orgUnitName;
+                        tei = data[i].trackedEntityInstance;
+                        var clientCode = getTeidata(tei);
+                        var response = getLatestArtData(tei);
+                        var responseM = getLatestMedicalData(tei);
+                        var responseE = getLatestEidData(tei);
+                        var responseAH = getLatestARTHIVData(tei);
+                        // console.log(enrollmentDate, " ", orgUnit, " ", tei, " ", response);
+                       
+                        var ebd1 = "", ebd = "";
+                        var ebd2 = "";
+                        var tal = "";
+
+                        var etd = "No", rr = "No", crap = "No";
+
+                        if (responseAH != 0 && responseAH !== undefined) {
+
+                            for (var n = 0; n < responseAH.dataValues.length; n++) {
+                                if (responseAH.dataValues[n].dataElement == "duIUHIbjXd8") {
+                                    ebd1 = responseAH.dataValues[n].value;
+                                }
+                            }
+                        }
+
+                        if (responseM != 0 && responseM !== undefined) {
+
+                            for (var n = 0; n < responseM.dataValues.length; n++) {
+                                if (responseM.dataValues[n].dataElement == "hZw6mBxzobR") {
+                                    ebd2 = responseM.dataValues[n].value;
+                                }
+                            }
+                        }
+
+                        if (responseE != 0 && responseE !== undefined) {
+
+
+                            for (var n = 0; n < responseE.dataValues.length; n++) {
+                                if (responseE.dataValues[n].dataElement == "uhf06KXmbJE" && responseE.dataValues[n].value == "true") {
+                                    etd = "Yes";
+                                }
+                                if (responseE.dataValues[n].dataElement == "vITDgYIsmrq" && responseE.dataValues[n].value == "true") {
+                                    rr = "Yes";
+                                }
+                                if (responseE.dataValues[n].dataElement == "KrHYb9bkF6O" && responseE.dataValues[n].value == "true") {
+                                    crap = "Yes";
+                                }
+                            }
+                        }
+
+                        if (response != 0 && response !== undefined) {
+                            var onTimePickup = getOntimePickup(response);
+                            var retention = "", vl = "";
+                            var talART = 0;
+                            var talM = 0;
+                            for (var n = 0; n < response.dataValues.length; n++) {
+                                if (response.dataValues[n].dataElement == "WpBa1L6xxPC") {
+                                    retention = getRetentionName(response.dataValues[n].value);
+                                }
+                                if (response.dataValues[n].dataElement == "UFHKzaHPnm9") {
+                                    talART = parseInt(response.dataValues[n].value);
+                                }
+                                if (response.dataValues[n].dataElement == "ji97ypBaP2i") {
+                                    vl = response.dataValues[n].value;
+                                }
+                                if (response.dataValues[n].dataElement == "ZbS1V1OoMvT") {
+                                    talM = parseInt(response.dataValues[n].value);
+                                }
+                            }
+                            if (ebd1 == "positive" && ebd2 == "alive") {
+                                ebd = "Yes";
+                            }
+                            if (talART != 0 && talM != 0) {
+                                tal = (talART / talM) * 100;
+                            }
+
+
+                            row = row + "<tr><td>" + clientCode + "</td><td>" + enrollmentDate + "</td><td>" + orgUnit + "</td><td>" + onTimePickup + "</td><td>" + retention + "</td><td>" + tal + "</td><td>" + vl + "</td><td>" + ebd + "</td><td>" + etd + "</td><td>" + rr + "</td><td>" + crap + "</td></tr>";
+                        }
+                    }
+                    row = row + "</tbody>";
+                    $(".reporttable").append(row);
+                },
+            });
+        };
+
+        var submit = function () {
+            startDate = document.getElementById("start").value;
+            endDate = document.getElementById("end").value;
+            $(".reporttable tbody").remove();
+            $(".reporttable tbody").detach();
+
+            if (ouLevel == 3) {
+
+                for (var p = 0; p < ouLeveldata.children.length; p++) {
+                    var tempOu = ouLeveldata.children[p].id;
+                    var tempOuData = checkOuLevel(tempOu);
+                    if (tempOuData.children.length !== 0) {
+                        for (var l = 0; l < tempOuData.children.length; l++) {
+                            ouu = tempOuData.children[l].id;
+                            getEnrollments(ouu);
+                        }
+                    }
+                }
+            }
+            else if (ouLevel == 4) {
+                for (var p = 0; p < ouLeveldata.children.length; p++) {
+                    ouu = ouLeveldata.children[p].id;
+                    getEnrollments(ouu);
+                }
+            }
+            else if (ouLevel == 5) {
+                getEnrollments(ou);
+            }
+
+
+        };
+
+        var url = window.location.href;
+        var ou1 = url.split("&")[1];
+        var ou = ou1.split("=")[1];
+        var enrollmentDate, orgUnit, tei;
+        var ouLeveldata = checkOuLevel(ou);
+        var ouLevel = ouLeveldata.level;
+        var startDate;
+        var endDate;
+    </script>
+</head>
+
+<body>
+    <div id="main">
+        <center> Start Date :
+            <input type="date" id="start" required> End Date :
+            <input type="date" id="end" required>
+            <br>
+            <br>
+            <button onClick="submit()" id="tap">Submit</button>
+        </center>
+        <br>
+        <br>
+        <table class="table table-bordered reporttable" width="100%" id="report_table" border='1'>
+            <thead>
+                <tr class="heading1">
+                    <td colspan="11">HIV Care and ART Treatment-Individual Patient Summary</td>
+                </tr>
+                <tr class="heading2">
+                    <td>Client Code</td>
+                    <td>Registration Date</td>
+                    <td>Registration Organisation Unit</td>
+                    <td>On time pill pick up</td>
+                    <td>Retention in treatment</td>
+                    <td>Treatment adherence level</td>
+                    <td>Viral load</td>
+                    <td>Exposed baby delivered</td>
+                    <td>EID Test Done</td>
+                    <td>Result received</td>
+                    <td>Received ARV Prophylaxis</td>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</body>
+
+</html>

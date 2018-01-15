@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" type="text/javascript"></script>
+    <style>
+        .heading td {
+            background: #1D9FDF;
+            color: white;
+            text-align: center;
+            border: none;
+        }
+
+        #heading {
+            text-align: center;
+        }
+
+        .heading2 {
+            text-align: center;
+            background: gray;
+            border: 1px solid black;
+            height: 30px;
+            padding-bottom: 10px;
+            margin-top: 10px;
+        }
+
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td {
+            border: 1px solid black;
+            height: 30px;
+            width: 280px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .noBorder td {
+            border: none;
+            background: lightgray;
+        }
+
+        table thead tr td {
+            background: lightgray;
+            height: 30px;
+            min-width: 100px;
+        }
+
+        .reporttable {
+            border-collapse: collapse;
+        }
+
+        #export {
+            margin-left: 90px;
+        }
+    </style>
+
+
+    <script type="text/javascript">
+        var json = "";
+        var checkOuLevel = function (ou) {
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/organisationUnits/" + ou + ".json",
+                success: function (data) {
+                    json = data;
+
+                }
+            });
+            return json;
+        };
+        var district = "", sub = "", ncbc = "";
+        var getFirstThreeColumn = function (ou, level) {
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../api/organisationUnits/" + ou + ".json?fields=ancestors[id,name,level],displayName",
+                success: function (data) {
+                    if (level == 3) { 
+                        sub = data.displayName;
+                        ncbc = "";
+                        for (var i = 0; i < data.ancestors.length; i++) {
+                            if (data.ancestors[i].level == 2) {
+                                district = data.ancestors[i].name;
+                            }
+                        }
+                     }
+                    else if (level == 4) {
+                        for (var i = 0; i < data.ancestors.length; i++) {
+                            if (data.ancestors[i].level == 2) {
+                                district = data.ancestors[i].name;
+                            }
+                            if (data.ancestors[i].level == 3) {
+                                sub = data.ancestors[i].name;
+                            }
+                            ncbc = data.displayName;
+
+                        }
+                    }
+                    else { }
+
+
+
+
+                }
+            });
+            return district, sub, ncbc;
+        };
+
+        var getPeriodArray = function (pe, ouPe) {
+            var array = "";
+            pe = parseInt(pe);
+
+            while (pe != 201700) {
+                array = array + pe + ";";
+                pe -= 1;
+            }
+            array = array + ouPe;
+            return array;
+        };
+        var month;
+        var getMonth = function (a) {
+            if (a == "1" || a == "01") { month = "January" }
+            if (a == "2" || a == "02") { month = "February" }
+            if (a == "3" || a == "03") { month = "March" }
+            if (a == "4" || a == "04") { month = "April" }
+            if (a == "5" || a == "05") { month = "May" }
+            if (a == "6" || a == "06") { month = "June" }
+            if (a == "7" || a == "07") { month = "July" }
+            if (a == "8" || a == "08") { month = "August" }
+            if (a == "9" || a == "09") { month = "September" }
+            if (a == "10") { month = "october" }
+            if (a == "11") { month = "November" }
+            if (a == "12") { month = "December" }
+        };
+
+        $(document).ready(function () {
+
+            $("#export").click(function (e) {
+                e.preventDefault();
+
+                //getting data from our table
+                var data_type = 'data:application/vnd.ms-excel';
+                var table_div = document.getElementById('report_table');
+                var table_html = table_div.outerHTML.replace(/ /g, '%20');
+
+                var a = document.createElement('a');
+                a.href = data_type + ', ' + table_html;
+                a.download = 'Lis of communication Report II.xls';
+                a.click();
+            });
+
+
+            var url = window.location.href;
+            var pe1 = url.split("&")[1];
+            var pe = pe1.split("=")[1];
+            var monthCode = pe.substr(4, 6);
+            getMonth(monthCode);
+            var year = pe.substr(0, 4);
+            var ou1 = url.split("&")[2];
+            var ou = ou1.split("=")[1];
+            var ouLeveldata = checkOuLevel(ou);
+            var ouLevel = ouLeveldata.level;
+            var index = 1;
+            var periodArray = getPeriodArray(pe);
+
+            var col1 = "", col2 = "", col3 = "", col4 = "", col5 = "", dataelement_id = "", event_id = "", event_id_value = "", uploadfile = "Uploaded File", attachmentvalue, typeofletter = "";
+
+            var printData = function (ouu, level) {
+                var json1 = "";
+
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    url: "../api/26/analytics/events/query/GgScUrEmVne.json?dimension=pe:" + pe + "&dimension=ou:" + ouu + "&dimension=jMVD9mmoIgu&dimension=oZL6uqwN2E0&dimension=iDZMEwwjDG1&dimension=h8Is9QYKyf8&dimension=EwJn4UrEe3M&dimension=wcDD3FD1TyI&dimension=H3GO0BVs14i&stage=GIHtkgzZofH&displayProperty=SHORTNAME&outputType=EVENT&pageSize=100&skipPaging=FALSE",
+
+                    success: function (data) {
+                        json1 = data;
+                        for (var i = 0; i < data.headers.length; i++) {
+
+                            if (data.headers[i].column == "LoC_Letter issued date") {
+                                col1 = i;
+                            }
+                            if (data.headers[i].column == "LoC_Subject of letter") {
+                                col2 = i;
+                            }
+                            if (data.headers[i].column == "LoC_Attachment") {
+                                col3 = i;
+                                dataelement_id = data.headers[i].name;
+                            }
+                            if (data.headers[i].column == "LoC_Contents") {
+                                col4 = i;
+                            }
+                            if (data.headers[i].column == "LoC_Type of letter") {
+                                col5 = i;
+                            }
+                            if (data.headers[i].column == "Event") {
+                                event_id = i;
+                            }
+
+                        }
+                    }
+                });
+
+
+                /*var download1 = function () {
+                      var event = document.getElementById("link").value;
+                      window.open('../api/events/files?eventUid=' + event_id_value + '&dataElementUid=' + dataelement_id,);
+                  
+                  };*/
+
+                $("a#link").click(function (event) {
+                    // var event = document.getElementById('link').value;
+                    var event = this.getAttribute('value')
+                    // alert(a);
+                    window.open('../api/events/files?eventUid=' + event + '&dataElementUid=' + dataelement_id, '');
+                });
+
+
+                getFirstThreeColumn(ouu, level);
+                for (var j = 0; j < json1.rows.length; j++) {
+
+                    event_id_value = json1.rows[j][event_id];
+                    attachmentvalue = json1.rows[j][col3];
+                    typeofletter = json1.rows[j][col5];
+
+                    if (typeofletter === "Incoming letters (to the consultants)") {
+                        var row = "<tr>";
+                        row = row + "<td>" + district + "</td><td>" + sub + "</td><td>" + ncbc + "</td>";
+                        row = row + "<td>" + json1.rows[j][col4] + "</td><td>" + json1.rows[j][col1] + "</td><td>" + json1.rows[j][col2] + "</td>";
+                        if (attachmentvalue == "") {
+                            row = row + "<td></td>";
+                            row = row + "</tr>";
+                            $('.reporttable1').append(row);
+                        }
+                        else {
+                            row = row + "<td><a id='link' value=" + event_id_value + " href= '#'>" + uploadfile + "</a></td>";
+                            row = row + "</tr>";
+                            $('.reporttable1').append(row);
+                        }
+                    }
+                    else {
+                        var row = "<tr>";
+                        row = row + "<td>" + district + "</td><td>" + sub + "</td><td>" + ncbc + "</td>";
+                        row = row + "<td>" + json1.rows[j][col4] + "</td><td>" + json1.rows[j][col1] + "</td><td>" + json1.rows[j][col2] + "</td>";
+                        if (attachmentvalue == "") {
+                            row = row + "<td></td>";
+                            row = row + "</tr>";
+                            $('.reporttable').append(row);
+                        }
+                        else {
+                            row = row + "<td><a id='link' value=" + event_id_value + " href= '#'>" + uploadfile + "</a></td>";
+                            row = row + "</tr>";
+                            $('.reporttable').append(row);
+                        }
+                    }
+
+
+
+                }
+
+            };
+
+            if (ouLevel == 1) {
+                for (var p = 0; p < ouLeveldata.children.length; p++) {
+                    var tempOu = ouLeveldata.children[p].id;
+                    var tempOuData = checkOuLevel(tempOu);
+                    if (tempOuData.children.length !== 0) {
+                        for (var l = 0; l < tempOuData.children.length; l++) {
+                            var tempOu2 = tempOuData.children[l].id;
+                            var tempOuData2 = checkOuLevel(tempOu2);
+                            if (tempOuData2.children.length !== 0) {
+                                printData(tempOuData2.id, 3, index);
+                                index++;
+                                for (var m = 0; m < tempOuData2.children.length; m++) {
+                                    ouu = tempOuData2.children[m].id;
+                                    printData(ouu, 4, index);
+                                    index++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            else if (ouLevel == 2) {
+
+                for (var p = 0; p < ouLeveldata.children.length; p++) {
+                    var tempOu = ouLeveldata.children[p].id;
+                    var tempOuData = checkOuLevel(tempOu);
+                    if (tempOuData.children.length !== 0) {
+                        printData(tempOuData.id, 3, index);
+                        index++;
+                        for (var l = 0; l < tempOuData.children.length; l++) {
+                            ouu = tempOuData.children[l].id;
+                            printData(ouu, 4, index);
+                            index++;
+                        }
+                    }
+                }
+            }
+            else if (ouLevel == 3) {
+                printData(ou, 3, index);
+                index++;
+                for (var p = 0; p < ouLeveldata.children.length; p++) {
+                    ouu = ouLeveldata.children[p].id;
+                    printData(ouu, 4, index);
+                    index++;
+                }
+            }
+            else if (ouLevel == 4) {
+                printData(ou, 4);
+            }
+
+
+        });
+    </script>
+</head>
+
+<body>
+    <button id="export">Export to Excel</button>
+    <table class="table table-bordered" width="100%" id="report_table" border='1'>
+        <thead bgcolor="#1D9FDF">
+            <tr class="heading" border="0" bgcolor="#1D9FDF">
+                <td colspan="3" rowspan="3" border="0" bgcolor="#1D9FDF">
+                    <img src="../dhis-web-commons/security/DRILP_Logo.jpg" width="120px" height="70px">
+                </td>
+                <td colspan="8" rowspan="1" border="0" bgcolor="#1D9FDF">
+                    <p style="font-size:16px;">Earthquake Emergency Assistance Project (EEAP)</p>
+                </td>
+                <td colspan="3" rowspan="3" border="0" bgcolor="#1D9FDF"></td>
+            </tr>
+            <tr class="heading" border="no0ne" bgcolor="#1D9FDF">
+                <td colspan="8" rowspan="1" border="0" bgcolor="#1D9FDF">
+                    <p style="font-size:20px;">Rehabilitation and Reconstruction of District Roads</p>
+                </td>
+            </tr>
+            <tr class="heading" border="0" bgcolor="#1D9FDF">
+                <td colspan="8" rowspan="1" border="0" bgcolor="#1D9FDF">
+                    <p style="font-size:16px;">List of Communication Report II</p>
+                </td>
+            </tr>
+
+            <tr>
+
+                <table class="table table-bordered reporttable" width="100%">
+                    <div class="heading2" width="100%">
+                        <p style="font-size:16px;">
+                            <b>Outgoing letters</b>
+                        </p>
+                    </div>
+                    <tr>
+                        <td>District</td>
+                        <td>Sub-project</td>
+                        <td>Contract</td>
+                        <td>Contents</td>
+                        <td>Letter Issued Date</td>
+                        <td>Subject of the letter</td>
+                        <td>Link to attachment</td>
+                    </tr>
+
+                </table>
+
+            </tr>
+            <tr>
+
+
+                <table class="table table-bordered reporttable1" width="100%">
+                    <div class="heading2" width="100%">
+                        <p style="font-size:16px;">
+                            <b>Incoming letters</b>
+                        </p>
+                    </div>
+                    <tr>
+                        <td>District</td>
+                        <td>Sub-project</td>
+                        <td>Contract</td>
+                        <td>Contents</td>
+                        <td>Letter Issued Date</td>
+                        <td>Subject of the letter</td>
+                        <td>Link to attachment</td>
+                    </tr>
+                </table>
+
+            </tr>
+    </table>
+
+
+    <div id="mydiv">
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</body>
+
+</html>
