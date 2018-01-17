@@ -61,7 +61,7 @@
         var dd8 = "D4Z6XYfNQR9";
         var dd9 = "CqOIRxdVmay";
         var dd10 = "es15Sv05Nmb";
-        var totalevent, totalEndevent = 0, activeatendevent = 0;
+        var totalevent, totalEndevent = 0, activeatendevent = 0,exitpatients = 0;
         var hasFollowup3mon = 0;
         var LTFU6mon = 0;
         var LTFU12mon = 0;
@@ -320,7 +320,7 @@
             data.enrollments.forEach(function (element, index) {
                 var tei = element.trackedEntityInstance;
                 var count = 0, count2 = 0, count3 = 0, count4 = 0;
-                var flag6mon = 0;
+                var flag6mon = 0,countExit = 0;
                 var flag12mon = 0;
                 $.when(
                     $.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=HvBZokNtaEZ&trackedEntityInstance=" + tei + "&skipPaging=true&programEndDate=" + enddate, {
@@ -328,8 +328,13 @@
                     }),
                     $.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true", {
                         format: "json"
+                    }),
+                    $.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true&programStartDate="+ startdate +"&programEndDate=" + enddate, {
+                        format: "json"
                     })
-                ).then(function (data1, data2) {
+                ).then(function (data1, data2, data3) {
+
+                    // data1 api call
                     if (data2[0].events.length == 0) {
                         count = 1;
                     }
@@ -343,6 +348,16 @@
                         }
                     }
 
+                    //data3 api call
+                    if (data2[0].events.length == 0) {
+                        countExit = 0;
+                    }
+                    else{
+                        countExit = 1;
+                    }
+
+
+                    //data2 api call
                     if (data1[0].events.length == 0) {
                         count2 = 0;
                     }
@@ -417,10 +432,14 @@
                         if (count4 == 1 && count == 0) {
                             LTFU12mon++;
                         }
+                        if(countExit == 1){
+                            exitpatients++;
+                        }
                         document.getElementById('totalNumber2').innerHTML = hasFollowup3mon;
                         document.getElementById('totalNumber3').innerHTML = activeatendevent;
                         document.getElementById('totalNumber4').innerHTML = LTFU6mon;
                         document.getElementById('totalNumber5').innerHTML = LTFU12mon;
+                        document.getElementById('totalNumber6').innerHTML = activeatendevent + exitpatients;
                         if (data.enrollments.length - 1 == index) {
                             document.getElementById('loader').style.display = "none";
                         }
@@ -617,6 +636,10 @@ var totalEvents =0;
                 <tr>
                     <td style="width:50%">Total Patients</td>
                     <td style="width:50%" id="totalE"></td>
+                </tr>
+                <tr>
+                    <td style="width:50%">Total Active Patients + Exit patients during reporting period</td>
+                    <td style="width:50%" id="totalNumber6"></td>
                 </tr>
             </thead>
         </table>
