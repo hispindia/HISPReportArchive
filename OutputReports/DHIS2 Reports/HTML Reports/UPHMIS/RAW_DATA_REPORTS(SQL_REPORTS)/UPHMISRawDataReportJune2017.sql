@@ -2019,6 +2019,6 @@ from
    )
    sag3 
 group by
-   state , div, dis,dishmiscode, block, blockhmiscode,facility, facilityhmiscode,organisationunitid, tp, st, loc
+   state , div, dis,dishmiscode, block, blockhmiscode,facility, facilityhmiscode,organisationunitid, NIN, tp, st, loc
 order by
    state , div, dis, block, facility) TO '/home/uphmis/DB/RDreport/UPHMISRawDataReportJune17.csv' (format CSV, HEADER);
