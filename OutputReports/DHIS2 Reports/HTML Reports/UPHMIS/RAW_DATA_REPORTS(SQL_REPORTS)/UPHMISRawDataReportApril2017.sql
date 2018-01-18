@@ -18,7 +18,7 @@ from
 from
    timestamp '2017-04-01') + 1) 
    end
-   Financial_Year , state , div as Division, dis as District, block, facility, organisationunitid, NIN, st as Category, tp as Facility_Type, loc as Location,
+   Financial_Year , state , div as Division,  dis as District, dishmiscode as District_HMIS_Code, block, blockhmiscode as Block_HMIS_code, facility, facilityhmiscode as Facility_HMIS_Code, organisationunitid,NIN, st as Category, tp as Facility_Type, loc as Location,
    
    array_to_string(array_agg(de803), '') as "v01", array_to_string(array_agg(de804), '') as "v02", array_to_string(array_agg(de805), '') as "v03", array_to_string(array_agg(de806), '') as "v04",
    
@@ -944,11 +944,16 @@ from
       select
          state,
          div,
+		 
          dis,
+		 dishmiscode,
          block,
+		 blockhmiscode,
          facility,
+		 facilityhmiscode,
          organisationunitid,
 		 NIN,
+		
          tp,
          st,
          loc,
@@ -1272,7 +1277,7 @@ from
 				case when dataelementid = 7440911 and categoryoptioncomboid = 15 then sag2.value end v288,
 				case when dataelementid = 7167480 and categoryoptioncomboid = 15 then sag2.value end v289,
 				case when dataelementid = 1631028 and categoryoptioncomboid = 15 then sag2.value end v290,
-				case when dataelementid = 9023 and categoryoptioncomboid = 15 then sag2.value end v291,
+				case when dataelementid = 8990 and categoryoptioncomboid = 15 then sag2.value end v291,
 				case when dataelementid = 8988 and categoryoptioncomboid = 15 then sag2.value end v292,
 				case when dataelementid = 8989 and categoryoptioncomboid = 15 then sag2.value end v293,
 				case when dataelementid = 8970 and categoryoptioncomboid = 15 then sag2.value end v294,
@@ -1478,7 +1483,7 @@ from
 				case when dataelementid = 1630980 and categoryoptioncomboid =  15 then sag2.value end a179,
 				case when dataelementid = 1630894 and categoryoptioncomboid =  15 then sag2.value end a180,
 				case when dataelementid = 1630873 and categoryoptioncomboid =  15 then sag2.value end a181,
-				case when dataelementid = 8990 and categoryoptioncomboid =  15 then sag2.value end a182,
+				case when dataelementid = 9023 and categoryoptioncomboid =  15 then sag2.value end a182,
 				case when dataelementid = 8991 and categoryoptioncomboid =  15 then sag2.value end a183,
 				case when dataelementid = 8992 and categoryoptioncomboid =  15 then sag2.value end a184,
 				case when dataelementid = 8993 and categoryoptioncomboid =  15 then sag2.value end a185,
@@ -1904,11 +1909,14 @@ from
             select
                state,
                div,
-               dis,
+			  dis,
+			   dishmiscode,
                block,
+			   blockhmiscode,
                facility,
+			   facilityhmiscode,
                organisationunitid,
-			   NIN,
+			  NIN,
                tp,
                st,
                Loc,
@@ -1920,11 +1928,18 @@ from
                   SELECT
                      ou1.name AS state,
                      ou2.name as div,
+					 
+					 
                      ou3.name as dis,
+					 ou3.code as dishmiscode,
+					 
                      ou4.name as block,
+					 ou4.code as blockhmiscode,
+					 
                      ou.shortname facility,
+					 ou.code as facilityhmiscode,
                      ou.organisationunitid,
-					 ou.code NIN,
+					 av.value as NIN,
 					
                      SUBSTRING(ou5.comment 
                   FROM
@@ -1953,6 +1968,13 @@ from
                      INNER JOIN
                         organisationunit ou5 
                         ON os.idlevel6 = ou5.organisationunitid 
+					left JOIN
+						organisationunitattributevalues ouv
+						ON ouv.organisationunitid = ou5.organisationunitid
+					left JOIN
+					attributevalue av
+					ON av.attributevalueid = ouv.attributevalueid		
+				
                      left join
                         orgunitgroupmembers ogm 
                         on ogm.organisationunitid = ou.organisationunitid 
@@ -2003,6 +2025,6 @@ from
    )
    sag3 
 group by
-   state , div, dis, block, facility, organisationunitid, tp, st, loc,NIN
+   state , div, dis,dishmiscode, block,blockhmiscode, facility,facilityhmiscode, organisationunitid,NIN, tp, st, loc
 order by
    state , div, dis, block, facility) TO '/home/uphmis/DB/RDreport/UPHMISRawDataReportApril17.csv' (format CSV, HEADER);
