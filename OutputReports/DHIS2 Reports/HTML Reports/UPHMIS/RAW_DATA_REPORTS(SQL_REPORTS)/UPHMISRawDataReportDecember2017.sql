@@ -1929,7 +1929,7 @@ from
                      ou3.name as dis,
 					 ou3.code as dishmiscode,
                      ou4.name as block,
-					 ou4.name as blockhmiscode,
+					 ou4.code as blockhmiscode,
                      ou.shortname facility,
 					 ou.code as facilityhmiscode,
                      ou.organisationunitid,
@@ -2022,6 +2022,6 @@ from
    )
    sag3 
 group by
-   state , div, dis,dishmiscode, block, blockhmiscode, facility, facilityhmiscode,organisationunitid, tp, st, NIN, loc
+   state , div, dis,dishmiscode, block, blockhmiscode, facility, facilityhmiscode,organisationunitid, NIN, tp, st, loc
 order by
    state , div, dis, block, facility) TO '/home/uphmis/DB/RDreport/UPHMISRawDataReportDecember17.csv' (format CSV, HEADER);
