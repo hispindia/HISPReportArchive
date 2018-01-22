@@ -1,0 +1,1042 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+    crossorigin="anonymous">
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    /* Center the loader */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+        display: none;
+        text-align: center;
+    }
+</style>
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle;" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')">
+    <span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', 'name', 'NLEP - Monthly Reporting Form Uttar Pradesh.xls')">
+    <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp; Download As Excel
+</button>
+
+<br>
+<br>
+<div id="loader"></div>
+<div id="printing" style="display:none;" class="animate-bottom">
+    <div id='state'>
+        <table width="100%" id="dataTable" border="1" class="table table-bordered table-hover text-center" cellspacing="6" cellpadding="4">
+            <thead style="background:#ADD8E6; font-weight:400; text-align:center">
+                <tr style="background:#ADD8E6; font-weight:400; text-align:center; ">
+                    <td  style="border:1px solid black">NLEP - Monthly Reporting Form Uttar Pradesh</td>
+                </tr>
+                <tr style="background:#ADD8E6; font-weight:400; text-align:center; ">
+                    <td  style="border:1px solid black" >State Report</td>
+                </tr>
+                <tr style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black">
+                    <td  style="border:1px solid black">Organisation Unit:-
+                        <span id="ouname"></span>
+                    </td>
+                </tr>
+                <tr style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black">
+                    <td  style="border:1px solid black; text-align:center">TimeStamp:-
+                        <span id="timeStamp"></span>
+                    </td>
+                </tr>
+                <tr style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black">
+                    <td style="border:1px solid black" >Reporting month:-
+                        <span id="periodName"></span>
+                    </td>
+                   
+                </tr>
+              
+
+            </thead>
+            <tbody>
+                <tr id='dataTable1'>
+
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- printing script -->
+<script type="text/javascript">
+function printContent(el) {
+    var restorepage = document.body.innerHTML;
+    var printcontent = document.getElementById(el).innerHTML;
+    document.body.innerHTML = printcontent;
+    window.print();
+    document.body.innerHTML = restorepage;
+}
+</script>
+
+<script>
+// Code fr date and time stamp
+var today = new Date();
+var dd = today.getDate();
+var mm = today.getMonth() + 1; //January is 0!
+var yyyy = today.getFullYear();
+if (dd < 10) {
+    dd = '0' + dd
+}
+if (mm < 10) {
+    mm = '0' + mm
+}
+today = mm + '/' + dd + '/' + yyyy;
+function displayTime() {
+    var str = "";
+    var currentTime = new Date()
+    var hours = currentTime.getHours()
+    var minutes = currentTime.getMinutes()
+    var seconds = currentTime.getSeconds()
+    if (minutes < 10) {
+        minutes = "0" + minutes
+    }
+    if (seconds < 10) {
+        seconds = "0" + seconds
+    }
+    str += hours + ":" + minutes + ":" + seconds + " ";
+    if (hours > 11) {
+        str += "PM"
+    } else {
+        str += "AM"
+    }
+    return str;
+}
+document.getElementById('timeStamp').innerHTML = today + "-" + displayTime();
+</script>
+
+<!-- Main Script -->
+<script>
+var periods = dhis2.report.periods;
+var period = periods[0];
+var periodName = getPeriod(period);
+document.getElementById('periodName').innerHTML = periodName;
+var url = window.location.href;
+var params = url.split('=');
+var gotOrgUnit = params[3];
+var gotPeriod = params[2].toString().substring(0, 6);
+var periodArray = getPeriods();
+var periodcum = periodArray.toString();
+var periodcumulative = periodcum.replace(/,/g, "");
+var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+if (selOrgUnitLevel == 2) {
+    // document.getElementById('level1').innerHTML = "State Name";
+    // document.getElementById('level2').innerHTML = "Divison Name";
+    level1 = "State Name";
+    level2 = "Divison Name";
+}
+else if (selOrgUnitLevel == 3) {
+    // document.getElementById('level1').innerHTML = "Divison Name";
+    // document.getElementById('level2').innerHTML = "District Name";
+
+    level1 = "Divison Name";
+    level2 = "District Name";
+}
+else if (selOrgUnitLevel == 4) {
+    // document.getElementById('level1').innerHTML = "District Name";
+    // document.getElementById('level2').innerHTML = "Block Name";
+
+    level1 = "District Name";
+    level2 = "Block Name";
+    
+}
+else if (selOrgUnitLevel == 5) {
+    // document.getElementById('level1').innerHTML = "Block Name";
+    // document.getElementById('level2').innerHTML = "Facility Name";
+
+    level1 = "Block Name";
+    level2 = "Facility Name";
+
+}
+var value0_sc = 0;
+var value0_st = 0;
+var value1_pb1 = 0;
+var value1_pb2 = 0;
+var value1_mb1 = 0;
+var value1_mb2 = 0;
+var value1_tot1 = 0;
+var value1_tot2 = 0;
+var value2_adult1 = 0;
+var value2_adult2 = 0;
+var value2_adult3 = 0;
+var value2c_adult1 = 0;
+var value2c_adult2 = 0;
+var value2c_adult3 = 0;
+var value2_child1 = 0;
+var value2_child2 = 0;
+var value2_child3 = 0;
+var value2c_child1 = 0;
+var value2c_child2 = 0;
+var value2c_child3 = 0;
+var value2_total1 = 0;
+var value2_total2 = 0;
+var value2_total3 = 0;
+var value2c_total1 = 0;
+var value2c_total2 = 0;
+var value2c_total3 = 0;
+var value2_1 = 0;
+var value2_2 = 0;
+var value2_3 = 0;
+var value2c_1 = 0;
+var value2c_2 = 0;
+var value2c_3 = 0;
+var value3_female1 = 0;
+var value3_female2 = 0;
+var value3_female3 = 0;
+var value3c_female1 = 0;
+var value3c_female2 = 0;
+var value3c_female3 = 0;
+var value3_gradeone1 = 0;
+var value3_gradeone2 = 0;
+var value3_gradeone3 = 0;
+var value3c_gradeone1 = 0;
+var value3c_gradeone2 = 0;
+var value3c_gradeone3 = 0;
+var value3_gradetwo1 = 0;
+var value3_gradetwo2 = 0;
+var value3_gradetwo3 = 0;
+
+
+var value3c_gradetwo1 = 0;
+var value3c_gradetwo2 = 0;
+var value3c_gradetwo3 = 0;
+var value3_sc1 = 0;
+var value3_sc2 = 0;
+var value3_sc3 = 0;
+var value3c_sc1 = 0;
+var value3c_sc2 = 0;
+var value3c_sc3 = 0;
+var value3_st1 = 0;
+var value3_st2 = 0;
+var value3_st3 = 0;
+var value3c_st1 = 0;
+var value3c_st2 = 0;
+var value3c_st3 = 0;
+var value4_rft1 = 0;
+var value4_rft2 = 0;
+var value4_rft3 = 0;
+var value4c_rft1 = 0;
+var value4c_rft2 = 0;
+
+var value4c_rft3 = 0;
+var value4_od1 = 0;
+var value4_od2 = 0;
+var value4_od3 = 0;
+var value4c_od1 = 0;
+var value4c_od2 = 0;
+var value4c_od3 = 0;
+var value4_total1 = 0;
+var value4_total2 = 0;
+var value4_total3 = 0;
+var value4_total1 = 0;
+var value4_total2 = 0;
+var value4_total3 = 0;
+var value5_adult1 = 0;
+var value5_adult2 = 0;
+var value5_adult3 = 0;
+var value5c_adult1 = 0;
+var value5c_adult2 = 0;
+var value5c_adult3 = 0;
+var value5_child1 = 0;
+
+var value5_child2 = 0;
+var value5_child3 = 0;
+var value5c_child1 = 0;
+var value5c_child2 = 0;
+var value5c_child3 = 0;
+var value5_total1 = 0;
+var value5_total2 = 0;
+var value5_total3 = 0;
+var value5c_total1 = 0;
+var value5c_total2 = 0;
+var value5c_total3 = 0;
+var value6_adult1 = 0;
+var value6_adult2 = 0;
+var value6_adult3 = 0;
+var value6c_adult1 = 0;
+var value6c_adult2 = 0;
+var value6c_adult3 = 0;
+var value6_child1 = 0;
+var value6_child2 = 0;
+var value6_child3 = 0;
+
+var value6c_child1 = 0;
+var value6c_child2 = 0;
+var value6c_child3 = 0;
+var value6_total1 = 0;
+var value6_total2 = 0;
+var value6_total3 = 0;
+var value6c_total1 = 0;
+var value6c_total2 = 0;
+var value6c_total3 = 0;
+var value7_adult1 = 0;
+var value7_adult2 = 0;
+var value7_adult3 = 0;
+var value7c_adult1 = 0;
+var value7c_adult2 = 0;
+var value7c_adult3 = 0;
+var value7_child1 = 0;
+var value7_child2 = 0;
+var value7_child3 = 0;
+var value7c_child1 = 0;
+var value7c_child2 = 0;
+
+var value7c_child3 = 0;
+var value7_total1 = 0;
+var value7_total2 = 0;
+var value7_total3 = 0;
+var value7c_total1 = 0;
+var value7c_total2 = 0;
+var value7c_total3 = 0;
+var value8_adult1 = 0;
+var value8_adult2 = 0;
+var value8_adult3 = 0;
+var value8c_adult1 = 0;
+var value8c_adult2 = 0;
+var value8c_adult3 = 0;
+var value8_child1 = 0;
+var value8_child2 = 0;
+var value8_child3 = 0;
+var value8c_child1 = 0;
+var value8c_child2 = 0;
+var value8c_child3 = 0;
+var value8_total1 = 0;
+
+var value8_total2 = 0;
+var value8_total3 = 0;
+var value8c_total1 = 0;
+var value8c_total2 = 0;
+var value8c_total3 = 0;
+var value9_adult1 = 0;
+var value9_adult2 = 0;
+var value9_adult3 = 0;
+var value9c_adult1 = 0;
+var value9c_adult2 = 0;
+var value9c_adult3 = 0;
+var value9_child1 = 0;
+var value9_child2 = 0;
+var value9_child3 = 0;
+var value9c_child1 = 0;
+var value9c_child2 = 0;
+var value9c_child3 = 0;
+var value9_total1 = 0;
+var value9_total2 = 0;
+var value9c_child3 = 0;
+
+var value9_total1 = 0;
+var value9_total2 = 0;
+var value9_total3 = 0;
+var value9c_total1 = 0;
+var value9c_total2 = 0;
+var value9c_total3 = 0;
+var value10_adult1 = 0;
+var value10_adult2 = 0;
+var value10_adult3 = 0;
+var value10c_adult1 = 0;
+var value10c_adult2 = 0;
+var value10c_adult3 = 0;
+var value10_child1 = 0;
+var value10_child2 = 0;
+var value10_child3 = 0;
+var value10c_child1 = 0;
+var value10c_child2 = 0;
+var value10c_child3 = 0;
+var value10_total1 = 0;
+var value10_total2 = 0;
+
+
+var value10_total3 = 0;
+var value10c_total1 = 0;
+var value10c_total2 = 0;
+var value10c_total3 = 0;
+var value11_adult1 = 0;
+var value11_adult2 = 0;
+var value11_adult3 = 0;
+var value11c_adult1 = 0;
+var value11c_adult2 = 0;
+var value11c_adult3 = 0;
+var value11_child1 = 0;
+var value11_child2 = 0;
+var value11_child3 = 0;
+var value11c_child1 = 0;
+var value11c_child2 = 0;
+var value11c_child3 = 0;
+var value11_total1 = 0;
+var value11_total2 = 0;
+var value11_total3 = 0;
+var value11c_total1 = 0;
+
+
+var value13_relapse1 = 0;
+var value13_relapse2 = 0;
+var value13_relapse3 = 0;
+var value13c_relapse1 = 0;
+var value13c_relapse2 = 0;
+var value13c_relapse3 = 0;
+var value13_rft1 = 0;
+var value13_rft2 = 0;
+var value13_rft3 = 0;
+var value13c_rft1 = 0;
+var value13c_rft2 = 0;
+var value13c_rft3 = 0;
+var value13_referred1 = 0;
+var value13_referred2 = 0;
+var value13_referred3 = 0;
+var value13c_referred1 = 0;
+var value13c_referred2 = 0;
+var value13c_referred3 = 0;
+var value13_reclassified1 = 0;
+var value13_reclassified2 = 0;
+
+var value13_reclassified3 = 0;
+var value13c_reclassified1 = 0;
+var value13c_reclassified2 = 0;
+var value13c_reclassified3 = 0;
+var value13_total1 = 0;
+var value13_total2 = 0;
+var value13_total3 = 0;
+var value13c_total1 = 0;
+var value13c_total2 = 0;
+var value13c_total3 = 0;
+var value14_rft1 = 0;
+var value14_rft2 = 0;
+var value14_rft3 = 0;
+var value14c_rft1 = 0;
+var value14c_rft2 = 0;
+var value14c_rft3 = 0;
+var value14_od1 = 0;
+var value14_od2 = 0;
+var value14_od3 = 0;
+var value14c_od1 = 0;
+var value14c_od2 = 0;
+
+var value14c_od3 = 0;
+var value14_total1 = 0;
+var value14_total2 = 0;
+var value14_total3 = 0;
+var value14_total1 = 0;
+var value14_total2 = 0;
+var value14_total3 = 0;
+
+
+var orgUnitChildren_Array = [];
+var secondChildren_Array = [];
+var orgUnit = dhis2.report.organisationUnit;
+var orgUnitChildren = dhis2.report.organisationUnitChildren;
+var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+var count = 0;
+document.getElementById('ouname').innerHTML = orgUnit.name;
+var ouid = orgUnit.id;
+var ouidName = orgUnit.name;
+// New Code start from here
+var count1 = 0;
+    $.when(
+        $.getJSON("../api/25/analytics.json?dimension=dx:uMhcwHdCp8N.DZLvNBwVmnJ;uMhcwHdCp8N.YncWngAsrGC;uMhcwHdCp8N.ce3NGhidu9F;uMhcwHdCp8N.wG9P35Ye92r;t57wRoxQcHb.HciqfDyUEdu;t57wRoxQcHb.CafLlBdsayJ;Ga9gO0Xen95.umEFoDnufcG;Ga9gO0Xen95.WWKpb8vfal6;Ga9gO0Xen95.QdIb6eIk7ZQ;Ga9gO0Xen95.RCsG6b6Hz3R;Ga9gO0Xen95.dpXqdFYjPMW;Ga9gO0Xen95.wkgiqUCFkjT;Ga9gO0Xen95.TxwS1qDhFsg;Ga9gO0Xen95.MZJJdZX0shP;Ga9gO0Xen95.UWdl7Qyb8s5;Ga9gO0Xen95.SmUA22GGDRA;MkOPKb5B3yA.sZl0H1M21hO;MkOPKb5B3yA.IbLjCPAjSQR;MkOPKb5B3yA.tXSd2ZF8tdz;MkOPKb5B3yA.J0Cb3RPZlhX;wsF0qzye852.DZLvNBwVmnJ;wsF0qzye852.YncWngAsrGC;wsF0qzye852.ce3NGhidu9F;wsF0qzye852.wG9P35Ye92r;j4Vcb7gOoZ1.DZLvNBwVmnJ;j4Vcb7gOoZ1.YncWngAsrGC;j4Vcb7gOoZ1.ce3NGhidu9F;j4Vcb7gOoZ1.wG9P35Ye92r;Mwx8jfnTAOS.DZLvNBwVmnJ;Mwx8jfnTAOS.YncWngAsrGC;Mwx8jfnTAOS.ce3NGhidu9F;Mwx8jfnTAOS.wG9P35Ye92r;C8Dzs8OwKgR.DZLvNBwVmnJ;C8Dzs8OwKgR.YncWngAsrGC;C8Dzs8OwKgR.ce3NGhidu9F;C8Dzs8OwKgR.wG9P35Ye92r;Skbpjnxr17c.DZLvNBwVmnJ;Skbpjnxr17c.YncWngAsrGC;Skbpjnxr17c.ce3NGhidu9F;Skbpjnxr17c.wG9P35Ye92r;oOM5Ytm0KMs.DZLvNBwVmnJ;oOM5Ytm0KMs.YncWngAsrGC;oOM5Ytm0KMs.ce3NGhidu9F;oOM5Ytm0KMs.wG9P35Ye92r;ebGX114F5x7.DZLvNBwVmnJ;ebGX114F5x7.YncWngAsrGC;ebGX114F5x7.ce3NGhidu9F;ebGX114F5x7.wG9P35Ye92r;DAdPRWnulKy.elmXBObo2WR;DAdPRWnulKy.l9JDCUgER98;DAdPRWnulKy.uZ6qOb2Mpaa;DAdPRWnulKy.jSG84LueM52;DAdPRWnulKy.ppWO3HLNLSx;DAdPRWnulKy.G3tnHNgfkzM;DAdPRWnulKy.ykZDEdrqOWR;DAdPRWnulKy.wUj0gHubXxz;zZ8U8TqYzrP-sZl0H1M21hO;zZ8U8TqYzrP-IbLjCPAjSQR;zZ8U8TqYzrP-tXSd2ZF8tdz;zZ8U8TqYzrP-J0Cb3RPZlhX;&dimension=ou:" + ouid + "&filter=pe:" + periodcumulative + "&displayProperty=NAME", {
+            format: "json"
+        }),
+        $.getJSON("../api/25/analytics.json?dimension=dx:E7MSWzw2kKz.i1GNUbptEIV;E7MSWzw2kKz.bHoQU3ieAHx;GpBrJVU3U1d.Es907PHdRiP;GpBrJVU3U1d.c7s45XMlPzM;GpBrJVU3U1d.Y0eRew4nCix;GpBrJVU3U1d.rlfpFwMVOy2;uMhcwHdCp8N.DZLvNBwVmnJ;uMhcwHdCp8N.YncWngAsrGC;uMhcwHdCp8N.ce3NGhidu9F;uMhcwHdCp8N.wG9P35Ye92r;t57wRoxQcHb.HciqfDyUEdu;t57wRoxQcHb.CafLlBdsayJ;Ga9gO0Xen95.umEFoDnufcG;Ga9gO0Xen95.WWKpb8vfal6;Ga9gO0Xen95.QdIb6eIk7ZQ;Ga9gO0Xen95.RCsG6b6Hz3R;Ga9gO0Xen95.dpXqdFYjPMW;Ga9gO0Xen95.wkgiqUCFkjT;Ga9gO0Xen95.TxwS1qDhFsg;Ga9gO0Xen95.MZJJdZX0shP;Ga9gO0Xen95.UWdl7Qyb8s5;Ga9gO0Xen95.SmUA22GGDRA;MkOPKb5B3yA.sZl0H1M21hO;MkOPKb5B3yA.IbLjCPAjSQR;MkOPKb5B3yA.tXSd2ZF8tdz;MkOPKb5B3yA.J0Cb3RPZlhX;wsF0qzye852.DZLvNBwVmnJ;wsF0qzye852.YncWngAsrGC;wsF0qzye852.ce3NGhidu9F;wsF0qzye852.wG9P35Ye92r;j4Vcb7gOoZ1.DZLvNBwVmnJ;j4Vcb7gOoZ1.YncWngAsrGC;j4Vcb7gOoZ1.ce3NGhidu9F;j4Vcb7gOoZ1.wG9P35Ye92r;Mwx8jfnTAOS.DZLvNBwVmnJ;Mwx8jfnTAOS.YncWngAsrGC;Mwx8jfnTAOS.ce3NGhidu9F;Mwx8jfnTAOS.wG9P35Ye92r;C8Dzs8OwKgR.DZLvNBwVmnJ;C8Dzs8OwKgR.YncWngAsrGC;C8Dzs8OwKgR.ce3NGhidu9F;C8Dzs8OwKgR.wG9P35Ye92r;Skbpjnxr17c.DZLvNBwVmnJ;Skbpjnxr17c.YncWngAsrGC;Skbpjnxr17c.ce3NGhidu9F;Skbpjnxr17c.wG9P35Ye92r;oOM5Ytm0KMs.DZLvNBwVmnJ;oOM5Ytm0KMs.YncWngAsrGC;oOM5Ytm0KMs.ce3NGhidu9F;oOM5Ytm0KMs.wG9P35Ye92r;ebGX114F5x7.DZLvNBwVmnJ;ebGX114F5x7.YncWngAsrGC;ebGX114F5x7.ce3NGhidu9F;ebGX114F5x7.wG9P35Ye92r;DAdPRWnulKy.elmXBObo2WR;DAdPRWnulKy.l9JDCUgER98;DAdPRWnulKy.uZ6qOb2Mpaa;DAdPRWnulKy.jSG84LueM52;DAdPRWnulKy.ppWO3HLNLSx;DAdPRWnulKy.G3tnHNgfkzM;DAdPRWnulKy.ykZDEdrqOWR;DAdPRWnulKy.wUj0gHubXxz;zZ8U8TqYzrP-sZl0H1M21hO;zZ8U8TqYzrP-IbLjCPAjSQR;zZ8U8TqYzrP-tXSd2ZF8tdz;zZ8U8TqYzrP-J0Cb3RPZlhX;&dimension=ou:" + ouid + "&filter=pe:" + period + "&displayProperty=NAME", {
+            format: "json"
+        }),
+        date = datafordate(ouid, period)
+    ).then(function (res4, res5, date) {
+        count++;
+        finalvalue(res4, res5, date, ouidName, count);
+    })
+    function datafordate(ouid, period) {
+        var dataA = 0;
+        $.ajax({
+            async: false,
+            url: "../api/dataValues.json?de=yl3ZGkjVbli&pe=" + period + "&ou=" + ouid + "",
+            success: function (data) {
+                dataA = data[0];
+            }
+        });
+        return dataA;
+    }
+    function finalvalue(res4, res5, date, ouidName, count) {
+        //**************** 0 ********************//
+
+        value0_sc = datavalue(res5[0], 'E7MSWzw2kKz.i1GNUbptEIV');
+       // document.getElementById('value0_sc').innerHTML = value0_sc;
+
+        value0_st = datavalue(res5[0], 'E7MSWzw2kKz.bHoQU3ieAHx');
+        //document.getElementById('value0_st').innerHTML = value0_st;
+
+
+
+        //**************** 0 END ********************// 
+
+        //**************** 1 ********************//
+
+        value1_pb1 = datavalue(res5[0], 'GpBrJVU3U1d.Es907PHdRiP');
+        value1_pb2 = datavalue(res5[0], 'GpBrJVU3U1d.c7s45XMlPzM');
+
+        value1_mb1 = datavalue(res5[0], 'GpBrJVU3U1d.Y0eRew4nCix');
+        value1_mb2 = datavalue(res5[0], 'GpBrJVU3U1d.rlfpFwMVOy2');
+
+        value1_tot1 = value1_pb1 + value1_mb1;
+        value1_tot2 = value1_pb2 + value1_mb2;
+
+        //**************** 1 END ********************//
+
+        //**************** 2 ********************//
+        value2_adult1 = datavalue(res5[0], 'uMhcwHdCp8N.DZLvNBwVmnJ');
+        value2_adult2 = datavalue(res5[0], 'uMhcwHdCp8N.YncWngAsrGC');
+        value2_adult3 = value2_adult1 + value2_adult2;
+
+        value2c_adult1 = datavalue(res4[0], 'uMhcwHdCp8N.DZLvNBwVmnJ');
+        value2c_adult2 = datavalue(res4[0], 'uMhcwHdCp8N.YncWngAsrGC');
+        value2c_adult3 = value2c_adult1 + value2c_adult2;
+
+        value2_child1 = datavalue(res5[0], 'uMhcwHdCp8N.ce3NGhidu9F');
+        value2_child2 = datavalue(res5[0], 'uMhcwHdCp8N.wG9P35Ye92r');
+        value2_child3 = value2_child1 + value2_child2;
+
+        value2c_child1 = datavalue(res4[0], 'uMhcwHdCp8N.ce3NGhidu9F');
+        value2c_child2 = datavalue(res4[0], 'uMhcwHdCp8N.wG9P35Ye92r');
+        value2c_child3 = value2c_child1 + value2c_child2;
+
+        value2_total1 = value2_adult1 + value2_child1;
+        value2_total2 = value2_adult2 + value2_child2;
+        value2_total3 = value2_adult3 + value2_child3;
+
+        value2c_total1 = value2c_adult1 + value2c_child1;
+        value2c_total2 = value2c_adult2 + value2c_child2;
+        value2c_total3 = value2c_adult3 + value2c_child3;
+
+        value2_1 = datavalue(res5[0], 't57wRoxQcHb.HciqfDyUEdu');
+        value2_2 = datavalue(res5[0], 't57wRoxQcHb.CafLlBdsayJ');
+        value2_3 = value2_1 + value2_2;
+
+        value2c_1 = datavalue(res4[0], 't57wRoxQcHb.HciqfDyUEdu');
+        value2c_2 = datavalue(res4[0], 't57wRoxQcHb.CafLlBdsayJ');
+        value2c_3 = value2c_1 + value2c_2;
+
+        //**************** 2 END********************//
+
+        //**************** 3 ********************//
+
+        value3_female1 = datavalue(res5[0], 'Ga9gO0Xen95.umEFoDnufcG');
+        value3_female2 = datavalue(res5[0], 'Ga9gO0Xen95.WWKpb8vfal6');
+        value3_female3 = value3_female1 + value3_female2;
+
+        value3c_female1 = datavalue(res4[0], 'Ga9gO0Xen95.umEFoDnufcG');
+        value3c_female2 = datavalue(res4[0], 'Ga9gO0Xen95.WWKpb8vfal6');
+        value3c_female3 = value3c_female1 + value3c_female2;
+
+        value3_gradeone1 = datavalue(res5[0], 'Ga9gO0Xen95.QdIb6eIk7ZQ');
+        value3_gradeone2 = datavalue(res5[0], 'Ga9gO0Xen95.RCsG6b6Hz3R');
+        value3_gradeone3 = value3_gradeone1 + value3_gradeone2;
+
+        value3c_gradeone1 = datavalue(res4[0], 'Ga9gO0Xen95.QdIb6eIk7ZQ');
+        value3c_gradeone2 = datavalue(res4[0], 'Ga9gO0Xen95.RCsG6b6Hz3R');
+        value3c_gradeone3 = value3c_gradeone1 + value3c_gradeone2;
+
+        value3_gradetwo1 = datavalue(res5[0], 'Ga9gO0Xen95.dpXqdFYjPMW');
+        value3_gradetwo2 = datavalue(res5[0], 'Ga9gO0Xen95.wkgiqUCFkjT');
+        value3_gradetwo3 = value3_gradetwo1 + value3_gradetwo2;
+
+        value3c_gradetwo1 = datavalue(res4[0], 'Ga9gO0Xen95.dpXqdFYjPMW');
+        value3c_gradetwo2 = datavalue(res4[0], 'Ga9gO0Xen95.wkgiqUCFkjT');
+        value3c_gradetwo3 = value3c_gradetwo1 + value3c_gradetwo2;
+
+        value3_sc1 = datavalue(res5[0], 'Ga9gO0Xen95.TxwS1qDhFsg');
+        value3_sc2 = datavalue(res5[0], 'Ga9gO0Xen95.MZJJdZX0shP');
+        value3_sc3 = value3_sc1 + value3_sc2;
+
+        value3c_sc1 = datavalue(res4[0], 'Ga9gO0Xen95.TxwS1qDhFsg');
+        value3c_sc2 = datavalue(res4[0], 'Ga9gO0Xen95.MZJJdZX0shP');
+        value3c_sc3 = value3c_sc1 + value3c_sc2;
+
+        value3_st1 = datavalue(res5[0], 'Ga9gO0Xen95.UWdl7Qyb8s5');
+        value3_st2 = datavalue(res5[0], 'Ga9gO0Xen95.SmUA22GGDRA');
+        value3_st3 = value3_st1 + value3_st2;
+
+        value3c_st1 = datavalue(res4[0], 'Ga9gO0Xen95.UWdl7Qyb8s5');
+        value3c_st2 = datavalue(res4[0], 'Ga9gO0Xen95.SmUA22GGDRA');
+        value3c_st3 = value3c_st1 + value3c_st2;
+
+        //**************** 3 END********************//
+
+        //**************** 4 ********************//
+
+        value4_rft1 = datavalue(res5[0], 'MkOPKb5B3yA.sZl0H1M21hO');
+        value4_rft2 = datavalue(res5[0], 'MkOPKb5B3yA.IbLjCPAjSQR');
+        value4_rft3 = value4_rft1 + value4_rft2;
+
+        value4c_rft1 = datavalue(res4[0], 'MkOPKb5B3yA.sZl0H1M21hO');
+        value4c_rft2 = datavalue(res4[0], 'MkOPKb5B3yA.IbLjCPAjSQR');
+        value4c_rft3 = value4c_rft1 + value4c_rft2;
+
+        value4_od1 = datavalue(res5[0], 'MkOPKb5B3yA.tXSd2ZF8tdz');
+        value4_od2 = datavalue(res5[0], 'MkOPKb5B3yA.J0Cb3RPZlhX');
+        value4_od3 = value4_od1 + value4_od2;
+
+        value4c_od1 = datavalue(res4[0], 'MkOPKb5B3yA.tXSd2ZF8tdz');
+        value4c_od2 = datavalue(res4[0], 'MkOPKb5B3yA.J0Cb3RPZlhX');
+        value4c_od3 = value4c_od1 + value4c_od2;
+
+        value4_total1 = value4_rft1 + value4_od1;
+        value4_total2 = value4_rft2 + value4_od2;
+        value4_total3 = value4_rft3 + value4_od3;
+
+        value4c_total1 = value4c_rft1 + value4c_od1;
+        value4c_total2 = value4c_rft2 + value4c_od2;
+        value4c_total3 = value4c_rft3 + value4c_od3;
+
+
+
+        //**************** 4 END********************//
+
+        //**************** 5 ********************//
+
+        value5_adult1 = datavalue(res5[0], 'wsF0qzye852.DZLvNBwVmnJ');
+        value5_adult2 = datavalue(res5[0], 'wsF0qzye852.YncWngAsrGC');
+        value5_adult3 = value5_adult1 + value5_adult2;
+
+        value5c_adult1 = datavalue(res4[0], 'wsF0qzye852.DZLvNBwVmnJ');
+        value5c_adult2 = datavalue(res4[0], 'wsF0qzye852.YncWngAsrGC');
+        value5c_adult3 = value5c_adult1 + value5c_adult2;
+
+        value5_child1 = datavalue(res5[0], 'wsF0qzye852.ce3NGhidu9F');
+        value5_child2 = datavalue(res5[0], 'wsF0qzye852.wG9P35Ye92r');
+        value5_child3 = value5_child1 + value5_child2;
+
+        value5c_child1 = datavalue(res4[0], 'wsF0qzye852.ce3NGhidu9F');
+        value5c_child2 = datavalue(res4[0], 'wsF0qzye852.wG9P35Ye92r');
+        value5c_child3 = value5c_child1 + value5c_child2;
+
+        value5_total1 = value5_adult1 + value5_child1;
+        value5_total2 = value5_adult2 + value5_child2;
+        value5_total3 = value5_adult3 + value5c_adult3;
+
+        value5c_total1 = value5c_adult1 + value5c_child1;
+        value5c_total2 = value5c_adult2 + value5c_child2;
+        value5c_total3 = value5c_adult3 + value5c_adult3;
+
+
+        //**************** 5 END********************//
+
+        //**************** 6 ********************//
+
+        value6_adult1 = datavalue(res5[0], 'j4Vcb7gOoZ1.DZLvNBwVmnJ');
+        value6_adult2 = datavalue(res5[0], 'j4Vcb7gOoZ1.YncWngAsrGC');
+        value6_adult3 = value6_adult1 + value6_adult2;
+
+        value6c_adult1 = datavalue(res4[0], 'j4Vcb7gOoZ1.DZLvNBwVmnJ');
+        value6c_adult2 = datavalue(res4[0], 'j4Vcb7gOoZ1.YncWngAsrGC');
+        value6c_adult3 = value6c_adult1 + value6c_adult2;
+
+        value6_child1 = datavalue(res5[0], 'j4Vcb7gOoZ1.ce3NGhidu9F');
+        value6_child2 = datavalue(res5[0], 'j4Vcb7gOoZ1.wG9P35Ye92r');
+        value6_child3 = value6_child1 + value6_child2;
+
+        value6c_child1 = datavalue(res4[0], 'j4Vcb7gOoZ1.ce3NGhidu9F');
+        value6c_child2 = datavalue(res4[0], 'j4Vcb7gOoZ1.wG9P35Ye92r');
+        value6c_child3 = value6c_child1 + value6c_child2;
+
+        value6_total1 = value6_adult1 + value6_child1;
+        value6_total2 = value6_adult2 + value6_child2;
+        value6_total3 = value6_adult3 + value6c_adult3;
+
+        value6c_total1 = value6c_adult1 + value6c_child1;
+        value6c_total2 = value6c_adult2 + value6c_child2;
+        value6c_total3 = value6c_adult3 + value6c_adult3;
+
+
+        //**************** 6 END********************//
+
+        //**************** 7 ********************//
+
+        value7_adult1 = datavalue(res5[0], 'Mwx8jfnTAOS.DZLvNBwVmnJ');
+        value7_adult2 = datavalue(res5[0], 'Mwx8jfnTAOS.YncWngAsrGC');
+        value7_adult3 = value7_adult1 + value7_adult2;
+
+        value7c_adult1 = datavalue(res4[0], 'Mwx8jfnTAOS.DZLvNBwVmnJ');
+        value7c_adult2 = datavalue(res4[0], 'Mwx8jfnTAOS.YncWngAsrGC');
+        value7c_adult3 = value7c_adult1 + value7c_adult2;
+
+        value7_child1 = datavalue(res5[0], 'Mwx8jfnTAOS.ce3NGhidu9F');
+        value7_child2 = datavalue(res5[0], 'Mwx8jfnTAOS.wG9P35Ye92r');
+        value7_child3 = value7_child1 + value7_child2;
+
+        value7c_child1 = datavalue(res4[0], 'Mwx8jfnTAOS.ce3NGhidu9F');
+        value7c_child2 = datavalue(res4[0], 'Mwx8jfnTAOS.wG9P35Ye92r');
+        value7c_child3 = value7c_child1 + value7c_child2;
+
+        value7_total1 = value7_adult1 + value7_child1;
+        value7_total2 = value7_adult2 + value7_child2;
+        value7_total3 = value7_adult3 + value7c_adult3;
+
+        value7c_total1 = value7c_adult1 + value7c_child1;
+        value7c_total2 = value7c_adult2 + value7c_child2;
+        value7c_total3 = value7c_adult3 + value7c_adult3;
+
+
+        //**************** 7 END********************//
+
+
+        //**************** 8 ********************//
+
+        value8_adult1 = datavalue(res5[0], 'C8Dzs8OwKgR.DZLvNBwVmnJ');
+        value8_adult2 = datavalue(res5[0], 'C8Dzs8OwKgR.YncWngAsrGC');
+        value8_adult3 = value8_adult1 + value8_adult2;
+
+        value8c_adult1 = datavalue(res4[0], 'C8Dzs8OwKgR.DZLvNBwVmnJ');
+        value8c_adult2 = datavalue(res4[0], 'C8Dzs8OwKgR.YncWngAsrGC');
+        value8c_adult3 = value8c_adult1 + value8c_adult2;
+
+        value8_child1 = datavalue(res5[0], 'C8Dzs8OwKgR.ce3NGhidu9F');
+        value8_child2 = datavalue(res5[0], 'C8Dzs8OwKgR.wG9P35Ye92r');
+        value8_child3 = value8_child1 + value8_child2;
+
+        value8c_child1 = datavalue(res4[0], 'C8Dzs8OwKgR.ce3NGhidu9F');
+        value8c_child2 = datavalue(res4[0], 'C8Dzs8OwKgR.wG9P35Ye92r');
+        value8c_child3 = value8c_child1 + value8c_child2;
+
+        value8_total1 = value8_adult1 + value8_child1;
+        value8_total2 = value8_adult2 + value8_child2;
+        value8_total3 = value8_adult3 + value8c_adult3;
+
+        value8c_total1 = value8c_adult1 + value8c_child1;
+        value8c_total2 = value8c_adult2 + value8c_child2;
+        value8c_total3 = value8c_adult3 + value8c_adult3;
+
+
+        //**************** 8 END********************//
+
+        //**************** 9 ********************//
+
+        value9_adult1 = datavalue(res5[0], 'Skbpjnxr17c.DZLvNBwVmnJ');
+        value9_adult2 = datavalue(res5[0], 'Skbpjnxr17c.YncWngAsrGC');
+        value9_adult3 = value9_adult1 + value9_adult2;
+
+        value9c_adult1 = datavalue(res4[0], 'Skbpjnxr17c.DZLvNBwVmnJ');
+        value9c_adult2 = datavalue(res4[0], 'Skbpjnxr17c.YncWngAsrGC');
+        value9c_adult3 = value9c_adult1 + value9c_adult2;
+
+        value9_child1 = datavalue(res5[0], 'Skbpjnxr17c.ce3NGhidu9F');
+        value9_child2 = datavalue(res5[0], 'Skbpjnxr17c.wG9P35Ye92r');
+        value9_child3 = value9_child1 + value9_child2;
+
+        value9c_child1 = datavalue(res4[0], 'Skbpjnxr17c.ce3NGhidu9F');
+        value9c_child2 = datavalue(res4[0], 'Skbpjnxr17c.wG9P35Ye92r');
+        value9c_child3 = value9c_child1 + value9c_child2;
+
+        value9_total1 = value9_adult1 + value9_child1;
+        value9_total2 = value9_adult2 + value9_child2;
+        value9_total3 = value9_adult3 + value9c_adult3;
+
+        value9c_total1 = value9c_adult1 + value9c_child1;
+        value9c_total2 = value9c_adult2 + value9c_child2;
+        value9c_total3 = value9c_adult3 + value9c_adult3;
+
+
+        //**************** 9 END********************//
+
+        //**************** 10 ********************//
+
+        value10_adult1 = datavalue(res5[0], 'oOM5Ytm0KMs.DZLvNBwVmnJ');
+        value10_adult2 = datavalue(res5[0], 'oOM5Ytm0KMs.YncWngAsrGC');
+        value10_adult3 = value10_adult1 + value10_adult2;
+
+        value10c_adult1 = datavalue(res4[0], 'oOM5Ytm0KMs.DZLvNBwVmnJ');
+        value10c_adult2 = datavalue(res4[0], 'oOM5Ytm0KMs.YncWngAsrGC');
+        value10c_adult3 = value10c_adult1 + value10c_adult2;
+
+        value10_child1 = datavalue(res5[0], 'oOM5Ytm0KMs.ce3NGhidu9F');
+        value10_child2 = datavalue(res5[0], 'oOM5Ytm0KMs.wG9P35Ye92r');
+        value10_child3 = value10_child1 + value10_child2;
+
+        value10c_child1 = datavalue(res4[0], 'oOM5Ytm0KMs.ce3NGhidu9F');
+        value10c_child2 = datavalue(res4[0], 'oOM5Ytm0KMs.wG9P35Ye92r');
+        value10c_child3 = value10c_child1 + value10c_child2;
+
+        value10_total1 = value10_adult1 + value10_child1;
+        value10_total2 = value10_adult2 + value10_child2;
+        value10_total3 = value10_adult3 + value10c_adult3;
+
+        value10c_total1 = value10c_adult1 + value10c_child1;
+        value10c_total2 = value10c_adult2 + value10c_child2;
+        value10c_total3 = value10c_adult3 + value10c_adult3;
+
+
+        //**************** 10 END********************//
+
+
+        //**************** 11 ********************//
+
+        value11_adult1 = datavalue(res5[0], 'ebGX114F5x7.DZLvNBwVmnJ');
+        value11_adult2 = datavalue(res5[0], 'ebGX114F5x7.YncWngAsrGC');
+        value11_adult3 = value11_adult1 + value11_adult2;
+
+        value11c_adult1 = datavalue(res4[0], 'ebGX114F5x7.DZLvNBwVmnJ');
+        value11c_adult2 = datavalue(res4[0], 'ebGX114F5x7.YncWngAsrGC');
+        value11c_adult3 = value11c_adult1 + value11c_adult2;
+
+        value11_child1 = datavalue(res5[0], 'ebGX114F5x7.ce3NGhidu9F');
+        value11_child2 = datavalue(res5[0], 'ebGX114F5x7.wG9P35Ye92r');
+        value11_child3 = value11_child1 + value11_child2;
+
+        value11c_child1 = datavalue(res4[0], 'ebGX114F5x7.ce3NGhidu9F');
+        value11c_child2 = datavalue(res4[0], 'ebGX114F5x7.wG9P35Ye92r');
+        value11c_child3 = value11c_child1 + value11c_child2;
+
+        value11_total1 = value11_adult1 + value11_child1;
+        value11_total2 = value11_adult2 + value11_child2;
+        value11_total3 = value11_adult3 + value11c_adult3;
+
+        value11c_total1 = value11c_adult1 + value11c_child1;
+        value11c_total2 = value11c_adult2 + value11c_child2;
+        value11c_total3 = value11c_adult3 + value11c_adult3;
+
+
+        //**************** 11 END********************//
+
+        //**************** 13 ********************//
+
+        value13_relapse1 = datavalue(res5[0], 'DAdPRWnulKy.elmXBObo2WR');
+        value13_relapse2 = datavalue(res5[0], 'DAdPRWnulKy.l9JDCUgER98');
+        value13_relapse3 = value13_relapse1 + value13_relapse2;
+
+        value13c_relapse1 = datavalue(res4[0], 'DAdPRWnulKy.elmXBObo2WR');
+        value13c_relapse2 = datavalue(res4[0], 'DAdPRWnulKy.l9JDCUgER98');
+        value13c_relapse3 = value13c_relapse1 + value13c_relapse2;
+
+        value13_rft1 = datavalue(res5[0], 'DAdPRWnulKy.uZ6qOb2Mpaa');
+        value13_rft2 = datavalue(res5[0], 'DAdPRWnulKy.jSG84LueM52');
+        value13_rft3 = value13_rft1 + value13_rft2;
+
+        value13c_rft1 = datavalue(res4[0], 'DAdPRWnulKy.uZ6qOb2Mpaa');
+        value13c_rft2 = datavalue(res4[0], 'DAdPRWnulKy.jSG84LueM52');
+        value13c_rft3 = value13c_rft1 + value13c_rft2;
+
+        value13_referred1 = datavalue(res5[0], 'DAdPRWnulKy.ppWO3HLNLSx');
+        value13_referred2 = datavalue(res5[0], 'DAdPRWnulKy.G3tnHNgfkzM');
+        value13_referred3 = value13_referred1 + value13_referred2;
+
+        value13c_referred1 = datavalue(res4[0], 'DAdPRWnulKy.ppWO3HLNLSx');
+        value13c_referred2 = datavalue(res4[0], 'DAdPRWnulKy.G3tnHNgfkzM');
+        value13c_referred3 = value13c_referred1 + value13c_referred2;
+
+        value13_reclassified1 = datavalue(res5[0], 'DAdPRWnulKy.ykZDEdrqOWR');
+        value13_reclassified2 = datavalue(res5[0], 'DAdPRWnulKy.wUj0gHubXxz');
+        value13_reclassified3 = value13_reclassified1 + value13_reclassified2;
+
+        value13c_reclassified1 = datavalue(res4[0], 'DAdPRWnulKy.ykZDEdrqOWR');
+        value13c_reclassified2 = datavalue(res4[0], 'DAdPRWnulKy.wUj0gHubXxz');
+        value13c_reclassified3 = value13c_reclassified1 + value13c_reclassified2;
+
+        value13_total1 = value13_relapse1 + value13_rft1 + value13_referred1 + value13_reclassified1;
+        value13_total2 = value13_relapse2 + value13_rft2 + value13_referred2 + value13_reclassified2;
+        value13_total3 = value13_relapse3 + value13_rft3 + value13_referred3 + value13_reclassified3;
+
+        value13c_total1 = value13c_relapse1 + value13c_rft1 + value13c_referred1 + value13c_reclassified1;
+        value13c_total2 = value13c_relapse2 + value13c_rft2 + value13c_referred2 + value13c_reclassified2;
+        value13c_total3 = value13c_relapse3 + value13c_rft3 + value13c_referred3 + value13c_reclassified3;
+
+        //**************** 13 END********************//
+
+        //**************** 14 ********************//
+
+        value14_rft1 = datavalue(res5[0], 'zZ8U8TqYzrP-sZl0H1M21hO');
+        value14_rft2 = datavalue(res5[0], 'zZ8U8TqYzrP-IbLjCPAjSQR');
+        value14_rft3 = value14_rft1 + value14_rft2;
+
+        value14c_rft1 = datavalue(res4[0], 'zZ8U8TqYzrP-sZl0H1M21hO');
+        value14c_rft2 = datavalue(res4[0], 'zZ8U8TqYzrP-IbLjCPAjSQR');
+        value14c_rft3 = value14c_rft1 + value14c_rft2;
+
+        value14_od1 = datavalue(res5[0], 'zZ8U8TqYzrP-tXSd2ZF8tdz');
+        value14_od2 = datavalue(res5[0], 'zZ8U8TqYzrP-J0Cb3RPZlhX');
+        value14_od3 = value14_od1 + value14_od2;
+
+        value14c_od1 = datavalue(res4[0], 'zZ8U8TqYzrP-tXSd2ZF8tdz');
+        value14c_od2 = datavalue(res4[0], 'zZ8U8TqYzrP-J0Cb3RPZlhX');
+        value14c_od3 = value14c_od1 + value14c_od2;
+
+        value14_total1 = value14_rft1 + value14_od1;
+        value14_total2 = value14_rft2 + value14_od2;
+        value14_total3 = value14_rft3 + value14_od3;
+
+        value14c_total1 = value14c_rft1 + value14c_od1;
+        value14c_total2 = value14c_rft2 + value14c_od2;
+        value14c_total3 = value14c_rft3 + value14c_od3;
+
+
+
+        //**************** 14 END********************//
+        var tabledata = '';
+        tabledata += ("<td><table width='100%'><tr><td colspan='4' rowspan='2' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>Population of the  State</td><td colspan='2' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>Total</td><td colspan='2' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>SC</td><td colspan='2' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>ST</td></tr><tr><td colspan='2' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'></td><td colspan='2' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>"+value0_sc+"</td><td colspan='2' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>"+value0_st+"</td></tr><tr><td colspan='2' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>" + count + "</td><td colspan='4' style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>"+level1+"</td><td colspan='4'style='background:#ADD8E6; text-align:center; border:1px solid black;font-weight:bold'>" + orgUnit.name+"</td></tr><tr> <td rowspan = 4 style='font-weight:bold'>1</td><td rowspan = 4 style='width:254;font-weight:bold'>No. of balance new cases at the beginning of the month</td><td colspan=2 style = 'background:black;width:64px;'></td><td colspan = 3 style='width:192;font-weight:bold'>1.1 New cases</td><td colspan = 3 style='width:192;font-weight:bold'>1.2 Other cases</td></tr><tr> <td colspan = 2 style='width:64;font-weight:bold'>PB</td><td colspan=3>" + value1_pb1  + "</td><td colspan=3>"+ value1_pb2 +"</td></tr><tr> <td colspan = 2 style='width:64;font-weight:bold'>MB</td><td colspan=3>" + value1_mb1  + "</td><td colspan=3>"+ value1_mb2 +"</td></tr><tr> <td colspan = 2 style='width:64;font-weight:bold'>TOTAL</td><td colspan=3>" + value1_tot1  + "</td><td colspan=3>"+ value1_tot2 +"</td></tr><tr> <td rowspan = 6 style='font-weight:bold'>" + '2' + "</td><td rowspan = 5 style='width:254;font-weight:bold'>" +  'No.of "New Leprosy Cases" detected in the reporting month' + "</td><td colspan=2 rowspan=2 style = 'background:black;width:64px;'>"+"</td><td colspan = 3 style='width:192;font-weight:bold'>"+'During reporting month'+"</td><td colspan = 3 style='width:192;font-weight:bold'>Cumulative from</td></tr><tr> <td style='width:64;font-weight:bold'>PB</td><td style='width:64;font-weight:bold'>MB</td><td style='width:64;font-weight:bold'>Total</td><td style='width:64;font-weight:bold'>PB</td><td style='width:64;font-weight:bold'>MB</td><td style='width:64;font-weight:bold'>Total</td></tr><tr> <td colspan = 2 style='width:64;font-weight:bold'>Adult</td><td style='width:64'>" + value2_adult1  + "</td><td style='width:64'>"+ value2_adult2+ "</td><td style='width:64'>" + value2_adult3  + "</td><td style='width:64'>"+ value2c_adult1 + "</td><td style='width:64'>" + value2c_adult2  + "</td><td style='width:64'>"+ value2c_adult3+"</td></tr><tr> <td colspan = 2 style='width:64;font-weight:bold'>"+'Child'+ "</td><td style='width:64'>" + value2_child1  + "</td><td style='width:64'>"+ value2_child2+ "</td><td style='width:64'>" + value2_child3  + "</td><td style='width:64'>"+ value2c_child1 + "</td><td style='width:64'>" + value2c_child2  + "</td><td style='width:64'>"+ value2c_child3+"</td></tr><tr> <td colspan = 2 style='width:64;font-weight:bold'>"+'Total'+ "</td><td style='width:64'>" + value2_total1  + "</td><td style='width:64'>"+ value2_total2+ "</td><td style='width:64'>" + value2_total3  + "</td><td style='width:64'>"+ value2c_total1 + "</td><td style='width:64'>" + value2c_total2  + "</td><td style='width:64'>"+ value2c_total3+"</td></tr><tr> <td style='width:254;font-weight:bold'>Among New cases -no. from other State</td><td style='width:64'>"+ "</td><td style='width:64'>"+"</td><td style='width:64'>"+ value2_1+ "</td><td style='width:64'>" + value2_2  + "</td><td style='width:64'>"+ value2_3 + "</td><td style='width:64'>" + value2c_1  + "</td><td style='width:64'>"+ value2c_2+ "</td><td style='width:64'>" + value2c_3 +"</td></tr><tr> <td rowspan = 5 style='font-weight:bold'>" + '3' + "</td><td rowspan = 5 style='width:254;font-weight:bold'>Among new leprosy cases detected during the reporting month</td><td colspan=2 style = 'font-weight:bold;width:64px'>"+'Female'+"</td><td style='width:64'>"+value3_female1+"</td><td style='width:64'>"+value3_female2+"</td><td style='width:64'>"+value3_female3+"</td><td style='width:64'>"+value3c_female1+"</td><td style='width:64'>"+value3c_female2+"</td><td style='width:64'>"+value3c_female3+"</td></tr><tr><td rowspan = 2 style = 'width:32px;font-weight:bold'>"+'Deformity'+"</td><td style='width:32;font-weight:bold'>Grade-I</td><td style='width:64'>"+value3_gradeone1+"</td><td style='width:64'>"+value3_gradeone2+"</td><td style='width:64'>"+value3_gradeone3+"</td><td style='width:64'>"+value3c_gradeone1+"</td><td style='width:64'>"+value3c_gradeone2+"</td><td style='width:64'>"+value3c_gradeone3+"</td></tr><tr><td style='width:32;font-weight:bold'>"+'Grade-II'+"</td><td style='width:64'>"+value3_gradetwo1+"</td><td style='width:64'>"+value3_gradetwo2+"</td><td style='width:64'>"+value3_gradetwo3+"</td><td style='width:64'>"+value3c_gradetwo1+"</td><td style='width:64'>"+value3c_gradetwo2+"</td><td style='width:64'>"+value3c_gradetwo3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'SC'+"</td><td style='width:64'>"+value3_sc1+"</td><td style='width:64'>"+value3_sc2+"</td><td style='width:64'>"+value3_sc3+"</td><td style='width:64'>"+value3c_sc1+"</td><td style='width:64'>"+value3c_sc2+"</td><td style='width:64'>"+value3c_sc3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'ST'+"</td><td style='width:64'>"+value3_st1+"</td><td style='width:64'>"+value3_st2+"</td><td style='width:64'>"+value3_st3+"</td><td style='width:64'>"+value3c_st1+"</td><td style='width:64'>"+value3c_st2+"</td><td style='width:64'>"+value3c_st3+"</td></tr><tr> <td rowspan = 3 style='font-weight:bold'>" + '4' + "</td><td rowspan = 3 style='width:254;font-weight:bold'>Number of new leprosy cases deleted during the month</td><td colspan=2 style = 'width:64px;font-weight:bold'>"+'RFT'+"</td><td style='width:64'>"+value4_rft1+"</td><td style='width:64'>"+value4_rft2+"</td><td style='width:64'>"+value4_rft3+"</td><td style='width:64'>"+value4c_rft1+"</td><td style='width:64'>"+value4c_rft2+"</td><td style='width:64'>"+value4c_rft3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>Otherwise deleted</td><td style='width:64'>"+value4_od1+"</td><td style='width:64'>"+value4_od2+"</td><td style='width:64'>"+value4_od3+"</td><td style='width:64'>"+value4c_od1+"</td><td style='width:64'>"+value4c_od2+"</td><td style='width:64'>"+value4c_od3+"</td></tr><tr><td colspan = 2 style='width:64';font-weight:bold>Total</td><td style='width:64'>"+value4_total1+"</td><td style='width:64'>"+value4_total2+"</td><td style='width:64'>"+value4_total3+"</td><td style='width:64'>"+value4c_total1+"</td><td style='width:64'>"+value4c_total2+"</td><td style='width:64'>"+value4c_total3+"</td></tr><tr> <td rowspan = 3 style='font-weight:bold'>5</td><td rowspan = 3 style='width:254;font-weight:bold'>No. of cases developed new disability after MDT</td><td colspan=2 style = 'width:64px;font-weight:bold'>Adult</td><td style='width:64'>"+value5_adult1+"</td><td style='width:64'>"+value5_adult2+"</td><td style='width:64'>"+value5_adult3+"</td><td style='width:64'>"+value5c_adult1+"</td><td style='width:64'>"+value5c_adult2+"</td><td style='width:64'>"+value5c_adult3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Child'+"</td><td style='width:64'>"+value5_child1+"</td><td style='width:64'>"+value5_child2+"</td><td style='width:64'>"+value5_child3+"</td><td style='width:64'>"+value5c_child1+"</td><td style='width:64'>"+value5c_child2+"</td><td style='width:64'>"+value5c_child3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Total'+"</td><td style='width:64'>"+value5_total1+"</td><td style='width:64'>"+value5_total2+"</td><td style='width:64'>"+value5_total3+"</td><td style='width:64'>"+value5c_total1+"</td><td style='width:64'>"+value5c_total2+"</td><td style='width:64'>"+value5c_total3+"</td></tr><tr> <td rowspan = 3 style='font-weight:bold'>" + '6' + "</td><td rowspan = 3 style='width:254;font-weight:bold'>No. of patients provided with footwear</td><td colspan=2 style = 'width:64px;font-weight:bold'>Adult</td><td style='width:64'>"+value6_adult1+"</td><td style='width:64'>"+value6_adult2+"</td><td style='width:64'>"+value6_adult3+"</td><td style='width:64'>"+value6c_adult1+"</td><td style='width:64'>"+value6c_adult2+"</td><td style='width:64'>"+value6c_adult3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>Child</td><td style='width:64'>"+value6_child1+"</td><td style='width:64'>"+value6_child2+"</td><td style='width:64'>"+value6_child3+"</td><td style='width:64'>"+value6c_child1+"</td><td style='width:64'>"+value6c_child2+"</td><td style='width:64'>"+value6c_child3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Total'+"</td><td style='width:64'>"+value6_total1+"</td><td style='width:64'>"+value6_total2+"</td><td style='width:64'>"+value6_total3+"</td><td style='width:64'>"+value6c_total1+"</td><td style='width:64'>"+value6c_total2+"</td><td style='width:64'>"+value6c_total3+"</td></tr><tr> <td rowspan = 3 style='font-weight:bold'>7</td><td rowspan = 3 style='width:254;font-weight:bold'>No. of patients provided with self care kit</td><td colspan=2 style = 'width:64px;font-weight:bold'>Adult</td><td style='width:64'>"+value7_adult1+"</td><td style='width:64'>"+value7_adult2+"</td><td style='width:64'>"+value7_adult3+"</td><td style='width:64'>"+value7c_adult1+"</td><td style='width:64'>"+value7c_adult2+"</td><td style='width:64'>"+value7c_adult3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Child'+"</td><td style='width:64'>"+value7_child1+"</td><td style='width:64'>"+value7_child2+"</td><td style='width:64'>"+value7_child3+"</td><td style='width:64'>"+value7c_child1+"</td><td style='width:64'>"+value7c_child2+"</td><td style='width:64'>"+value7c_child3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>Total</td><td style='width:64'>"+value7_total1+"</td><td style='width:64'>"+value7_total2+"</td><td style='width:64'>"+value7_total3+"</td><td style='width:64'>"+value7c_total1+"</td><td style='width:64'>"+value7c_total2+"</td><td style='width:64'>"+value7c_total3+"</td></tr><tr> <td rowspan = 3 styel='font-weight:bold'>8</td><td rowspan = 3 style='width:254;font-weight:bold'>No. of patients provided with footwear</td><td colspan=2 style = 'width:64px;font-weight:bold'>"+'Adult'+"</td><td style='width:64'>"+value8_adult1+"</td><td style='width:64'>"+value8_adult2+"</td><td style='width:64'>"+value8_adult3+"</td><td style='width:64'>"+value8c_adult1+"</td><td style='width:64'>"+value8c_adult2+"</td><td style='width:64'>"+value8c_adult3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Child'+"</td><td style='width:64'>"+value8_child1+"</td><td style='width:64'>"+value8_child2+"</td><td style='width:64'>"+value8_child3+"</td><td style='width:64'>"+value8c_child1+"</td><td style='width:64'>"+value8c_child2+"</td><td style='width:64'>"+value8c_child3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Total'+"</td><td style='width:64'>"+value8_total1+"</td><td style='width:64'>"+value8_total2+"</td><td style='width:64'>"+value8_total3+"</td><td style='width:64'>"+value8c_total1+"</td><td style='width:64'>"+value8c_total2+"</td><td style='width:64'>"+value8c_total3+"</td></tr><tr> <td rowspan = 3 style='font-weight:bold'>9</td><td rowspan = 3 style='width:254;font-weight:bold'>No. of new cases confirmed at PHC out of suspects referred by ASHA</td><td colspan=2 style = 'width:64px;font-weight:bold'>"+'Adult'+"</td><td style='width:64'>"+value9_adult1+"</td><td style='width:64'>"+value9_adult2+"</td><td style='width:64'>"+value9_adult3+"</td><td style='width:64'>"+value9c_adult1+"</td><td style='width:64'>"+value9c_adult2+"</td><td style='width:64'>"+value9c_adult3+"</td></tr><tr><td colspan = 2 style='width:64'>"+'Child'+"</td><td style='width:64'>"+value9_child1+"</td><td style='width:64'>"+value9_child2+"</td><td style='width:64'>"+value9_child3+"</td><td style='width:64;font-weight:bold'>"+value9c_child1+"</td><td style='width:64'>"+value9c_child2+"</td><td style='width:64'>"+value9c_child3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Total'+"</td><td style='width:64'>"+value9_total1+"</td><td style='width:64'>"+value9_total2+"</td><td style='width:64'>"+value9_total3+"</td><td style='width:64'>"+value9c_total1+"</td><td style='width:64'>"+value9c_total2+"</td><td style='width:64'>"+value9c_total3+"</td></tr><tr> <td rowspan = 3 style='font-weight:bold'>" + '10' + "</td><td rowspan = 3 style='width:254;font-weight:bold'>" +  'No. of cases completed treatment through ASHA' + "</td><td colspan=2 style = 'width:64px;font-weight:bold'>"+'Adult'+"</td><td style='width:64'>"+value10_adult1+"</td><td style='width:64'>"+value10_adult2+"</td><td style='width:64'>"+value10_adult3+"</td><td style='width:64'>"+value10c_adult1+"</td><td style='width:64'>"+value10c_adult2+"</td><td style='width:64'>"+value10c_adult3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Child'+"</td><td style='width:64'>"+value10_child1+"</td><td style='width:64'>"+value10_child2+"</td><td style='width:64'>"+value10_child3+"</td><td style='width:64'>"+value10c_child1+"</td><td style='width:64'>"+value10c_child2+"</td><td style='width:64'>"+value10c_child3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Total'+"</td><td style='width:64'>"+value10_total1+"</td><td style='width:64'>"+value10_total2+"</td><td style='width:64'>"+value10_total3+"</td><td style='width:64'>"+value10c_total1+"</td><td style='width:64'>"+value10c_total2+"</td><td style='width:64'>"+value10c_total3+"</td></tr><tr> <td rowspan = 3 style='font-weight:bold'>" + '11' + "</td><td rowspan = 3 style='width:254;font-weight:bold'>" +  'No. of patients provided with footwearNo. of ASHA paid incentives' + "</td><td colspan=2 style = 'width:64px;font-weight:bold'>"+'Adult'+"</td><td style='width:64'>"+value11_adult1+"</td><td style='width:64'>"+value11_adult2+"</td><td style='width:64'>"+value11_adult3+"</td><td style='width:64'>"+value11c_adult1+"</td><td style='width:64'>"+value11c_adult2+"</td><td style='width:64'>"+value11c_adult3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Child'+"</td><td style='width:64'>"+value11_child1+"</td><td style='width:64'>"+value11_child2+"</td><td style='width:64'>"+value11_child3+"</td><td style='width:64'>"+value11c_child1+"</td><td style='width:64'>"+value11c_child2+"</td><td style='width:64'>"+value11c_child3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>"+'Total'+"</td><td style='width:64'>"+value11_total1+"</td><td style='width:64'>"+value11_total2+"</td><td style='width:64'>"+value11_total3+"</td><td style='width:64'>"+value11c_total1+"</td><td style='width:64'>"+value11c_total2+"</td><td style='width:64'>"+value11c_total3+"</td></tr><tr> <td style='font-weight:bold'>" + '12' + "</td><td colspan='3' style='font-weight:bold'>Number of New leprosy cases under treatment at the end of the month     (1.1 +2 - 4)</td><td style='width:64'></td><td style='width:64'></td><td style='width:64'><td style='width:64;background:black'>"+"</td><td style='width:64;background:black'>"+"</td>"+"</td><td style='width:64;background:black'></td></tr><tr> <td rowspan = 5 style='font-weight:bold'>13</td><td rowspan = 5 style='width:254;font-weight:bold'>" +  'Number of "other cases" recorded and put under treatment' + "</td><td colspan=2 style = 'width:64px;font-weight:bold'>"+'(i) Relapse'+"</td><td style='width:64'>"+value13_relapse1+"</td><td style='width:64'>"+value13_relapse2+"</td><td style='width:64'>"+value13_relapse3+"</td><td style='width:64'>"+value13c_relapse1+"</td><td style='width:64'>"+value13c_relapse2+"</td><td style='width:64'>"+value13c_relapse3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>(ii) Reentered for treat-ment</td><td style='width:64'>"+value13_rft1+"</td><td style='width:64'>"+value13_rft2+"</td><td style='width:64'>"+value13_rft3+"</td><td style='width:64'>"+value13c_rft1+"</td><td style='width:64'>"+value13c_rft2+"</td><td style='width:64'>"+value13c_rft3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>(iii) Referred</td><td style='width:64'>"+value13_referred1+"</td><td style='width:64'>"+value13_referred2+"</td><td style='width:64'>"+value13_referred3+"</td><td style='width:64'>"+value13c_referred1+"</td><td style='width:64'>"+value13c_referred2+"</td><td style='width:64'>"+value13c_referred3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>(iv) Reclassified</td><td style='width:64'>"+value13_reclassified1+"</td><td style='width:64'>"+value13_reclassified2+"</td><td style='width:64'>"+value13_reclassified3+"</td><td style='width:64'>"+value13c_reclassified1+"</td><td style='width:64'>"+value13c_reclassified2+"</td><td style='width:64'>"+value13c_reclassified3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>Total</td><td style='width:64'>"+value13_total1+"</td><td style='width:64'>"+value13_total2+"</td><td style='width:64'>"+value13_total3+"</td><td style='width:64'>"+value13c_total1+"</td><td style='width:64'>"+value13c_total2+"</td><td style='width:64'>"+value13c_total3+"</td></tr><tr> <td rowspan = 3 style='font-weight:bold'>14</td><td rowspan = 3 style='width:254;font-weight:bold'>Number of new leprosy cases deleted during the month</td><td colspan=2 style = 'width:64px;font-weight:bold'>RFT</td><td style='width:64'>"+value14_rft1+"</td><td style='width:64'>"+value14_rft2+"</td><td style='width:64'>"+value14_rft3+"</td><td style='width:64'>"+value14c_rft1+"</td><td style='width:64'>"+value14c_rft2+"</td><td style='width:64'>"+value14c_rft3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>Otherwise deleted</td><td style='width:64'>"+value14_od1+"</td><td style='width:64'>"+value14_od2+"</td><td style='width:64'>"+value14_od3+"</td><td style='width:64'>"+value14c_od1+"</td><td style='width:64'>"+value14c_od2+"</td><td style='width:64'>"+value14c_od3+"</td></tr><tr><td colspan = 2 style='width:64;font-weight:bold'>Total</td><td style='width:64'>"+value14_total1+"</td><td style='width:64'>"+value14_total2+"</td><td style='width:64'>"+value14_total3+"</td><td style='width:64'>"+value14c_total1+"</td><td style='width:64'>"+value14c_total2+"</td><td style='width:64'>"+value14c_total3+"</td></tr><tr> <td style='font-weight:bold'>15</td><td colspan='3' style='font-weight:bold'>No. of other cases under treatment at the end of reporting month  (1.2 +6 - 7)</td><td style='width:64'>"+"</td><td style='width:64'>"+"</td><td style='width:64'>"+"</td><td style='width:64'>"+"</td><td style='width:64'>"+"</td><td style='width:64'>"+"</td></tr><tr> <td rowspan='6' style='font-weight:bold'>16</td><td rowspan='2' style='width:64;font-weight:bold'>Blister Pack</td><td colspan='2' style='font-weight:bold'>Compiled District/block Stock</td><td colspan='2' style='font-weight:bold'>During the month </td><td colspan='2' style='font-weight:bold'>Cumulative total</td><td style='width:64;background:#A5A3A3'></td><td style='width:64;background:#A5A3A3'></td></tr><tr><td style='width:64;font-weight:bold'>Quantity</td><td style='width:64;font-weight:bold'>Expiry Date</td><td style='width:64;font-weight:bold'>No. of UT patient</td><td style='width:64;font-weight:bold'>Patient month BCP</td><td style='width:64;font-weight:bold'>No. of UT patient</td><td style='width:64;font-weight:bold'>Patient month BCP</td><td style='width:64;background:#A5A3A3'></td><td style='width:64;background:#A5A3A3'></td></tr><tr><td style='width:64;font-weight:bold'>MB (A)</td></td><td style='width:64'></td><td style='width:64'><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64;background:#A5A3A3'></td><td style='width:64;background:#A5A3A3'></td></tr><tr><td style='width:64;font-weight:bold'>MB (C)</td></td><td style='width:64'></td><td style='width:64'><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64;background:#A5A3A3'></td><td style='width:64;background:#A5A3A3'></td></tr><tr><td style='width:64;font-weight:bold'>PB (A)</td></td><td style='width:64'></td><td style='width:64'><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64;background:#A5A3A3'></td><td style='width:64;background:#A5A3A3'></td></tr><tr><td style='width:64;font-weight:bold'>PB(C)</td><td style='width:64'><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64'></td><td style='width:64;background:#A5A3A3'></td><td style='width:64;background:#A5A3A3'></td></tr></table></td>");
+
+ 
+        // var row = document.getElementById("dataTable1").innerHTML;
+       $('#dataTable1').append(tabledata);
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("printing").style.display = "block";
+       
+        
+     
+    };
+    function datavalue1(dataJSON, id, id1) {
+        var value1 = 'No';
+        for (var i = 0; i < dataJSON.rows.length; i++) {
+            if (dataJSON.rows[i][0] == id) {
+                value1 = 'Yes';
+            }
+        }
+        return (value1);
+    };
+    function datavalue(dataJSON, id) {
+        var value1 = 0;
+        for (var i = 0; i < dataJSON.rows.length; i++) {
+            if (dataJSON.rows[i][0] == id) {
+                value1 = parseInt(dataJSON.rows[i][2]);
+            }
+        }
+        return (value1);
+    };
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    };
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+        if (month == "01" || month == "1") strMonth = "January";
+        else if (month == "02" || month == "2") strMonth = "February";
+        else if (month == "03" || month == "3") strMonth = "March";
+        else if (month == "04" || month == "4") strMonth = "April";
+        else if (month == "05" || month == "5") strMonth = "May";
+        else if (month == "06" || month == "6") strMonth = "June";
+        else if (month == "07" || month == "7") strMonth = "July";
+        else if (month == "08" || month == "8") strMonth = "August";
+        else if (month == "09" || month == "9") strMonth = "September";
+        else if (month == "10") strMonth = "October";
+        else if (month == "11") strMonth = "November";
+        else if (month == "12") strMonth = "December";
+        return strMonth + " " + year;
+    };
+    function getPeriods() {
+        var periodArray = [];
+        var year = parseInt(gotPeriod.substring(0, 4));
+        var mnth = parseInt(gotPeriod.substring(4, 6));
+        if (mnth > 3) {
+            for (var i = 4; i <= mnth; i++) {
+                if (i < 10) {
+                    periodArray.push(year.toString() + "0" + i + ";");
+                }
+                else {
+                    periodArray.push(year.toString() + i + ";");
+                }
+            }
+        }
+        if (mnth <= 3) {
+            for (var i = 4; i <= 12; i++) {
+                if (i < 10) {
+                    periodArray.push((year - 1).toString() + "0" + i + ";");
+                }
+                else {
+                    periodArray.push((year - 1).toString() + i + ";");
+                }
+            }
+            for (var i = 1; i <= mnth; i++) {
+                if (i < 10) {
+                    periodArray.push(year.toString() + "0" + i + ";");
+                }
+                else {
+                    periodArray.push(year.toString() + i + ";");
+                }
+            }
+        }
+        return periodArray;
+    }
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>
