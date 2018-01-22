@@ -1275,8 +1275,8 @@ from
 				case when dataelementid = 7440911 and categoryoptioncomboid = 15 then sag2.value end v288,
 				case when dataelementid = 7167480 and categoryoptioncomboid = 15 then sag2.value end v289,
 				case when dataelementid = 1631028 and categoryoptioncomboid = 15 then sag2.value end v290,
-				case when dataelementid = 9023 and categoryoptioncomboid = 15 then sag2.value end v291,
-				case when dataelementid = 8990 and categoryoptioncomboid = 15 then sag2.value end v292,
+				case when dataelementid = 8993 and categoryoptioncomboid = 15 then sag2.value end v291,
+				case when dataelementid = 8988 and categoryoptioncomboid = 15 then sag2.value end v292,
 				case when dataelementid = 8989 and categoryoptioncomboid = 15 then sag2.value end v293,
 				case when dataelementid = 8970 and categoryoptioncomboid = 15 then sag2.value end v294,
 				case when dataelementid = 8964 and categoryoptioncomboid = 15 then sag2.value end v295,
@@ -1480,10 +1480,10 @@ from
 				case when dataelementid = 1630980 and categoryoptioncomboid =  15 then sag2.value end a179,
 				case when dataelementid = 1630894 and categoryoptioncomboid =  15 then sag2.value end a180,
 				case when dataelementid = 1630873 and categoryoptioncomboid =  15 then sag2.value end a181,
-				case when dataelementid = 9023 and categoryoptioncomboid =  15 then sag2.value end a182,
+				case when dataelementid = 8990 and categoryoptioncomboid =  15 then sag2.value end a182,
 				case when dataelementid = 8991 and categoryoptioncomboid =  15 then sag2.value end a183,
 				case when dataelementid = 8992 and categoryoptioncomboid =  15 then sag2.value end a184,
-				case when dataelementid = 8993 and categoryoptioncomboid =  15 then sag2.value end a185,
+				case when dataelementid = 9023 and categoryoptioncomboid =  15 then sag2.value end a185,
 				case when dataelementid = 8994 and categoryoptioncomboid =  15 then sag2.value end a186,
 				case when dataelementid = 8995 and categoryoptioncomboid =  15 then sag2.value end a187,
 				case when dataelementid = 8996 and categoryoptioncomboid =  15 then sag2.value end a188,
@@ -1500,7 +1500,7 @@ from
 				case when dataelementid = 9475 and categoryoptioncomboid =  15 then sag2.value end a199,
 				case when dataelementid = 9476 and categoryoptioncomboid =  15 then sag2.value end a200,
 				case when dataelementid = 9032 and categoryoptioncomboid =  15 then sag2.value end a201,
-				case when dataelementid = 9037 and categoryoptioncomboid =  15 then sag2.value end a202,
+				case when dataelementid = 9033 and categoryoptioncomboid =  15 then sag2.value end a202,
 				case when dataelementid = 9038 and categoryoptioncomboid =  15 then sag2.value end a203,
 				case when dataelementid = 1630856 and categoryoptioncomboid =  15 then sag2.value end a204,
 				case when dataelementid = 9457 and categoryoptioncomboid =  15 then sag2.value end a205,
@@ -2024,4 +2024,4 @@ from
 group by
    state , div, dis,dishmiscode, block, blockhmiscode, facility, facilityhmiscode,organisationunitid, NIN, tp, st, loc
 order by
-   state , div, dis, block, facility) TO '/home/uphmis/DB/RDreport/UPHMISRawDataReportDecember17.csv' (format CSV, HEADER);
+   state , div, dis, block, facility) TO '/DATA/DHIS/Apps/dhis/tomcat/dhis_home/RDreport/UPHMISRawDataReportDecember17.csv' (format CSV, HEADER);

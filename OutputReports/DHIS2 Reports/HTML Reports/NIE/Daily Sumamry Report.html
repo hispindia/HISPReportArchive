@@ -1,744 +1,2405 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-	<script>$(document).ready(function() {
-  $.ajaxSetup({ cache: false });
-});</script>
-  <style type="text/css" href="http://139.162.61.147/nieodk_new/api/documents/IlCodOSjSxY/data" media="print">
-        @media print {
-            .notPrint {
-                display: none;
-            }
-            #printing {
-                display: block;
-            }
-            @page {
-                size: A4 landscape;
-                max-height: 100%;
-                max-width: 100%
-            }
-        }
-    </style>
+    <title>Daily Summary Report</title>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.15.35/css/bootstrap-datetimepicker.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.15.35/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/no-data-to-display.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://dhis2-cdn.org/v225-1/plugin/jquery-2.2.4.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
 
-    <style>
-        /* Center the loader */
-        #loader {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            z-index:3;
-            width: 150px;
-            height: 150px;
-            margin: -75px 0 0 -75px;
-            border: 16px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 16px solid #3498db;
-            width: 120px;
-            height: 120px;
-            -webkit-animation: spin 2s linear infinite;
-            animation: spin 2s linear infinite;
-        }
-
-        @-webkit-keyframes spin {
-            0% { -webkit-transform: rotate(0deg); }
-            100% { -webkit-transform: rotate(360deg); }
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        table {
-            border-collapse: collapse;
-        }
-
-        table,
-        td,
-        th {
-            border: 1px solid black;
-        }
-
-        p {
-            text-align: center;
-        }
-    </style>
-
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+    <!--<link rel="stylesheet" href="../api/documents/yV6CLAi1CWA/data" />-->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" />
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 </head>
 
-<body>
 
-<div id="loader" class="loader"></div>
+<style type="text/css" href="http://139.162.61.147/nieodk_new/api/documents/IlCodOSjSxY/data" media="print">
+    @media print {
+        #notPrint {
+            display: none;
+        }
+        #printing {
+            display: block;
+        }
 
-<div class="notPrint">
-<b style="margin-left: 30%">Start Date : </b><input type="date" id ="start" required>
-<input type="checkbox" id ="checkit" onclick="checkfunction()" checked> search only for single day End Date :  <input type="date" id ="end" disabled required><br><br>
-</div>
-<div style="text-align: center" class="notPrint">
-    <button onClick="generate(1);" id="dr1add">Daily Report 1-ADD</button>
-    &nbsp;
-    <button onClick="generate(2);" id="dr1afi">Daily Report 1-AFI</button>
-    &nbsp;
-    <button onClick="generate(3);" id="dr2">Daily Report 2 LAB</button><br><br>
+        body {
+            -webkit-print-color-adjust: exact;
+        }
 
-    <input type="button" id="export1" value="Download as Excel(DR1 ADD)" onClick="exportExcel_dr1add()">
-    &nbsp;
-    <input type="button" id="export2" value="Download as Excel(DR1 AFI)" onClick="exportExcel_dr1afi()">
-    &nbsp;
-    <input type="button" id="export3" value="Download as Excel(DR2 Lab)" onClick="exportExcel_dr2lab()">
-</div>
-<div id="printing">
+        @page {
+            size: A4 portrait;
+            margin: 1cm;
+        }
+    }
+</style>
+<Style>
+    .leaflet-popup-tip-container {
+        display: none;
+    }
 
-    <p id="dr1_fever"><strong>Daily  Report - I - ADD</strong></p>
-    <p id="dr1_fever1"><strong>Daily  Report - I - AFI</strong></p>
-    <p id="dr2_lab"><strong>Daily  Report 2</strong></p>
-    <p style="text-align: left;display: inline" id="datedisplay">Start Date:</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<p style="text-align: left;display: inline" id="datedisplay1">End Date:</p>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<p style="text-align: center;display: inline" id="orgunitdisplay"><strong>OrgUnit:</strong></p>
+    .leaflet-container {
+        background-color: rgba(255, 0, 0, 0.0);
+    }
 
-    <table style="text-align:center" class="table_fever" id="fever_table">
-        <thead>
-        <tr style='border:1px solid black'>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>S.No.</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Date of Admission</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Age(in years)</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Sex (M/F)</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Guardian</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Door Number,Street Name,Habitation</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Village</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the block</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the HUD</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the District</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Contact Number</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Probable Diagnosis</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of Hospital/organisation</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Remarks if any</b></th></tr>
-        </thead>
-    </table>
-    <table style="text-align:center" class="table_lab" id="lab_table">
-        <thead>
-        <tr style='border:1px solid black'>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>S.No.</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Date of Confirmation</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Age(in years)</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Sex (M/F)</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Guardian</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Door Number,Street Name,Habitation</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Village</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the block</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the HUD</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of the District</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Contact Number</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Diagnosis Lab Confirmed</b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Name of Institution/Lab Confirmed </b></th>
-            <th id = 'tablerows' colspan='1' style="color: #000000"><b>Remarks if any</b></th></tr>
-        </thead>
-    </table>
-    <div style="display:flex">
-        <p style="padding-right:50%" id="footer1"> Supported by GHSA Project, ICMR-NIE, Chennai-77</p>
-        <p id="footer2"> Facilitated by DPH and PM, Chennai-06</p>
-        </div>
-</div>
+    .newRow td {
+        border: none;
+        height: 30px;
+    }
 
-<script type="text/javascript">
-  
-var startDate="",endDate="";
-   var flag=0;
-    $( document ).ready(function() {
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("export2").disabled = true;
-        document.getElementById("export1").disabled = true;
-        document.getElementById("export3").disabled = true;
-        $('.table_fever').hide();
-        $('.table_lab').hide();
-        $('#datedisplay').hide();
-        $('#datedisplay1').hide();
-        $('#orgunitdisplay').hide();
-        $('#dr1_fever').hide();
-        $('#dr1_fever1').hide();
-        $('#dr2_lab').hide();
-        $('#footer1').hide();
-        $('#footer2').hide();
-		
-		var url = window.location.href;
-		var arrayUrl = url.split('&');
-		if(arrayUrl.length >2){
-		var arraySDate = arrayUrl[2] ;
-		 startDate = arraySDate.split('=')[1];
-		var arrayEDate = arrayUrl[3];
-		 endDate = arrayEDate.split('=')[1];
-		var arrayType = arrayUrl[4];
-		var type = arrayType.split('=')[1];
-		flag = 2;
-			generate(type);
-		
-		}
-//
-//            fever_table.Visible=false;
-//            lab_table.Visible=false;
+    thead th {
+        text-align: center;
+    }
+
+    .reporttable {
+        border-collapse: collapse;
+    }
+
+    .tablerows1 {
+        text-align: center;
+        text-align: center;
+        font-size: 16px;
+        height: 50px;
+        width: 10%;
+    }
+
+    .tablerows {
+        text-align: center;
+        font-size: 16px;
+        border: 1px solid black;
+        height: 50px;
+        width: 10%;
+    }
+
+
+
+    .table3 h1 {
+        text-align: center;
+    }
+
+    .reporttableC {
+
+        border-collapse: collapse;
+        border: 1px solid black;
+        text-align: center;
+        width: 100%;
+    }
+
+    .reporttableC tr td {
+        border: 1px solid black;
+        height: 40px;
+        min-width: 120px;
+    }
+
+    .reporttableC thead tr th {
+        height: 50px;
+        min-width: 120px;
+        border: 2px solid black;
+        background-color: #99ccff;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    tr {
+        padding-top: .4em;
+        padding-bottom: .5em;
+    }
+
+    .clusterHead td {
+        font-weight: 600;
+        font-family: 'Times New Roman', Times, serif;
+        border-bottom: 1px solid black;
+        background: #FFF9B1 !important;
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .custom-popup .leaflet-popup-content-wrapper {
+        font-size: 10px;
+        line-height: 2px;
+    }
+
+    .custom-popup .leaflet-popup-content-wrapper a {
+        font-size: 2px;
+        line-height: 2px;
+        width: 04px;
+        height: 04px;
+    }
+
+    .custom-popup .leaflet-popup-tip-container {
+        width: 04px;
+        height: 04px;
+    }
+
+    .info {
+        padding: 6px 8px;
+        font: 14px/16px Arial, Helvetica, sans-serif;
+        background: white;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+    }
+
+    .info h4 {
+        margin: 0 0 5px;
+        color: #777;
+    }
+
+    .legend {
+        text-align: left;
+        line-height: 18px;
+        color: #555;
+    }
+
+    .legend i {
+        width: 18px;
+        height: 18px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.7;
+    }
+</Style>
+<script>
+    //new map constants
+    var map;
+    const NIE = {
+        ROOT_OU_UID: "mnbTnDyJ37p",
+        CLUSTER_TEA_CLUSTER_TAIL_DATE: "b1WmXl2TU5U",
+        CLUSTER_TEA_CLUSTER_START_DATE: "XGWh7OT2Pa8",
+        Cluster_ProgramUID: "mcnt7nqNrNw",
+        TEA_IS_ACTIVE: "DyjpKLdKmoD",
+        TEA_COORDS: "sanq4S5uYdb",
+        TEA_CLUSTER_TYPE: "sBmb7HfvAau",
+        TEA_CLUSTER_CASES: "I2eCWfhryZH",
+        AFI_TEA_3_5: "vCeMi4DtfEC",
+        AFI_TEA_5_7: "k0L2KR4ZrU2",
+        ADD_TEA_2_3: "ET5iMtBo5fV",
+        TEA_LAB: "nMC9jWaMUTA",
+
+    }
+
+
+    const imgpath_polygon_5_sided = "../api/documents/ph7t8TbV1lJ/data";
+    const imgpath_red_circle = "../api/documents/AafIibwti0p/data";
+    const imgpath_star = "../api/documents/KE87BJI62sC/data";
+    const imgpath_marker_icon_blue = "../api/documents/ph7t8TbV1lJ/data";
+    const imgpath_marker_icon_inactive = "../api/documents/ph7t8TbV1lJ/data";
+    const imgpath_marker_icon_add_2 = "../api/documents/yVEmCyGgEoR/data";
+
+    function findValueAgainstId(data, idKey, id, valKey) {
+        for (var i = 0; i < data.length; i++) {
+            if (data[i][idKey] == id) {
+                return data[i][valKey]
+            }
+        }
+        return null;
+    }
+
+
+
+    var ou,clusterId = "None", clusterType = "None",block = "None",phc = "None",patients, patientsArray,Pname, Page, Pgender, Pdoor, Phabitation, Pvillage, Pmob, Ponset, Pdate, Pstreet, Plab = [];
+
+    var total_1day = 0, total_7day = 0, total_30day = 0,x_categories = [], ip_fever_male_data = [], ip_fever_female_data = [], ip_fever_total_data = [];
+    var series = [], ip_fever_age12 = [], ip_fever_agel = [], ip_fever_age1to5 = [], ip_fever_ageg6to12 = [],ip_fever_dengue_cases = [], ip_fever_scrub_cases = [], ipcases = [],labconfirmedcases = [];
+    var last30days, last7days;
+    var url, ou;
+    var taluk_count_07 = {
+        orgname: [],
+        orgcount: []
+
+    };
+    var opcases = {
+        ouval: [],
+        ouperiod: []
+
+    };
+
+    var taluk_count_01 = {
+        orgname: [],
+        orgcount: []
+
+    };
+    var taluk_count_30 = {
+        orgname: [],
+        orgcount: []
+
+    };
+    var taluk_chart_data = [];
+    var taluk_chart_data_name = [];
+    var ip_fever = {
+        ip_fever_male: [],
+        ip_fever_female: [],
+        ip_fever_total: []
+    };
+
+    var ip_fever_gender = {
+        ip_fever_age_g_12: [],
+        ip_fever_age_l_1: [],
+        ip_fever_age_6to12: [],
+        ip_fever_age_1to5: []
+    };
+
+    var today = "";
+    $(document).ready(function () {
+        var url = window.location.href;
+        var arrayUrl = url.split('&');
+        if (arrayUrl.length > 2) {
+            var arraySDate = arrayUrl[2];
+            today = arraySDate.split('=')[1];
+
+	document.getElementById('datepicker').value = today;
+            loadDataX();
+        }
 
     });
-	
-	  var checkfunction = function(){
-        if($('input:checkbox').is(':checked')){
-            document.getElementById("end").disabled = true;
+
+
+    function loadDataX() {
+        url = window.location.href;
+        ou = url.split('=')[2];
+
+        $("#legend").show();
+
+        var datee;
+        if (today == "") {
+            today = document.getElementById('datepicker').value;
         }
-        else{
-            document.getElementById("end").disabled = false;
+        var year = today.substring(0, 4),month = today.substring(5, 7),piechartperod = year + '' + month,date = today.substring(8, 11);
+
+        var today_ = year + "-" + month + "-" + date,today_fortable = year + month + date,last30days = "",d = new Date(year, month - 1, date);
+        var previousdy = new Date(d.getTime() - 1 * 24 * 60 * 60 * 1000),previousdy_7 = new Date(d.getTime() - 7 * 24 * 60 * 60 * 1000),mon = previousdy.getMonth() + 1;
+        var mon_ = previousdy_7.getMonth() + 1,datenew = previousdy.getDate(),datenew_ = previousdy_7.getDate(),dateyear = previousdy.getFullYear();
+        var date_print = datenew + "-" + mon + "-" + dateyear;
+        if (mon < 10) {
+            mon = '0' + mon;
         }
-    };
-	var generate = function(selection){
-	
-				  
-    var urlApi;
-    var add_afi=[],add_aff=[],daily_ip=[],daily_op=[],daily_lab=[],village=[],hud=[],block=[],districtu=[],habitationu=[],gaurdian=[],remarks=[];
-	var dateofAdd=[],patientname=[],age=[],sex=[],guardian=[],street1=[],street2=[],district=[];
-    var url = window.location.href;
-    var ouu = url.split('=')[2],ouname;
-   var ou = ouu.split('&')[0]
-   var json,length;
-   var addcount=1;
-     var oulevel,oulevel_name;
-	var lab_positive="Positive",lab_diagnosis=[],lab_diagnosis_string=[];
-        var org_ghuid;
-        var hospital=[],contactnumber=[],diagnosis=[],nameofhospital,remarks=[];
-	
-  
-	
-    function callApis(selection)
-    {	
-		if(flag!=2){
-		startDate = document.getElementById("start").value;
-
-        if($('input:checkbox').is(':checked')){
-
-		endDate = startDate.substring(0,8)+(Number(startDate.substring(8,10)) + 1);
-		flag = 1;
-
-            
+        if (datenew < 10) {
+            datenew = "0" + datenew;
         }
-        else{
-            endDate = document.getElementById("end").value;
-           
+        if (mon_ < 10) {
+            mon_ = '0' + mon_;
         }
-		}
-		
-        document.getElementById("export2").disabled = true;
-        document.getElementById("export1").disabled = true;
-        document.getElementById("export3").disabled = true;
-//        showLoader();
+        if (datenew_ < 10) {
+            datenew_ = "0" + datenew_;
+        }
+        var previousdy1 = previousdy.getFullYear() + '' + mon + '' + datenew,previousdy1_ = previousdy.getFullYear() + '-' + mon + '-' + datenew,previousdy_7_ = previousdy_7.getFullYear() + '-' + mon_ + '-' + datenew_;
 
- $('.table_fever tbody').remove();
-        $('.table_fever tbody').detach();
-        $('.table_fever').show();
-        $('.table_lab').hide();
-        $('#dr2_lab').hide();
-        $('#datedisplay').show();
-        $('#datedisplay1').show();
-        $('#orgunitdisplay').show();
-        $('#dr1_fever').hide();
-		 $('#dr1_fever1').hide();
-        $('#footer1').show();
-        $('#footer2').show();
-      
 
-        $.getJSON("../api/organisationUnits/"+ou+".json", function(data1){
-	$("#loader").show();
-            ouname=data1.displayName;
-            oulevel=data1.level;
+        for (var x = 30; x >= 1; x--) {
+            // var date2=x-date;
 
-            $.getJSON("../api/organisationUnitLevels?fields=level,name", function(data2) {
+            var startDate = new Date(d.getTime() - x * 24 * 60 * 60 * 1000);
 
-                $.each(data2.organisationUnitLevels, function (index, item) {
-                    if(item.level==oulevel)
-                    {
-                        oulevel_name=item.name;
+            var date3 = startDate.getDate();
+            if (date3 < 10) {
+                date3 = '0' + date3;
+            }
+            var month1 = startDate.getMonth() + 1;
+            if (month1 < 10) {
+                month1 = '0' + month1;
+            }
+            var year1 = startDate.getFullYear();
+            var period = year1 + '' + month1 + '' + date3;
+
+
+            last30days = period + ';' + last30days;
+
+        };
+        var len = last30days.length - 1;
+        last30days = last30days.substring(0, len);
+        var last7days = "";
+        for (var x = 7; x >= 1; x--) {
+            // var date2=x-date;
+
+            var startDate = new Date(d.getTime() - x * 24 * 60 * 60 * 1000);
+            var date3 = startDate.getDate();
+            if (date3 < 10) {
+                date3 = '0' + date3;
+            }
+            var month1 = startDate.getMonth() + 1;
+            if (month1 < 10) {
+                month1 = '0' + month1;
+            }
+            var year1 = startDate.getFullYear();
+
+
+            var period = year1 + '' + month1 + '' + date3;
+
+
+            last7days = period + ';' + last7days;
+
+        };
+        loadReports(previousdy_7_, previousdy1_, last7days);
+        var len1 = last7days.length - 1;
+        last7days = last7days.substring(0, len1);
+
+        map = L.map('map1').setView([13.252525, 79.797979], 9.5);
+
+        var style = {
+            color: "black",
+            opacity: 0.75,
+            fillColor: "white",
+            fillOpacity: 0,
+            weight: 2,
+
+        }
+        $(".leaflet-control-zoom").css("display", "none");
+
+        addOrgUnitLayer(5, Object.assign({}, style), true);
+        style.weight = 0.95;
+        style.color = "black";
+        style.opacity = 0.25;
+        addOrgUnitLayer(7, Object.assign({}, style));
+
+
+
+        // get color depending on population density value
+        function getColor(d) {
+            var afi_3 = '../api/documents/ph7t8TbV1lJ/data',afi_5 = '../api/documents/KE87BJI62sC/data',lab_1 = '../api/documents/AafIibwti0p/data';
+            return d > '1 Lab confirmed case' ? lab_1 :
+                d > '5 AFI cases (last 5 days)' ? afi_5 :
+                d > '3 AFI cases (last 5 days)' ? afi_3 :
+                '#FFEDA0';
+
+        }
+        function style(feature) {
+            return {
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7,
+                fillColor: getColor(feature.properties.density)
+            };
+        }
+        var legend = L.control({
+            position: 'topleft'
+        });
+
+        legend.onAdd = function (map) {
+
+            var div = L.DomUtil.create('div', 'info legend'),
+                grades = ['3 AFI cases (last 5 days)', '5 AFI cases (last 5 days)', '1 Lab confirmed case',
+                    'Manual Cluster','ADD 2 Cases in 3 Days'
+                ],
+                labels = [],
+                from = ['../api/documents/ph7t8TbV1lJ/data', '../api/documents/KE87BJI62sC/data',
+                    '../api/documents/AafIibwti0p/data', '../api/documents/dWIBuOQPMHq/data', '../api/documents/yVEmCyGgEoR/data'
+                ],
+                to;
+
+            for (var i = 0; i < grades.length; i++) {
+                //                from = grades[i];
+                to = grades[i];
+
+                labels.push(
+                    '<img src="' + (from[i]) + '"  style="width:20px;height: 20px ;"> ' + (to));
+            }
+
+            div.innerHTML = labels.join('<br>');
+            return div;
+        };
+
+        legend.addTo(map);
+        document.getElementById("report").innerHTML = "Report ID:";
+        document.getElementById("datet").innerHTML = "Date : " + dateformat(today_);
+        document.getElementById("period").innerHTML = "Period : " + dateformat(previousdy_7_) + " - " + dateformat(
+            previousdy1_);
+
+        var format = "YYYY-MM-DD",endDate = new Date(document.getElementById('datepicker').value),startDate = new Date(endDate);
+
+        startDate = startDate.setDate(endDate.getDate() - 7);
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: "../api/trackedEntityInstances?ou=" + NIE.ROOT_OU_UID + "&ouMode=DESCENDANTS&filter=" +
+                NIE.CLUSTER_TEA_CLUSTER_TAIL_DATE + ":ge:" + moment(startDate).format(format) + "&filter=" +
+                NIE.CLUSTER_TEA_CLUSTER_START_DATE + ":eq:" + moment(endDate).format(format) +
+                 "&program=" + NIE.Cluster_ProgramUID +
+                "&skipPaging=true",
+            success: function (data) {
+                var teis = data.trackedEntityInstances;
+                coords = extractCoordsFromTEI(teis, true);debugger
+                featureCollection = getPointFeatures(coords)
+                addClusterMarkers(featureCollection);
+
+            },
+            error: function (response) {
+
+            }
+        });
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/25/analytics.json?dimension=dx:c6ZZS1owbii;BJ3D1sBfXkN&dimension=pe:' + last7days +
+                '&filter=ou:leMGqLV90eH&displayProperty=NAME&outputIdScheme=CODE',
+            success: function (dhis_rows) {
+                for (var i = 0; i < dhis_rows.metaData.pe.length; i++) {
+                    x_categories.push(dhis_rows.metaData.pe[i]);
+                }
+                for (var i = 0; i < dhis_rows.rows.length; i++) {
+                    if (dhis_rows.rows[i][0] == "c6ZZS1owbii") {
+                        ip_fever.ip_fever_male.push({
+                            "name": "IP fever case (male)",
+                            "period": dhis_rows.rows[i][1],
+                            "value": dhis_rows.rows[i][2]
+                        });
+
+                        ip_fever_male_data.push(Number(dhis_rows.rows[i][2]));
+
+                    } else if (dhis_rows.rows[i][0] == "BJ3D1sBfXkN") {
+                        ip_fever.ip_fever_female.push({
+                            "name": "IP fever case (female)",
+                            "period": dhis_rows.rows[i][1],
+                            "value": dhis_rows.rows[i][2]
+                        });
+                        ip_fever_female_data.push(Number(dhis_rows.rows[i][2]));
+
+                    } else {
+                        ip_fever.ip_fever_total.push({
+                            "name": "IP fever case (total)",
+                            "period": dhis_rows.rows[i][1],
+                            "value": dhis_rows.rows[i][2]
+                        });
+                        ip_fever_total_data.push(dhis_rows.rows[i][2]);
                     }
+
+                }
+                //                    x_categories.reverse();
+                ip_fever_male_data.reverse();
+                ip_fever_female_data.reverse();
+
+                generatechart_ipfever_male_female(x_categories, ip_fever_male_data,
+                    ip_fever_female_data);
+
+
+            },
+            error: function (response) {
+
+            }
+        });
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/25/analytics.json?dimension=dx:qt1YSg9Nxrf;tGevnp0W5lQ;b2RCQBQGScR;PGmsNGvuZtr&dimension=pe:' +
+                last7days + '&filter=ou:leMGqLV90eH&displayProperty=NAME&skipMeta=true',
+            success: function (dhis_rows) {
+                x_categories = [];
+                for (var i = 0; i < dhis_rows.rows.length; i++) {
+                    for (var i = 0; i < dhis_rows.rows.length; i++) {
+                        if (dhis_rows.rows[i][0] == "PGmsNGvuZtr") {
+                            ip_fever_gender.ip_fever_age_g_12.push({
+                                "name": "IP fever case (age > 12 yrs)",
+                                "period": dhis_rows.rows[i][1],
+                                "value": dhis_rows.rows[i][2]
+                            });
+
+                            ip_fever_age12.push(Number(dhis_rows.rows[i][2]));
+                            x_categories.push(dhis_rows.rows[i][1]);
+                        } else if (dhis_rows.rows[i][0] == "qt1YSg9Nxrf") {
+                            ip_fever_gender.ip_fever_age_l_1.push({
+                                "name": "IP fever case (age < 1 year)",
+                                "period": dhis_rows.rows[i][1],
+                                "value": dhis_rows.rows[i][2]
+                            });
+                            ip_fever_agel.push(Number(dhis_rows.rows[i][2]));
+
+                        } else if (dhis_rows.rows[i][0] == "b2RCQBQGScR") {
+                            ip_fever_gender.ip_fever_age_6to12.push({
+                                "name": "IP fever case (age 6-12 yrs)",
+                                "period": dhis_rows.rows[i][1],
+                                "value": dhis_rows.rows[i][2]
+                            });
+                            ip_fever_ageg6to12.push(Number(dhis_rows.rows[i][2]));
+
+                        } else if (dhis_rows.rows[i][0] == "tGevnp0W5lQ") {
+                            ip_fever_gender.ip_fever_age_1to5.push({
+                                "name": "IP fever case (age 1-5 yrs)",
+                                "period": dhis_rows.rows[i][1],
+                                "value": dhis_rows.rows[i][2]
+                            });
+                            ip_fever_age1to5.push(Number(dhis_rows.rows[i][2]));
+
+                        } else {
+                            ip_fever_total_data.push(dhis_rows.rows[i][2]);
+                        }
+                    }
+                }
+                x_categories.reverse();
+                ip_fever_age12.reverse();
+                ip_fever_age1to5.reverse();
+                ip_fever_ageg6to12.reverse();
+                ip_fever_agel.reverse();
+                generatechart_ipfever_age(x_categories, ip_fever_age12, ip_fever_agel, ip_fever_age1to5,
+                    ip_fever_ageg6to12);
+            },
+            error: function (response) {
+
+            }
+        });
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/25/analytics.json?dimension=dx:rtJChfVTmu7;LbnFL8X21GT&dimension=pe:' + last7days +
+                '&filter=ou:leMGqLV90eH&displayProperty=NAME',
+            success: function (dhis_rows) {
+                x_categories = [];
+                for (var j = 0; j < dhis_rows.metaData.pe.length; j++) {
+                    x_categories.push(dhis_rows.metaData.pe[j]);
+                }
+                for (var i = 0; i < dhis_rows.rows.length; i++) {
+                    if (dhis_rows.rows[i][0] == "rtJChfVTmu7") {
+                        ip_fever_dengue_cases.push(Number(dhis_rows.rows[i][2]));
+
+                    } else if (dhis_rows.rows[i][0] == "LbnFL8X21GT") {
+                        ip_fever_scrub_cases.push(Number(dhis_rows.rows[i][2]));
+
+                    }
+                }
+
+
+                generatechart_ipfever_disease(x_categories, ip_fever_dengue_cases, ip_fever_scrub_cases);
+            },
+            error: function (response) {
+
+            }
+        });
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/25/analytics.json?dimension=dx:yldg0WX82FD&dimension=pe:' + last7days +
+                '&dimension=ou:leMGqLV90eH&displayProperty=NAME',
+            success: function (dhis_rows) {
+                x_categories = [];
+                for (var j = 0; j < dhis_rows.metaData.pe.length; j++) {
+                    x_categories.push(dhis_rows.metaData.pe[j]);
+
+                }
+                for (var i = 0; i < dhis_rows.rows.length; i++) {
+
+                    if (dhis_rows.rows[i][0] == "yldg0WX82FD") {
+                        opcases.ouperiod.push(dhis_rows.rows[i][1]);
+                        opcases.ouval.push(Number(dhis_rows.rows[i][3]));
+                    }
+                }
+                opcases.ouval.reverse();
+                opcases.ouperiod.reverse();
+
+                linechart_op(opcases.ouperiod, opcases.ouval);
+            },
+            error: function (response) {
+
+            }
+        });
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/25/analytics.json?dimension=dx:kI1lGixi5a5&dimension=pe:' + last7days +
+                '&filter=ou:leMGqLV90eH&displayProperty=NAME',
+            success: function (dhis_rows) {
+                x_categories = [];
+                for (var i = 0; i < dhis_rows.metaData.pe.length; i++) {
+                    x_categories.push(dhis_rows.metaData.pe[i]);
+                }
+                for (var i = 0; i < dhis_rows.rows.length; i++) {
+                    if (dhis_rows.rows[i][0] == "kI1lGixi5a5") {
+
+                        ipcases.push(Number(dhis_rows.rows[i][2]));
+
+                    }
+                }
+                ipcases.reverse();
+
+                linechart_ip(x_categories, ipcases);
+            },
+            error: function (response) {
+
+            }
+        });
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/25/analytics.json?dimension=dx:BZW0y6OUSVS&dimension=pe:' + last7days +
+                '&filter=ou:leMGqLV90eH&displayProperty=NAME',
+            success: function (dhis_rows) {
+                x_categories = [];
+                for (var i = 0; i < dhis_rows.metaData.pe.length; i++) {
+                    x_categories.push(dhis_rows.metaData.pe[i]);
+                }
+
+                for (var i = 0; i < dhis_rows.rows.length; i++) {
+                    if (dhis_rows.rows[i][0] == "BZW0y6OUSVS") {
+
+                        labconfirmedcases.push(Number(dhis_rows.rows[i][2]));
+
+                    }
+                }
+
+
+                linechart_fever(x_categories, labconfirmedcases);
+            },
+            error: function (response) {
+
+            }
+        });
+        $.getJSON("../api/analytics/events/aggregate/Ml0ZNj9APN0.json?stage=iWcQ5lxmsy4&dimension=pe:" + last7days +
+            "&dimension=ou:LEVEL-5;mnbTnDyJ37p&outputType=EVENT&displayProperty=NAME",
+            function (odfjson1, id) {
+                var map = [],
+                    count;
+                for (var i = 0; i < odfjson1.rows.length; i++) {
+                    if (!map[odfjson1.rows[i][1]]) {
+                        map[odfjson1.rows[i][1]] = [];
+                    }
+                    map[odfjson1.rows[i][1]].push(odfjson1.rows[i]);
+                }
+
+                for (var j = 0; j < Object.keys(map).length; j++) {
+                    count = 0;
+                    $.ajax({
+                        async: false,
+                        type: "GET",
+                        dataType: "json",
+                        contentType: "application/json",
+                        url: '../api/organisationUnits/' + Object.keys(map)[j] + '.json?fields=name,id',
+                        success: function (data) {
+
+                            taluk_count_07.orgname.push(data.name);
+                        }
+                    });
+
+
+                    for (var i = 0; i < Object.values(map)[j].length; i++) {
+                        count = Number(count) + Number(Object.values(map)[j][i][2]);
+
+                    }
+                    taluk_count_07.orgcount.push(Math.round(count / 7));
+
+                }
+                if (taluk_count_07.orgname.length < 14) {
+                    taluk_count_07.orgname.push("Puzhal");
+                    taluk_count_07.orgcount.push(0);
+                } else {
+
+                }
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    dataType: "json",
+                    contentType: "application/json",
+                    url: '../api/analytics/events/aggregate/Ml0ZNj9APN0.json?stage=iWcQ5lxmsy4&dimension=pe:' +
+                        last30days +
+                        '&dimension=ou:LEVEL-5;mnbTnDyJ37p&outputType=EVENT&displayProperty=NAME',
+                    success: function (odfjson1, id) {
+                        var map = [],
+                            count = 0;
+                        for (var i = 0; i < odfjson1.rows.length; i++) {
+                            if (!map[odfjson1.rows[i][1]]) {
+                                map[odfjson1.rows[i][1]] = [];
+                            }
+                            map[odfjson1.rows[i][1]].push(odfjson1.rows[i]);
+                        }
+
+                        for (var j = 0; j < Object.keys(map).length; j++) {
+
+
+                            $.ajax({
+                                async: false,
+                                type: "GET",
+                                dataType: "json",
+                                contentType: "application/json",
+                                url: '../api/organisationUnits/' + Object.keys(map)[j] +
+                                    '.json?fields=name,id',
+                                success: function (data) {
+
+                                    taluk_count_30.orgname.push(data.name);
+                                }
+                            });
+
+                            for (var i = 0; i < Object.values(map)[j].length; i++) {
+                                count = Number(count) + Number(Object.values(map)[j][i][2]);
+
+                            }
+                            taluk_count_30.orgcount.push(Math.round(count / 30));
+                            count = 0;
+
+                        }
+                    },
+                    error: function (response) {}
                 });
-                document.getElementById("orgunitdisplay").innerHTML="Facility: "+ouname +" "+oulevel_name;
-          
+
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    dataType: "json",
+                    contentType: "application/json",
+                    url: '../api/analytics/events/aggregate/Ml0ZNj9APN0.json?stage=iWcQ5lxmsy4&dimension=pe:' +
+                        today_fortable +
+                        '&dimension=ou:LEVEL-5;mnbTnDyJ37p&outputType=EVENT&displayProperty=NAME',
+                    success: function (odfjson1, id) {
+                        var map = [],
+                            count = 0;
+                        for (var i = 0; i < odfjson1.rows.length; i++) {
+                            if (!map[odfjson1.rows[i][1]]) {
+                                map[odfjson1.rows[i][1]] = [];
+                            }
+                            map[odfjson1.rows[i][1]].push(odfjson1.rows[i]);
+                        }
+
+                        for (var j = 0; j < Object.keys(map).length; j++) {
 
 
-        
+                            $.ajax({
+                                async: false,
+                                type: "GET",
+                                dataType: "json",
+                                contentType: "application/json",
+                                url: '../api/organisationUnits/' + Object.keys(map)[j] +
+                                    '.json?fields=name,id',
+                                success: function (data) {
 
-       document.getElementById("datedisplay").innerHTML="Start Date:"+ startDate;
-				if(endDate ==null)
-				{
-				endDate ="-";
-				}
-                document.getElementById("datedisplay1").innerHTML="End Date:"+ endDate;
-
-//        $.getJSON("../api/events.json?orgUnit="+ou+"&program=Ml0ZNj9APN0&ouMode=DESCENDANTS&startDate="+startDate+"&endDate="+endDate+"&skipPaging=true&order=eventDate:desc", function(data){
-//        $.getJSON("../api/sqlViews/aABHZ3xSINW/data.json?var=startDate:"+startDate+"&var=endDate:"+endDate+"&var=syndrome:ADD", function(data){
-
-
-		
-     
-						if(selection == 1){
-                            $.getJSON("http://139.162.61.147/nieodk/api/sqlViews/aABHZ3xSINW/data.json?var=startDate:"+startDate+"&var=endDate:"+endDate+"&var=syndrome:ADD", function(data) {
-                                length = data.rows.length;
-                                saveData(data, 0);
-                                printDate1(length, 0);
-                                document.getElementById("export1").disabled = false;
-                                $('#dr1_fever').show();
+                                    taluk_count_01.orgname.push(data.name);
+                                }
                             });
-						}
-						else if(selection == 2){
-                            $.getJSON("http://139.162.61.147/nieodk/api/sqlViews/aABHZ3xSINW/data.json?var=startDate:"+startDate+"&var=endDate:"+endDate+"&var=syndrome:AFI", function(data) {
-                                length = data.rows.length;
-                                saveData(data,0);
-							printDate2(length,0);
-							document.getElementById("export2").disabled = false;
-							 $('#dr1_fever1').show();
-                            });
-						}
-						else{
-                            $.getJSON("../api/sqlViews/YD92a2cONvA/data.json?var=startDate:"+startDate+"&var=endDate:"+endDate, function(data) {
-                                length = data.rows.length;
 
-                                saveDataLab(data,0);
-							printDate3(length,0);
-							document.getElementById("export3").disabled = false;
-							$('#dr2_lab').show();
-                            });
-						}    
+                            for (var i = 0; i < Object.values(map)[j].length; i++) {
+                                count = Number(count) + Number(Object.values(map)[j][i][2]);
 
+                            }
+                            taluk_count_01.orgcount.push(Math.round(count));
+                            count = 0;
+                        }
 
-			$("#hidden1").show();
-			$("#hidden2").show();       
+                        for (var i=0;i<taluk_count_07.orgname.length;i++)
+                        {
+                            for(var j=0;j<taluk_count_30.orgname.length;j++)
+                            {
+                                if(taluk_count_07.orgname[i]==taluk_count_30.orgname[j])
+                                {
+                                    taluk_count_30.orgname[i]=taluk_count_30.orgname[j];
+                                    taluk_count_30.orgcount[i]=taluk_count_30.orgcount[j];
 
-	   });
-		
-  });
+                                }
+                                if(taluk_count_07.orgname[i]==taluk_count_01.orgname[j])
+                                {
+                                    taluk_count_01.orgname[i]=taluk_count_01.orgname[j];
+                                    taluk_count_01.orgcount[i]=taluk_count_01.orgcount[j];
 
-//        });
-     
+                                }
+
+                            }
+                        }
+                        generatetable(today_, taluk_count_07, taluk_count_30, taluk_count_01);
+                    },
+                    error: function (response) {}
+                });
+
+            });
+
 
     }
-			var saveData = function(data,p){
-			if(p>=data.rows.length){
-			return;}
-			else{
-					 json =  data.rows[p];
 
-                    for(var p=0;p<data.rows.length;p++)
-                    {
-                            dateofAdd.push(data.rows[p][1].substring(0,10));
-                            //Basic_Information/Name
-                            patientname.push(data.rows[p][2]);
-                            //Age in years
-                            age.push(data.rows[p][4]);
-                            //Gender
-                            sex.push(data.rows[p][5]);
-                            //Gaurdian
-                        guardian.push(data.rows[p][6]);
-                            //Street_Information/Street
-                            street1.push(data.rows[p][7]);
-                            //Street_Information/Pincode
-                            street2.push(data.rows[p][8]);
-                            //District
-                            districtu.push(data.rows[p][13]);
-                           habitationu.push(data.rows[p][9].replace(/[^A-Za-z]+/g, ''));
-                            //Village
-                           village.push(data.rows[p][10]);
-                           //block
-                           block.push(data.rows[p][11]);
-                           //hud
-                           hud.push(data.rows[p][12]);
-                           //contact
-                        contactnumber.push(data.rows[p][14]);
-                        diagnosis.push(data.rows[p][15]);
-                        //GH
-                hospital.push(data.rows[p][16] ? data.rows[p][16].split('-')[1] : "-");
-                        //remarks
-                        remarks.push(data.rows[p][17]);
-                    }
+    function generatetable(today_, taluk_count_07, taluk_count_30, taluk_count_01) {
+        var tablerow = "";
+        for (var tab = 0; tab < taluk_count_07.orgname.length; tab++) {
 
-						if(dateofAdd[p]==null)
-                        {
-                            dateofAdd[p]="-";
-                        }
-						if(patientname[p]==null)
-                        {
-                            patientname[p]="-";
-                        }
-						if(age[p]==null)
-                        {
-                            age[p]="-";
-                        }
-						if(sex[p]==null)
-                        {
-                            sex[p]="-";
-                        }
-
-                if(!hospital[p])
-                {
-                    hospital[p]="-";
-                }
-
-                        if(street1[p]==null)
-                        {
-                            street1[p]="-";
-                        }
-						if(habitationu[p]==null)
-                        {
-                            habitationu[p]="-";
-                        }
-						if(village[p]==null)
-                        {
-                            village[p]="-";
-                        }
-						if(hud[p]==null)
-                        {
-                            hud[p]="-";
-                        }
-						if(block[p]==null)
-                        {
-                            block[p]="-";
-                        }
-						if(districtu[p]==null)
-                        {
-                            districtu[p]="-";
-                        }
-
-						saveData(data, p+1);
-}
-			};
-	
-			var saveDataLab = function(data,p){
-			if(p>=data.rows.length){
-			return;}
-			else {
-                for(var p=0;p<data.rows.length;p++)
-                {
-
-                dateofAdd.push(data.rows[p][3]);
-                //Basic_Information/Name
-                patientname.push(data.rows[p][2]);
-                //Age in years
-                age.push(data.rows[p][4]);
-                //Gender
-                sex.push(data.rows[p][5]);
-                //Gaurdian
-                guardian.push(data.rows[p][6]);
-                //Street_Information/Street
-                street1.push(data.rows[p][7]);
-                //Street_Information/Pincode
-                street2.push(data.rows[p][8]);
-                //District
-                districtu.push(data.rows[p][13]);
-                habitationu.push(data.rows[p][9].replace(/[^A-Za-z]+/g, ''));
-                //Village
-                village.push(data.rows[p][10]);
-                //block
-                block.push(data.rows[p][11]);
-                //hud
-                hud.push(data.rows[p][12]);
-                //district
-                contactnumber.push(data.rows[p][14]);
-
-                if (data.rows[p][15].includes("Dengue")) {
-                    diagnosis.push("Dengue");
-                }
-                if (data.rows[p][16].includes("Malaria")) {
-                    diagnosis.push("Malaria");
-                }
-                if (data.rows[p][17].includes("Leptosprirosis")) {
-                    diagnosis.push("Leptosprirosis");
-                }
-                if (data.rows[p][18].includes("scrub_typhus")) {
-                    diagnosis.push("scrub_typhus");
-                }
-
-                //GH
-                hospital.push(data.rows[p][19] ? data.rows[p][19].split('-')[1] : "-");
-                //remarks
-                remarks.push(data.rows[p][20]);
+            if (taluk_count_01.orgname.includes(taluk_count_07.orgname[tab])) {} else {
+                taluk_count_01.orgname.push(taluk_count_07.orgname[tab]);
+                taluk_count_01.orgcount.push(0);
             }
+
+
+            if (taluk_count_01.orgcount[tab] == "undefined" || taluk_count_01.orgcount[tab] == "" || taluk_count_01
+                .orgcount[tab] == null) {
+                taluk_count_01.orgcount[tab] = "-";
+            }
+            if (taluk_count_07.orgcount[tab] == "undefined" || taluk_count_07.orgcount[tab] == "" || taluk_count_07
+                .orgcount[tab] == null) {
+                taluk_count_07.orgcount[tab] = "-";
+            }
+            if (taluk_count_30.orgcount[tab] == "undefined" || taluk_count_30.orgcount[tab] == "" || taluk_count_30
+                .orgcount[tab] == null) {
+                taluk_count_30.orgcount[tab] = "-";
+            }
+
+        }
+        for (var tab = 0; tab < taluk_count_07.orgname.length; tab++) {
+                    console.log("name:--"+tab+"-->",taluk_count_07.orgname[tab])
+                    tablerow +=
+                        "<tr style='padding-bottom: 1em;border-bottom:0.5px solid black'><td style='text-align:right;padding-right:5px;'>" +
+                        parseInt(
+                            parseInt(tab) + 1) + "</td><td style='text-align:left;'>" +
+                        taluk_count_07.orgname[tab] + "</td><td style='text-align:right;'>" + taluk_count_01.orgcount[
+                            tab] +
+                        "</td><td style='text-align:right;'>" + taluk_count_07.orgcount[tab] +
+                        "</td><td style='text-align:right;'>" + taluk_count_30.orgcount[tab] + "</td></tr>";
+                    taluk_chart_data.push(Math.round(taluk_count_07.orgcount[tab] - taluk_count_30.orgcount[tab]));
+                    taluk_chart_data_name.push((taluk_count_07.orgname[tab]));
+
+                    if (taluk_count_01.orgcount[tab] == "-") {
+                        taluk_count_01.orgcount[tab] = 0;
                     }
+                    if (taluk_count_07.orgcount[tab] == "-") {
+                        taluk_count_07.orgcount[tab] = 0;
+                    }
+                    if (taluk_count_30.orgcount[tab] == "-") {
+                        taluk_count_30.orgcount[tab] = 0;
+                    }
+                    total_1day += parseInt(taluk_count_01.orgcount[tab]);
+                    total_7day += parseInt(taluk_count_07.orgcount[tab]);
+                    total_30day += parseInt(taluk_count_30.orgcount[tab]);
+        }
+        var _7day = total_1day.toString();
+        var _1day = total_7day.toString();
+        var _30day = total_30day.toString();
+        _7day.replace(/[^a-zA-Z ]/g, "");
+        _1day.replace(/[^a-zA-Z ]/g, "");
+        _30day.replace(/[^a-zA-Z ]/g, "");
+        var tableheading =
+            "<tr style='border-bottom:2px solid black;'><td style='text-align:center;'> S.No  </td><td style='text-align:center;'>Name of the Block </td><td style='text-align:center;'>" +
+            "IP-" + today_ +
 
+            "</td><td style='text-align:center;'>Last 7 Days (Average)</td><td style='text-align:center;'>Last 30 Days(Average)</td></tr>";
+        //to DO add a Total at the end of row
+        var table_total =
+            "<tr style='border-top:2px solid black'><td style='text-align:left;'> Total </td><td style='text-align:left;'> </td><td style='text-align:right;'>" +
+            total_1day +
+            "</td><td style='text-align:right;'>" + total_7day + "</td><td style='text-align:right;'>" + total_30day +
+            "</td></tr>";
 
+        var table = "<table style='margin-left: 12%; width: 80%;height: 40%;margin-bottom:5%;margin-top:5%;'>" +
+            tableheading + tablerow + table_total + "</table>";
+        document.getElementById("summary").innerHTML = table;
 
-               
-						if(dateofAdd[p]==null)
-                        {
-                            dateofAdd[p]="-";
-                        }
-						if(patientname[p]==null)
-                        {
-                            patientname[p]="-";
-                        }
-						if(age[p]==null)
-                        {
-                            age[p]="-";
-                        }
-						if(sex[p]==null)
-                        {
-                            sex[p]="-";
-                        }
-                if(!hospital[p])
-                {
-                    hospital[p]="-";
+        generatechart_taluk(taluk_chart_data,taluk_chart_data_name);
+    }
+
+    function generatechart_taluk(taluk_chart_data) {
+        Highcharts.chart('sumamry_chart', {
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: 'Difference of last 7 days average and last 30 days average'
+            },
+
+            xAxis: {
+
+                lineWidth: 0,
+                minorGridLineWidth: 0,
+                lineColor: 'transparent',
+
+                labels: {
+                    enabled: false
+                },
+                minorTickLength: 0,
+                tickLength: 0
+            },
+
+            yAxis: {
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                allowDecimals: false,
+                title: {
+                    text: null
+                },
+                plotLines: [{
+                    color: 'red',
+                    width: 2,
+                    value: 0
+                }],
+                labels: {
+                    enabled: true
+                },
+
+            },
+
+            plotOptions: {
+                bar: {
+                    zones: [{
+                        value: 0, // Values up to 10 (not including) ...
+                        color: 'blue', // ... have the color blue.
+                        label: 'Negative -----'
+                    }, {
+                        color: 'red', // Values from 10 (including) and up have the color red
+                        label: 'Positive -----'
+                    }]
                 }
-                        if(street1[p]==null)
-                        {
-                            street1[p]="-";
+            },
+            legend: {
+                enabled: false
+            },
+
+            series: [{
+                dataLabels: {
+                    enabled: true,
+                },
+                data: taluk_chart_data
+            }]
+        });
+
+
+    }
+
+    function generatechart_ipfever_male_female(x_categories, ip_fever_male_data, ip_fever_female_data) {
+        Highcharts.chart('container1', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: x_categories,
+                max: 6,
+                labels: {
+                    enabled: false
+                },
+            },
+            yAxis: {
+                min: 0,
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                title: {
+                    text: 'by Gender'
+                },
+                plotOptions: {
+                    bar: {
+                        dataLabels: {
+                            enabled: true
                         }
-						if(habitationu[p]==null)
-                        {
-                            habitationu[p]="-";
+                    }
+                }
+            },
+            plotOptions: {
+                series: {
+                    dataLabels: {
+                        enabled: true,
+                    }
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            tooltip: {
+                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+                shared: true
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'percent',
+                    dataLabels: {
+                        enabled: true,
+                        color: 'black'
+                    }
+                },
+
+            },
+            series: [{
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: "Male",
+                color: '#0099CC',
+                data: ip_fever_male_data
+            }, {
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: "Female",
+                color: '#FF9933',
+                data: ip_fever_female_data
+            }]
+        });
+    }
+
+    function generatechart_ipfever_age(x_categories, ip_fever_age12, ip_fever_agel, ip_fever_age1to5,
+        ip_fever_ageg6to12) {
+        Highcharts.chart('container', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: x_categories,
+                max: 6,
+                labels: {
+                    enabled: false
+                },
+            },
+            yAxis: {
+                min: 0,
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                title: {
+                    text: 'by Age'
+                },
+                plotOptions: {
+                    bar: {
+                        dataLabels: {
+                            enabled: true
                         }
-						if(village[p]==null)
-                        {
-                            village[p]="-";
-                        }
-						if(hud[p]==null)
-                        {
-                            hud[p]="-";
-                        }
-						if(block[p]==null)
-                        {
-                            block[p]="-";
-                        }
-						if(districtu[p]==null)
-                        {
-                            districtu[p]="-";
-                        }
-						saveDataLab(data, p+1);
-}
+                    }
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
 
-	
-	
-	
-	
-			var printDate1 = function(i,p){
-				if(p>=i){
-				$("#loader").hide();
-				return;}
-				else{
-				
-				if(flag==1){
-				var dateNew = dateofAdd[p].substring(0,10);
-					if(dateNew != startDate){}
-					else{
-						var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>ADD</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
-                        $(".table_fever").append(row);
-                        addcount++;
-					}
-				
-				}
-				else{
-				
-				
-                        var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>ADD</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
-                        $(".table_fever").append(row);
-                        addcount++;
-					}
-					}
-					printDate1(i,p+1)
-				};
+            tooltip: {
+                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+                shared: true
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'percent',
+                    dataLabels: {
+                        enabled: true,
+                        color: 'black'
+                    }
+                }
+            },
+            series: [{
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: "> 12",
+                color: '#BE8D55',
+                data: ip_fever_age12
+            }, {
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: "6 to 12 ",
+                color: '#7AE08C',
+                data: ip_fever_ageg6to12
+            }, {
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: "1 to 5",
+                color: '#FFF162',
+                data: ip_fever_age1to5
+            }, {
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: "< 1",
+                color: '#FF9966',
+                data: ip_fever_agel
+            }]
+        });
+    }
 
-			var printDate2 = function(i,p){
-			json2= dateofAdd;
-				if(p>=i){
-				$("#loader").hide();
-				return;}
-				else{
-                   
-					if(flag==1){
-				var dateNew = dateofAdd[p].substring(0,10);
-					if(dateNew != startDate){}
-					else{
-						var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>ADD</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
-                        $(".table_fever").append(row);
-                        addcount++;
-					}
-				
-				}
-				else{
-				
+    function generatechart_ipfever_disease(x_categories, ip_fever_dengue_cases, ip_fever_scrub_cases) {
+        var period_array = [];
+        for (var i = 0; i < x_categories.length; i++) {
+            var _period = dateformat1(x_categories[i]);
+            period_array.push(_period);
+        }
+        period_array.reverse();
+        Highcharts.chart('container2', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: period_array,
+                min: 0,
+                max: 6
+            },
+            column: {
+                minPointLength: 7
+            },
+            yAxis: {
+                min: 0,
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                title: {
+                    text: 'by diseases(Lab)'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            tooltip: {
+                pointFormat: '<span style="color:black">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+                shared: true
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'percent',
+                    dataLabels: {
+                        enabled: true,
+                        color: 'black'
+                    }
+                }
+            },
+            series: [{
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: "Dengue",
+                color: '#32CD33',
+                data: ip_fever_dengue_cases
+            }, {
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: "Scrub",
+                color: 'orange',
+                data: ip_fever_scrub_cases
+            }]
+        });
+    }
 
-				   var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
-                        "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
-                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
-                        "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
-                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
-                        "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
-                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
-                        "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
-                        "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
-                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
-                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
-                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
-                        "<td  id = 'tablerowsh' colspan='1' id='td'>AFI</td>" +
-                        "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
-                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
-                        $(".table_fever").append(row);
-                        addcount++;
-					}
-}				
-				printDate2(i,p+1)
-				};
-			var printDate3 = function(i,p){
-				if(p>=i){
-				$("#loader").hide();
-				return;}
-				else{
-                   
-				if(flag==1){
-				var dateNew = dateofAdd[p].substring(0,10);
-					if(dateNew != startDate){}
-					else{
-						var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>ADD</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
-                        $(".table_fever").append(row);
-                        addcount++;
-					}
-				
-				}
-				else{
-				
-				
-				   var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + addcount  + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].substring(0,10) + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] +","+ habitationu[p] +"</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis[p] +"</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
-                        $(".table_fever").append(row);
-                        addcount++;
-					}
-					}
-					printDate3(i,p+1)
-			};
+    function linechart_op(x_categories, opcases) {
 
-			
-			callApis(selection);
-			};
-  
+        var avg = 0;
+        var sum = 0;
+        for (var i = 0; i < opcases.length; i++) {
+            sum += opcases[i];
+        }
+
+        avg = parseInt(sum) / (opcases.length);
+
+        var target = 0;
+        var oplast30days = '../api/25/analytics.json?dimension=dx:yldg0WX82FD&dimension=pe:' + last30days +
+            '&filter=ou:leMGqLV90eH&displayProperty=NAME'
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/25/analytics.json?dimension=dx:yldg0WX82FD&dimension=pe:' + last30days +
+                '&filter=ou:leMGqLV90eH&displayProperty=NAME',
+            success: function (data_op) {
+                for (var i = 0; i < data_op.rows.length; i++) {
+                    target += parseInt(data_op.rows[i][2]);
+
+                }
+                target = target / 30;
+
+            },
+            error: function (response) {}
+        });
 
 
 
+        Highcharts.chart('container_op', {
+
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: x_categories,
+                min: 0,
+                max: 6,
+                labels: {
+                    enabled: false
+                }
+            },
+            yAxis: {
+				max:Math.max(...opcases)+5,
+                min:Math.min(...opcases)-5,
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                title: {
+                    text: 'OP Cases(n =' + sum + ')'
+                },
+
+                plotLines: [{
+                    value: target,
+                    color: 'red',
+                    width: 2,
+                    label: {
+                        text: 'Average ' + Math.floor(avg),
+                        align: 'center',
+                        y: -50
+                    }
+                }]
+            },
+            legend: {
+                enabled: false,
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            series: [{
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: 'OP Cases',
+                color: 'lightgreen',
+                data: opcases
+            }]
+
+        });
+
+    }
+
+    function linechart_ip(x_categories, ipcases) {
+
+
+        var avg = 0;
+        var sum = 0;
+        for (var i = 0; i < ipcases.length; i++) {
+            sum += ipcases[i];
+        }
+
+        avg = parseInt(sum) / (ipcases.length);
+
+        var target = 0;
+        var iplast30 = '../api/analytics.json?dimension=dx:kI1lGixi5a5&dimension=pe:' + last30days +
+            '&filter=ou:leMGqLV90eH&displayProperty=NAME';
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: iplast30,
+            success: function (data_op) {
+
+                for (var i = 0; i < data_op.rows.length; i++) {
+                    target += parseInt(data_op.rows[i][2]);
+
+                }
+
+                target = target / 30;
+
+            },
+            error: function (response) {
+
+            }
+        });
+
+        Highcharts.chart('container_ip', {
+
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: x_categories,
+                min: 0,
+                max: 6,
+                labels: {
+                    enabled: false
+                }
+            },
+            yAxis: {
+				max:Math.max(...ipcases)+5,
+                min:Math.min(...ipcases)-5,
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                title: {
+                    text: 'IP Cases(n =' + sum + ')'
+                },
+                plotLines: [{
+                    value: target,
+                    color: 'red',
+                    width: 2,
+                    label: {
+                        text: 'Last 30 Days Average' + Math.floor(avg),
+                        align: 'center',
+                        y: -50
+                    }
+                }]
+            },
+            legend: {
+                enabled: false,
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            series: [{
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: 'IP Cases',
+                data: ipcases
+            }]
+
+        });
+
+    }
+
+
+    function linechart_fever(x_categories, labconfirmedcases) {
+
+        var avg = 0;
+        var sum = 0;
+        for (var i = 0; i < labconfirmedcases.length; i++) {
+            sum += labconfirmedcases[i];
+        }
+
+        avg = parseInt(sum) / (labconfirmedcases.length);
+
+
+        var period_array = [];
+        for (var i = 0; i < x_categories.length; i++) {
+            var _period = dateformat1(x_categories[i]);
+            period_array.push(_period);
+        }
+        period_array.reverse();
+        var target = 0;
+        var oplast30days = '../api/25/analytics.json?dimension=dx:CwwhAcIkrSq&dimension=pe:' + last30days +
+            '&filter=ou:mnbTnDyJ37p&displayProperty=NAME'
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: oplast30days,
+            success: function (data_op) {
+                for (var i = 0; i < data_op.rows.length; i++) {
+                    target += parseInt(data_op.rows[i][2]);
+
+                }
+                target = target / 30;
+
+            },
+            error: function (response) {
+
+            }
+        });
+
+        Highcharts.chart('container_fever', {
+
+            title: {
+                text: ''
+            },
+
+            xAxis: {
+                categories: period_array,
+                min: 0,
+                max: 6,
+                labels: {
+                    enabled: true
+                }
+            },
+            yAxis: {
+			    max:Math.max(...labconfirmedcases)+5,
+                min:Math.min(...labconfirmedcases)-5,
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                title: {
+                    text: 'Lab Confirmed Cases(n =' + sum + ')'
+                },
+                plotLines: [{
+                    value: target,
+                    color: 'red',
+                    width: 2,
+                    label: {
+                        text: 'Last 30 Days  Average ' + avg,
+                        align: 'center',
+                        y: -50
+                    }
+                }]
+            },
+            legend: {
+                enabled: false,
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+
+            series: [{
+                dataLabels: {
+                    enabled: true,
+                    color: 'black'
+                },
+                name: 'Lab Cases',
+                color: 'purple',
+                data: labconfirmedcases,
+                pointStart: period_array,
+                min: 0,
+                max: 6
+            }]
+
+        });
+    }
+
+
+    var loadReports = function (previousdy_7_, previousdy1_, last7days) {
+
+        var format = "YYYY-MM-DD";
+
+        var endDate = new Date(document.getElementById('datepicker').value);
+        var startDate = new Date(endDate)
+
+        startDate = startDate.setDate(endDate.getDate() - 7);
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/trackedEntityInstances?ou=' + NIE.ROOT_OU_UID + '&ouMode=DESCENDANTS&filter=' +
+                NIE.CLUSTER_TEA_CLUSTER_TAIL_DATE + ':ge:' + moment(startDate).format(format) +
+                '&filter=' + NIE.CLUSTER_TEA_CLUSTER_START_DATE + ':eq:' + moment(startDate).format(
+                    format)  + '&program=' + NIE
+                .Cluster_ProgramUID + '&skipPaging=true',
+            success: function (data) {
+
+                for (var i = 0; i < data.trackedEntityInstances.length; i++) {
+                    var tei = data.trackedEntityInstances[i].trackedEntityInstance;
+                    $.ajax({
+                        async: false,
+                        type: "GET",
+                        dataType: "json",
+                        contentType: "application/json",
+                        url: '../api/trackedEntityInstances/' + tei + '.json?fields=*',
+                        success: function (data) {
+
+                            ou = data.orgUnit;
+
+                            if (data.attributes.length != 0) {
+                                var printDisplay = ""
+                                for (var i = 0; i < data.attributes.length; i++) {
+                                    if (data.attributes[i].displayName == "Cluster ID") {
+                                        clusterId = data.attributes[i].value;
+                                    }
+                                    if (data.attributes[i].displayName ==
+                                        "Cluster Type") {
+                                        clusterType = data.attributes[i].value;
+                                    }
+                                    if(data.attributes[i].attribute=="vCeMi4DtfEC")
+                                    {
+
+                                    }
+                                    if (data.attributes[i].displayName ==
+                                        "≥ 3 AFI cases (last 5 days)") {
+                                        if (data.attributes[i].value == "true") {
+                                            printDisplay = printDisplay + ";" + data.attributes[
+                                                i].displayName;
+                                        }
+                                    }
+                                    if (data.attributes[i].displayName ==
+                                        "≥ 2 ADD cases (last 3 days)") {
+                                        if (data.attributes[i].value == "true") {
+                                            printDisplay = printDisplay + ";" + data.attributes[
+                                                i].displayName;
+                                        }
+                                    }
+                                    if (data.attributes[i].displayName ==
+                                        "≥ 5 AFI cases (last 7 days)") {
+                                        if (data.attributes[i].value == "true") {
+                                            printDisplay = printDisplay + ";" + data.attributes[
+                                                i].displayName;
+                                        }
+                                    }
+                                    if (data.attributes[i].displayName ==
+                                        "Lab confirmed case") {
+                                        if (data.attributes[i].value == "true") {
+                                            printDisplay = printDisplay + ";" + data.attributes[
+                                                i].displayName;
+                                        }
+                                    }
+                                    if (data.attributes[i].attribute == "sBmb7HfvAau") {
+                                        if (data.attributes[i].value == "MANUAL") {
+                                            printDisplay = printDisplay + ";" + data.attributes[
+                                                i].value;
+                                        }
+                                    }
+                                    if (data.attributes[i].displayName == "CasesUIDs") {
+                                        patients = data.attributes[i].value;
+                                    }
+                                }
+                            } else {
+                                clusterId = "None";
+                                clusterType = "None";
+                            }
+
+
+                            console.log(clusterId);
+                            console.log(clusterType);
+                            patientsArray = patients.split(';');
+
+                            var format = "YYYY-MM-DD";
+
+                            var endDate = new Date(document.getElementById('datepicker')
+                                .value);
+                            var startDate = new Date(endDate)
+
+                            startDate = startDate.setDate(endDate.getDate() - 7);
+                            $.ajax({
+                                async: false,
+                                type: "GET",
+                                dataType: "json",
+                                contentType: "application/json",
+                                url: '../api/26/analytics/events/query/Ml0ZNj9APN0.json?dimension=pe:THIS_YEAR&dimension=ou:mnbTnDyJ37p&dimension=xUhbNO2bQCz&dimension=pa6AUJ4s9li&dimension=xq2RxjLDbev&dimension=KSaU2NSe3ga&dimension=XYhSJWeyxQL&dimension=GIGDIz8ivwS&dimension=KQFdmU5Oqz6&dimension=IeAaU6tgIFl&dimension=mYQBPHZugDx&dimension=glBt6kk3AXS&dimension=nOCIVMD4lOv&dimension=vN0BoElifvC&dimension=IXnRY4BQtQZ&dimension=jwmIajW8wa4&dimension=z4NPqwhOjDH&dimension=xvEO66y1BB4&dimension=ojqkjOup797&dimension=GJsrYvDPJG1&dimension=pQLz5yJ0AJQ&dimension=aWM069T9jXj&dimension=eezUUL7VZMd&stage=iWcQ5lxmsy4&displayProperty=NAME&outputType=EVENT&paging=false',
+                                //                url:'../api/trackedEntityInstances?ou='+NIE.ROOT_OU_UID+'&ouMode=DESCENDANTS&filter='+NIE.CLUSTER_TEA_CLUSTER_TAIL_DATE+':ge:'+moment(startDate).format(format)+'&filter='+NIE.CLUSTER_TEA_CLUSTER_START_DATE+':le:'+moment(endDate).format(format)+'&programEndDate='+moment(endDate).format(format)+'&program='+NIE.Cluster_ProgramUID+'&skipPaging=true',
+                                success: function (data5) {
+
+                                    if (printDisplay == "") {} else {
+
+                                        var slice_printDisplay = printDisplay;
+                                        var _printDisplay = slice_printDisplay.slice(
+                                            1);
+                                        var rowcluster =
+                                            "<tr><td colspan='20'>&nbsp;</td></tr><tr class='clusterHead'><td colspan='4' style='text-align:left'> Cluster ID : " +
+                                            clusterId +
+                                            "</td><td colspan='6' style='text-align:left'>Cluster Type :" +
+                                            clusterType + " " +
+                                            "(" + _printDisplay + ")" +
+                                            "</td></tr>";
+                                        $('.reporttable').append(rowcluster);
+                                        var index = 1;
+                                        for (var h = 0; h < patientsArray.length -
+                                            1; h++) {
+                                            var kk = 0;
+                                            for (var ii = 0; ii < data5.rows
+                                                .length; ii++) {
+                                                if (data5.rows[ii][0] ==
+                                                    patientsArray[h]) {
+                                                    Pname = data5.rows[ii][
+                                                        8
+                                                    ];
+                                                    Pgender = data5.rows[ii]
+                                                        [9];
+                                                    Page = data5.rows[ii][
+                                                        10
+                                                    ];
+                                                    Pstreet = data5.rows[ii]
+                                                        [11];
+                                                    Pdoor = data5.rows[ii][
+                                                        12
+                                                    ] + data5.rows[ii][
+                                                        13
+                                                    ];
+                                                    Phabitation = data5.rows[
+                                                        ii][14];
+                                                    Pvillage = data5.rows[
+                                                        ii][15];
+                                                    Pmob = data5.rows[ii][
+                                                        16
+                                                    ];
+                                                    Ponset = data5.rows[ii]
+                                                        [17];
+                                                    Pdate = data5.rows[ii][
+                                                        18
+                                                    ];
+                                                    phc = data5.rows[ii][19];
+
+                                                    for (var jj = 20; jj <
+                                                        data5.rows[ii].length; jj++
+                                                    ) {
+                                                        if (data5.rows[ii][
+                                                                jj
+                                                            ] == "positive") {
+                                                            Plab[kk] =
+                                                                data5.headers[
+                                                                    jj].column;
+                                                            kk++;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (Plab.length == 0) {
+                                                Plab[0] = "none";
+                                            }
+
+                                            var newAge = Math.round(Page);
+                                            var newStreet = Pstreet.split(
+                                                '-')[0];
+                                            var newDoor = Pdoor.split('-')[0] +
+                                                newStreet;
+                                            var newVil = Pvillage.split('-')[
+                                                1];
+                                            var newHab = Phabitation.split(
+                                                '-')[0];
+                                            if (phc != "") {
+                                                phc = phc.split('-')[1];
+                                                if (phc == 'undefined' ||
+                                                    phc == null) {
+                                                    phc = "";
+                                                }
+                                            }
+
+                                            if (Ponset == 'eDFSS_IPD_V3') {
+                                                Ponset = 'IPD'
+                                            } else {
+                                                Ponset = 'OPD'
+                                            }
+
+                                            var newRow = $(
+                                                "<tr class='newRow'><td class='tdrow' colspan='1' style='text-align:right;padding-right:5px'>" +
+                                                index +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:left;padding-left:5px'>" +
+                                                Pname +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:right;padding-right:5px'>" +
+                                                newAge +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:left;padding-left:5px'>" +
+                                                Pgender +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:left;padding-left:5px'>" +
+                                                newDoor +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:left;padding-left:5px'>" +
+                                                newHab +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:left;padding-left:5px'>" +
+                                                newVil +
+                                                // "</td><td class='tdrow' colspan='1'>" +
+                                                // Pmob +
+                                                // "</td><td class='tdrow' colspan='1'>" +
+                                                // Ponset +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:right;padding-right:5px'>" +
+                                                dateformat(Pdate) +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:left;padding-left:5px'>" +
+                                                Plab +
+                                                "</td><td class='tdrow' colspan='1' style='text-align:left;padding-left:5px'>" +
+                                                phc + "</td></tr>");
+                                            $('.reporttable').append(newRow);
+                                            index++;
+
+                                        }
+                                    }
+                                }
+                            });
+                        },
+                        error: function (data) {}
+                    });
+                }
+            }
+        });
+    };
+
+
+    function extractCoordsFromTEI(teis, excludeInactive) {
+
+        var result = [];
+
+        for (var i = 0; i < teis.length; i++) {
+            var type = "unknown";
+
+            var coord = findValueAgainstId(teis[i].attributes, "attribute", NIE.TEA_COORDS, "value");
+
+            var active = findValueAgainstId(teis[i].attributes, "attribute", NIE.TEA_IS_ACTIVE, "value");
+
+            if (active == "false" && excludeInactive) {
+                continue
+            }
+
+            if (coord) {
+
+                coord = JSON.parse(coord);
+
+                var clusterType = findValueAgainstId(teis[i].attributes, "attribute", NIE.TEA_CLUSTER_TYPE, "value");
+                var cases = findValueAgainstId(teis[i].attributes, "attribute", NIE.TEA_CLUSTER_CASES, "value");
+                var afi3_5 = findValueAgainstId(teis[i].attributes, "attribute", NIE.AFI_TEA_3_5, "value");
+                var afi5_7 = findValueAgainstId(teis[i].attributes, "attribute", NIE.AFI_TEA_5_7, "value");
+                var lab = findValueAgainstId(teis[i].attributes, "attribute", NIE.TEA_LAB, "value");
+
+
+                if (clusterType == "ADD") {
+                    type = "ADD2";
+                }
+                if (afi3_5) {
+                    type = "AFI3"
+                }
+                if (afi5_7) {
+                    type = "AFI5"
+                }
+                if (lab) {
+                    type = "LAB"
+                }
+                if (clusterType == "MANUAL") {
+                    type = "MANUAL";
+                }
+                if (active == "false") {
+                    type = "INACTIVE"
+                }
+
+                result.push({
+                    id: teis[i].trackedEntityInstance + clusterType,
+                    coordinates: coord,
+                    orgUnit: teis[i].orgUnit,
+                    type: type,
+                    trackedEntityInstance: teis[i].trackedEntityInstance,
+                    attributes: teis[i].attributes,
+                    cases: cases
+
+                })
+
+            }
+        }
+
+
+        return result;
+    }
+
+    function getPointGeoJson(data) {
+        var coord = data.coordinates;
+        var point = {
+            "type": "Feature",
+            properties: {
+                id: "cluster",
+                type: data.type,
+                label: data.orgUnit,
+                layerId: "custom",
+                trackedEntityInstance: data.trackedEntityInstance,
+                attributes: data.attributes,
+                cases: data.cases
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [coord.longitude, coord.latitude]
+            }
+        };
+        return point;
+    }
+
+    function getPointFeatures(coords) {
+        var geoJsonPointFeatures = {
+            type: "FeatureCollection",
+            features: []
+        };
+        for (var i = 0; i < coords.length; i++) {
+            var point = getPointGeoJson(coords[i]);
+            geoJsonPointFeatures.features.push(point);
+
+        }
+        return geoJsonPointFeatures;
+    }
+
+
+    function getCustomIcon2(iconUrl, iconSize, iconAnchor) {
+
+        if (!iconSize) {
+            iconSize = [15, 15]
+        }
+
+        if (!iconAnchor) {
+            iconAnchor = [6, 1]
+        }
+
+        return new L.Icon({
+            //  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+            iconUrl: iconUrl,
+            //  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            shadowUrl: 'images/point-shadow.png',
+            iconSize: iconSize,
+            //        iconSize: [25, 41],
+
+            //        iconAnchor: [12, 41],
+            iconAnchor: iconAnchor,
+
+            popupAnchor: [1, 0],
+            shadowSize: [16, 20]
+        });
+
+    }
+
+    function addClusterMarkers(gjson) {
+
+        var pointToLayer = function (feature, latlng) {
+            if (feature.properties) {
+                switch (feature.properties.type) {
+                    case 'centroid':
+                        var centroidIcon = L.divIcon({
+                            className: 'alert-icon-centroid leaflet-clickable',
+                            html: '<i class="alert-icon-centroid"><b>[' + feature.properties.clusterSize +
+                                ']</b></i>'
+                        });
+                        return L.marker(latlng, {
+                            icon: centroidIcon
+                        });
+                    case 'LAB':
+                        return L.marker(latlng, {
+                            icon: getCustomIcon2(imgpath_red_circle)
+                        });
+                    case 'AFI3':
+                        return L.marker(latlng, {
+                            icon: getCustomIcon2(imgpath_polygon_5_sided, [20, 20], [15, 0])
+                        });
+                    case 'AFI5':
+                        return L.marker(latlng, {
+                            icon: getCustomIcon2(imgpath_star, [20, 20], [0, 0])
+                        });
+                    case 'ADD2':
+                        return L.marker(latlng, {
+                            icon: getCustomIcon2(imgpath_marker_icon_add_2, [17, 17], [0, 15])
+                        });
+
+                    case 'MANUAL':
+                        return L.marker(latlng, {
+                            icon: getCustomIcon2(imgpath_marker_icon_blue, [25, 41], [5, 15])
+                        });
+                    case 'INACTIVE':
+                        return L.marker(latlng, {
+                            icon: getCustomIcon2(imgpath_marker_icon_inactive, [25, 41], [10, 10])
+                        });
+                }
+            }
+
+            return L.marker(latlng, {});
+        }
+
+        geojson = L.geoJson(gjson, {
+            pointToLayer: pointToLayer
+        }).addTo(map);
+
+    }
+
+
+    function addOrgUnits(blockCoords, style) {
+        var geoJson = {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": blockCoords
+            },
+            "properties": {
+                "name": "MultiPolygon",
+                key: "block"
+            }
+        };
+
+        var pointToLayer = function (feature, latlng) {
+            feature.properties.style = style;
+        };
+
+        addGeoJson(geoJson, null, style, null);
+    }
+
+    this.addGeoJson = function (geoJson, pointToLayer, style, onEachFeature) {
+
+        var mapArgs = {
+        };
+        if (style) {
+            mapArgs.style = style;
+        }
+        if (onEachFeature) {
+            mapArgs.onEachFeature = onEachFeature;
+        }
+        if (pointToLayer) {
+            mapArgs.pointToLayer = pointToLayer;
+        }
+
+
+        return new L.GeoJSON(geoJson, mapArgs).addTo(map);
+    };
+
+    function addOrgUnitLayer(level, style, addLabels) {
+
+        $.ajax({
+            type: "GET",
+            async: true,
+            contentType: "application/json",
+            url: "../api/organisationUnits?filter=level:eq:" + level +
+                "&fields=id,name,coordinates&paging=false",
+            success: function (response) {
+                if (addLabels) {
+                    addOrgUnitLabels(response.organisationUnits)
+                } else {
+                    addOrgUnits(getCoordinatesFromOus(response.organisationUnits), style);
+
+                }
+            }
+        })
+    }
+
+    function getCoordinatesFromOus(ous) {
+
+        var ouCoords = [];
+        for (var key in ous) {
+            if (ous[key].coordinates) {
+                var coords = JSON.parse(ous[key].coordinates);
+                //reverseCoordinates(coords[0]);
+
+                ouCoords.push(coords[0]);
+            }
+        }
+        return ouCoords;
+    }
+
+    function addOrgUnitLabels(orgUnits) {
+
+
+        for (var i = 0; i < orgUnits.length; i++) {
+
+            var geojsonFeature = {
+                "type": "Feature",
+
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": JSON.parse(orgUnits[i].coordinates)[0]
+                }
+            };
+
+            var style = {
+                color: "black",
+                opacity: 0.75,
+                fillColor: "white",
+                fillOpacity: 0,
+                weight: 2,
+
+            }
+
+            var polygon = L.geoJSON(geojsonFeature, {
+                style: style
+            }).addTo(map);
+
+            var icon = L.divIcon({
+                iconSize: new L.Point(0, 0),
+                iconAnchor: [15, 0],
+                html: '<label>' + orgUnits[i].name + '</label>'
+            });
+
+
+            var marker = L.marker(polygon._layers[polygon._leaflet_id - 1].getCenter(), {
+                icon: icon
+            }).addTo(map);
+
+
+        }
+
+
+    }
+
+    function dateformat(date) {
+
+        var date_ = date;
+        var year = date_.substring(0, 4);
+        var month = date_.substring(5, 7);
+        var day = date_.substring(8, 10);
+
+        return day + '/' + month + '/' + year;
+    }
+
+    function dateformat1(date) {
+        var date_ = date;
+        var year = date_.substring(0, 4);
+        var month = date_.substring(4, 6);
+        var day = date_.substring(6, 8);
+
+        return day + '/' + month + '/' + year;
+    }
 </script>
 <script type="text/javascript">
+    var tei, url, ou, index = 1;
+    var clusterId, clusterType = "None";
+    var district = "None",
+        hud = "None",
+        block = "None",
+        phc = "None",
+        rrt = "None";
+    var population = 0,
+        houseCount = 0;
+    var Pname, Page, Pgender, Pdoor, Phab, Pvillage, Pmob, Ponset, Pdate, Plab = [],
+        Ptei, Pins;
+    var data44, data55, data;
+    var Week1, Week2;
 
-    function exportExcel_dr1add(e) {
-        var a = document.createElement('a');
-        var data_type = 'data:application/vnd.ms-excel';
-        var table_div = document.getElementsByClassName('table_fever')[0];
-        var table_html = table_div.outerHTML.replace(/ /g, '%20');
-        a.href = data_type + ', ' + table_html;
-        a.download = 'Daily Report ADD.xls';
-        a.click();
-        e.preventDefault();
-    }
-    function exportExcel_dr1afi(e) {
-        var a = document.createElement('a');
-        var data_type = 'data:application/vnd.ms-excel';
-        var table_div = document.getElementsByClassName('table_fever')[0];
-        var table_html = table_div.outerHTML.replace(/ /g, '%20');
-        a.href = data_type + ', ' + table_html;
-        a.download = 'Daily Report AFI.xls';
-        a.click();
-        e.preventDefault();
-    }
- function exportExcel_dr2lab(e) {
-        var a = document.createElement('a');
-        var data_type = 'data:application/vnd.ms-excel';
-        var table_div = document.getElementsByClassName('table_lab')[0];
-        var table_html = table_div.outerHTML.replace(/ /g, '%20');
-        a.href = data_type + ', ' + table_html;
-        a.download = 'Daily Report2 Lab.xls';
-        a.click();
-        e.preventDefault();
-    }
 
+    var getDate = function () {
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth() + 1; //January is 0!
+        var yyyy = today.getFullYear();
+
+        if (dd < 10) {
+            dd = '0' + dd
+        }
+
+        if (mm < 10) {
+            mm = '0' + mm
+        }
+
+        today = mm + '/' + dd + '/' + yyyy;
+        return today;
+    };
+
+    var getWeek = function () {
+        var curr = new Date; // get current date
+        var first = curr.getDate() - curr.getDay() - 4; // First day is the day of the month - the day of the week
+        var last = first + 6; // last day is the first day + 6
+        var startDate = new Date(curr.setDate(first));
+        Week1 = "" + (startDate.getMonth() + 1) + "/" + startDate.getDate() + "/" + startDate.getFullYear();
+        var endDate = new Date(curr.setDate(last));
+        Week2 = "" + (endDate.getMonth() + 1) + "/" + endDate.getDate() + "/" + endDate.getFullYear();
+
+        return;
+
+    };
+
+    var displayReport = function () {
+
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/trackedEntityInstances.json?fields=*&program=wXXVzDXRLMe&ouMode=ALL',
+            success: function (data7) {
+
+                buildReport(data7, 0);
+            }
+        });
+    };
+
+
+
+    var buildReport = function (data7, increment) {
+
+        if (increment >= data7.trackedEntityInstances.length) {
+            return;
+        } else {
+            tei = data7.trackedEntityInstances[increment].trackedEntityInstance;
+            clusterId = "", Pname = "", Page = "", Pgender = "", Pdoor = "", Phab = "", Pvillage = "", Pmob =
+                "", Ponset = "", Pdate = "", Plab = [], Ptei = "", Pins = "";
+            data = getData11(tei);
+            data55 = getData5();
+            data44 = getData4();
+            printHeader(increment);
+            printTable(data, data55, data44, increment, 0);
+            buildReport(data7, increment + 1);
+        }
+    };
+
+    var getData11 = function (tei) {
+        rrt = "";
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/trackedEntityInstances/' + tei + '.json?fields=*&ouMode=ALL',
+            success: function (data11) {
+
+                if (data11.attributes.length != 0) {
+                    for (var i = 0; i < data11.attributes.length; i++) {
+                        if (data11.attributes[i].displayName == "Cluster ID") {
+                            clusterId = data11.attributes[i].value;
+                        }
+                        if (data11.attributes[i].displayName == "Cluster type") {
+                            clusterType = data11.attributes[i].value;
+                        }
+                        if (data11.attributes[i].displayName == "≥ 3 AFI cases (last 5 days)") {
+                            rrt = rrt + data11.attributes[i].displayName;
+                        }
+                        if (data11.attributes[i].displayName == "≥ 5 AFI cases (last 7 days)") {
+                            rrt = rrt + data11.attributes[i].displayName;
+                        }
+                        if (data11.attributes[i].displayName == "1 Lab confirmed case") {
+                            rrt = rrt + data11.attributes[i].displayName;
+                        }
+                    }
+
+                } else {
+                    clusterId = "None";
+                    clusterType = "None";
+                }
+                data = data11;
+            }
+        });
+        return data;
+    };
+
+    var getData4 = function () {
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/analytics/events/query/X2XfE0rYiwk.json?stage=apqU6esBuwV&dimension=pe:' +
+                last7days +
+                '&dimension=ou:WXW1rhM9hgR&dimension=A4xv2IGIidc&dimension=u4Im7YWqdL6&dimension=leMIOD9cjVL&dimension=bcNxz9ZI7Zi&dimension=wFiHJnAmAyK&dimension=wZbg3yGKcNu&dimension=QGtJOccfJJO&dimension=CPrDolo2qSh&dimension=DKXiHk6FrtK&dimension=wvVoqUUWHnI&dimension=HpKD5NQqDqX&dimension=xYO8HkDDW3N&dimension=J6uckqQfkyc&dimension=mEWZIvuQWwe&dimension=GWQL3jsnuaM&dimension=ysgOCWco2Gw&dimension=wCHzBwjAwn4&displayProperty=NAME',
+            success: function (data4) {
+                data44 = data4;
+
+            }
+        });
+        return data44;
+    };
+    var getData5 = function () {
+        $.ajax({
+            async: false,
+            type: "GET",
+            dataType: "json",
+            contentType: "application/json",
+            url: '../api/analytics/events/query/X2XfE0rYiwk.json?stage=apqU6esBuwV&dimension=pe:' +
+                last7days +
+                '&dimension=ou:WXW1rhM9hgR&dimension=DKXiHk6FrtK&dimension=CPrDolo2qSh&dimension=wvVoqUUWHnI&dimension=leMIOD9cjVL&dimension=HpKD5NQqDqX&dimension=bcNxz9ZI7Zi&dimension=J6uckqQfkyc&dimension=mEWZIvuQWwe&dimension=wZbg3yGKcNu&dimension=QGtJOccfJJO&dimension=A4xv2IGIidc&dimension=wFiHJnAmAyK&dimension=WUoOh92Rftx&dimension=n6kP82CbJUh&dimension=FfvWigqXGOt&dimension=HmIhUj55Q9i&dimension=p3Ozgnoorit&dimension=YmnPLo5tyYv&dimension=f91ufC0PCuy&dimension=ZFxhXoEh3xb&dimension=r5Pg7EcNbE2&dimension=y8701JIOBhm&dimension=ceSYgw6p45I&dimension=GWQL3jsnuaM&&dimension=ysgOCWco2Gw&displayProperty=NAME',
+            success: function (data5) {
+                data55 = data5;
+
+            }
+        });
+        return data55;
+    };
+
+    var printHeader = function (aaa) {
+        var todayDate = getDate();
+        getWeek();
+
+        var Divid =
+            "<div class='headingg' width='100%' style='border:1px solid black;background-color:yellow'><div style='width:25%;float:left'>Cluster ID: " +
+            clusterId + "</div><div style='width:25%;float:left'>Confirmed Case: " + rrt +
+            "</div><div style='width:25%;float:left'>Date: " + todayDate +
+            "</div><div style='width:25%;float:left'>Period: " + Week1 + "-" + Week2 + "</div></div>";
+        $('.patientdata').append(Divid);
+        var heading = "<table id='reporttable_" + aaa +
+            "' class='reporttableC'><thead><tr>" +
+            "<th class = 'tablerows' colspan='1' >Date of Admission</th>" +
+            "<th class = 'tablerows' colspan='1' >Block</th>" +
+            "<th class = 'tablerows' colspan='1' >Village</th>" +
+            "<th class = 'tablerows' colspan='1' >Name</th>" +
+            "<th class = 'tablerows' colspan='1' >Age(in years)</th>" +
+            "<th class = 'tablerows' colspan='1' >Sex(M/F)</th>" +
+            "<th class = 'tablerows' colspan='1' >Door number, Street Name</th>" +
+            "<th class = 'tablerows' colspan='1' >Mobile Number</th>" +
+            "<th class = 'tablerows' colspan='1' >Reported Institution</th>" +
+            "<th class = 'tablerows' colspan='1' >Lab Diagnosis</th>" +
+            "</thead>" +
+            "</table><br><br><br>";
+        $('.patientdata').append(heading);
+
+    };
+
+    var printTable = function (data, data55, data44, v, aa) {
+
+        if (aa >= data.relationships.length) {
+            return;
+        } else {
+            for (var hh = 0; hh < data.relationships[aa].relative.attributes.length; hh++) {
+
+                if (data.relationships[aa].relative.attributes[hh].displayName == "TEI-UID") {
+                    Ptei = data.relationships[aa].relative.attributes[hh].value;
+                }
+
+            }
+            var d = 0,
+                diag = [];
+            for (var ii = 0; ii < data55.rows.length; ii++) {
+                if (data55.rows[ii][32] == Ptei) {
+                    for (var k = 20; k < 32; k++) {
+                        if (data55.rows[ii][k] == "Positive") {
+                            diag[d] = data55.headers[k].column;
+                            d++;
+                        }
+                    }
+                }
+            }
+            if (diag.length == 0) {
+                diag[0] = "none";
+            }
+
+            for (var l = 0; l < data44.rows.length; l++) {
+                if (data44.rows[l][23] == Ptei) {
+                    Pname = data44.rows[l][16];
+                    Pdoor = data44.rows[l][18] + " " + data44.rows[l][22];
+                    Pgender = data44.rows[l][10];
+                    Page = data44.rows[l][8];
+                    Phab = data44.rows[l][20];
+                    Pdate = data44.rows[l][9];
+                    Pmob = data44.rows[l][12];
+                    Pins = data44.rows[l][14];
+                    Pvillage = data44.rows[l][21];
+                }
+            }
+            var phab = Phab.split('-')[0];
+
+            var newRow = $("<tr><td class='tdrow' colspan='1'>" + Pdate + "</td><td class='tdrow' colspan='1'>" +
+                phab + "</td><td class='tdrow' colspan='1'>" + Pvillage +
+                "</td><td class='tdrow' colspan='1'>" + Pname + "</td><td class='tdrow' colspan='1'>" +
+                Page + "</td><td class='tdrow' colspan='1'>" + Pgender +
+                "</td><td class='tdrow' colspan='1'>" + Pdoor + "</td><td class='tdrow' colspan='1'>" +
+                Pmob + "</td><td class='tdrow' colspan='1'>" + Pins + "</td><td class='tdrow' colspan='1'>" +
+                diag + "</td></tr>");
+            $('#reporttable_' + v).append(newRow);
+            index++;
+            printTable(data, data55, data44, v, aa + 1);
+        }
+
+    };
 </script>
+<body>
+    <div id="notPrint"><b>Select Date : </b><input type="date" id="datepicker" required> <input type="button" onClick="loadDataX()" value="Go"
+        /></div>
+    <div id="printing" item-width="800px">
+
+        <div item-width="100%">
+            <table width="100%">
+                <tr>
+                    <td>
+                        <img src="../api/documents/PRa74yvj2VL/data" alt="logo" width="100" height="100" />
+                    </td>
+                    <td style="text-align:center">
+                        <h1>Daily Summary Report(DLDMP), Triuvallur District, Tamil Nadu</h1>
+                    </td>
+                    <td>
+                        <img src="../api/documents/KyVqC2KDKXO/data" width="100" height="100" />
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+
+        <div style="width:100%">
+            <table style="width:100%">
+                <tr>
+                    <td style="width:20%;text-align:-webkit-center; border:none;">
+                        <table style="background-color:#FFF9B1 !important; font-family:'Times New Roman', Times, serif;">
+                            <tr>
+                                <th style="border:none">
+                                    <p style="display: inline" id="report"></p>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th style="border:none">
+                                    <p style="display: inline" id="datet"></p>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th style="border:none">
+                                    <p style="display: inline" id="period"></p>
+                                </th>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width:80%; text-align:-webkit-center">
+                        <div id="map1" style="width:800px;height:450px;margin-right:10%;"></div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+
+        <table style="width: 100%">
+            <tbody>
+                <tr>
+                    <td style="width: 50%">
+                        <div id="summary"></div>
+                    </td>
+                    <td style="width: 50%;">
+                        <div id="sumamry_chart" style="height:330px"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div id="table3">
+            <table style="width:90%;margin:auto" class="table3">
+                <tbody>
+                    <tr>
+
+                        <td style="width:50%;">
+                            <H1></H1>
+                            <div id="container_op" style="width: 550px;  height: 200px; margin: 0 auto; "></div>
+                        </td>
+                        <td style="width:50%;">
+                            <H1></H1>
+                            <div id="container" style="width: 530px;  height: 200px; margin: 0 auto; "></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <table style="width:90%;margin:auto" class="table3">
+            <tbody>
+                <tr>
+
+                    <td style="width:50%;">
+                        <H1></H1>
+                        <div id="container_ip" style="width: 550px;  height: 200px; margin: 0 auto; " class="empty-table"></div>
+                    </td>
+                    <td style="width:50%;">
+                        <H1></H1>
+                        <div id="container1" style="width: 530px;  height: 200px; margin: 0 auto; " class="empty-table"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table style="width:90%;margin:auto" class="table3">
+            <tbody>
+                <tr>
+
+                    <td style="width:50%;">
+                        <H1></H1>
+                        <div id="container_fever" style="width: 550px;  height: 200px; margin: 0 auto; " class="empty-table"></div>
+                    </td>
+                    <td style="width:50%;">
+                        <H1></H1>
+                        <div id="container2" style="width: 530px;  height: 200px; margin: 0 auto; " class="empty-table"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table><br><br><br>
+
+
+        <div id="patientdata">
+            <p class="Cheading"><b>Line list of case patients :</b></p><br>
+            <table class="reporttable" width="100%">
+                <thead>
+                    <tr style='border:0px 0px 1px 0px; border-color:lightgray;text-align:center'>
+                        <th class='tablerows1' colspan='1'>S.No.</th>
+                        <th class='tablerows1' colspan='1'>Name</th>
+                        <th class='tablerows1' colspan='1'>Age(in years)</th>
+                        <th class='tablerows1' colspan='1'>Gender</th>
+                        <th class='tablerows1' colspan='1'>Door, Street Name</th>
+                        <th class='tablerows1' colspan='1'>Habitation</th>
+                        <th class='tablerows1' colspan='1'>Village</th>
+                        <!-- <th class='tablerows1' colspan='1'>Mobile Number</th>
+                        <th class='tablerows1' colspan='1'>Onset of AFI/ADD</th> -->
+                        <th class='tablerows1' colspan='1'>Date of Admission</th>
+                        <th class='tablerows1' colspan='1'>Lab Results</th>
+                        <th class='tablerows1' colspan='1'>Reported Institution</th>
+                </thead>
+            </table>
+        </div>
+    </div>
 </body>
 
-</html>
-</div>          </div>
-    <script type="text/javascript">
-        </script>
-
-    <div id="rightBar">
-      <span id="hideRightBar"><a href="javascript:hideHelpContent()" title="Close">
-        <i class="fa fa-times leftBarIcon"></i></a>
-      </span>
-      <div id="rightBarContents"></div>
-    </div>
-
-    
-
-
-  </body>
 </html>
