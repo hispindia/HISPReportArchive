@@ -47,6 +47,7 @@
         var enddate = dates[1];
         var htnDbActive = 0, htnDbTotal = 0;
         var totalExit = 0, totalActive = 0;
+        var cerHtnDb12Total = 0, htnDbSeenTotal = 0;
         var checkStatus = function (data) {
             data.enrollments.forEach(function (element, index) {
                 var tei = element.trackedEntityInstance;
@@ -54,6 +55,8 @@
                 var exit = false;
                 var htndbnum = false;
                 var htnanddbflag = false;
+                var cer12flag = false;
+                var htnDbSeenflag = false;
                 $.when(
                     $.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true", {
                         format: "json"
@@ -72,12 +75,12 @@
                         var date = exitstage[0].eventDate;
                         var first = date.split('T')[0];
                         var expireDate = new Date(first);
-                        if (new Date(startdate) < expireDate) {
+                        if (new Date(startdate) <= expireDate) {
                             active = true;
                         }
                         else if (new Date(enddate) <= expireDate && expireDate >= new Date(startdate)) {
                             exit = true;
-                           // active = false;
+                            // active = false;
                         }
                         else {
                             //active = false;
@@ -107,15 +110,45 @@
                                     }
                                 }
                             }
+                            if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+                                var currentEventAttr = eventsdata[i].dataValues;
+                                //console.log(first);
+                                for (var j = 0; j < currentEventAttr.length; j++) {
+                                    if ((currentEventAttr[j].dataElement == "Ft37n3yO81y" || currentEventAttr[j].dataElement == "D4Z6XYfNQR9" || currentEventAttr[j].dataElement == "nwFajZjl3Fa" || currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "rwDJebu16Fu" || currentEventAttr[j].dataElement == "lzBg6QalyhT") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+                                        htnDbSeenflag = true;
+                                    }
+                                }
+                            }
+
+
+                            if (htnDbSeenflag) {
+                                var dateTwelveMonthsAgo = new Date(enddate);
+                                dateTwelveMonthsAgo.setFullYear(dateTwelveMonthsAgo.getFullYear() - 1);
+                                dateTwelveMonthsAgo.setDate(dateTwelveMonthsAgo.getDate() - 1);
+                                if (new Date(enddate) >= expireDate && expireDate > dateTwelveMonthsAgo) {
+                                    for (var k = 0; k < currentEventAttr.length; k++) {
+                                        if (currentEventAttr[k].dataElement == "bxZbTKBLYGL" || currentEventAttr[k].dataElement == "KEVxrQoxfJ9") {
+                                            cer12flag = true;
+                                        }
+                                    }
+                                }
+                            }
+
                         }
+
                     }
+
 
                     if (exit) { totalExit++; }
                     if (htnanddbflag) { totalActive++; }
                     if (htndbnum) { htnDbTotal++; }
+                    if (cer12flag) { cerHtnDb12Total++; }
+                    if (htnDbSeenflag) { htnDbSeenTotal++; }
                     htnDbActive = totalExit + totalActive;
                     document.getElementById('num').innerHTML = htnDbTotal;
                     document.getElementById('deno').innerHTML = htnDbActive;
+                    document.getElementById('num2').innerHTML = cerHtnDb12Total;
+                    document.getElementById('deno2').innerHTML = htnDbSeenTotal;
                     document.getElementById('p').innerHTML = index + " of " + (data.enrollments.length - 1) + " completed";
                     if (data.enrollments.length - 1 == index) {
                         document.getElementById('loader').style.display = "none";
@@ -281,7 +314,7 @@
     <body>
         <div class="loading" id="loader">Loading&#8230;</div>
 
-        <br>
+        <br> ̰
         <table class="table table-bordered table-hover reporttable">
             <thead>
                 <tr>
@@ -292,7 +325,17 @@
                     <td style="width:50%">Active patients + exit patients durin rp (HTN and DB)</td>
                     <td style="width:50%" id="deno"></td>
                 </tr>
-                <tr></tr>
+                <tr>
+                    <td style="width:50%">Creatnine in past 12 months</td>
+                    <td style="width:50%" id="num2"></td>
+                </tr>
+                <tr>
+                    <td style="width:50%">HTN and DB active patients seen in reporting period</td>
+                    <td style="width:50%" id="deno2"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"></td>
+                </tr>
                 <tr>
                     <td style="width:50%">progress</td>
                     <td style="width:50%" id="p"></td>
