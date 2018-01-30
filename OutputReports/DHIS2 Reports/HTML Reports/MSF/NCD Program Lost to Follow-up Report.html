@@ -33,10 +33,76 @@
         var prog_id = "VCuHIFtJJSv";
         var enddate = getDate();
         var totalevent, totalEndevent = 0, totalEndevent2 = 0, activeatendevent;
+        var beforeFour=0;
+        var beforeSix =0;
+
+        var dateSixMonthsAgo = new Date(enddate);
+        var dateFourMonthsAgo = new Date(enddate);
+        dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
+        dateFourMonthsAgo.setMonth(dateFourMonthsAgo.getMonth() - 4);
+        var index = 0;
+        var checkStatus = function(teiarrayy){
+        for(var key in teiarrayy){
+                var tei = key
+                var eventsUrl = "../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&trackedEntityInstance=" + tei + "&endDate=" + enddate+"&order=eventDate:DESC";
+                var active = true;
+                $.when(
+                    $.getJSON(eventsUrl,{format:"json"})
+
+                ).then(function(eventsData){
+                    index++;
+                var isBeforeSix = false;
+                var isBeforeFour = false;
+                    $('table tr.no-records-found').remove();
+                    if(eventsData.events.length>0){
+                        var date = eventsData.events[0].eventDate;
+                        var newTei = eventsData.events[0].trackedEntityInstance; 
+                        if(eventsData.events[0].programStage != "Kr60c8j7vMe" && date!=null){
+                            
+                            var first = date.split('T')[0];
+                            var eventDate = new Date(first);
+                            if(eventDate<dateSixMonthsAgo){
+                               
+                                isBeforeSix =true;
+                            }
+                            if(eventDate<dateFourMonthsAgo){
+                                
+                                isBeforeFour = true;
+                            }
+
+                                    var file = teiarrayy[newTei][0];
+                                    var pi = teiarrayy[newTei][1];
+                               
+                            var row = "<tr><td style='text-align:center;border:1px solid #bbbbbb'>" + pi + "</td><td style='text-align:center;border:1px solid #bbbbbb'>" + file + "</td><td style='text-align:center;border:1px solid #bbbbbb'>" + first + "</td></tr>";
+                            if (isBeforeSix) {
+                                beforeSix++;
+                                $('.reporttable').append(row);
+                            }
+                            if (isBeforeFour) {
+                                beforeFour++;
+                                $('.reporttable2').append(row);
+                            }
+                            document.getElementById('totalNumber').innerHTML = beforeSix;
+                            document.getElementById('totalNumber2').innerHTML = beforeFour;
+                            //  $("#reportTable").tablesorter();
+                            //  $("#reportTable2").tablesorter();
+                        }
+
+                        
+                        
+                        
+                    }
+                    if (Object.keys(teiarrayy).length - 1 == index) {
+                        document.getElementById('loader').style.display = "none";
+                    }
+                });
+
+            }
+        }
 
 
 
-        var checkStatus = function (data) {
+        var checkStatusold = function (data) {
             data.enrollments.forEach(function (element, index) {
                 var tei = element.trackedEntityInstance;
                 var count = 0;
@@ -171,15 +237,31 @@
 
 
         };
-
+        var teiArray = [];
         $(document).ready(function () {
 
             $.when(
-                $.getJSON("../api/enrollments.json?ou=" + ou + "&ouMode=DESCENDANTS&program=" + prog_id + "&fields=trackedEntityInstance&skipPaging=true&programEndDate=" + enddate, {
+                $.getJSON("../api/trackedEntityInstances.json?ou=" + ou + "&ouMode=DESCENDANTS&program=" + prog_id + "&skipPaging=true", {
                     format: "json"
                 })
             ).then(function (data1) {
-                checkStatus(data1);
+                var teidata = data1.trackedEntityInstances;
+                for(var i=0, len = teidata.length; i < len; i++){
+                    teiArray[teidata[i].trackedEntityInstance] = {};
+                    for (var j = 0; j < teidata[i].attributes.length; j++) {
+                        if (teidata[i].attributes[j].displayName == "File number") {
+                            var file = teidata[i].attributes[j].value;
+                            teiArray[teidata[i].trackedEntityInstance][0] = file; 
+                        }
+                        if (teidata[i].attributes[j].displayName == "Patient identifier") {
+                            var pi = teidata[i].attributes[j].value;
+                            teiArray[teidata[i].trackedEntityInstance][1] = pi;
+                        }
+                    }
+                }
+
+                console.log(teiArray);
+                checkStatus(teiArray);
 
             });
 
