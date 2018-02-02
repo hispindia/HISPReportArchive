@@ -195,7 +195,7 @@
                 </ex-property>
             </list-property>
             <property name="odaDriverClass">com.mysql.jdbc.Driver</property>
-            <property name="odaURL">jdbc:mysql://192.168.0.25/tvha_05122017</property>
+            <property name="odaURL">jdbc:mysql://192.168.0.25/tvha_31012018</property>
             <property name="odaUser">birt</property>
             <encrypted-property name="odaPassword" encryptionID="base64">YmlydA==</encrypted-property>
         </oda-data-source>
@@ -268,6 +268,12 @@
                     <property name="analysis">measure</property>
                     <text-property name="displayName">amount</text-property>
                     <text-property name="heading">amount</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">discount</property>
+                    <property name="analysis">measure</property>
+                    <text-property name="displayName">discount</text-property>
+                    <text-property name="heading">discount</text-property>
                 </structure>
                 <structure>
                     <property name="columnName">discamount</property>
@@ -429,16 +435,21 @@
                     </structure>
                     <structure>
                         <property name="position">12</property>
-                        <property name="name">discamount</property>
+                        <property name="name">discount</property>
                         <property name="dataType">float</property>
                     </structure>
                     <structure>
                         <property name="position">13</property>
-                        <property name="name">creditamount</property>
+                        <property name="name">discamount</property>
                         <property name="dataType">float</property>
                     </structure>
                     <structure>
                         <property name="position">14</property>
+                        <property name="name">creditamount</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
                         <property name="name">username</property>
                         <property name="dataType">string</property>
                     </structure>
@@ -525,20 +536,27 @@
                 </structure>
                 <structure>
                     <property name="position">12</property>
+                    <property name="name">discount</property>
+                    <property name="nativeName">discount</property>
+                    <property name="dataType">float</property>
+                    <property name="nativeDataType">7</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
                     <property name="name">discamount</property>
                     <property name="nativeName">discamount</property>
                     <property name="dataType">float</property>
                     <property name="nativeDataType">7</property>
                 </structure>
                 <structure>
-                    <property name="position">13</property>
+                    <property name="position">14</property>
                     <property name="name">creditamount</property>
                     <property name="nativeName">creditamount</property>
                     <property name="dataType">float</property>
                     <property name="nativeDataType">8</property>
                 </structure>
                 <structure>
-                    <property name="position">14</property>
+                    <property name="position">15</property>
                     <property name="name">username</property>
                     <property name="nativeName">username</property>
                     <property name="dataType">string</property>
@@ -546,7 +564,7 @@
                 </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT billid,id,datecreated ,timecreated,patientname,identifier,Age ,
-gender,category,sub,amount,discamount,creditamount,username
+gender,category,sub,amount,discount,discamount,creditamount,username
 FROM
 (
 SELECT asd.name 'sub_cat'
@@ -561,7 +579,7 @@ AND cn.concept_name_type LIKE 'fully_specified'
 )asd
 )fin1
 LEFT JOIN(
-SELECT isdt.id AS id,DATE(isdp.created_on) AS datecreated,TIME(isdp.created_on) AS timecreated,CONCAT(ps.given_name,' ',ps.family_name) AS patientname,ps.identifier AS 'identifier',
+SELECT isdt.id AS id,isdp.patient_id,DATE(isdp.created_on) AS datecreated,TIME(isdp.created_on) AS timecreated,CONCAT(ps.given_name,' ',ps.family_name) AS patientname,ps.identifier AS 'identifier',
 CASE WHEN (YEAR(p.date_created)-YEAR(ps.birthdate)>=1) 
     THEN CONCAT(YEAR(p.date_created)-YEAR(ps.birthdate),' ','years')
   ELSE 
@@ -587,7 +605,7 @@ CASE WHEN (YEAR(p.date_created)-YEAR(ps.birthdate)>=1)
                     END
     END 
 END AS 'Age' ,isdp.id as billid,
-ps.gender AS gender,cn1.name AS category,cn2.name AS sub,isdtl.total_amount AS amount,isdtl.waiver_amount AS discamount,isdtl.amount_credit AS creditamount,isdp.created_by AS username
+ps.gender AS gender,cn1.name AS category,cn2.name AS sub,isdtl.total_amount AS amount,isdtl.waiver_percetage as discount,isdtl.waiver_amount AS discamount,isdtl.amount_credit AS creditamount,isdp.created_by AS username
 FROM patient_search ps
 INNER JOIN `inventory_store_drug_patient` isdp ON isdp.patient_id=ps.patient_id 
 INNER JOIN `inventory_store_drug_patient_detail` isdpl ON isdpl.store_drug_patient_id=isdp.id
@@ -598,6 +616,7 @@ INNER JOIN encounter_type et ON et.encounter_type_id= e.encounter_type
 INNER JOIN person p ON p.person_id=ps.patient_id
 INNER JOIN obs o ON o.person_id=ps.patient_id AND o.encounter_id=e.encounter_id
 LEFT JOIN person_attribute pa ON pa.person_id=o.person_id AND pa.value=o.comments AND pa.voided=0 AND pa.person_attribute_type_id=31
+INNER JOIN person_attribute patt on patt.person_id=o.person_id AND patt.voided=0 AND patt.person_attribute_type_id=14 AND patt.value=o.value_text
 INNER JOIN users u ON u.user_id = o.creator
 INNER JOIN person_name pn ON u.person_id=pn.person_id
 INNER JOIN concept_name cn1 ON o.value_text = cn1.concept_id
@@ -1525,6 +1544,12 @@ SELECT 'None' ,'o'  FROM concept_name]]></xml-property>
                     <text-property name="heading">amount</text-property>
                 </structure>
                 <structure>
+                    <property name="columnName">discount</property>
+                    <property name="analysis">measure</property>
+                    <text-property name="displayName">discount</text-property>
+                    <text-property name="heading">discount</text-property>
+                </structure>
+                <structure>
                     <property name="columnName">discamount</property>
                     <property name="analysis">measure</property>
                     <text-property name="displayName">discamount</text-property>
@@ -1684,16 +1709,21 @@ SELECT 'None' ,'o'  FROM concept_name]]></xml-property>
                     </structure>
                     <structure>
                         <property name="position">12</property>
-                        <property name="name">discamount</property>
+                        <property name="name">discount</property>
                         <property name="dataType">float</property>
                     </structure>
                     <structure>
                         <property name="position">13</property>
-                        <property name="name">creditamount</property>
+                        <property name="name">discamount</property>
                         <property name="dataType">float</property>
                     </structure>
                     <structure>
                         <property name="position">14</property>
+                        <property name="name">creditamount</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
                         <property name="name">username</property>
                         <property name="dataType">string</property>
                     </structure>
@@ -1780,20 +1810,27 @@ SELECT 'None' ,'o'  FROM concept_name]]></xml-property>
                 </structure>
                 <structure>
                     <property name="position">12</property>
+                    <property name="name">discount</property>
+                    <property name="nativeName">discount</property>
+                    <property name="dataType">float</property>
+                    <property name="nativeDataType">7</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
                     <property name="name">discamount</property>
                     <property name="nativeName">discamount</property>
                     <property name="dataType">float</property>
                     <property name="nativeDataType">7</property>
                 </structure>
                 <structure>
-                    <property name="position">13</property>
+                    <property name="position">14</property>
                     <property name="name">creditamount</property>
                     <property name="nativeName">creditamount</property>
                     <property name="dataType">float</property>
                     <property name="nativeDataType">8</property>
                 </structure>
                 <structure>
-                    <property name="position">14</property>
+                    <property name="position">15</property>
                     <property name="name">username</property>
                     <property name="nativeName">username</property>
                     <property name="dataType">string</property>
@@ -1801,7 +1838,7 @@ SELECT 'None' ,'o'  FROM concept_name]]></xml-property>
                 </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT billid,id,datecreated ,timecreated,patientname,identifier,Age ,
-gender,category,sub,amount,discamount,creditamount,username
+gender,category,sub,amount,discount,discamount,creditamount,username
 FROM
 (
 SELECT asd.name 'sub_cat'
@@ -1842,7 +1879,7 @@ CASE WHEN (YEAR(p.date_created)-YEAR(ps.birthdate)>=1)
                     END
     END 
 END AS 'Age' ,isdp.id as billid,
-ps.gender AS gender,cn1.name AS category,cn2.name AS sub,isdtl.total_amount AS amount,isdtl.waiver_amount AS discamount,isdtl.amount_credit AS creditamount,isdp.created_by AS username
+ps.gender AS gender,cn1.name AS category,cn2.name AS sub,isdtl.total_amount AS amount,isdtl.waiver_percetage as discount,isdtl.waiver_amount AS discamount,isdtl.amount_credit AS creditamount,isdp.created_by AS username
 FROM patient_search ps
 INNER JOIN `inventory_store_drug_patient` isdp ON isdp.patient_id=ps.patient_id 
 INNER JOIN `inventory_store_drug_patient_detail` isdpl ON isdpl.store_drug_patient_id=isdp.id
@@ -1853,6 +1890,7 @@ INNER JOIN encounter_type et ON et.encounter_type_id= e.encounter_type
 INNER JOIN person p ON p.person_id=ps.patient_id
 INNER JOIN obs o ON o.person_id=ps.patient_id AND o.encounter_id=e.encounter_id
 INNER JOIN person_attribute pa ON pa.person_id=o.person_id AND pa.value=o.comments AND pa.voided=0 AND pa.person_attribute_type_id=31
+inner JOIN person_attribute patt on patt.person_id=o.person_id AND patt.voided=0 AND patt.person_attribute_type_id=14 AND patt.value=o.value_text
 INNER JOIN users u ON u.user_id = o.creator
 INNER JOIN person_name pn ON u.person_id=pn.person_id
 INNER JOIN concept_name cn1 ON o.value_text = cn1.concept_id
@@ -2243,7 +2281,7 @@ order by billid]]></xml-property>
         <simple-master-page name="Simple MasterPage" id="2">
             <property name="type">custom</property>
             <property name="height">11in</property>
-            <property name="width">13in</property>
+            <property name="width">13.8in</property>
             <page-footer>
                 <text id="3">
                     <property name="contentType">html</property>
@@ -2348,6 +2386,48 @@ order by billid]]></xml-property>
                     <expression name="expression" type="javascript">dataSetRow["billid"]</expression>
                     <property name="dataType">integer</property>
                 </structure>
+                <structure>
+                    <property name="name">discount</property>
+                    <text-property name="displayName">discount</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["discount"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">Aggregation</property>
+                    <property name="dataType">float</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value" type="javascript">row["creditamount"]</expression>
+                        </structure>
+                    </list-property>
+                    <property name="allowExport">true</property>
+                </structure>
+                <structure>
+                    <property name="name">Aggregation_1</property>
+                    <property name="dataType">float</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value" type="javascript">row["discamount"]</expression>
+                        </structure>
+                    </list-property>
+                    <property name="allowExport">true</property>
+                </structure>
+                <structure>
+                    <property name="name">Aggregation_2</property>
+                    <property name="dataType">float</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value" type="javascript">row["amount"]</expression>
+                        </structure>
+                    </list-property>
+                    <property name="allowExport">true</property>
+                </structure>
             </list-property>
             <column id="276">
                 <property name="width">0.7395833333333334in</property>
@@ -2371,6 +2451,9 @@ order by billid]]></xml-property>
                 <property name="width">0.8645833333333334in</property>
             </column>
             <column id="241">
+                <property name="width">0.8645833333333334in</property>
+            </column>
+            <column id="294">
                 <property name="width">0.8645833333333334in</property>
             </column>
             <column id="42">
@@ -2397,7 +2480,7 @@ order by billid]]></xml-property>
                         <property name="borderTopWidth">1px</property>
                     </cell>
                     <cell id="66">
-                        <property name="colSpan">10</property>
+                        <property name="colSpan">11</property>
                         <property name="rowSpan">1</property>
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -2483,7 +2566,7 @@ order by billid]]></xml-property>
                         </data>
                     </cell>
                     <cell id="112">
-                        <property name="colSpan">4</property>
+                        <property name="colSpan">5</property>
                         <property name="rowSpan">1</property>
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -2624,6 +2707,16 @@ order by billid]]></xml-property>
                         </label>
                     </cell>
                     <cell id="238">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="291">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
                         <property name="borderLeftStyle">solid</property>
@@ -2783,6 +2876,19 @@ order by billid]]></xml-property>
                             <text-property name="text">Subcategory</text-property>
                         </label>
                     </cell>
+                    <cell id="292">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <label id="301">
+                            <text-property name="text">Discount Percentage</text-property>
+                        </label>
+                    </cell>
                     <cell id="13">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -2934,6 +3040,20 @@ order by billid]]></xml-property>
                             <property name="resultSetColumn">sub</property>
                         </data>
                     </cell>
+                    <cell id="293">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <property name="textAlign">center</property>
+                        <data id="303">
+                            <property name="resultSetColumn">discount</property>
+                        </data>
+                    </cell>
                     <cell id="23">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -2978,6 +3098,154 @@ order by billid]]></xml-property>
                     </cell>
                 </row>
             </detail>
+            <footer>
+                <row id="305">
+                    <property name="backgroundColor">#C0C0C0</property>
+                    <property name="fontWeight">bold</property>
+                    <property name="textAlign">center</property>
+                    <cell id="306">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="307">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="308">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="309">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="310">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="311">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <data id="320">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
+                            <property name="resultSetColumn">Aggregation_2</property>
+                        </data>
+                    </cell>
+                    <cell id="312">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="313">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="314">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="315">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <data id="319">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
+                            <property name="resultSetColumn">Aggregation_1</property>
+                        </data>
+                    </cell>
+                    <cell id="316">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <data id="318">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
+                            <property name="resultSetColumn">Aggregation</property>
+                        </data>
+                    </cell>
+                    <cell id="317">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                </row>
+            </footer>
         </table>
         <table id="142">
             <property name="width">11.447916666666666in</property>
@@ -3074,6 +3342,48 @@ order by billid]]></xml-property>
                     <expression name="expression" type="javascript">dataSetRow["billid"]</expression>
                     <property name="dataType">integer</property>
                 </structure>
+                <structure>
+                    <property name="name">discount</property>
+                    <text-property name="displayName">discount</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["discount"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">Aggregation</property>
+                    <property name="dataType">float</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value" type="javascript">dataSetRow["amount"]</expression>
+                        </structure>
+                    </list-property>
+                    <property name="allowExport">true</property>
+                </structure>
+                <structure>
+                    <property name="name">Aggregation_1</property>
+                    <property name="dataType">float</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value" type="javascript">row["discamount"]</expression>
+                        </structure>
+                    </list-property>
+                    <property name="allowExport">true</property>
+                </structure>
+                <structure>
+                    <property name="name">Aggregation_2</property>
+                    <property name="dataType">float</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value" type="javascript">row["creditamount"]</expression>
+                        </structure>
+                    </list-property>
+                    <property name="allowExport">true</property>
+                </structure>
             </list-property>
             <column id="282">
                 <property name="width">0.7395833333333334in</property>
@@ -3097,6 +3407,9 @@ order by billid]]></xml-property>
                 <property name="width">0.8645833333333334in</property>
             </column>
             <column id="247">
+                <property name="width">0.8645833333333334in</property>
+            </column>
+            <column id="300">
                 <property name="width">0.8645833333333334in</property>
             </column>
             <column id="216">
@@ -3123,7 +3436,7 @@ order by billid]]></xml-property>
                         <property name="borderTopWidth">1px</property>
                     </cell>
                     <cell id="144">
-                        <property name="colSpan">10</property>
+                        <property name="colSpan">11</property>
                         <property name="rowSpan">1</property>
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -3209,7 +3522,7 @@ order by billid]]></xml-property>
                         </data>
                     </cell>
                     <cell id="153">
-                        <property name="colSpan">4</property>
+                        <property name="colSpan">5</property>
                         <property name="rowSpan">1</property>
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -3350,6 +3663,16 @@ order by billid]]></xml-property>
                         </label>
                     </cell>
                     <cell id="244">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="297">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
                         <property name="borderLeftStyle">solid</property>
@@ -3509,6 +3832,19 @@ order by billid]]></xml-property>
                             <text-property name="text">Subcategory</text-property>
                         </label>
                     </cell>
+                    <cell id="298">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <label id="302">
+                            <text-property name="text">Discount Percentage</text-property>
+                        </label>
+                    </cell>
                     <cell id="185">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -3660,6 +3996,20 @@ order by billid]]></xml-property>
                             <property name="resultSetColumn">sub</property>
                         </data>
                     </cell>
+                    <cell id="299">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <property name="textAlign">center</property>
+                        <data id="304">
+                            <property name="resultSetColumn">discount</property>
+                        </data>
+                    </cell>
                     <cell id="204">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -3704,6 +4054,155 @@ order by billid]]></xml-property>
                     </cell>
                 </row>
             </detail>
+            <footer>
+                <row id="321">
+                    <property name="backgroundColor">#C0C0C0</property>
+                    <property name="fontWeight">bold</property>
+                    <property name="textAlign">center</property>
+                    <cell id="322">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <property name="textAlign">center</property>
+                    </cell>
+                    <cell id="323">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="324">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="325">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="326">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="327">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <data id="334">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
+                            <property name="resultSetColumn">Aggregation</property>
+                        </data>
+                    </cell>
+                    <cell id="328">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="329">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="330">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="331">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <data id="335">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
+                            <property name="resultSetColumn">Aggregation_1</property>
+                        </data>
+                    </cell>
+                    <cell id="332">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <data id="336">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
+                            <property name="resultSetColumn">Aggregation_2</property>
+                        </data>
+                    </cell>
+                    <cell id="333">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                </row>
+            </footer>
         </table>
     </body>
 </report>
