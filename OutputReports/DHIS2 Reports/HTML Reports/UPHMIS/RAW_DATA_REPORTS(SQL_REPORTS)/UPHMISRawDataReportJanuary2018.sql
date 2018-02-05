@@ -1,25 +1,25 @@
 	COPY (select
-   'July-2017' period, 
+   'January-2018' period, 
    case
       when
          extract(month 
 from
-   timestamp '2017-07-01') < 4 
+   timestamp '2018-01-01') < 4 
 then
    concat(extract(year 
 from
-   timestamp '2017-07-01') - 1, '-', extract(year 
+   timestamp '2018-01-01') - 1, '-', extract(year 
 from
-   timestamp '2017-07-01')) 
+   timestamp '2018-01-01')) 
 else
    concat(extract(year 
 from
-   timestamp '2017-07-01'), '-', extract(year 
+   timestamp '2018-01-01'), '-', extract(year 
 from
-   timestamp '2017-07-01') + 1) 
+   timestamp '2018-01-01') + 1) 
    end
-   Financial_Year , state state , div as Division, dis as District,dishmiscode as District_HMIS_Code, block, blockhmiscode as Block_HMIS_Code, facility,
-facilityhmiscode as Facility_HMIS_Code, organisationunitid, NIN , st as Category, tp as Facility_Type, loc as Location,
+   Financial_Year , state , div as Division, dis as District,dishmiscode as District_HMIS_Code, block, blockhmiscode as Block_HMIS_Code, facility,
+facilityhmiscode as Facility_HMIS_Code,   organisationunitid, NIN, st as Category, tp as Facility_Type, loc as Location,
    
    array_to_string(array_agg(de803), '') as "v01", array_to_string(array_agg(de804), '') as "v02", array_to_string(array_agg(de805), '') as "v03", array_to_string(array_agg(de806), '') as "v04",
    
@@ -943,14 +943,15 @@ from
       select
          state,
          div,
-         dis,
-		 dishmiscode,
+		 dis,
+         dishmiscode,
          block,
 		 blockhmiscode,
          facility,
 		 facilityhmiscode,
          organisationunitid,
 		 NIN,
+	
          tp,
          st,
          loc,
@@ -1905,12 +1906,12 @@ from
             select
                state,
                div,
-               dis,
-			   dishmiscode,
-               block,
-			   blockhmiscode,
-               facility,
-			   facilityhmiscode,
+			   dis,
+               dishmiscode,
+         block,
+		 blockhmiscode,
+         facility,
+		 facilityhmiscode,
                organisationunitid,
 			   NIN,
 			  
@@ -1933,6 +1934,7 @@ from
 					 ou.code as facilityhmiscode,
                      ou.organisationunitid,
 					   av.value as NIN,
+					 
 					
 					
                      SUBSTRING(ou5.comment 
@@ -1962,12 +1964,13 @@ from
                      INNER JOIN
                         organisationunit ou5 
                         ON os.idlevel6 = ou5.organisationunitid 
+						
 						left JOIN
 						organisationunitattributevalues ouv
 						ON ouv.organisationunitid = ou5.organisationunitid
 					left JOIN
 					attributevalue av
-					ON av.attributevalueid = ouv.attributevalueid	 
+					ON av.attributevalueid = ouv.attributevalueid		
 					
                      left join
                         orgunitgroupmembers ogm 
@@ -2010,7 +2013,7 @@ from
                            on de.dataelementid = dv.dataelementid 
                      where
                         dg.name like 'Raw Data Group' 
-                        and p.startdate = '2017-07-01' 
+                        and p.startdate = '2018-01-01' 
                   )
                   sag1 
                   on sag.organisationunitid = sag1.sourceid 
@@ -2019,6 +2022,6 @@ from
    )
    sag3 
 group by
-   state , div, dis,dishmiscode, block, blockhmiscode,facility,facilityhmiscode, organisationunitid,NIN, tp, st, loc
+   state , div, dis,dishmiscode, block, blockhmiscode, facility, facilityhmiscode,organisationunitid, NIN, tp, st, loc
 order by
-   state , div, dis, block, facility) TO '/DATA/DHIS/Apps/dhis/tomcat/dhis_home/RDreport/UPHMISRawDataReportJuly17.csv' (format CSV, HEADER);
+   state , div, dis, block, facility) TO '/DATA/DHIS/Apps/dhis/tomcat/dhis_home/RDreport/UPHMISRawDataReportJanuary18.csv' (format CSV, HEADER);
