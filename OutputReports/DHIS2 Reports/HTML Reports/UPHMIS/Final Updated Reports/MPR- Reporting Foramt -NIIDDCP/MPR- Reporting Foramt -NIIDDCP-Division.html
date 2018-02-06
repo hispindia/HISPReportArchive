@@ -138,7 +138,6 @@ function printContent(el) {
     window.print();
     document.body.innerHTML = restorepage;
 }
-
 </script>
 
 <script>
@@ -147,27 +146,19 @@ var today = new Date();
 var dd = today.getDate();
 var mm = today.getMonth() + 1; //January is 0!
 var yyyy = today.getFullYear();
-
 if (dd < 10) {
     dd = '0' + dd
 }
-
 if (mm < 10) {
     mm = '0' + mm
 }
-
 today = mm + '/' + dd + '/' + yyyy;
-
-
-
 function displayTime() {
     var str = "";
-
     var currentTime = new Date()
     var hours = currentTime.getHours()
     var minutes = currentTime.getMinutes()
     var seconds = currentTime.getSeconds()
-
     if (minutes < 10) {
         minutes = "0" + minutes
     }
@@ -182,21 +173,15 @@ function displayTime() {
     }
     return str;
 }
-
-
 document.getElementById('timeStamp').innerHTML = today + "-" + displayTime();
-
 </script>
 
 <!-- Main Script -->
 <script>
 var periods = dhis2.report.periods;
 var period = periods[0];
-
 var periodName = getPeriod(period);
-
 document.getElementById('periodName').innerHTML = periodName;
-
 var url = window.location.href;
 var params = url.split('=');
 var gotOrgUnit = params[3];
@@ -205,7 +190,6 @@ var periodArray = getPeriods();
 var periodcum = periodArray.toString();
 var periodcumulative = periodcum.replace(/,/g, "");
 var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
-
 if (selOrgUnitLevel == 2) {
     document.getElementById('level1').innerHTML = "State Name";
     document.getElementById('level2').innerHTML = "Divison Name";
@@ -222,9 +206,6 @@ else if (selOrgUnitLevel == 5) {
     document.getElementById('level1').innerHTML = "Block Name";
     document.getElementById('level2').innerHTML = "Facility Name";
 }
-
-
-
 var value1 = 0;
 var value2 = 0;
 var value3 = 0;
@@ -246,24 +227,14 @@ var secondChildren_Array = [];
 var orgUnit = dhis2.report.organisationUnit;
 var orgUnitChildren = dhis2.report.organisationUnitChildren;
 var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
-
 var count = 0;
-
 document.getElementById('ouname').innerHTML = orgUnit.name;
-
-
-
 $.each(orgUnitChildren, function (i, val) {
     orgUnitChildren_Array.push([val.id, val.name]);
 });
 orgUnitChildren_Array.sort(arraySorting);
-
-
-
 // New Code start from here
-
 var count1 = 0;
-
 orgUnitChildren_Array.forEach(function (element, index) {
     var ouid = element[0];
     var ouidName = element[1];
@@ -271,9 +242,7 @@ orgUnitChildren_Array.forEach(function (element, index) {
     if (orgUnitChildren_Array.length - 1 == index) {
         sample(ouid, ouidName, 0);
     }
-
 }, this)
-
 function datafordate(ouid, period) {
     var dataA = 0;
     $.ajax({
@@ -285,78 +254,62 @@ function datafordate(ouid, period) {
     });
     return dataA;
 }
-
-
 function sample(ouid, ouidName, count1) {
     $.when(
-        $.getJSON("../api/25/analytics.json?dimension=dx:Szu9adIZ0yw.Ti9FJqkSK6J;MDSTyMs9zsl.Ti9FJqkSK6J;hlKvZJ0kgiA.Ti9FJqkSK6J;d66AnHcZgr4.Ti9FJqkSK6J;PAq85SPbzbp.Ti9FJqkSK6J;zbSeisPrV8D.Ti9FJqkSK6J;&dimension=ou:" + ouid + "&filter=pe:" + periodcumulative + "&displayProperty=NAME", {
+        $.getJSON("../api/25/analytics.json?dimension=dx:zbSeisPrV8D.Ti9FJqkSK6J;&dimension=ou:" + ouid + "&filter=pe:" + periodcumulative + "&displayProperty=NAME", {
+            format: "json"
+        }),
+        $.getJSON("../api/25/analytics.json?dimension=dx:Szu9adIZ0yw.Ti9FJqkSK6J;MDSTyMs9zsl.Ti9FJqkSK6J;hlKvZJ0kgiA.Ti9FJqkSK6J;d66AnHcZgr4.Ti9FJqkSK6J;PAq85SPbzbp.Ti9FJqkSK6J;zbSeisPrV8D.Ti9FJqkSK6J;&dimension=ou:" + ouid + "&filter=pe:" + period + "&displayProperty=NAME", {
             format: "json"
         })
-    
-    ).then(function ( res5) {
+    ).then(function (res4, res5) {
         count++;
-        finalvalue( res5, ouidName, count, count1);
+        finalvalue(res4, res5, ouidName, count, count1);
     })
 }
-
-
-
-function finalvalue(res5, ouidName, count, count1) {
-
+function finalvalue(res4, res5, ouidName, count, count1) {
     if (count1 != 0) {
-
        
-                    value1 = datavalue(res5, 'Szu9adIZ0yw.Ti9FJqkSK6J');
+        value1 = datavalue(res5[0], 'Szu9adIZ0yw.Ti9FJqkSK6J');
         
-                    value2 = datavalue(res5, 'MDSTyMs9zsl.Ti9FJqkSK6J');
-        
-                    value3 = datavalue(res5, 'hlKvZJ0kgiA.Ti9FJqkSK6J');
-        
-                    value4 = datavalue(res5, 'd66AnHcZgr4.Ti9FJqkSK6J');
-        
-                    value5 = datavalue(res5, 'PAq85SPbzbp.Ti9FJqkSK6J');
-        
-                    value6 = datavalue(res5, 'zbSeisPrV8D.Ti9FJqkSK6J');
-        
-                    value_cum = value1+value2+value3+value4+value5+value6;
-        
+        value2 = datavalue(res5[0], 'MDSTyMs9zsl.Ti9FJqkSK6J');
+
+        value3 = datavalue(res5[0], 'hlKvZJ0kgiA.Ti9FJqkSK6J');
+
+        value4 = datavalue(res5[0], 'd66AnHcZgr4.Ti9FJqkSK6J');
+
+        value5 = datavalue(res5[0], 'PAq85SPbzbp.Ti9FJqkSK6J');
+
+        value6 = datavalue(res5[0], 'zbSeisPrV8D.Ti9FJqkSK6J');
+
+        value_cum = datavalue(res4[0], 'zbSeisPrV8D.Ti9FJqkSK6J');
 
         var tabledata = '<tr>';
-
-            tabledata += ("<td>" + count + "</td><td>" + orgUnit.name+ "</td><td>" + ouidName + "</td><td>"  + value1 + "</td><td>" + value2 + "</td><td>" + value3 + "</td><td>" + value4 + "</td><td>" + value5 + "</td><td>" + value6 +"</td><td>" + value_cum);
+         
+            tabledata += ("<td>" + count + "</td><td>" + orgUnit.name + "</td><td>" + ouidName + "</td><td>" + value1 + "</td><td>" + value2 + "</td><td>" + value3 + "</td><td>" + value4 + "</td><td>" + value5 + "</td><td>" + value6 +"</td><td>" + value_cum);
 
         tabledata += "</tr>";
         document.getElementById("dataTable").innerHTML += tabledata;
         document.getElementById("loader").style.display = "none";
         document.getElementById("printing").style.display = "block";
-
-        sum1 += value1;
+           sum1 += value1;
         sum2 += value2;
         sum3 += value3;
         sum4 += value4;
         sum5 += value5;
         sum6 += value6;
         sum_cum += value_cum;
-     
-
-
     }
     else if (count1 == 0) {
-
-
         setTimeout(function () {
-            tabledata = ("<tr style='background:#ADD8E6'><td colspan='3'>Total</td><td>" + sum1 + "</td><td>" + sum2 + "</td><td>" + sum3 + "</td><td>" + sum4 + "</td><td>" + sum5 + "</td><td>" + sum6 + "</td><td>" + sum_cum +"</tr>");
-            document.getElementById("dataTable").innerHTML += tabledata;
-
-
+            var tabledata = '<tr style = "background:#ADD8E6">';
+                
+                            tabledata += ("<td colspan='3'>Total</td><td>" +sum1 + "</td><td>" + sum2 + "</td><td>" + sum3 + "</td><td>" + sum4 + "</td><td>" + sum5 + "</td><td>" + sum6 + "</td><td>" + sum_cum +"</tr>");
+                
+                        document.getElementById("dataTable").innerHTML += tabledata;
         }, 1000);
-
-
     }
-
 }
-
-
 function datavalue(dataJSON, id) {
     var value1 = 0;
     for (var i = 0; i < dataJSON.rows.length; i++) {
@@ -366,8 +319,6 @@ function datavalue(dataJSON, id) {
     }
     return (value1);
 }
-
-
 function datavalue1(dataJSON, id, id1) {
     var value1 = 'No';
     for (var i = 0; i < dataJSON.rows.length; i++) {
@@ -377,17 +328,13 @@ function datavalue1(dataJSON, id, id1) {
     }
     return (value1);
 }
-
-
 function arraySorting(a, b) {
     return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
 }
-
 function getPeriod(pr) {
     var year = pr.substring(0, 4);
     var month = pr.substring(4, 6);
     var strMonth = "";
-
     if (month == "01" || month == "1") strMonth = "January";
     else if (month == "02" || month == "2") strMonth = "February";
     else if (month == "03" || month == "3") strMonth = "March";
@@ -400,15 +347,12 @@ function getPeriod(pr) {
     else if (month == "10") strMonth = "October";
     else if (month == "11") strMonth = "November";
     else if (month == "12") strMonth = "December";
-
     return strMonth + " " + year;
 }
-
 function getPeriods() {
     var periodArray = [];
     var year = parseInt(gotPeriod.substring(0, 4));
     var mnth = parseInt(gotPeriod.substring(4, 6));
-
     if (mnth > 3) {
         for (var i = 4; i <= mnth; i++) {
             if (i < 10) {
@@ -419,7 +363,6 @@ function getPeriods() {
             }
         }
     }
-
     if (mnth <= 3) {
         for (var i = 4; i <= 12; i++) {
             if (i < 10) {
@@ -429,7 +372,6 @@ function getPeriods() {
                 periodArray.push((year - 1).toString() + i + ";");
             }
         }
-
         for (var i = 1; i <= mnth; i++) {
             if (i < 10) {
                 periodArray.push(year.toString() + "0" + i + ";");
@@ -438,11 +380,9 @@ function getPeriods() {
                 periodArray.push(year.toString() + i + ";");
             }
         }
-
     }
     return periodArray;
 }
-
 var tableToExcel = (function () {
     var uri = 'data:application/vnd.ms-excel;base64,'
         , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
@@ -451,12 +391,9 @@ var tableToExcel = (function () {
     return function (table, name, filename) {
         if (!table.nodeType) table = document.getElementById(table)
         var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
-
         document.getElementById("dlink").href = uri + base64(format(template, ctx));
         document.getElementById("dlink").download = filename;
         document.getElementById("dlink").click();
-
     }
 })()
-
 </script>

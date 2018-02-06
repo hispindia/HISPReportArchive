@@ -203,18 +203,23 @@ x = 0, // Loop index
     // You only need to understand that higher 'value' param will finish earlier.
     simulateAjax = function (value) {
         var dfdAjax = $.Deferred();
-        // console.log('simulateAjax with value: ' + value);
-        // console.log('simulateAjax DONE with value: ' + value);
+       
 
         var res4 = $.ajax(
             {
                 type: "GET",
-                url: "../api/25/analytics.json?dimension=dx:Szu9adIZ0yw.Ti9FJqkSK6J;MDSTyMs9zsl.Ti9FJqkSK6J;hlKvZJ0kgiA.Ti9FJqkSK6J;d66AnHcZgr4.Ti9FJqkSK6J;PAq85SPbzbp.Ti9FJqkSK6J;zbSeisPrV8D.Ti9FJqkSK6J;&dimension=ou:" + value + "&filter=pe:" + periodcumulative + "&displayProperty=NAME",
+                url: "../api/25/analytics.json?dimension=dx:zbSeisPrV8D.Ti9FJqkSK6J;&dimension=ou:" + value + "&filter=pe:" + periodcumulative + "&displayProperty=NAME",
                 data: JSON,
                 success: function (data4, status) {
-                    dfdAjax.resolve(data4);
-                    
-
+                    $.ajax(
+                        {
+                            type: "GET",
+                            url: "../api/25/analytics.json?dimension=dx:Szu9adIZ0yw.Ti9FJqkSK6J;MDSTyMs9zsl.Ti9FJqkSK6J;hlKvZJ0kgiA.Ti9FJqkSK6J;d66AnHcZgr4.Ti9FJqkSK6J;PAq85SPbzbp.Ti9FJqkSK6J;zbSeisPrV8D.Ti9FJqkSK6J;&dimension=ou:" + value + "&filter=pe:" + period + "&displayProperty=NAME",
+                            data: JSON,
+                            success: function (data5, status) {
+                                dfdAjax.resolve(data4, data5);
+                            }
+                        });
                 }
             });
 
@@ -356,20 +361,20 @@ $.each(orgUnitChildren_Array, function (index, element) {
                 var value = values.shift();
 
                 return requestAjax(value).
-                    done(function (response) {
+                    done(function (response,response1) {
                         count++;
                         count3++;
 
 
 
-                        finalvalue(response, ouidName, divName, count);
+                        finalvalue(response, response1,ouidName, divName, count);
 
                         if (count3 == res.children.length) {
-                            finalvalue(0, 0, 0, 0);
+                            finalvalue(0,0, 0, 0, 0);
                         }
 
                         if (index == orgUnitChildren_Array.length - 1 && count3 == res.children.length) {
-                            finalvalue( 0, 0, 0, undefined, 00);
+                            finalvalue( 0,0, 0, 0, undefined, 00);
                         }
 
                     });
@@ -386,11 +391,11 @@ $.each(orgUnitChildren_Array, function (index, element) {
 //res 4 contains cumulative data
 //res5 contains monthly data
 
-function finalvalue( res5, ouidName, name, count, count1) {
+function finalvalue( res4,res5, ouidName, name, count, count1) {
 
     if (count != 0 && count != undefined) {
 
-        value1 = datavalue(res5, 'Szu9adIZ0yw.Ti9FJqkSK6J');
+                value1 = datavalue(res5, 'Szu9adIZ0yw.Ti9FJqkSK6J');
         
                     value2 = datavalue(res5, 'MDSTyMs9zsl.Ti9FJqkSK6J');
         
@@ -402,7 +407,7 @@ function finalvalue( res5, ouidName, name, count, count1) {
         
                     value6 = datavalue(res5, 'zbSeisPrV8D.Ti9FJqkSK6J');
         
-                    value_cum = value1+value2+value3+value4+value5+value6;
+                    value_cum = datavalue(res4, 'zbSeisPrV8D.Ti9FJqkSK6J');
 
 
 
