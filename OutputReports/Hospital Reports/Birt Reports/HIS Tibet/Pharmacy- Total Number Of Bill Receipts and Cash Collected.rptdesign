@@ -72,7 +72,7 @@
                 </ex-property>
             </list-property>
             <property name="odaDriverClass">com.mysql.jdbc.Driver</property>
-            <property name="odaURL">jdbc:mysql://192.168.0.25/tvha_05122017</property>
+            <property name="odaURL">jdbc:mysql://192.168.0.25/tvha_31012018</property>
             <property name="odaUser">birt</property>
             <encrypted-property name="odaPassword" encryptionID="base64">YmlydA==</encrypted-property>
         </oda-data-source>
@@ -145,6 +145,12 @@
                     <property name="analysis">dimension</property>
                     <text-property name="displayName">users</text-property>
                     <text-property name="heading">users</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">discountpercent</property>
+                    <property name="analysis">measure</property>
+                    <text-property name="displayName">discountpercent</text-property>
+                    <text-property name="heading">discountpercent</text-property>
                 </structure>
             </list-property>
             <list-property name="parameters">
@@ -266,6 +272,11 @@
                         <property name="name">users</property>
                         <property name="dataType">string</property>
                     </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">discountpercent</property>
+                        <property name="dataType">float</property>
+                    </structure>
                 </list-property>
             </structure>
             <property name="dataSource">Data Source</property>
@@ -347,8 +358,15 @@
                     <property name="dataType">string</property>
                     <property name="nativeDataType">12</property>
                 </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">discountpercent</property>
+                    <property name="nativeName">discountpercent</property>
+                    <property name="dataType">float</property>
+                    <property name="nativeDataType">7</property>
+                </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[SELECT billid,recdate,rectime,NAMES,patid ,ident,categ,amount,waiver,tot,users
+            <xml-property name="queryText"><![CDATA[SELECT billid,recdate,rectime,NAMES,patid ,ident,categ,amount,waiver,tot,users,discountpercent
 FROM 
 (
 SELECT asd.name 'sub_cat'
@@ -364,30 +382,32 @@ AND (cn.name LIKE ? OR ? LIKE "All Category")
 )asd
 )fin1
 LEFT JOIN
-(SELECT DATE(i.created_on)AS recdate,idp.id as billid,TIME(i.created_on) AS rectime,CONCAT(ps.given_name,' ',ps.family_name) AS 'Names',
+(SELECT DATE(i.created_on)AS recdate,idp.id AS billid,TIME(i.created_on) AS rectime,CONCAT(ps.given_name,' ',ps.family_name) AS 'Names',isdtl.waiver_percetage AS discountpercent,
 idp.patient_id AS patid,idp.identifier AS ident,cn1.name AS categ ,i.total_amount AS amount,i.waiver_amount AS waiver,i.amount_payable AS tot,u.username AS users
 FROM inventory_store_drug_transaction_detail i
 INNER JOIN inventory_store_drug_patient_detail isd ON i.id=isd.transaction_detail_id
+INNER JOIN inventory_store_drug_transaction_detail isdtl ON isdtl.id=isd.transaction_detail_id
 INNER JOIN inventory_store_drug_patient idp ON isd.store_drug_patient_id=idp.id
 INNER JOIN inventory_drug_formulation idf ON i.formulation_id=idf.id
 INNER JOIN inventory_drug idr ON i.drug_id=idr.id
 INNER JOIN person_attribute pa ON idp.patient_id=pa.person_id AND pa.person_attribute_type_id=14 AND pa.voided=0
 INNER JOIN person p ON idp.patient_id=p.person_id
-INNER JOIN users u ON u.username=idp.created_by
 INNER JOIN patient_search ps ON ps.patient_id=p.person_id
 INNER JOIN patient pat ON ps.patient_id=pat.patient_id
-INNER JOIN person_name pn ON p.person_id=pn.person_id
+INNER JOIN obs o ON o.person_id=ps.patient_id 
+INNER JOIN users u ON u.user_id = o.creator
+INNER JOIN person_name pn ON u.person_id=pn.person_id
 INNER JOIN inventory_store_drug_transaction it ON i.transaction_id=it.id
 INNER JOIN concept_name cn1 ON pa.value = cn1.concept_id
 INNER JOIN inventory_store ist ON it.store_id=ist.id AND ist.name LIKE '%pharmacy%'
-WHERE  DATE(idp.created_on) BETWEEN ? AND ?
+WHERE  DATE(i.created_on) BETWEEN ? AND ?
 AND i.amount_credit IS NULL 
 AND (cn1.name LIKE ? OR ? LIKE "All Category") 
 GROUP BY idp.patient_id,cn1.name,idp.created_on
 )amb
 ON fin1.sub_cat=amb.categ
 WHERE amb.categ IS NOT NULL
-order by billid
+ORDER BY billid
 ]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
@@ -814,7 +834,7 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
         <simple-master-page name="Simple MasterPage" id="2">
             <property name="type">custom</property>
             <property name="height">11in</property>
-            <property name="width">9.5in</property>
+            <property name="width">10.5in</property>
             <page-footer>
                 <text id="3">
                     <property name="contentType">html</property>
@@ -975,7 +995,7 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                     <list-property name="arguments">
                         <structure>
                             <property name="name">Expression</property>
-                            <expression name="value" type="javascript">BirtMath.round(row["amount"])</expression>
+                            <expression name="value" type="javascript">row["amount"]</expression>
                         </structure>
                     </list-property>
                     <property name="allowExport">true</property>
@@ -987,7 +1007,7 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                     <list-property name="arguments">
                         <structure>
                             <property name="name">Expression</property>
-                            <expression name="value" type="javascript">BirtMath.round(row["waiver"])</expression>
+                            <expression name="value" type="javascript">row["waiver"]</expression>
                         </structure>
                     </list-property>
                     <property name="allowExport">true</property>
@@ -999,7 +1019,7 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                     <list-property name="arguments">
                         <structure>
                             <property name="name">Expression</property>
-                            <expression name="value" type="javascript">BirtMath.round(row["Column Binding"])</expression>
+                            <expression name="value" type="javascript">row["Column Binding"]</expression>
                         </structure>
                     </list-property>
                     <property name="allowExport">true</property>
@@ -1015,6 +1035,12 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                     <expression name="expression" type="javascript">dataSetRow["amount"]-dataSetRow["waiver"]</expression>
                     <property name="dataType">float</property>
                     <property name="allowExport">true</property>
+                </structure>
+                <structure>
+                    <property name="name">discountpercent</property>
+                    <text-property name="displayName">discountpercent</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["discountpercent"]</expression>
+                    <property name="dataType">float</property>
                 </structure>
             </list-property>
             <column id="111">
@@ -1036,6 +1062,9 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                 <property name="width">0.6875in</property>
             </column>
             <column id="46">
+                <property name="width">0.7604166666666666in</property>
+            </column>
+            <column id="118">
                 <property name="width">0.7604166666666666in</property>
             </column>
             <column id="47">
@@ -1140,6 +1169,19 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                         <property name="borderTopWidth">1px</property>
                         <label id="91">
                             <text-property name="text">Patient Category</text-property>
+                        </label>
+                    </cell>
+                    <cell id="115">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <label id="119">
+                            <text-property name="text">Discount Percentage</text-property>
                         </label>
                     </cell>
                     <cell id="15">
@@ -1278,6 +1320,19 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                             <property name="resultSetColumn">categ</property>
                         </data>
                     </cell>
+                    <cell id="116">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <data id="120">
+                            <property name="resultSetColumn">discountpercent</property>
+                        </data>
+                    </cell>
                     <cell id="26">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
@@ -1361,10 +1416,24 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">1px</property>
                         <data id="105">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
                             <property name="resultSetColumn">Aggregation</property>
                         </data>
                     </cell>
                     <cell id="36">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                    </cell>
+                    <cell id="117">
                         <property name="borderBottomStyle">solid</property>
                         <property name="borderBottomWidth">1px</property>
                         <property name="borderLeftStyle">solid</property>
@@ -1384,6 +1453,10 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">1px</property>
                         <data id="106">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
                             <property name="resultSetColumn">Aggregation_1</property>
                         </data>
                     </cell>
@@ -1397,6 +1470,10 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">1px</property>
                         <data id="107">
+                            <structure name="numberFormat">
+                                <property name="category">Fixed</property>
+                                <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                            </structure>
                             <property name="resultSetColumn">Aggregation_2</property>
                         </data>
                     </cell>
