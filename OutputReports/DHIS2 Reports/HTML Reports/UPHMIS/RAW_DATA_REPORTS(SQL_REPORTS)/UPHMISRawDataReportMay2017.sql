@@ -1926,7 +1926,7 @@ from
                      ou1.name AS state,
                      ou2.name as div,
                      ou3.name as dis,
-					 ou4.code as dishmiscode,
+					 ou3.code as dishmiscode,
                      ou4.name as block,
 					 ou4.code as blockhmiscode,
                      ou.shortname facility,
