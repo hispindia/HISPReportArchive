@@ -12,18 +12,18 @@
 
 
 
-		var getDate = function(y, q){
+		var getDate = function (y, q) {
 			var date = "";
-			if(q == 1){
+			if (q == 1) {
 				date = y + "-03-31"
 			}
-			if(q == 2){
+			if (q == 2) {
 				date = y + "-06-30"
 			}
-			if(q == 3){
+			if (q == 3) {
 				date = y + "-09-30"
 			}
-			if(q == 4){
+			if (q == 4) {
 				date = y + "-12-31"
 			}
 			return date;
@@ -37,12 +37,12 @@
 		var year = pe.split('Q')[0];
 		var quarter = pe.split('Q')[1];
 		var prog_id = "VCuHIFtJJSv";
-		var enddate = getDate(year,quarter);
+		var enddate = getDate(year, quarter);
 		var totalevent, totalEndevent = 0, totalEndevent2 = 0, activeatendevent;
-	var totalEnrollments = 0;
+		var totalEnrollments = 0;
 
 		var checkStatus = function (data) {
-		//totalEnrollments = data.enrollments.length;
+			//totalEnrollments = data.enrollments.length;
 			data.enrollments.forEach(function (element, index) {
 				var tei = element.trackedEntityInstance;
 				var count = 0, count2 = 0, count3 = 0;
@@ -61,7 +61,7 @@
 					if (data1[0].events.length == 0) {
 						count = 1;
 					}
-					else if(data1.httpStatusCode == 409 || data1.httpStatusCode == "409"){count = 0;}
+					else if (data1.httpStatusCode == 409 || data1.httpStatusCode == "409") { count = 0; }
 					else {
 						var date = data1[0].events[0].eventDate;
 						var first = date.split('T')[0];
@@ -73,7 +73,7 @@
 					if (data2[0].events.length == 0) {
 						count2 = 0;
 					}
-					else if(data2.httpStatusCode == 409 || data2.httpStatusCode == "409"){count2 = 0;}
+					else if (data2.httpStatusCode == 409 || data2.httpStatusCode == "409") { count2 = 0; }
 					else {
 						for (var b = 0; b < data2[0].events.length; b++) {
 							var date = data2[0].events[b].eventDate;
@@ -93,25 +93,25 @@
 					}
 
 
-						for (var b = 0; b < data3[0].events.length; b++) {
-							var date = data3[0].events[b].eventDate;
-							var first = date.split('T')[0];
-							var expireDate = new Date(first);
-							var dateSixMonthsAgo = new Date(enddate);
-							var dateThreeMonthsAgo = new Date(enddate);
-							dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
-							dateThreeMonthsAgo.setMonth(dateThreeMonthsAgo.getMonth() - 3);
-							if (new Date(enddate) > expireDate && expireDate > dateSixMonthsAgo) {
-								count2 = 1;
-							}
-							if (new Date(enddate) > expireDate && expireDate > dateThreeMonthsAgo) {
-								count3 = 1;
-							}
+					for (var b = 0; b < data3[0].events.length; b++) {
+						var date = data3[0].events[b].eventDate;
+						var first = date.split('T')[0];
+						var expireDate = new Date(first);
+						var dateSixMonthsAgo = new Date(enddate);
+						var dateThreeMonthsAgo = new Date(enddate);
+						dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
+						dateThreeMonthsAgo.setMonth(dateThreeMonthsAgo.getMonth() - 3);
+						if (new Date(enddate) > expireDate && expireDate > dateSixMonthsAgo) {
+							count2 = 1;
+						}
+						if (new Date(enddate) > expireDate && expireDate > dateThreeMonthsAgo) {
+							count3 = 1;
+						}
 					}
 					if (count == 1 && count2 == 1) { totalEndevent++; }
 					if (count == 1) { totalEndevent2++; }
 					document.getElementById('totalNumber').innerHTML = totalEndevent;
-				//	document.getElementById('totalNumber2').innerHTML = totalEndevent2;
+					//	document.getElementById('totalNumber2').innerHTML = totalEndevent2;
 					//document.getElementById('totalNumber3').innerHTML = totalEnrollments;
 					if (data.enrollments.length - 1 == index) {
 						document.getElementById('loader').style.display = "none";
@@ -122,15 +122,30 @@
 
 		};
 
-		$(document).ready(function () {
+		var pushdata = function () {
 
 			$.when(
 				$.getJSON("../api/enrollments.json?ou=" + ou + "&ouMode=DESCENDANTS&program=" + prog_id + "&fields=trackedEntityInstance&skipPaging=true", {
 					format: "json"
 				})
 			).then(function (data1) {
+				document.getElementById('loader').style.display = "block";
 				checkStatus(data1);
 
+			});
+		};
+		
+		var ouarray = [];
+		$(document).ready(function(){
+			$.when(
+				$.getJSON("../api/organisationUnits/oo6xFWZ9n1y.json?level=3", {
+					format: "json"
+				})
+			).then(function (res) {
+				for(var i=0; i < res.organisationUnits.length;i++){
+					ouarray.push(res.organisationUnits[i].id);
+				}
+				console.log(ouarray);
 			});
 		});
 	</script>
@@ -154,6 +169,7 @@
 			left: 0;
 			bottom: 0;
 			right: 0;
+			display:none;
 		}
 
 		/* Transparent Overlay */
@@ -276,6 +292,8 @@
 		<div class="loading" id="loader">Loading&#8230;</div>
 
 		<br>
+		<button class="btn btn-default" id="submit" onclick="pushdata();">Push Data</button>
+		<br><br>
 		<table class="table table-bordered table-hover reporttable">
 			<thead>
 				<tr>
