@@ -29,6 +29,70 @@
 			return date;
 		};
 
+		var getEndDate = function (d) {
+			var q = d.substring(5, 7);
+			var y = d.substring(0, 4);
+			if (q == "01" || q == "02" || q == "03") {
+				q = "-03-31";
+			}
+			if (q == "04" || q == "05" || q == "06") {
+				q = "-06-30";
+			}
+			if (q == "07" || q == "08" || q == "09") {
+				q = "-09-30";
+			}
+			if (q == "10" || q == "11" || q == "12") {
+				q = "-12-31";
+			}
+			return (y + q);
+		};
+
+		function formatDate(date) {
+			var d = new Date(date),
+				month = '' + (d.getMonth() + 1),
+				day = '' + d.getDate(),
+				year = d.getFullYear();
+
+			if (month.length < 2) month = '0' + month;
+			if (day.length < 2) day = '0' + day;
+
+			if (day == "01") {
+				month = '0' + (parseInt(month) - 1);
+				day = "30";
+			}
+
+			return [year, month, day].join('-');
+		}
+
+		var getPeriodArray = function (qedate) {
+			var periodArray = [];
+			var date3monthsbefore = new Date(qedate);
+			date3monthsbefore.setMonth(date3monthsbefore.getMonth() - 3);
+			var date6monthsbefore = new Date(qedate);
+			date6monthsbefore.setMonth(date6monthsbefore.getMonth() - 6);
+			var date9monthsbefore = new Date(qedate);
+			date9monthsbefore.setMonth(date9monthsbefore.getMonth() - 9);
+			periodArray[0] = qedate;
+			periodArray[1] = formatDate(date3monthsbefore);
+			periodArray[2] = formatDate(date6monthsbefore);
+			periodArray[3] = formatDate(date9monthsbefore);
+			return periodArray;
+		};
+
+		var getouarray = function () {
+			var ouarray = [];
+			$.when(
+				$.getJSON("../api/organisationUnits/oo6xFWZ9n1y.json?level=3", {
+					format: "json"
+				})
+			).then(function (res) {
+				for (var i = 0; i < res.organisationUnits.length; i++) {
+					ouarray.push(res.organisationUnits[i].id);
+				}
+			});
+			return ouarray;
+		};
+
 		var url = window.location.href;
 		var arrayUrl = url.split('=');
 		var ou = arrayUrl[3];
@@ -40,6 +104,10 @@
 		var enddate = getDate(year, quarter);
 		var totalevent, totalEndevent = 0, totalEndevent2 = 0, activeatendevent;
 		var totalEnrollments = 0;
+
+
+
+
 
 		var checkStatus = function (data) {
 			//totalEnrollments = data.enrollments.length;
@@ -123,7 +191,28 @@
 		};
 
 		var pushdata = function () {
+			//getting today date
 
+			var today = new Date();
+			var dd = today.getDate();
+			var mm = today.getMonth() + 1; //January is 0!
+
+			var yyyy = today.getFullYear();
+			if (dd < 10) {
+				dd = '0' + dd;
+			}
+			if (mm < 10) {
+				mm = '0' + mm;
+			}
+			var todaydate = yyyy + '-' + mm + '-' + dd;
+			var endDate = getEndDate(todaydate);
+			var periodarray = getPeriodArray(endDate);
+			console.log(endDate);
+			console.log(periodarray);
+			//end
+
+			var ouarray = getouarray();
+			console.log(ouarray);
 			$.when(
 				$.getJSON("../api/enrollments.json?ou=" + ou + "&ouMode=DESCENDANTS&program=" + prog_id + "&fields=trackedEntityInstance&skipPaging=true", {
 					format: "json"
@@ -131,23 +220,11 @@
 			).then(function (data1) {
 				document.getElementById('loader').style.display = "block";
 				checkStatus(data1);
-
 			});
 		};
-		
-		var ouarray = [];
-		$(document).ready(function(){
-			$.when(
-				$.getJSON("../api/organisationUnits/oo6xFWZ9n1y.json?level=3", {
-					format: "json"
-				})
-			).then(function (res) {
-				for(var i=0; i < res.organisationUnits.length;i++){
-					ouarray.push(res.organisationUnits[i].id);
-				}
-				console.log(ouarray);
-			});
-		});
+
+
+
 	</script>
 	<style>
 		table {
@@ -169,7 +246,7 @@
 			left: 0;
 			bottom: 0;
 			right: 0;
-			display:none;
+			display: none;
 		}
 
 		/* Transparent Overlay */
@@ -293,7 +370,8 @@
 
 		<br>
 		<button class="btn btn-default" id="submit" onclick="pushdata();">Push Data</button>
-		<br><br>
+		<br>
+		<br>
 		<table class="table table-bordered table-hover reporttable">
 			<thead>
 				<tr>
