@@ -45,94 +45,133 @@
 		var dates = getDate(year, quarter);
 		var startdate = dates[0];
 		var enddate = dates[1];
-		var total = 0, stage1 = 0, stage2 = 0, stage3 =0;
-		var df = 0;
-		var totalh=0;
 
+
+
+
+		var med1 = "Amlodipine-5 mg";
+		var med2 = "Atenolol-50 mg";
+		var med3 = "Bisoprolol Fumarate-5 mg";
+		var med4 = "Captopril-25 mg";
+		var med5 = "Captopril-50 mg";
+		var med6 = "Enalapril-10mg";
+		var med7 = "Enalapril-20mg";
+		var med8 = "Enalapril-5 mg";
+		var med9 = "Hydrochlorothiazide-25 mg";
+		var med10 = "Hydrochlorothiazide-50 mg";
+		var med11 = "Isosorbide dinitrate-10 mg tab";
+		var med12 = "Losartan/Hydrocholothiazide-12.5 mg";
+		var med13 = "Methyldopa-250 mg";
+		var med14 = "Nifedipine 30mg";
+		var med15 = "Ramipril tab-5 mg";
+		var med16 = "Ramipril 10mg";
+		var med17 = "Valsartan 80mg (Diovan)";
+		var med18 = "Bisoprolol hemifumarate 10 mg";
+		var med19 = "Losartan potassium 50 mg";
+		var med20 = "Captopril 50 mg/hct 25 mg";
+
+
+		var medications = [med1, med2, med3, med4, med5, med6, med7, med8, med9,
+			med10, med11, med12, med13, med14, med15, med16, med17, med18, med19, med20];
+
+		var medDataElements =
+			["nQ32sHUnPKv", "e4RAOrfr6Oz", "JiMkzWDtYwL", "SSHzwRe5rWG", "QGddWBd4WGw", "bHdzWTNZvM3", "gTL8HOgeCq2", "TzdFTRlnjeC", "oQIMNkobUke", "CEP72QOx3GW", "Uza0ZnZ1XxV", "Lmo1tDeH2r8",
+				"wd9KkclB1dg", "IMvy9x1Xuo9", "E60ikhXksxo", "TGu4kRLXmru", "JDTlrMsHXke", "FTNyHVtzOcy", "XAsWYJD5mRD", "hOEQiwt21Hj", "qtWD2pOQmFk", "SVIpRhaadFs", "D9PrDVUMtmB", "mvBYfc9pMF2"];
+
+		var totalevent, totalEndevent = 0, totalHTN = 0, totalAHTN = 0, activeatendevent;
+		var medOne = 0, medTwo = 0, medThree = 0, medFlag = 0;
+		var totalh = 0;
+		var crt1 = 0, crt2 = 0, crt3 = 0, crt4 = 0, crt5 = 0;
+		var totalCrt = 0;
 
 		var checkStatus = function (data) {
 			data.enrollments.forEach(function (element, index) {
 				var tei = element.trackedEntityInstance;
 				var count = 0, count2 = 0, count22 = 0, count3 = 0, flag = 0;
-				var stage1f = 0, stage2f = 0, stage3f = 0;
-				var prestage1f = 0, prestage2f = 0, prestage3f = 0;
+				var active = true;
+				var EventAttr = "";
+				var sIndex = 0, totalF = 0;
+				if (tei == "lT03nnVmq1S") {
+					console.log("stop");
+				}
 				$.when(
-
-					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&trackedEntityInstance=" + tei + "&orderBy=eventDate:ASC&skipPaging=true", {
+					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true", {
+						format: "json"
+					}),
+					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&trackedEntityInstance=" + tei + "&order=eventDate:DESC&skipPaging=true&endDate=" + enddate, {
 						format: "json"
 					})
 
-				).then(function (data2) {
+				).then(function (data1, data2) {
 
-					if (data2.events.length == 0) {
-						count2 = 0;
+					if (data2[0].events.length == 0) {
+						return;
 					}
-					else if (data2.httpStatusCode == 409 || data2.httpStatusCode == "409") { count2 = 0; }
-					else {
-						for (var b = 0; b < data2.events.length; b++) {
-							var date = data2.events[b].eventDate;
-							var first = date.split('T')[0];
-							var expireDate = new Date(first);
-							//var dateSixMonthsAgo = new Date(enddate);
-							//dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
-							var currentEventAttr = data2.events[b].dataValues;
-							
-							if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+					if (data2[0].events[0].programStage == "Kr60c8j7vMe") {
+						var date = data2[0].events[0].eventDate;
+						var first = date.split('T')[0];
+						var expireDate = new Date(first);
+						if (expireDate > new Date(enddate)) {
+							active = true;
+						}
+						else {
+							active = false;
+						}
+					}
+					else if (data2.httpStatusCode == 409 || data2.httpStatusCode == "409") {
+						count = 0;
 
-								for (var j = 0; j < currentEventAttr.length; j++) {
-									if ((currentEventAttr[j].dataElement == "D4Z6XYfNQR9" || currentEventAttr[j].dataElement == "Ft37n3yO81y") && (currentEventAttr[j].value == "Newly_diagnosed")) {
-										count2 = 1;
-									}
-									if (prestage1f != 1) {
-										if ((currentEventAttr[j].dataElement == "FwEKkTnhiQa" || currentEventAttr[j].dataElement == "rBNRkcu7Tqw") && currentEventAttr[j].value == "Stage 1") {
-											stage1f = 1;
-											//break;
-										}
-									}
-									if (prestage2f != 1) {
-										if ((currentEventAttr[j].dataElement == "FwEKkTnhiQa" || currentEventAttr[j].dataElement == "rBNRkcu7Tqw") && currentEventAttr[j].value == "Stage 2") {
-											stage2f = 1;
-											//break;
-										}
-									}
-									if (prestage3f != 1) {
-										if ((currentEventAttr[j].dataElement == "FwEKkTnhiQa" || currentEventAttr[j].dataElement == "rBNRkcu7Tqw") && currentEventAttr[j].value == "Stage 3") {
-											stage3f = 1;
-											//break;
-										}
-									}
+					}
+					var elementFound = false;
+					// var element2Found = false;
+					var applicable = false;
+					var curVal = -1;
+					var curValCrt = -1;
+					if (active) {
+						var date = data2[0].events[0].eventDate;
+						var first = date.split('T')[0];
+						var expireDate = new Date(first);
 
+						if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+							//sIndex = b;
+							var currentEventAttr = data2[0].events[0].dataValues;
+							for (var j = 0; j < currentEventAttr.length; j++) {
+								if ((currentEventAttr[j].dataElement == "lzBg6QalyhT" || currentEventAttr[j].dataElement == "rwDJebu16Fu" || currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "nwFajZjl3Fa" || currentEventAttr[j].dataElement == "D4Z6XYfNQR9" || currentEventAttr[j].dataElement == "Ft37n3yO81y") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) { //&& (currentEventAttr[j].value > 0 )) { 
+									applicable = true;
 								}
 							}
-							else {
+							for (var b = 0; b < data2[0].events.length; b++) {
+								var currentEventAttr = data2[0].events[b].dataValues;
 								for (var j = 0; j < currentEventAttr.length; j++) {
-									if ((currentEventAttr[j].dataElement == "FwEKkTnhiQa" || currentEventAttr[j].dataElement == "rBNRkcu7Tqw") && currentEventAttr[j].value == "Stage 1") {
-										prestage1f = 1;
-									//	break;
+									if ((currentEventAttr[j].dataElement == "lsH055Gkik2" || currentEventAttr[j].dataElement == "D6GaP2vd7Oy") && curValCrt < 0) { //&& (currentEventAttr[j].value > 0 )) { 
+										curValCrt = parseInt(currentEventAttr[j].value).toFixed(2);
 									}
-									if ((currentEventAttr[j].dataElement == "FwEKkTnhiQa" || currentEventAttr[j].dataElement == "rBNRkcu7Tqw") && currentEventAttr[j].value == "Stage 2") {
-										prestage2f = 1;
-									//	break;
-									}
-									if ((currentEventAttr[j].dataElement == "FwEKkTnhiQa" || currentEventAttr[j].dataElement == "rBNRkcu7Tqw") && currentEventAttr[j].value == "Stage 3") {
-										prestage3f = 1;
-									//	break;
-									}
+
 								}
 							}
 						}
+
+
+						if (curValCrt > 0 && applicable) {
+							totalCrt++;
+							if (curValCrt >= 90) { crt1++; }
+							if (curValCrt < 90 && curValCrt > 59) { crt2++; }
+							if (curValCrt < 60 && curValCrt > 29) { crt3++; }
+							if (curValCrt < 30 && curValCrt > 14) { crt4++; }
+							if (curValCrt < 15) { crt5++; }
+						}
+
 					}
 
-					
-					if (count2 == 1) { total++; }
-					if (count2 == 1 && stage1f ==1) { stage1++; }
-					if (count2 == 1 && stage2f ==1) { stage2++; }
-					if (count2 == 1 && stage3f ==1) { stage3++; }
-					document.getElementById('col1').innerHTML = stage1;
-					document.getElementById('col2').innerHTML = stage2;
-					document.getElementById('col3').innerHTML = stage3;
-					document.getElementById('col4').innerHTML = total;
-					document.getElementById('p').innerHTML = index + " of " + (data.enrollments.length-1) + " completed";
+					document.getElementById('col1').innerHTML = crt1;
+					document.getElementById('col2').innerHTML = crt2;
+					document.getElementById('col3').innerHTML = crt3;
+					document.getElementById('col4').innerHTML = crt4;
+					document.getElementById('col5').innerHTML = crt5;
+					document.getElementById('deno').innerHTML = totalCrt;
+
+
+					document.getElementById('p').innerHTML = index + " of " + (data.enrollments.length - 1) + " completed";
 					if (data.enrollments.length - 1 == index) {
 						document.getElementById('loader').style.display = "none";
 					}
@@ -142,6 +181,8 @@
 
 		};
 
+
+
 		$(document).ready(function () {
 
 			$.when(
@@ -150,6 +191,7 @@
 				})
 			).then(function (data1) {
 				checkStatus(data1);
+
 
 			});
 		});
@@ -299,20 +341,32 @@
 		<table class="table table-bordered table-hover reporttable">
 			<thead>
 				<tr>
-					<td style="width:50%">Hypertension Stage 1</td>
-					<td style="width:50%" id="col1"></td>
+					<td style="width:50%">creatinine clearance
+						<=90</td>
+							<td style="width:50%" id="col1"></td>
 				</tr>
 				<tr>
-					<td style="width:50%">Hypertension Stage 2</td>
+					<td style="width:50%">creatinine clearance between 89 and 60</td>
 					<td style="width:50%" id="col2"></td>
 				</tr>
 				<tr>
-					<td style="width:50%">Hypertension Stage 3</td>
+					<td style="width:50%">creatinine clearance between 59 and 30</td>
 					<td style="width:50%" id="col3"></td>
 				</tr>
 				<tr>
-					<td style="width:50%">Hypertension Total</td>
+					<td style="width:50%">creatinine clearance between 29 and 15</td>
 					<td style="width:50%" id="col4"></td>
+				</tr>
+				<tr>
+					<td style="width:50%">creatinine clearance less than 15</td>
+					<td style="width:50%" id="col5"></td>
+				</tr>
+				<tr>
+					<td style="width:50%">Total Patients having value</td>
+					<td style="width:50%" id="deno"></td>
+				</tr>
+				<tr>
+					<td></td>
 				</tr>
 				<tr>
 					<td style="width:50%">Progress</td>

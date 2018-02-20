@@ -45,6 +45,10 @@
 		var dates = getDate(year, quarter);
 		var startdate = dates[0];
 		var enddate = dates[1];
+
+	
+        
+
 		var med1 = "Amlodipine-5 mg";
 		var med2 = "Atenolol-50 mg";
 		var med3 = "Bisoprolol Fumarate-5 mg";
@@ -58,52 +62,69 @@
 		var med11 = "Isosorbide dinitrate-10 mg tab";
 		var med12 = "Losartan/Hydrocholothiazide-12.5 mg";
 		var med13 = "Methyldopa-250 mg";
-		var med14 = "Nifedipine-30mg";
+		var med14 = "Nifedipine 30mg";
 		var med15 = "Ramipril tab-5 mg";
 		var med16 = "Ramipril 10mg";
 		var med17 = "Valsartan 80mg (Diovan)";
 		var med18 = "Bisoprolol hemifumarate 10 mg";
-		var med19 = "Losartan potassium 50 mg ";
-		var med20 = "Captopril 50 mg/hct 25 mg ";
-		var med21 = "Losartan potassium 50 mg";
-		var med22 = "Captopril 50 mg/hct 25 mg";
+		var med19 = "Losartan potassium 50 mg";
+		var med20 = "Captopril 50 mg/hct 25 mg";
+		
+
+        var medications = [med1,med2,med3,med4,med5,med6,med7,med8,med9,
+        med10,med11,med12,med13,med14,med15,med16,med17,med18,med19,med20];
+
+		var medDataElements = 
+		["nQ32sHUnPKv","e4RAOrfr6Oz","JiMkzWDtYwL","SSHzwRe5rWG","QGddWBd4WGw","bHdzWTNZvM3","gTL8HOgeCq2","TzdFTRlnjeC","oQIMNkobUke","CEP72QOx3GW","Uza0ZnZ1XxV","Lmo1tDeH2r8",
+		"wd9KkclB1dg","IMvy9x1Xuo9","E60ikhXksxo","TGu4kRLXmru","JDTlrMsHXke","FTNyHVtzOcy","XAsWYJD5mRD","hOEQiwt21Hj","qtWD2pOQmFk","SVIpRhaadFs","D9PrDVUMtmB","mvBYfc9pMF2"];		
 
 		var totalevent, totalEndevent = 0, totalHTN = 0, totalAHTN = 0, activeatendevent;
 		var medOne = 0, medTwo = 0, medThree = 0, medFlag = 0;
 		var totalh = 0;
+		
 		var checkStatus = function (data) {
 			data.enrollments.forEach(function (element, index) {
 				var tei = element.trackedEntityInstance;
 				var count = 0, count2 = 0, count22 = 0, count3 = 0, flag = 0;
+                var active = true;
 				var medCounter = 0;
 				var EventAttr = "";
 				var sIndex = 0, totalF = 0;
+
+				var exitUrl = "../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true";
+				var eventUrl = "../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&trackedEntityInstance=" + tei + "&order=eventDate:DESC&skipPaging=true&endDate="+ enddate; 
 				$.when(
-					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true", {
+					$.getJSON(exitUrl, {
 						format: "json"
 					}),
-					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&trackedEntityInstance=" + tei + "&orderBy=eventDate:DESC&skipPaging=true&endDate="+ enddate, {
+					$.getJSON(eventUrl, {
 						format: "json"
 					})
 
 				).then(function (data1, data2) {
-
+					
 					if (data2[0].events.length == 0) {
 						return;
 					}
 					if (data2[0].events[0].programStage == "Kr60c8j7vMe") {
-						console.log("exit stage");
-						count = 1;
-						var indexx = 1;
+						active = false;
+						
 					}
 					else if (data2.httpStatusCode == 409 || data2.httpStatusCode == "409") {
 						count = 0;
-						var indexx = 0;
+						
 					}
-					else {
-						count = 1;
-						var indexx = 0;
-					}
+                    if(tei=="PCbADGN4fIk"){
+                        var a = 10;
+                    }
+                    var elementFound = false;
+					// var element2Found = false;
+                    var applicable = false;
+                    var df1 = false,df2=false;
+                    var bVal = -1;
+
+					var elemendsFoundDateYearBefore = null;
+					var diagnosisAndMedicationGapMoreThanYear = false;
 
 					for (var b = 0; b < data2[0].events.length; b++) {
 						//sIndex = b;
@@ -111,263 +132,129 @@
 						var first = date.split('T')[0];
 						var expireDate = new Date(first);
 						var enddateLastYear = new Date(enddate);
-						enddateLastYear.setFullYear(enddateLastYear.getFullYear() - 1);
-						if (new Date(startdate) >= expireDate && expireDate <= enddateLastYear) {
-							var currentEventAttr = data2[0].events[b].dataValues;
-							for (var j = 0; j < currentEventAttr.length; j++) {
-								if ((currentEventAttr[j].dataElement == "Ft37n3yO81y" || currentEventAttr[j].dataElement == "D4Z6XYfNQR9") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
-									totalF = 1;
-								 }
-							}
-							
-						}
+                        enddateLastYear.setFullYear(enddateLastYear.getFullYear() - 1);
 
-						// reporting period filter starts here	
 						var currentEventAttr = data2[0].events[b].dataValues;
-						if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
-							
-
-							// attributes loop starts here	
+						if(!elementFound ) {
+							var elementCount = 0;
 							for (var j = 0; j < currentEventAttr.length; j++) {
-
-								if ((currentEventAttr[j].dataElement == "Ft37n3yO81y" || currentEventAttr[j].dataElement == "D4Z6XYfNQR9") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
-									count2 = 1; // count for total HTN Patients
-									//if HTN patient found --  medications count loop start	
-								}
-							}
-							// attributes loop ends here
-							if(count2 == 1){
-								for (var h = 0; h < currentEventAttr.length; h++) {
-										if (currentEventAttr[h].value == med1) {
-											medFlag++;
-											medCounter++;
+									if(currentEventAttr[j].dataElement =="qmIiLHw6tw6" ){
+										elementCount++;
+										
+										if(parseInt(currentEventAttr[j].value) <= 140){
+											
+											df1 = true;
 										}
-										if (currentEventAttr[h].value == med2) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med3) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med4) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med5) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med6) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med7) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med8) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med9) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med10) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med11) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med12) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med13) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med14) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med15) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med16) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med17) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med18) {
-											medFlag++
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med19) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med20) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med21) {
-											medFlag++;
-											medCounter++;
-										}
-										if (currentEventAttr[h].value == med22) {
-											medFlag++;
-											medCounter++;
+										
+									}
+									if(currentEventAttr[j].dataElement == "sJdzIU57haq" ){
+										elementCount++;
+										
+										if(parseInt(currentEventAttr[j].value) <= 90){
+											
+											df2 = true;
 										}
 									}
-								if(medFlag == 0){
-									for (var b = 0; b < data2[0].events.length; b++) {
-										var date = data2[0].events[b].eventDate;
-										var first = date.split('T')[0];
-										var expireDate = new Date(first);
-										var currentEventAttr = data2[0].events[b].dataValues;
-			
-										if (expireDate < new Date(startdate)) {
-											for (var j = 0; j < currentEventAttr.length; j++) {
-			
-												if ((currentEventAttr[j].dataElement == "Ft37n3yO81y" || currentEventAttr[j].dataElement == "D4Z6XYfNQR9") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
-													count2 = 1; // count for total HTN Patients
-			
-													//if HTN patient found --  medications count loop starts
-													for (var h = 0; h < currentEventAttr.length; h++) {
-														if (currentEventAttr[h].value == med1) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med2) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med3) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med4) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med5) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med6) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med7) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med8) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med9) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med10) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med11) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med12) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med13) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med14) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med15) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med16) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med17) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med18) {
-															medFlag++
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med19) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med20) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med21) {
-															medFlag++;
-															medCounter++;
-														}
-														if (currentEventAttr[h].value == med22) {
-															medFlag++;
-															medCounter++;
-														}
-													}
-												}
-											}
-											if(medFlag != 0){
-												flag = 1;
-												break;
-											}
-										}
-									}
-								}
-								else{
-									break;
-								}
+									
 							}
-
+							if(elementCount>1){
+								bVal =b;
+								elementFound = true;
+								elemendsFoundDateYearBefore = new Date(first);
+								elemendsFoundDateYearBefore.setFullYear(elemendsFoundDateYearBefore.getFullYear()-1);
+							}
 						}
-						// reporting period filter ends here
-					}
 
+                        if(new Date(enddate) >= expireDate && expireDate >= new Date(startdate) && !applicable){
+                            for (var j = 0; j < currentEventAttr.length; j++) {
 
-					if (flag == 0) {
+                                if ((currentEventAttr[j].dataElement == "Ft37n3yO81y" || currentEventAttr[j].dataElement == "D4Z6XYfNQR9") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+                                    count2 = 1; // count for total HTN Patients
+                                    //if HTN patient found --  medications count loop start	
+                                    applicable =true;
+                                }
+                            }
+                           
+                        }
 
-						
+                        
+                    }
+                    medCounter = 0;
+                    if(applicable){
+                        var found = false;
+                        for(var b = 0; b < data2[0].events.length && !found; b++){
+                            var currentEventAttr = data2[0].events[b].dataValues;
+                            for(var j=0;j<currentEventAttr.length; j++){
 
-					}
+								if(medDataElements.includes(currentEventAttr[j].dataElement)){
+									found =true;
+									if(medications.includes(currentEventAttr[j].value.trim())){
+										medCounter++;
+										
+									}
+								}
+                            }
+							console.log("Date " + data2[0].events[b].eventDate + " Count :" +medCounter + " TEI " + data2[0].events[b].trackedEntityInstance )
+                        }
+                    }
 
+                    
+					var expired = false;
+					var valid = false;
+                    var bVal2 =0;
+					var diagnosedOneYearOlderThanLatestMedicine = false;
 					
-					if (totalF == 1 && count == 0) { totalh++; }
-					if (count2 == 1) { totalHTN++; }
+                    for (var b = data2[0].events.length-1; b >0 && !expired && !valid; b--) {
+                        var date = data2[0].events[b].eventDate;
+                        var first = date.split('T')[0];
+                        var eventDate = new Date(first);
+
+                        var enddateLastYear = new Date(enddate);
+                        enddateLastYear.setFullYear(enddateLastYear.getFullYear() - 1);
+                        if (eventDate <= enddateLastYear) {
+                            var currentEventAttr = data2[0].events[b].dataValues;
+                            for (var j = 0; j < currentEventAttr.length; j++) {
+                                if ((currentEventAttr[j].dataElement == "Ft37n3yO81y" || currentEventAttr[j].dataElement == "D4Z6XYfNQR9") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+                                    valid = true;
+									if(elemendsFoundDateYearBefore!=null){
+										
+										if(elemendsFoundDateYearBefore>=eventDate){
+											//console.log( " TEI " + data2[0].events[b].trackedEntityInstance + " Date "+eventDate + "Element Found Date " + elemendsFoundDateYearBefore);
+											diagnosisAndMedicationGapMoreThanYear = true;
+										} 
+										
+									}
+                                    bVal2 = b;
+                                }
+                            }
+                            
+                        }else{
+                            expired = true;
+                        }
+                    
+                    }
+
+                    if(valid && active ){
+                        totalh++;
+                        if(df1 && df2 && diagnosisAndMedicationGapMoreThanYear ){
+                            totalAHTN++;
+							// console.log("Selected ");
+                        }
+                    }
+                    
+					//if (totalF == 1 && count == 0) { totalh++; }
+					if ( active && applicable) { totalHTN++; }
 					if (medCounter == 1) { medOne++; }
 					else if (medCounter == 2) { medTwo++; }
 					else if (medCounter >= 3) { medThree++; }
+                    medFlag = medFlag + medCounter;
 					document.getElementById('totalAHTN').innerHTML = medFlag;
 					document.getElementById('totalHTN').innerHTML = totalHTN;
 					document.getElementById('totalHTNM1').innerHTML = medOne;
 					document.getElementById('totalHTNM2').innerHTML = medTwo;
 					document.getElementById('totalHTNM3').innerHTML = medThree;
 					document.getElementById('col5').innerHTML = totalh;
+					document.getElementById('col6').innerHTML = totalAHTN;
 					document.getElementById('p').innerHTML = index + " of " + (data.enrollments.length - 1) + " completed";
 					if (data.enrollments.length - 1 == index) {
 						document.getElementById('loader').style.display = "none";
@@ -377,6 +264,7 @@
 			});
 
 		};
+
 
 
 		$(document).ready(function () {

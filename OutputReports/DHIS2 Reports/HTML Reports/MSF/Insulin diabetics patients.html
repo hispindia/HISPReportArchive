@@ -45,17 +45,18 @@
 		var t2countn = 0, t2countp = 0;
 		var it1countn = 0, it1countp = 0;
 		var it2countn = 0, it2countp = 0;
+		var ccc = 0;
 
 		var checkStatus = function (data) {
 			data.enrollments.forEach(function (element, index) {
 				var tei = element.trackedEntityInstance;
-
-
+				var url = "../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&trackedEntityInstance=" + tei + "&order=eventDate:ASC&skipPaging=true&endDate=" + enddate;
+				console.log(url);
 				$.when(
 					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true&endDate=" + enddate, {
 						format: "json"
 					}),
-					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&trackedEntityInstance=" + tei + "&orderBy=eventDate:ASC&skipPaging=true", {
+					$.getJSON(url, {
 						format: "json"
 					})
 
@@ -63,100 +64,186 @@
 					var count = 0, count2 = 0, count22 = 0, count3 = 0, flag = 0, flag2 = 0;
 					var type1p = false, type1n = false;
 					var type2p = false, type2n = false;
+					var type1nF = false, type2nF = false;
 					var itype1p = false, itype1n = false;
 					var itype2p = false, itype2n = false;
+
+					var visitMade = false;
+					var temp = false;
+					
 
 					if (data2[0].events.length == 0) {
 						count2 = 0;
 					}
 					else if (data2.httpStatusCode == 409 || data2.httpStatusCode == "409") { count2 = 0; }
 					else {
+						//search for diagnosis
+
+
 						for (var b = 0; b < data2[0].events.length; b++) {
 							var date = data2[0].events[b].eventDate;
 							var first = date.split('T')[0];
 							var expireDate = new Date(first);
-							if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
-								var currentEventAttr = data2[0].events[b].dataValues;
-								for (var j = 0; j < currentEventAttr.length; j++) {
-									if ((currentEventAttr[j].dataElement == "lzBg6QalyhT" || currentEventAttr[j].dataElement == "rwDJebu16Fu") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+							
+							if(new Date(enddate) >= expireDate && expireDate >= new Date(startdate)){
+								visitMade = true;
+							}
+
+							var currentEventAttr = data2[0].events[b].dataValues;
+							for (var j = 0; j < currentEventAttr.length ; j++) {
+								if ((currentEventAttr[j].dataElement == "lzBg6QalyhT" || currentEventAttr[j].dataElement == "rwDJebu16Fu") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+									if(new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+										type1n = true;
+									}else if(expireDate<new Date(startdate)){
+										type1nF = true;		
+									}
+									if(expireDate<new Date(enddate)){
 										type1p = true;
-										for (var p = 0; p < currentEventAttr.length; p++) {
-											if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
+									} 
+								}
+									//for (var p = 0; p < currentEventAttr.length; p++) {
+										if (currentEventAttr[j].value.trim() == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[j].value.trim() == "Insuline NPH" || currentEventAttr[j].value == "Insulin rapid" || currentEventAttr[j].value == "Insulin regular") {
+											if(new Date(enddate) >= expireDate && expireDate >= new Date(startdate)){
+												itype1n = true;
+											}
+											if(expireDate<new Date(enddate)) {
 												itype1p = true;
 											}
 										}
-									}
-									if ((currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
-										type2p = true;
-										for (var p = 0; p < currentEventAttr.length; p++) {
-											if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
+									//}
+								//}
+								if ((currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+									if(new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) type2n = true;
+									else if(expireDate<new Date(startdate))type2nF = true;
+									if(expireDate<new Date(enddate)) type2p = true;
+								}
+								//	for (var p = 0; p < currentEventAttr.length; p++) {
+										if (currentEventAttr[j].value.trim() == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[j].value == "Insuline NPH" || currentEventAttr[j].value == "Insulin rapid" || currentEventAttr[j].value == "Insulin regular") {
+											if(new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+												itype2n = true;
+											}//else
+											if(expireDate<new Date(enddate)) {
 												itype2p = true;
 											}
 										}
-									}
-								}
-								// for the first visit case
-
-								if (b == 0) {
-									for (var j = 0; j < currentEventAttr.length; j++) {
-										if ((currentEventAttr[j].dataElement == "lzBg6QalyhT") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
-											type1n = true;
-											for (var p = 0; p < currentEventAttr.length; p++) {
-												if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
-													itype1n = true;
-												}
-											}
-										}
-										if ((currentEventAttr[j].dataElement == "uoVoakOJULl") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
-											type2n = true;
-											for (var p = 0; p < currentEventAttr.length; p++) {
-												if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
-													itype2n = true;
-												}
-											}
-										}
-									}
-								}
-
-								// for the follow up visit case
-								else {
-									if (!type1n) {
-										for (var j = 0; j < currentEventAttr.length; j++) {
-											if ((currentEventAttr[j].dataElement == "rwDJebu16Fu") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
-												type1n = true;
-												for (var p = 0; p < currentEventAttr.length; p++) {
-													if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
-														itype1n = true;
-													}
-												}
-											}
-										}
-									}
-									if (!type2n) {
-										for (var j = 0; j < currentEventAttr.length; j++) {
-											if ((currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
-												type2n = true;
-												for (var p = 0; p < currentEventAttr.length; p++) {
-													if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
-														itype2n = true;
-													}
-												}
-											}
-										}
-									}
-								}
-
-
+								//	}
+								//}
 							}
 						}
-						if (type1n) { t1countn++; }
-						if (type2n) { t2countn++; }
-						if (itype1n) { it1countn++; }
-						if (itype2n) { it2countn++; }
-						if (type1p) { t1countp++; }
-						if (type2p) { t2countp++; }
-						if (itype1p) { it1countp++; }
-						if (itype2p) { it2countp++; }
+
+						
+
+						//sidanshu
+						// for (var b = 0; b < data2[0].events.length; b++) {
+						// 	var date = data2[0].events[b].eventDate;
+						// 	var first = date.split('T')[0];
+						// 	var expireDate = new Date(first);
+
+						// 	if (new Date(enddate) >= expireDate && expireDate >= new Date(startdate)) {
+						// 		var currentEventAttr = data2[0].events[b].dataValues;
+						// 		for (var j = 0; j < currentEventAttr.length; j++) {
+						// 			if ((currentEventAttr[j].dataElement == "lzBg6QalyhT" || currentEventAttr[j].dataElement == "rwDJebu16Fu") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+						// 				type1p = true;
+						// 				for (var p = 0; p < currentEventAttr.length; p++) {
+						// 					if (currentEventAttr[p].value.trim() == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value.trim() == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
+						// 						itype1p = true;
+						// 					}
+						// 				}
+						// 			}
+						// 			if ((currentEventAttr[j].dataElement == "uoVoakOJULl" || currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+						// 				type2p = true;
+						// 				for (var p = 0; p < currentEventAttr.length; p++) {
+						// 					if (currentEventAttr[p].value.trim() == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
+						// 						itype2p = true;
+						// 					}
+						// 				}
+						// 			}
+						// 		}
+						// 		// for the first visit case
+
+						// 		if (b == 0) {
+						// 			for (var j = 0; j < currentEventAttr.length; j++) {
+						// 				if ((currentEventAttr[j].dataElement == "lzBg6QalyhT") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+						// 					type1n = true;
+						// 					for (var p = 0; p < currentEventAttr.length; p++) {
+						// 						if (currentEventAttr[p].value.trim() == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
+						// 							itype1n = true;
+						// 						}
+						// 					}
+						// 				}
+						// 				if ((currentEventAttr[j].dataElement == "uoVoakOJULl") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+						// 					type2n = true;
+						// 					for (var p = 0; p < currentEventAttr.length; p++) {
+						// 						if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
+						// 							itype2n = true;
+						// 						}
+						// 					}
+						// 				}
+						// 			}
+						// 		}
+
+						// 		// for the follow up visit case
+						// 		else {
+						// 			if (!type1n) {
+						// 				for (var j = 0; j < currentEventAttr.length; j++) {
+						// 					if ((currentEventAttr[j].dataElement == "rwDJebu16Fu") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+						// 						type1n = true;
+						// 						for (var p = 0; p < currentEventAttr.length; p++) {
+						// 							if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
+						// 								itype1n = true;
+						// 							}
+						// 						}
+						// 					}
+						// 				}
+						// 			}
+						// 			if (!type2n) {
+						// 				for (var j = 0; j < currentEventAttr.length; j++) {
+						// 					if ((currentEventAttr[j].dataElement == "nwFajZjl3Fa") && (currentEventAttr[j].value == "Newly_diagnosed" || currentEventAttr[j].value == "Previously_diagnosed")) {
+						// 						type2n = true;
+						// 						for (var p = 0; p < currentEventAttr.length; p++) {
+						// 							if (currentEventAttr[p].value == "Insulin, 100 IU/ml, Biphasic 30, human, 10 ml" || currentEventAttr[p].value == "Insuline NPH" || currentEventAttr[p].value == "Insulin rapid" || currentEventAttr[p].value == "Insulin regular") {
+						// 								itype2n = true;
+						// 							}
+						// 						}
+						// 					}
+						// 				}
+						// 			}
+						// 		}
+
+
+						// 	}
+						// }
+
+						if(visitMade){
+							if(type1p){
+								t1countp++;
+								if(itype1p)it1countp++;
+							}
+							if(!type1nF && type1n){
+								t1countn++;
+								if(itype1n)it1countn++;
+							}
+
+							if(type2p){
+								t2countp++;
+								if(itype2p)it2countp++;
+							}
+							if(!type2nF && type2n){
+								t2countn++;
+								if(itype2n)it2countn++;
+							}
+						}
+						
+						
+
+						// if (type1n) { t1countn++; }
+						// if (type2n) { t2countn++; }
+						// if (itype1n) { it1countn++; }
+						// if (itype2n) { it2countn++; }
+						// if (type1p) { t1countp++; }
+						// if (type2p) { t2countp++; }
+						// if (itype1p) { it1countp++; }
+						// if (itype2p) { it2countp++; }
 					}
 
 
@@ -172,6 +259,7 @@
 					document.getElementById('p').innerHTML = index + " of " + (data.enrollments.length - 1) + " completed";
 					if (data.enrollments.length - 1 == index) {
 						document.getElementById('loader').style.display = "none";
+						console.log("total count " +ccc);
 					}
 				});
 

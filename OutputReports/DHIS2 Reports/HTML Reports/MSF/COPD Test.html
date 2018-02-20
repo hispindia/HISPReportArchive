@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" type="text/javascript"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+	 crossorigin="anonymous"></script>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb"
+	 crossorigin="anonymous">
+	<script type="text/javascript">
+
+
+
+
+		var getDate = function (y, q) {
+			var edate = "";
+			var sdate = "";
+			if (q == 1) {
+				sdate = y + "-01-01"
+				edate = y + "-03-31"
+			}
+			if (q == 2) {
+				sdate = y + "-04-01"
+				edate = y + "-06-30"
+			}
+			if (q == 3) {
+				sdate = y + "-07-01"
+				edate = y + "-09-30"
+			}
+			if (q == 4) {
+				sdate = y + "-10-01"
+				edate = y + "-12-31"
+			}
+			return [sdate, edate];
+		};
+
+		var url = window.location.href;
+		var arrayUrl = url.split('=');
+		var ou = arrayUrl[3];
+		var arrayUrl1 = arrayUrl[2].split('&');
+		var pe = arrayUrl1[0];
+		var year = pe.split('Q')[0];
+		var quarter = pe.split('Q')[1];
+		var prog_id = "VCuHIFtJJSv";
+		var dates = getDate(year, quarter);
+		var startdatestr = dates[0];
+		var enddatestr = dates[1];
+		var totalevent, totalEndevent = 0, totalEndevent2 = 0, activeatendevent;
+		var denominator =0;
+		var numerator = 0;
+		var mnthbeforeendDate = new Date(enddatestr);
+		mnthbeforeendDate.setMonth(mnthbeforeendDate.getMonth()-15);
+		
+		var getProperDate = function(d){
+			return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+		}
+		console.log(getProperDate(mnthbeforeendDate));
+		var checkStatus = function (data) {
+			data.enrollments.forEach(function (element, index) {
+				var tei = element.trackedEntityInstance;
+				var active = false, count2 = 0, count22 = 0, count3 = 0,flag =0;
+				
+				$.when(
+					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true&endDate=" + enddatestr, {
+						format: "json"
+					}),//for exit
+					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=HvBZokNtaEZ&trackedEntityInstance=" + tei + "&skipPaging=true&endDate="+enddatestr+"&order=eventDate:DSC", {
+						format: "json"
+					}),//for follw up
+					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=kwXu1zEDMEe&trackedEntityInstance=" + tei + "&skipPaging=true&endDate="+getProperDate(mnthbeforeendDate), {
+						format: "json"
+					})//first visit
+					// ,
+					// $.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=HvBZokNtaEZ&trackedEntityInstance=" + tei + "&skipPaging=true&startDate="+getProperDate(mnthbeforeendDate)+"&endDate="+enddatestr+"&order=eventDate:DSC",{
+					// 	format: "json"
+					// })//follow up within fifteen months
+				).then(function (exitevents, followupvisits, firstVisit){//,followupvisitsWithinPeriod) {
+					if (exitevents[0].events.length == 0) {
+						active = true;//if there is no exit consider active
+					}
+					else if (exitevents.httpStatusCode == 409 || exitevents.httpStatusCode == "409") { count = 0; }
+					else {
+						var date = exitevents[0].events[0].eventDate;
+						var first = date.split('T')[0];
+						var expireDate = new Date(first);
+						if (new Date(enddatestr) < expireDate) {
+							active = true; // though there is exit but the exit date is after reporting period 
+							//still consider active
+						}
+					}
+ 					
+					var applicable = false;
+
+					if(active){
+						if(firstVisit[0].events.length>0){//registered 15 months before report ending period
+							
+							for(var i =0;i<firstVisit[0].events.length && !applicable;i++){//check whether diagnosed in first visit
+								
+								for(var j=0;j<firstVisit[0].events[i].dataValues.length && !applicable;j++){
+									var dataValue = firstVisit[0].events[i].dataValues[j];
+									var firstStageCOPDDataElementId = "GSH68kIsvKX";
+									if(dataValue.dataElement == firstStageCOPDDataElementId && (dataValue.value == "Newly_diagnosed" || dataValue.value == "Previously_diagnosed")){
+										applicable = true;
+									}
+								}
+							}
+
+							if(!applicable && followupvisits[0].events.length>0){
+                                
+                                for(var i=0;i<followupvisits[0].events.length && !applicable;i++){
+                                    var date = followupvisits[0].events[0].eventDate;
+                                    var first = date.split('T')[0];
+                                    var evDate = new Date(first);
+                                    if(evDate<mnthbeforeendDate){
+                                        var event = followupvisits[0].events[i];
+                                        var followupVisitStageCOPDDataElementID = "rLfKA2uDpI1";
+                                        for(var j=0;j<event.dataValues.length && !applicable;j++){
+                                            var dataValue = event.dataValues[j];
+                                            if(dataValue.dataElement==followupVisitStageCOPDDataElementID && (dataValue.value == "Newly_diagnosed" || dataValue.value == "Previously_diagnosed")){
+                                                applicable = true;
+                                            }
+                                        }
+
+                                    }
+                                }
+							}
+						}
+
+					}
+					var valueConsiderable = false;
+					if(applicable){
+                        console.log(tei);
+						denominator++;
+                        var date = followupvisits[0].events[0].eventDate;
+                        
+						if(followupvisits[0].events.length>0){
+                            var date = followupvisits[0].events[0].eventDate;
+                            var first = date.split('T')[0];
+                            var evDate = new Date(first);
+                            if(evDate>mnthbeforeendDate){
+                                var followupdataValues = followupvisits[0].events[0].dataValues;
+                                for(var k=0;k<followupdataValues.length && !valueConsiderable && k<1;k++){
+                                    if(followupdataValues[k].dataElement = "efGpqH6XRRw" && followupdataValues[k].value=="Controlled"){
+                                        valueConsiderable = true;
+                                    }
+                                }
+                            }
+							
+						}
+						
+					}
+					if(valueConsiderable){
+						numerator++;
+					}
+					document.getElementById('totalNumber').innerHTML = numerator;
+					document.getElementById('totalNumber2').innerHTML = denominator;
+					document.getElementById('prg').innerHTML = index+" of "+data.enrollments.length+" completed";
+                    if (data.enrollments.length - 1 == index) {
+					    document.getElementById('loader').style.display = "none";
+				    }
+					
+				});
+				
+				
+			});
+
+		};
+
+		$(document).ready(function () {
+
+			$.when(
+				$.getJSON("../api/enrollments.json?ou=" + ou + "&ouMode=DESCENDANTS&program=" + prog_id + "&fields=trackedEntityInstance&skipPaging=true", {
+					format: "json"
+				})
+			).then(function (enrollements) {//get the enrollements in this ou for the program
+				checkStatus(enrollements);
+
+			});
+		});
+	</script>
+	<style>
+		table {
+			table-layout: fixed;
+			word-wrap: break-word;
+			text-align: center;
+		}
+
+		/* Absolute Center Spinner */
+
+		.loading {
+			position: fixed;
+			z-index: 999;
+			height: 2em;
+			width: 2em;
+			overflow: show;
+			margin: auto;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+		}
+
+		/* Transparent Overlay */
+
+		.loading:before {
+			content: '';
+			display: block;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.3);
+		}
+
+		/* :not(:required) hides these rules from IE9 and below */
+
+		.loading:not(:required) {
+			/* hide "loading..." text */
+			font: 0/0 a;
+			color: transparent;
+			text-shadow: none;
+			background-color: transparent;
+			border: 0;
+		}
+
+		.loading:not(:required):after {
+			content: '';
+			display: block;
+			font-size: 10px;
+			width: 1em;
+			height: 1em;
+			margin-top: -0.5em;
+			-webkit-animation: spinner 1500ms infinite linear;
+			-moz-animation: spinner 1500ms infinite linear;
+			-ms-animation: spinner 1500ms infinite linear;
+			-o-animation: spinner 1500ms infinite linear;
+			animation: spinner 1500ms infinite linear;
+			border-radius: 0.5em;
+			-webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+			box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+		}
+
+		/* Animation */
+
+		@-webkit-keyframes spinner {
+			0% {
+				-webkit-transform: rotate(0deg);
+				-moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-o-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+				-moz-transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-o-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		@-moz-keyframes spinner {
+			0% {
+				-webkit-transform: rotate(0deg);
+				-moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-o-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+				-moz-transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-o-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		@-o-keyframes spinner {
+			0% {
+				-webkit-transform: rotate(0deg);
+				-moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-o-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+				-moz-transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-o-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		@keyframes spinner {
+			0% {
+				-webkit-transform: rotate(0deg);
+				-moz-transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-o-transform: rotate(0deg);
+				transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+				-moz-transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-o-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+
+		button {
+			cursor: pointer;
+		}
+	</style>
+
+	<body>
+		<div class="loading" id="loader">Loading&#8230;</div>
+
+		<br>
+		<table class="table table-bordered table-hover reporttable">
+			<thead>
+				<tr>
+					<td style="width:50%">Number of controlled COPD patients under care for more than 15 months</td>
+					<td style="width:50%" id="totalNumber"></td>
+				</tr>
+				<tr>
+					<td style="width:50%">Total number of COPD patients months under care for more than  15 months</td>
+					<td style="width:50%" id="totalNumber2"></td>
+				</tr>
+				<tr>
+					<td style="width:50%">Progress</td>
+					<td style="width:50%" id="prg"></td>
+				</tr>
+			</thead>
+		</table>
+	</body>
+
+</html>
