@@ -81,27 +81,89 @@
 
 		var getouarray = function () {
 			var ouarray = [];
-			$.when(
-				$.getJSON("../api/organisationUnits/oo6xFWZ9n1y.json?level=3", {
-					format: "json"
-				})
-			).then(function (res) {
+			var promise = $.ajax({
+				url: "../api/organisationUnits/oo6xFWZ9n1y.json?level=3"
+			});
+
+			promise.always(function (res) {
 				for (var i = 0; i < res.organisationUnits.length; i++) {
 					ouarray.push(res.organisationUnits[i].id);
 				}
 			});
+			// $.ajax({
+			// 	async: false,
+			// 	type: 'GET',
+			// 	dataType: 'json',
+			// 	url: "../api/organisationUnits/oo6xFWZ9n1y.json?level=3",
+			// 	success: function (res) {
+			// 		for (var i = 0; i < res.organisationUnits.length; i++) {
+			// 			ouarray.push(res.organisationUnits[i].id);
+			// 		}
+			// 	}
+			// });
+
 			return ouarray;
 		};
 
-		var url = window.location.href;
-		var arrayUrl = url.split('=');
-		var ou = arrayUrl[3];
-		var arrayUrl1 = arrayUrl[2].split('&');
-		var pe = arrayUrl1[0];
-		var year = pe.split('Q')[0];
-		var quarter = pe.split('Q')[1];
+		var getQuarter = function(e){
+			var q = "";
+			if(e.substring(5,7) == "03"){
+				q = e.substring(0,4) + "Q1";
+			}
+			if(e.substring(5,7) == "06"){
+				q = e.substring(0,4) + "Q2";
+			}
+			if(e.substring(5,7) == "09"){
+				q = e.substring(0,4) + "Q3";
+			}
+			if(e.substring(5,7) == "12"){
+				q = e.substring(0,4) + "Q4";
+			}
+			return q;
+		};
+
+
+		var pushfunction = function (value, quarter, selectedou) {
+			var dataValueSet = {
+				"dataSet": "tJ1JJ1o7gkj",
+				"period": quarter,
+				"orgUnit": selectedou,
+				"dataValues": [{
+					"dataElement": "JxOwlo5l4Is",
+					"categoryOptionCombo": "HllvX50cXC0",
+					"period": quarter,
+					"orgUnit": selectedou,
+					"value": value
+				},
+				]
+			};
+			$.ajax({
+				async: false,
+				type: 'post',
+				dataType: 'json',
+				contentType: "application/json",
+				url: '../api/dataValueSets',
+				data: JSON.stringify(dataValueSet),
+				success: function (response) {
+					alert("Successfully pushed into quaterly datavalues");
+				},
+				warning: function (response) {
+					alert("Warning!");
+				},
+				error: function (response) {
+					alert("ERROR")
+				}
+			});
+		};
+		//	var url = window.location.href;
+		//	var arrayUrl = url.split('=');
+		//	var ou = arrayUrl[3];
+		//	var arrayUrl1 = arrayUrl[2].split('&');
+		//	var pe = arrayUrl1[0];
+		//	var year = pe.split('Q')[0];
+		//	var quarter = pe.split('Q')[1];
 		var prog_id = "VCuHIFtJJSv";
-		var enddate = getDate(year, quarter);
+		//	var enddate = getDate(year, quarter);
 		var totalevent, totalEndevent = 0, totalEndevent2 = 0, activeatendevent;
 		var totalEnrollments = 0;
 
@@ -109,85 +171,61 @@
 
 
 
-		var checkStatus = function (data) {
+		var checkStatus = function (data, ou, enddate) {
 			//totalEnrollments = data.enrollments.length;
+			var periodq = getQuarter(enddate);
+			var length = data.enrollments.length;
 			data.enrollments.forEach(function (element, index) {
 				var tei = element.trackedEntityInstance;
-				var count = 0, count2 = 0, count3 = 0;
-				$.when(
-					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=Kr60c8j7vMe&trackedEntityInstance=" + tei + "&skipPaging=true&endDate=" + enddate, {
-						format: "json"
-					}),
-					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=HvBZokNtaEZ&trackedEntityInstance=" + tei + "&skipPaging=true", {
-						format: "json"
-					}),
-					$.getJSON("../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&programStage=kwXu1zEDMEe&trackedEntityInstance=" + tei + "&skipPaging=true", {
-						format: "json"
-					}),
-
-				).then(function (data1, data2, data3) {
-					if (data1[0].events.length == 0) {
-						count = 1;
-					}
-					else if (data1.httpStatusCode == 409 || data1.httpStatusCode == "409") { count = 0; }
-					else {
-						var date = data1[0].events[0].eventDate;
-						var first = date.split('T')[0];
-						var expireDate = new Date(first);
-						if (new Date(enddate) < expireDate) {
-							count = 1;
-						}
-					}
-					if (data2[0].events.length == 0) {
-						count2 = 0;
-					}
-					else if (data2.httpStatusCode == 409 || data2.httpStatusCode == "409") { count2 = 0; }
-					else {
-						for (var b = 0; b < data2[0].events.length; b++) {
-							var date = data2[0].events[b].eventDate;
-							var first = date.split('T')[0];
-							var expireDate = new Date(first);
-							var dateSixMonthsAgo = new Date(enddate);
-							var dateThreeMonthsAgo = new Date(enddate);
-							dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
-							dateThreeMonthsAgo.setMonth(dateThreeMonthsAgo.getMonth() - 3);
-							if (new Date(enddate) > expireDate && expireDate > dateSixMonthsAgo) {
-								count2 = 1;
-							}
-							if (new Date(enddate) > expireDate && expireDate > dateThreeMonthsAgo) {
-								count3 = 1;
-							}
-						}
-					}
-
-
-					for (var b = 0; b < data3[0].events.length; b++) {
-						var date = data3[0].events[b].eventDate;
-						var first = date.split('T')[0];
-						var expireDate = new Date(first);
-						var dateSixMonthsAgo = new Date(enddate);
-						var dateThreeMonthsAgo = new Date(enddate);
-						dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
-						dateThreeMonthsAgo.setMonth(dateThreeMonthsAgo.getMonth() - 3);
-						if (new Date(enddate) > expireDate && expireDate > dateSixMonthsAgo) {
-							count2 = 1;
-						}
-						if (new Date(enddate) > expireDate && expireDate > dateThreeMonthsAgo) {
-							count3 = 1;
-						}
-					}
-					if (count == 1 && count2 == 1) { totalEndevent++; }
-					if (count == 1) { totalEndevent2++; }
-					document.getElementById('totalNumber').innerHTML = totalEndevent;
-					//	document.getElementById('totalNumber2').innerHTML = totalEndevent2;
-					//document.getElementById('totalNumber3').innerHTML = totalEnrollments;
-					if (data.enrollments.length - 1 == index) {
-						document.getElementById('loader').style.display = "none";
-					}
+				var  count2 = 0, count3 = 0;
+				$.ajax({
+					async: true,
+					type: 'GET',
+					dataType: 'json',
+					url: "../api/events.json?orgUnit=" + ou + "&program=" + prog_id + "&trackedEntityInstance=" + tei + "&skipPaging=true&endDate=" + enddate,
+					success: callbackfactory(index,length, enddate, ou, periodq)
 				});
 
 			});
 
+		//	pushfunction(totalEndevent, enddate, ou);
+
+		};
+
+		var callbackfactory = function (i,length,enddate, ou, p) {
+			return function (data2, textStatus, jqXHR) {
+				var active = true;
+				if (data2.events[0].programStage == "Kr60c8j7vMe") {
+					var date = data2.events[0].eventDate;
+					var first = date.split('T')[0];
+					var expireDate = new Date(first);
+					if (new Date(enddate) > expireDate) {
+						active = false;
+					}
+				}
+				if (data2.events.length == 0) {
+					count2 = 0;
+				}
+				else if (data2.httpStatusCode == 409 || data2.httpStatusCode == "409") { count2 = 0; }
+				else {
+					for (var b = 0; b < data2.events.length; b++) {
+						var date = data2.events[b].eventDate;
+						var first = date.split('T')[0];
+						var expireDate = new Date(first);
+						var dateSixMonthsAgo = new Date(enddate);
+						dateSixMonthsAgo.setMonth(dateSixMonthsAgo.getMonth() - 6);
+						if (new Date(enddate) > expireDate && expireDate > dateSixMonthsAgo) {
+							count2 = 1;
+						}
+					}
+				}
+
+				if (active && count2 == 1) { totalEndevent++; }
+
+				if(length - 1 == i){
+					pushfunction(totalEndevent,p, ou);
+				}
+			}
 		};
 
 		var pushdata = function () {
@@ -207,22 +245,51 @@
 			var todaydate = yyyy + '-' + mm + '-' + dd;
 			var endDate = getEndDate(todaydate);
 			var periodarray = getPeriodArray(endDate);
-			console.log(endDate);
 			console.log(periodarray);
 			//end
 
-			var ouarray = getouarray();
-			console.log(ouarray);
-			$.when(
-				$.getJSON("../api/enrollments.json?ou=" + ou + "&ouMode=DESCENDANTS&program=" + prog_id + "&fields=trackedEntityInstance&skipPaging=true", {
-					format: "json"
-				})
-			).then(function (data1) {
-				document.getElementById('loader').style.display = "block";
-				checkStatus(data1);
+			var ouarray = [];
+			var promise = $.ajax({
+				url: "../api/organisationUnits/oo6xFWZ9n1y.json?level=3"
 			});
+
+			promise.always(function (res) {
+				for (var i = 0; i < res.organisationUnits.length; i++) {
+					ouarray.push(res.organisationUnits[i].id);
+				}
+
+				//	console.log(ouarray);
+				var indexx = 0;
+				for (var a = 0; a < periodarray.length; a++) {
+					for (var b = 0; b < ouarray.length; b++) {
+
+						$.ajax({
+							async: true,
+							type: 'GET',
+							dataType: 'json',
+							url: "../api/enrollments.json?ou=" + ouarray[b] + "&ouMode=DESCENDANTS&program=" + prog_id + "&fields=trackedEntityInstance&skipPaging=true",
+							success: callback(ouarray[b], periodarray[a])
+						});
+
+
+					}
+					indexx++;
+				}
+				if (indexx == periodarray.length - 1) {
+					document.getElementById('loader').style.display = "none";
+				}
+			});
+
 		};
 
+		var callback = function (ou, p) {
+
+			return function (data, textStatus, jqXHR) {
+				document.getElementById('loader').style.display = "block";
+				totalEndevent = 0;
+				checkStatus(data, ou, p);
+			}
+		};
 
 
 	</script>
