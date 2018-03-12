@@ -117,9 +117,9 @@
                 </ex-property>
             </list-property>
             <property name="odaDriverClass">org.gjt.mm.mysql.Driver</property>
-            <property name="odaURL">jdbc:mysql://192.168.0.25/pgichd</property>
-            <property name="odaUser">birt</property>
-            <encrypted-property name="odaPassword" encryptionID="base64">YmlydA==</encrypted-property>
+            <property name="odaURL">jdbc:mysql://localhost/production_pgichd</property>
+            <property name="odaUser">root</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">cm9vdA==</encrypted-property>
         </oda-data-source>
     </data-sources>
     <data-sets>
@@ -173,7 +173,7 @@
     from concept_name cn 
     inner join concept_answer ca on cn.concept_id = ca.concept_id
     inner join concept_name cn1 on cn1.concept_id=ca.answer_concept
-    where cn.name like "OPD WARD"
+    where cn.name IN ("OPD WARD","TRIAGE")
     and cn.concept_name_type like "FULLY_SPECIFIED"
     and cn1.concept_name_type like "FULLY_SPECIFIED"]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
@@ -401,14 +401,14 @@ SELECT  answer_concept,cn.name
 FROM concept_answer ca 
 INNER JOIN concept_name cn ON cn.concept_id=ca.answer_concept AND cn.concept_name_type = 'FULLY_SPECIFIED'
 INNER JOIN concept_name cn1 ON cn1.concept_id=ca.concept_id AND cn1.concept_name_type = 'FULLY_SPECIFIED'
-WHERE cn1.name LIKE "OPD WARD"
+WHERE cn1.name IN( "OPD WARD","TRIAGE")
 AND (cn.name LIKE ? OR ? LIKE "All OPD") #input
 )asd1
 INNER JOIN
 (
 SELECT a.opd_name AS OPD_NAME,source_code, a.Diagnosys AS Diagnosys, COUNT(a.person_id) AS Total,COUNT(CASE WHEN a.age <= 5 THEN a.age END) AS 'lessthan5',COUNT(CASE WHEN a.age > 5 THEN a.age END) AS 'greaterthan5' FROM 
 (
-SELECT DISTINCT  opdl.opd_concept_name AS opd_name,o.person_id,cm.source_code,cn.name AS 'Diagnosys',ps.age
+SELECT DISTINCT cn3.name AS opd_name,o.person_id,cm.source_code,cn.name AS 'Diagnosys',ps.age
 FROM obs o
 INNER JOIN concept_name cn1 ON cn1.concept_id=o.concept_id AND cn1.name IN ('PROVISIONAL DIAGNOSIS','FINAL DIAGNOSIS') 
 					AND cn1.concept_name_type = 'FULLY_SPECIFIED'
@@ -416,16 +416,20 @@ INNER JOIN concept_name cn ON o.value_coded = cn.concept_id AND cn.concept_name_
 LEFT JOIN concept_map cm ON cm.concept_id=cn.concept_id
 LEFT JOIN concept_source cs ON cs.concept_source_id=cm.source AND cs.name LIKE 'ICD-10-WHO'
 INNER JOIN concept c ON c.concept_id=cn.concept_id AND c.class_id = 4
-INNER JOIN opd_patient_queue_log opdl ON o.person_id = opdl.patient_id AND o.encounter_id=opdl.encounter_id
+INNER JOIN encounter enc ON o.person_id = enc.patient_id AND o.encounter_id=enc.encounter_id
 INNER JOIN patient_search ps ON ps.patient_id=o.person_id
-WHERE DATE(o.obs_datetime) BETWEEN ? AND  ?  #input
+INNER JOIN obs ob2 ON ob2.person_id=o.person_id 
+INNER JOIN concept_name cn2 ON cn2.concept_id=ob2.concept_id AND cn2.name IN ('OPD WARD','TRIAGE') 
+					AND cn2.concept_name_type = 'FULLY_SPECIFIED'
+INNER JOIN concept_name cn3 ON ob2.value_coded = cn3.concept_id AND cn3.concept_name_type = 'FULLY_SPECIFIED'
+WHERE DATE(o.obs_datetime) BETWEEN ? AND  ?
 GROUP BY person_id,cn.concept_id,o.obs_datetime
 )a
 GROUP BY opd_name,Diagnosys
 )asd
 ON asd1.name=asd.opd_name
 )sag
-GROUP BY Diagnosys
+GROUP BY opd_name,Diagnosys
 ;]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
@@ -1896,7 +1900,7 @@ GROUP BY Investigation
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">1px</property>
                         <label id="719">
-                            <text-property name="text">lessthan5</text-property>
+                            <text-property name="text"></text-property>
                         </label>
                     </cell>
                     <cell id="709">
@@ -1911,7 +1915,7 @@ GROUP BY Investigation
                         <property name="borderTopStyle">solid</property>
                         <property name="borderTopWidth">1px</property>
                         <label id="717">
-                            <text-property name="text">greaterthan5</text-property>
+                            <text-property name="text"></text-property>
                         </label>
                     </cell>
                 </row>
@@ -2189,6 +2193,26 @@ GROUP BY Investigation
                     </cell>
                 </row>
             </header>
+            <group id="721">
+                <property name="groupName">NewTableGroup1</property>
+                <expression name="keyExpr" type="javascript">row["opd_name"]</expression>
+                <structure name="toc">
+                    <expression name="expressionValue" type="javascript">row["opd_name"]</expression>
+                </structure>
+                <property name="hideDetail">false</property>
+                <header>
+                    <row id="722">
+                        <cell id="723">
+                            <property name="colSpan">6</property>
+                            <property name="rowSpan">1</property>
+                            <property name="fontWeight">bold</property>
+                            <data id="736">
+                                <property name="resultSetColumn">opd_name</property>
+                            </data>
+                        </cell>
+                    </row>
+                </header>
+            </group>
             <detail>
                 <row id="19">
                     <property name="textAlign">center</property>
