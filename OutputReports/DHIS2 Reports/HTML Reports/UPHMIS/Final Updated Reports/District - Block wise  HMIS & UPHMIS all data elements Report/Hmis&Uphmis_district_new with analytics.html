@@ -79,7 +79,7 @@ thead>tr>td {
 }
 </style>
 <a id="dlink" style="display:none;"></a>
-<td><b>Select Period</b></td>
+<!--<td><b>Select Period</b></td>
 </tr>
 <br><br>
 <tr>
@@ -95,7 +95,7 @@ thead>tr>td {
         <td><input type="date" id="datepicker2"></td>
         </tr>
         
-<button onClick="submit()" id="tap" >Submit</button><br><br>
+<button onClick="submit()" id="tap" >Submit</button><br><br>-->
 
 <button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle;" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"><span
 class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
@@ -122,10 +122,9 @@ Download As Excel
                 <td style="border:1px solid black" colspan="4">Organisation Unit:- <span id="ouname"></span></td>
                 <td style="border:1px solid black; text-align:left" colspan="916">TimeStamp:-<span id="timeStamp"></span></td>
             </tr>
-          <!--  <tr style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black">
-                <td style="border:1px solid black" colspan="6">Reporting month:-<span id="periodName"></span></td>
-                <td style="border:1px solid black" colspan="39">&nbsp;</td>
-            </tr>-->
+          <td style="border:1px solid black;text-align:left " colspan="920">Period :-&nbsp;
+                <span id="periodName"></span>
+            </td>
             <tr style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black">
                 <td style="border:1px solid black" width="64">Sl.</td>
                 <td style="border:1px solid black" width="64" id="level1"></td>
@@ -1082,7 +1081,47 @@ function printContent(el) {
 </script>
 
 <script>
+ var url = window.location.href;
+    var urlParams = url.split('&');
+    var startDate;
+    var endDate;
+    $.each(urlParams, function (i, item) {
+        if (item.split("=")[0] == "sd") {
+            startDate = item.split("=")[1];
+        }
+        else if (item.split("=")[0] == "ed") {
+            endDate = item.split("=")[1];
+        }
+    });
+	
+document.getElementById("periodName").innerHTML =dateFormat(startDate) + "-To-" + dateFormat(endDate);         
 
+  startDate = moment(startDate);
+    endDate = moment(endDate);
+    var result = [];
+    if (endDate.isBefore(startDate)) {
+        window.alert('Please select end date Accordinlgy');
+    }
+    var currentDate = startDate.clone();
+    while (currentDate.isBefore(endDate)) {
+        result.push(currentDate.format("YYYYMM"));
+        currentDate.add(1, 'month');
+    }
+
+    var date = ("" + result.join(";") + "");
+
+
+
+
+
+    function dateFormat(date) {
+        var dd = date.substring(8, 10);
+        var mm = date.substring(5, 7);
+        var yyyy = date.substring(0, 4);
+
+        console.log(dd + "/" + mm + "/ " + yyyy);
+        return dd + "/" + mm + "/ " + yyyy;
+    }
     // How to force async functions to execute sequentially 
     // by using deferred pipe chaining.
 
@@ -1098,35 +1137,7 @@ function printContent(el) {
         // You only need to understand that higher 'value' param will finish earlier.
         simulateAjax = function (_value,_value11) {
             var dfdAjax = $.Deferred();
-            // console.log('simulateAjax with value: ' + value);
-            // console.log('simulateAjax DONE with value: ' + value);
-            // var startDat = document.getElementById("datepicker1").value;
-            // var endDat = document.getElementById("datepicker2").value;
-            // var s = startDat.split('-');
-            // var ss = s.join('');
-            // var startmonth = ss.substr(0, 6);
-            // var e = endDat.split('-');
-            // var ee = e.join('');
-            // var endmonth = ee.substr(0, 6);
 
-
-           
-
-var startDate = document.getElementById("datepicker1").value;
-var endDate = document.getElementById("datepicker2").value;
-var startDate = moment(startDate);
-var endDate = moment(endDate);
-var result = [];
-if (endDate.isBefore(startDate)) {
-window.alert('Please select end date Accordinlgy');
-}
-var currentDate = startDate.clone();
-while (currentDate.isBefore(endDate)) {
-result.push(currentDate.format("YYYYMM"));
-currentDate.add(1, 'month');
-}
-
-var date = ("" + result.join(";") + "");
             var res4 = $.ajax(
                 {
                     type: "GET",
@@ -2174,25 +2185,11 @@ orgUnitChildren_Array.sort(arraySorting);
 
 
 
-
-    function submit()
-{
-
     $.each(orgUnitChildren_Array, function (index, element) {
         var ouid = element[0];
         var count1 = 0;
 
-        // var orgUnitAPI = $.ajax(
-        //     {
-        //         type: "GET",
-        //         // async: false,
-        //         url: "../api/organisationUnits/" + ouid + ".json?fields=children[id,name]&order=name:desc",
-        //         data: JSON,
-        //         success: function (data, status) {
-        //         }
-        //     });
-
-
+     
         $.when(orgUnitChildren_Array).then(function (res) {
             var ouids = element[0];
         _values11.push(ouids);
@@ -2223,19 +2220,6 @@ return requestAjax(_value,_value11).
 
     })
   
-}
-
-    /*function datafordate(ouid, period) {
-        var dataA = 0;
-        $.ajax({
-            async: false,
-            url: "../api/dataValues.json?de=yl3ZGkjVbli&pe=" + period + "&ou=" + ouid + "",
-            success: function (data) {
-                dataA = data[0];
-            }
-        });
-        return dataA;
-    }*/
     function finalvalue(res4, res5, ouidName, count) {
         valuea = datavalue(res4,'FIaGENXR3c5.Ti9FJqkSK6J') ;
     valueb = datavalue(res4,'fqM6fGLUqVD.Ti9FJqkSK6J') ;
