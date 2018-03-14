@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Form A</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+        crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" type="text/javascript"></script>
+    <style type="text/css" media="screen"></style>
+    <style type="text/css" href="../api/documents/IlCodOSjSxY/data" media="print">
+        @media print {
+            #notPrint {
+                display: none;
+            }
+            #printing {
+                display: block;
+            }
+            @page {
+                size: A4 landscape;
+                max-height: 100%;
+                max-width: 100%
+            }
+        }
+    </style>
+
+    <style>
+	tbody>tr>td {
+    font-weight: bold;
+}
+thead>tr>td {
+font-weight: bold;
+}
+        table {
+            border-collapse: collapse;
+        }
+        table,
+        td,
+        th {
+            border: 1px solid black;
+            text-align: center;
+            height: 30px;
+        }
+        p {
+            text-align: center;
+        }
+        .custom {
+            margin-top: 50px;
+            width: 100%;
+            padding: 10px;
+        }
+        h3 {
+            text-align: center;
+        }
+        .custom-table {
+            width: 75%;
+            font-size: 16px;
+            margin: auto;
+            text-align: center;
+        }
+        .custom-drop {
+            text-align: center;
+        }
+        input[type=date] {
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+       
+        
+    </style>
+</head>
+
+<body>
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('tableid', 'name', 'Linelisting_L_form.xls')"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;
+Download As Excel
+</button>
+  
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-*  custom">
+                <div id="notPrint">
+                    <b style="margin-left: 30%">Start Date : </b><input type="date" id="startDate" required>
+                  End Date : <input type="date" id="endDate"required> <br><br><br>
+				  <button onClick="genFormA()" id="genformA" style="margin-left: 50%">Generate</button><br><br>
+                </div>
+                    
+
+                <div id="printing">
+                    
+                 
+                       <table width="100%" id="tableid" border="1" class="table  table-hover text-center" cellspacing="6" cellpadding="4">
+                        <thead>
+                           <tr style=" font-weight:400; text-align:center;">
+<td colspan="17" width="1450"  style="border:1px solid black;background:#ADD8E6; ">IDSP Form L Positive Cases Line List</td>
+</tr>
+<tr style=" font-weight:400; text-align:center;">
+<td colspan="17"  style="border:1px solid black;background:#ADD8E6; "OorganisationUnit : -<span id = "ouname"> </span> </td>
+
+
+</tr>
+
+<tr style=" font-weight:400; text-align:center;" >
+<td colspan = '9'style="border:1px solid black;background:#ADD8E6; "> From : -  <span id = "start"></span></td>
+<td colspan = '8' style="border:1px solid black;background:#ADD8E6; "> To : - <span id = "end" ></span> </td>
+</tr>
+
+<tr style=" font-weight:400; text-align:center;">
+<td style="border:1px solid black;background:#ADD8E6; " > Sr.no </td>
+<td    style="border:1px solid black;background:#ADD8E6; ">Name</td>
+<td   style="border:1px solid black;background:#ADD8E6; ">Aadhaar number/Passport number/Visa number</td>
+<td  style="border:1px solid black;background:#ADD8E6; ">Contact number</td>
+<td  colspan="2" style="border:1px solid black;background:#ADD8E6; " >Age(in completed months/yrs)</td>
+<td   style="border:1px solid black;background:#ADD8E6; ">Sex</td>
+<td colspan="2" style="border:1px solid black;background:#ADD8E6; ">Hno./Pocket/Ward/Village</td>
+<td  colspan="2" style="border:1px solid black;background:#ADD8E6; ">Illness onset date</td>
+<td   colspan="2" style="border:1px solid black;background:#ADD8E6; " >Sample collection date</td>
+<td  style="border:1px solid black;background:#ADD8E6; ">Type of sample</td>
+
+<td  style="border:1px solid black;background:#ADD8E6; " >Test performed</td>
+<td  style="border:1px solid black;background:#ADD8E6; " colspan="2">Result details (isolate name/type)</td>
+</tr>
+                        </thead>
+						<tbody>
+						</tbody>
+                    </table>
+					
+                    <div style="display:flex" id="footer">
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+	
+        var orgUnitUid = dhis2.report.organisationUnit.id;
+		var ouname = dhis2.report.organisationUnit.name;
+		document.getElementById('ouname').innerHTML = ouname;
+        var Total1, Total2, Total3, Total11;
+        // var orgUnitChildren = dhis2.report.organisationUnitChildren;
+        var url = window.location.href;
+        var ouu1 = url.split('=')[2];
+        var ou1 = ouu1.split('&')[0];
+        var ou2 = ouu1.split('&')[0];
+        var flag = 0;
+	
+      
+       
+  
+	
+        function genFormA() {
+//            if (flag != 1) {
+//                endDate = "";
+//            }
+
+            var total1 = 0, total2 = 0, total3 = 0, total4 = 0, total5 = 0, total6 = 0, total7 = 0, total8 = 0, total9 = 0, total10 = 0, total11 = 0, total12 = 0, total13 = 0, total14 = 0, total15 = 0, total16 = 0, total17 = 0, total18 = 0;
+			var count_1 = 0, count_2 = 0, count_3 = 0, count_4 = 0, count_5 = 0, count_6 = 0 , count_7 = 0 , count_8 = 0 ,count_9 = 0, count_10 = 0 , count_11 = 0 ;
+           var  rowcount = 0;
+      
+            //Ml0ZNj9APN0
+   var startDate = document.getElementById("startDate").value;
+	var endDate = document.getElementById("endDate").value;
+          
+		   document.getElementById('start').innerHTML = startDate;
+		 document.getElementById('end').innerHTML = endDate;
+		 
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    url: "../api/events.json?fields=*&ou=" + orgUnitUid + "&program=BtA0kExvj3w&&startDate=" + startDate + "&endDate=" + endDate + "&skipPaging=true",
+                    success: function (data) {
+                        var Pou = "";
+						document.getElementById("tableid").tBodies[0].innerHTML = ""
+                        for (var p = 0; p < data.events.length; p++) {
+                           
+                           
+
+                            for (var q = 0; q < data.events[p].dataValues.length; q++) {
+                                if (data.events[p].dataValues[q].dataElement == "UajKRe6kWlp") {
+                                    //Total_IP_Fever_Adult
+                                    count_1 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "JPDoJv0FjuX") {
+                                    //Total_IP_Fever_child
+                                    count_2 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "OxwEjJhRFWV") {
+                                    //Total_IP_Fever_adult 24 hours
+                                    count_3 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "pUElSVLa01I") {
+                                    //Total_IP_Fever_child 24 hours
+                                    count_4 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "aMDrqMM4iq4") {
+                                    
+                                    count_5 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "fEJKG0iPKoz") {
+                                  
+                                    count_6 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "rIjge7jMYws") {
+                                    //HUD_Aggregate/Case_Detected_24hrs_IgM
+                                    count_7 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "vMjpe0vuLrC") {
+                                    //HUD_Aggregate/Case_Detected_24hrs_NSI
+                                    count_8 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "YtzjZCgal8P") {
+                                    //HUD_Aggregate/Dengue_Discharged_24hrs_IgM
+                                    count_9 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "a3Nk6d8WOxw") {
+                                    //HUD_Aggregate/Dengue_Discharged_24hrs_NS1
+                                    count_10 = data.events[p].dataValues[q].value;
+                                }
+                                else if (data.events[p].dataValues[q].dataElement == "JIciav2l7eb") {
+                                    //HUD_Aggregate/Dengue_+ve_24hrs_IG1
+                                    count_11 = data.events[p].dataValues[q].value;
+                                }
+                              
+                            }
+						
+                               // $('.custom-table-government').append(roww);
+									rowcount++;
+								   var tabledata = '<tr>';
+                                //var table = document.getElementById("checkTable");
+                              
+                               tabledata += ("<tr id = 'tableid'><td colspan = '1'>" + rowcount + " </td><td colspan = '1' style = 'boder:1px solid black' >" + count_1 + "</td><td style =  'boder:1px solid black' colspan = '1'>" + count_2 + "</td><td colspan = '1' style =  'boder:1px solid black' style =  'boder:1px solid black'>" + count_3 + "</td><td colspan = '2' style =  'boder:1px solid black'>" + count_4 + "</td><td colspan='1' style =  'boder:1px solid black'>" + count_5 + "</td><td colspan = '2' style =  'boder:1px solid black'>" + count_6 + "</td><td colspan = '2' style =  'boder:1px solid black'>" + count_7 + "</td><td colspan = '2' style =  'boder:1px solid black'>" + count_8 + "</td><td colspan = '1' style =  'boder:1px solid black'>" + count_9 + "</td><td colspan = '1' style =  'boder:1px solid black' >"+ count_10 + "</td><td colspan = '2' style =  'boder:1px solid black'>" + count_11 + "</td></tr>");
+							   
+							   tabledata += "</tr>";
+							    document.getElementById("tableid").tBodies[0].innerHTML += tabledata;
+                             
+                      
+                        }
+						
+                          
+					
+					
+                    },
+                    error: function (response) {
+                    }
+					
+					  
+                });
+				
+            }
+			   var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,'
+                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+            return function (table, name, filename) {
+                if (!table.nodeType) table = document.getElementById(table)
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+
+                document.getElementById("dlink").href = uri + base64(format(template, ctx));
+                document.getElementById("dlink").download = filename;
+                document.getElementById("dlink").click();
+
+            }
+        })()
+        
+    </script>
+</body>
+
+</html>

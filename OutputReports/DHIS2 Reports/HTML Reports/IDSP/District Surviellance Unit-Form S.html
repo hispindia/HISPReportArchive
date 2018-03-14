@@ -1,0 +1,593 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+    crossorigin="anonymous">
+
+<style>
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+    /* Center the loader  */
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    */ #printing {
+        display: none;
+        text-align: center;
+    }
+    /*.table tbody+tbody{
+	border-top: 1px solid black!important;
+}
+
+.table td, .table th{
+	border-top : 1px solid black!important;
+}*/
+</style>
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('tableid', 'name', 'District_Surviellance_Unit-Form_S.xls')"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;
+Download As Excel
+</button>
+<div id="notPrint">
+    <b style="margin-left: 30%">Start Date : </b><input type="date" id="startDate" required> End Date : <input type="date"
+        id="endDate" required> <br><br><br>
+    <button onClick="weekDate()" id="genformA" style="margin-left: 50%">Generate</button><br><br>
+</div>
+
+<br><br>
+<div id="loader"></div>
+<div id="printing" style="display:none;" class="animate-bottom">
+    <div id='state'>
+        <table  id="tableid" border="1" width='1200px1' class="table  table-hover text-center">
+            <thead style="background:#ADD8E6; font-weight:400; text-align:center">
+
+                <tr style=" font-weight:400; text-align:center; ">
+                    <td colspan="17" style="border:1px solid black;background:#ADD8E6; ">District Surviellance Unit-Form S</td>
+                </tr>
+                <tr style="font-weight:400; text-align:center; ">
+                    <td colspan="10" style="border:1px solid black;background:#ADD8E6;">OrganisationUnit : - <span id="ouname"></span></td>
+                    <td  colspan ="4" style="border:1px solid black;background:#ADD8E6; ">Start Date : - <span id="start"></span> </span>
+                    </td>
+                    <td colspan="3" style="border:1px solid black;background:#ADD8E6; ">End Date : - <span id="end"></span> </span>
+                    </td>
+                </tr>
+                <tr style=" font-weight:400; text-align:center; ">
+                    <td colspan="10" rowspan="3" style="border:1px solid black;background:#ADD8E6; "></td>
+                    <td colspan="6" style="border:1px solid black; background:#ADD8E6; ">Cases</td>
+                    <td rowspan="3" colspan="1" style="border:1px solid black;background:#ADD8E6; ">Total</td>
+                </tr>
+                <tr style=" font-weight:400; text-align:center; ">
+                    <td colspan="3" style="border:1px solid black; background:#ADD8E6; ">Male</td>
+                    <td colspan="3" style="border:1px solid black; background:#ADD8E6; ">Female</td>
+                </tr>
+
+                <tr style="font-weight:400; text-align:center;">
+                    <td colspan="1" style="border:1px solid black;background:#ADD8E6; ">&lt;5yr</td>
+                    <td colspan="1" style="border:1px solid black;background:#ADD8E6; ">&gt;=5yr</td>
+                    <td colspan="1" style="border:1px solid black;background:#ADD8E6; ">Total</td>
+                    <td colspan="1" style="border:1px solid black;background:#ADD8E6; ">&lt;5yr</td>
+                    <td colspan="1" style="border:1px solid black;background:#ADD8E6; ">&gt;=5yr</td>
+                    <td colspan="1" style="border:1px solid black;background:#ADD8E6; ">Total</td>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+
+        </table>
+    </div>
+</div>
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
+
+
+
+<!-- Main Script -->
+<script>
+    var startDate = '';
+    var endDate = '';
+    var per = '';
+
+    function weekDate() {
+        document.getElementById("tableid").tBodies[0].innerHTML = "";
+        startDate = document.getElementById("startDate").value;
+        endDate = document.getElementById("endDate").value;
+        per = weekly(startDate, endDate);
+        console.log("per" + per);
+
+        document.getElementById('start').innerHTML = startDate;
+        document.getElementById('end').innerHTML = endDate;
+
+
+        var periods = dhis2.report.periods;
+        var period = periods[0];
+
+
+
+        var url = window.location.href;
+        var params = url.split('=');
+        var gotOrgUnit = params[3];
+
+
+
+        var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+
+        var count = 0;
+        var value0 = 0;
+        var value1 = 0;
+        var value2 = 0;
+
+        var value3 = 0;
+        var value4 = 0;
+        var value5 = 0;
+        var value6 = 0;
+        var value7 = 0;
+        var value8 = 0;
+        var value9 = 0;
+        var value10 = 0;
+        var value11 = 0;
+        var value12 = 0;
+        var value13 = 0;
+        var value14 = 0;
+        var value15 = 0;
+        var value16 = 0;
+        var value17 = 0;
+        var value18 = 0;
+        var value19 = 0;
+        var value20 = 0;
+        var value21 = 0;
+        var value22 = 0;
+        var value23 = 0;
+        var value24 = 0;
+        var value25 = 0;
+        var value26 = 0;
+        var value27 = 0;
+        var value28 = 0;
+        var value29 = 0;
+        var value30 = 0;
+        var value31 = 0;
+        var value32 = 0;
+        var value33 = 0;
+        var value34 = 0;
+        var value35 = 0;
+        var value36 = 0;
+        var value37 = 0;
+        var value38 = 0;
+        var value39 = 0;
+        var value40 = 0;
+        var value41 = 0;
+        var value42 = 0;
+        var value43 = 0;
+        var value44 = 0;
+        var value45 = 0;
+        var value46 = 0;
+        var value47 = 0;
+        var value48 = 0;
+        var value49 = 0;
+        var value50 = 0;
+        var value51 = 0;
+        var value52 = 0;
+        var value53 = 0;
+        var value54 = 0;
+        var value55 = 0;
+        var value56 = 0;
+        var value57 = 0;
+        var value58 = 0;
+        var value59 = 0;
+
+        var value60 = 0;
+        var value61 = 0;
+        var value62 = 0;
+        var value63 = 0;
+        var value64 = 0;
+        var value65 = 0;
+        var value66 = 0;
+
+        var value67 = 0;
+        var value68 = 0;
+        var value69 = 0;
+        var value70 = 0;
+        var value71 = 0;
+
+        var value72 = 0;
+        var value73 = 0;
+        var value74 = 0;
+        var value75 = 0;
+        var value76 = 0;
+
+        var value77 = 0;
+        var value78 = 0;
+        var value79 = 0;
+        var value80 = 0;
+
+
+
+
+        var orgUnitChildren_Array = [];
+        var secondChildren_Array = [];
+        var orgUnit = dhis2.report.organisationUnit;
+        var orgUnitChildren = dhis2.report.organisationUnitChildren;
+        var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+        var count = 0;
+
+        document.getElementById('ouname').innerHTML = orgUnit.name;
+
+        var ouid = orgUnit.id;
+        var ouidName = orgUnit.name;
+
+
+        // New Code start from here
+
+        var count1 = 0;
+
+
+
+        $.when(
+            $.getJSON("../api/analytics.json?dimension=dx:tvwSijvH0lX.v5GOgTZOS8B;tvwSijvH0lX.joWwoLReVgm;tvwSijvH0lX.w8m3uorIwkZ;tvwSijvH0lX.ExLkBV6vSZl;bV9osqKDgMo.v5GOgTZOS8B;bV9osqKDgMo.joWwoLReVgm;bV9osqKDgMo.w8m3uorIwkZ;bV9osqKDgMo.ExLkBV6vSZl;YbZZyTQZaeC.ExLkBV6vSZl;YbZZyTQZaeC.joWwoLReVgm;YbZZyTQZaeC.ExLkBV6vSZl;T29S8hI9erj.v5GOgTZOS8B;T29S8hI9erj.joWwoLReVgm;T29S8hI9erj.w8m3uorIwkZ;T29S8hI9erj.ExLkBV6vSZl;FJp9aNP8NUr.v5GOgTZOS8B;FJp9aNP8NUr.joWwoLReVgm;FJp9aNP8NUr.w8m3uorIwkZ;FJp9aNP8NUr.ExLkBV6vSZl;XSSz0uCetNA.v5GOgTZOS8B;XSSz0uCetNA.joWwoLReVgm;XSSz0uCetNA.w8m3uorIwkZ;XSSz0uCetNA.ExLkBV6vSZl;pFIVoTbMqOE.v5GOgTZOS8B;pFIVoTbMqOE.joWwoLReVgm;pFIVoTbMqOE.w8m3uorIwkZ;pFIVoTbMqOE.ExLkBV6vSZl;GZeGRtfdHw6.v5GOgTZOS8B;GZeGRtfdHw6.w8m3uorIwkZ;GZeGRtfdHw6.ExLkBV6vSZl;PM6jWf4QXkS.v5GOgTZOS8B;PM6jWf4QXkS.joWwoLReVgm;PM6jWf4QXkS.w8m3uorIwkZ;PM6jWf4QXkS.ExLkBV6vSZl;enVESXeVZe7.v5GOgTZOS8B;enVESXeVZe7.joWwoLReVgm;enVESXeVZe7.w8m3uorIwkZ;enVESXeVZe7.ExLkBV6vSZl;ibjog09xYL3.v5GOgTZOS8B;ibjog09xYL3.w8m3uorIwkZ;ibjog09xYL3.ExLkBV6vSZl;EyJrZX7YDS8.v5GOgTZOS8B;EyJrZX7YDS8.joWwoLReVgm;EyJrZX7YDS8.w8m3uorIwkZ;EyJrZX7YDS8.ExLkBV6vSZl;TPoytcsQFS2.v5GOgTZOS8B;TPoytcsQFS2.joWwoLReVgm;TPoytcsQFS2.w8m3uorIwkZ;TPoytcsQFS2.ExLkBV6vSZl;AwDThUc6jQ2.v5GOgTZOS8B;AwDThUc6jQ2.joWwoLReVgm;AwDThUc6jQ2.w8m3uorIwkZ;AwDThUc6jQ2.ExLkBV6vSZl;VCGkS4mUjwz.v5GOgTZOS8B;VCGkS4mUjwz.w8m3uorIwkZ;VCGkS4mUjwz.ExLkBV6vSZl;Gqjn52uLFIl.v5GOgTZOS8B;Gqjn52uLFIl.w8m3uorIwkZ;Gqjn52uLFIl.ExLkBV6vSZl;U9r66KYrbcR.v5GOgTZOS8B;U9r66KYrbcR.joWwoLReVgm;U9r66KYrbcR.w8m3uorIwkZ;U9r66KYrbcR.ExLkBV6vSZl;TTlnyQkz3Nt.v5GOgTZOS8B;TTlnyQkz3Nt.w8m3uorIwkZ;JVCEJKAPw6K.v5GOgTZOS8B;JVCEJKAPw6K.joWwoLReVgm;JVCEJKAPw6K.w8m3uorIwkZ;JVCEJKAPw6K.ExLkBV6vSZl&dimension=ou:" + ouid + "&filter=pe:" + per + "&displayProperty=NAME", {
+
+                format: "json"
+            })
+
+        ).then(function (res4, res5) {
+            count++;
+            finalvalue(res4, res5, ouidName, count, count1);
+        })
+
+    }
+
+
+
+
+
+    function finalvalue(res4, res5, date, ouidName, count) {
+
+        value3 = datavalue(res4, 'tvwSijvH0lX.v5GOgTZOS8B');
+        value4 = datavalue(res4, 'tvwSijvH0lX.joWwoLReVgm');
+
+        value5 = datavalue(res4, 'tvwSijvH0lX.w8m3uorIwkZ');
+        value6 = datavalue(res4, 'tvwSijvH0lX.ExLkBV6vSZl');
+
+        value7 = datavalue(res4, 'bV9osqKDgMo.v5GOgTZOS8B');
+        value8 = datavalue(res4, 'bV9osqKDgMo.joWwoLReVgm');
+
+        value9 = datavalue(res4, 'bV9osqKDgMo.w8m3uorIwkZ');
+        value10 = datavalue(res4, 'bV9osqKDgMo.ExLkBV6vSZl');
+
+        value11 = datavalue(res4, 'YbZZyTQZaeC.v5GOgTZOS8B');
+        value12 = datavalue(res4, 'YbZZyTQZaeC.joWwoLReVgm');
+
+        value13 = datavalue(res4, 'YbZZyTQZaeC.w8m3uorIwkZ');
+        value14 = datavalue(res4, 'YbZZyTQZaeC.ExLkBV6vSZl');
+
+
+
+        value15 = datavalue(res4, 'T29S8hI9erj.v5GOgTZOS8B');
+
+        value16 = datavalue(res4, 'T29S8hI9erj.joWwoLReVgm');
+        value17 = datavalue(res4, 'T29S8hI9erj.w8m3uorIwkZ');
+        value18 = datavalue(res4, 'T29S8hI9erj.ExLkBV6vSZl');
+        value19 = datavalue(res4, 'FJp9aNP8NUr.v5GOgTZOS8B');
+        value20 = datavalue(res4, 'FJp9aNP8NUr.joWwoLReVgm');
+        value21 = datavalue(res4, 'FJp9aNP8NUr.w8m3uorIwkZ');
+        value22 = datavalue(res4, 'FJp9aNP8NUr.ExLkBV6vSZl');
+        value23 = datavalue(res4, 'XSSz0uCetNA.v5GOgTZOS8B');
+        value24 = datavalue(res4, 'XSSz0uCetNA.joWwoLReVgm');
+        value25 = datavalue(res4, 'XSSz0uCetNA.w8m3uorIwkZ');
+        value26 = datavalue(res4, 'XSSz0uCetNA.ExLkBV6vSZl');
+
+
+        value27 = datavalue(res4, 'pFIVoTbMqOE.v5GOgTZOS8B');
+        value28 = datavalue(res4, 'pFIVoTbMqOE.joWwoLReVgm');
+        value29 = datavalue(res4, 'pFIVoTbMqOE.w8m3uorIwkZ');
+        value30 = datavalue(res4, 'pFIVoTbMqOE.ExLkBV6vSZl');
+        value31 = datavalue(res4, 'GZeGRtfdHw6.v5GOgTZOS8B');
+        value32 = datavalue(res4, 'GZeGRtfdHw6.joWwoLReVgm');
+        value33 = datavalue(res4, 'GZeGRtfdHw6.w8m3uorIwkZ');
+        value34 = datavalue(res4, 'GZeGRtfdHw6.ExLkBV6vSZl');
+
+        value35 = datavalue(res4, 'PM6jWf4QXkS.v5GOgTZOS8B');
+        value36 = datavalue(res4, 'PM6jWf4QXkS.joWwoLReVgm');
+        value37 = datavalue(res4, 'PM6jWf4QXkS.w8m3uorIwkZ');
+
+        value38 = datavalue(res4, 'PM6jWf4QXkS.ExLkBV6vSZl');
+        value39 = datavalue(res4, 'enVESXeVZe7.v5GOgTZOS8B');
+        value40 = datavalue(res4, 'enVESXeVZe7.joWwoLReVgm');
+        value41 = datavalue(res4, 'enVESXeVZe7.w8m3uorIwkZ');
+        value42 = datavalue(res4, 'enVESXeVZe7.ExLkBV6vSZl');
+        value43 = datavalue(res4, 'ibjog09xYL3.v5GOgTZOS8B');
+        value44 = datavalue(res4, 'ibjog09xYL3.joWwoLReVgm');
+        value45 = datavalue(res4, 'ibjog09xYL3.w8m3uorIwkZ');
+        value46 = datavalue(res4, 'ibjog09xYL3.ExLkBV6vSZl');
+
+
+        value47 = datavalue(res4, 'EyJrZX7YDS8.v5GOgTZOS8B');
+        value48 = datavalue(res4, 'EyJrZX7YDS8.joWwoLReVgm');
+        value49 = datavalue(res4, 'EyJrZX7YDS8.w8m3uorIwkZ');
+        value50 = datavalue(res4, 'EyJrZX7YDS8.ExLkBV6vSZl');
+
+        value51 = datavalue(res4, 'TPoytcsQFS2.v5GOgTZOS8B');
+        value52 = datavalue(res4, 'TPoytcsQFS2.joWwoLReVgm');
+        value53 = datavalue(res4, 'TPoytcsQFS2.w8m3uorIwkZ');
+        value54 = datavalue(res4, 'TPoytcsQFS2.ExLkBV6vSZl');
+
+        value55 = datavalue(res4, 'AwDThUc6jQ2.v5GOgTZOS8B');
+        value56 = datavalue(res4, 'AwDThUc6jQ2.joWwoLReVgm');
+        value57 = datavalue(res4, 'AwDThUc6jQ2.w8m3uorIwkZ');
+        value58 = datavalue(res4, 'AwDThUc6jQ2.ExLkBV6vSZl');
+
+        value59 = datavalue(res4, 'VCGkS4mUjwz.v5GOgTZOS8B');
+        value60 = datavalue(res4, 'VCGkS4mUjwz.joWwoLReVgm');
+        value61 = datavalue(res4, 'VCGkS4mUjwz.w8m3uorIwkZ');
+        value62 = datavalue(res4, 'VCGkS4mUjwz.ExLkBV6vSZl');
+
+        value63 = datavalue(res4, 'Gqjn52uLFIl.v5GOgTZOS8B');
+        value64 = datavalue(res4, 'Gqjn52uLFIl.joWwoLReVgm');
+        value65 = datavalue(res4, 'Gqjn52uLFIl.w8m3uorIwkZ');
+        value66 = datavalue(res4, 'Gqjn52uLFIl.ExLkBV6vSZl');
+
+
+
+        value67 = datavalue(res4, 'U9r66KYrbcR.v5GOgTZOS8B');
+        value68 = datavalue(res4, 'U9r66KYrbcR.joWwoLReVgm');
+        value69 = datavalue(res4, 'U9r66KYrbcR.w8m3uorIwkZ');
+        value70 = datavalue(res4, 'U9r66KYrbcR.ExLkBV6vSZl');
+
+        value71 = datavalue(res4, 'TTlnyQkz3Nt.v5GOgTZOS8B');
+        value72 = datavalue(res4, 'TTlnyQkz3Nt.joWwoLReVgm');
+        value73 = datavalue(res4, 'TTlnyQkz3Nt.w8m3uorIwkZ');
+        value74 = datavalue(res4, 'TTlnyQkz3Nt.ExLkBV6vSZl');
+
+        value75 = datavalue(res4, 'JVCEJKAPw6K.v5GOgTZOS8B');
+        value76 = datavalue(res4, 'JVCEJKAPw6K.joWwoLReVgm');
+        value77 = datavalue(res4, 'JVCEJKAPw6K.w8m3uorIwkZ');
+        value78 = datavalue(res4, 'JVCEJKAPw6K.ExLkBV6vSZl');
+
+
+        var s2 = value3 + value4;
+        var s3 = value5 + value6;
+        var gs1 = s2 + s3;
+        var s4 = value7 + value8;
+        var s5 = value9 + value10;
+        var gs2 = s4 + s5;
+        var s6 = value11 + value12;
+        var s7 = value13 + value14;
+        var gs3 = s6 + s7;
+        var s8 = value15 + value16;
+        var s9 = value17 + value18;
+        var gs4 = s8 + s9;
+        var s10 = value19 + value20;
+        var s11 = value21 + value22;
+        var gs5 = s10 + s11;
+        var s12 = value23 + value24;
+
+        var s13 = value25 + value26;
+        var gs6 = s12 + s13;
+        var s14 = value27 + value28;
+        var s15 = value29 + value30;
+        var gs7 = s14 + s15;
+        var s16 = value31 + value32;
+        var s17 = value33 + value34;
+        var gs8 = s16 + s17;
+        var s18 = value35 + value36;
+
+        var s19 = value37 + value38;
+        var gs9 = s18 + s19;
+        var s20 = value39 + value40;
+        var s21 = value41 + value42;
+        var gs10 = s20 + s21;
+        var s22 = value43 + value44;
+        var s23 = value45 + value46;
+        var gs11 = s22 + s23;
+        var s24 = value47 + value48;
+
+        var s25 = value49 + value50;
+        var gs12 = s24 + s25;
+        var s26 = value51 + value52;
+        var s27 = value53 + value54;
+        var gs13 = s26 + s27;
+        var s28 = value55 + value56;
+        var s29 = value57 + value58;
+        var gs14 = s28 + s29;
+        var s30 = value59 + value60;
+        var s31 = value61 + value62;
+        var gs15 = s30 + s31;
+        var s32 = value63 + value64;
+        var s33 = value65 + value66;
+        var gs16 = s32 + s33;
+        var s34 = value67 + value68;
+        var s35 = value69 + value70;
+        var gs17 = s34 + s35;
+        var s36 = value71 + value72;
+        var s37 = value73 + value74;
+        var gs18 = s36 + s37;
+        var s38 = value75 + value76;
+        var s39 = value77 + value78;
+        var gs19 = s38 + s39;
+
+
+
+
+
+
+
+
+
+
+
+
+
+        var tabledata = '<tr>';
+        tabledata += ("<tr id ='tableid' ><td colspan = '17' style = 'boder:1px solid black;background-color:#ADEDEB' >Fever</td></tr><tr><td colspan = '10' style = 'border-top:1px solid black; background-color:#9DCED2'>Fever < 7 days</td><td colspan = '7' style = 'border-top:1px solid black;background-color:#9DCED2'> </td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Only Fever</td><td style = 'border-top:1px solid black'>" + value3 + "</td><td style = 'border-top:1px solid black'>" + value4 + "</td><td style = 'border-top:1px solid black'>" + s2 + "</td><td style = 'border-top:1px solid black'>" + value5 + "</td><td style = 'border-top:1px solid black'>" + value6 + "</td><td style = 'border-top:1px solid black'>" + s3 + "</td><td style = 'border-top:1px solid black'>" + gs1 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>With Rash</td><td style = 'border-top:1px solid black'>" + value7 + "</td><td style = 'border-top:1px solid black'>" + value8 + "</td><td style = 'border-top:1px solid black'>" + s4 + "</td><td style = 'border-top:1px solid black'>" + value9 + "</td><td style = 'border-top:1px solid black'>" + value10 + "</td><td style = 'border-top:1px solid black'>" + s5 + "</td><td style = 'border-top:1px solid black'>" + gs2 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>With Bleeding</td><td style = 'border-top:1px solid black'>" + value11 + "</td><td style = 'border-top:1px solid black'>" + value12 + "</td><td style = 'border-top:1px solid black'>" + s6 + " </td><td style = 'border-top:1px solid black'>" + value13 + "</td><td style = 'border-top:1px solid black'>" + value14 + "</td><td style = 'border-top:1px solid black'>" + s7 + "</td><td style = 'border-top:1px solid black'>" + gs3 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>With Daze / Semiconsciousness / Unconsciousness</td><td style = 'border-top:1px solid black'>" + value15 + "</td><td style = 'border-top:1px solid black'>" + value16 + "</td><td style = 'border-top:1px solid black'>" + s8 + "</td><td style = 'border-top:1px solid black'>" + value17 + "</td><td style = 'border-top:1px solid black'>" + value18 + "</td><td style = 'border-top:1px solid black'>" + s9 + "</td><td style = 'border-top:1px solid black'>" + gs4 + "</td></tr><tr><td colspan = '10' style = 'border-top:1px solid black;background-color:#9DCED2'>Fever > 7 days</td><td colspan = '7' style = 'border-top:1px solid black;background-color:#9DCED2'> </td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Only Fever > = 7 days</td><td style = 'border-top:1px solid black'>" + value19 + "</td><td style = 'border-top:1px solid black'>" + value20 + "</td><td style = 'border-top:1px solid black'>" + s10 + "</td><td style = 'border-top:1px solid black'>" + value21 + "</td><td style = 'border-top:1px solid black'>" + value22 + "</td><td style = 'border-top:1px solid black'>" + s11 + "</td><td style = 'border-top:1px solid black'>" + gs5 + "</td></tr><tr><td colspan = '17'  style = 'background-color:#ADEDEB;boder-top:1px solid black'>Cough with or without fever</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>< 2 Weeks	</td><td style = 'border-top:1px solid black'>" + value23 + "</td><td style = 'border-top:1px solid black'>" + value24 + "</td><td style = 'border-top:1px solid black'>" + s12 + "</td><td style = 'border-top:1px solid black'>" + value25 + "</td><td style = 'border-top:1px solid black'>" + value26 + "</td><td style = 'border-top:1px solid black'>" + s13 + "</td><td style = 'border-top:1px solid black'>" + gs6 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'> > 2 Weeks	</td><td style = 'border-top:1px solid black'>" + value27 + "</td><td style = 'border-top:1px solid black'>" + value28 + "</td><td style = 'border-top:1px solid black'>" + s14 + "</td><td style = 'border-top:1px solid black'>" + value29 + "</td><td style = 'border-top:1px solid black'>" + value30 + "</td><td style = 'border-top:1px solid black'>" + s15 + "</td><td style = 'border-top:1px solid black'>" + gs7 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Cough of <3 weeks duration with or without fever </td><td style = 'border-top:1px solid black'>" + value31 + "</td><td style = 'border-top:1px solid black'>" + value32 + "</td><td style = 'border-top:1px solid black'>" + s16 + "</td><td style = 'border-top:1px solid black'>" + value33 + "</td><td style = 'border-top:1px solid black'>" + value34 + "</td><td style = 'border-top:1px solid black'>" + s17 + "</td><td style = 'border-top:1px solid black'>" + gs8 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Cough of >3 weeks duration with or without fever</td><td style = 'border-top:1px solid black'>" + value35 + "</td><td style = 'border-top:1px solid black'>" + value36 + "</td><td style = 'border-top:1px solid black'>" + s18 + "</td><td style = 'border-top:1px solid black'>" + value37 + "</td><td style = 'border-top:1px solid black'>" + value38 + "</td><td style = 'border-top:1px solid black'>" + s19 + "</td><td style = 'border-top:1px solid black'>" + gs9 + "</td></tr><tr><td colspan = '17'  style = 'background-color:#ADEDEB;boder-top:1px solid black'>Loose Watery Stools of Less than 2 Weeks Duration</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>With No Dehydration </td><td style = 'border-top:1px solid black'>" + value39 + "</td><td style = 'border-top:1px solid black'>" + value40 + "</td><td style = 'border-top:1px solid black'>" + s20 + "</td><td style = 'border-top:1px solid black'>" + value41 + "</td><td style = 'border-top:1px solid black'>" + value42 + "</td><td style = 'border-top:1px solid black'>" + s21 + "</td><td style = 'border-top:1px solid black'>" + gs10 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'> With Blood in Stool	</td><td style = 'border-top:1px solid black'>" + value43 + "</td><td style = 'border-top:1px solid black'>" + value44 + "</td><td style = 'border-top:1px solid black'>" + s22 + "</td><td style = 'border-top:1px solid black'>" + value45 + "</td><td style = 'border-top:1px solid black'>" + value46 + "</td><td style = 'border-top:1px solid black'>" + s23 + "</td><td style = 'border-top:1px solid black'>" + gs11 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Without blood in stool</td><td style = 'border-top:1px solid black'>" + value47 + "</td><td style = 'border-top:1px solid black'>" + value48 + "</td><td style = 'border-top:1px solid black'>" + s24 + "</td><td style = 'border-top:1px solid black'>" + value49 + "</td><td style = 'border-top:1px solid black'>" + value50 + "</td><td style = 'border-top:1px solid black'>" + s25 + "</td><td style = 'border-top:1px solid black'>" + gs12 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>With some/much dehydration</td><td style = 'border-top:1px solid black'>" + value51 + "</td><td style = 'border-top:1px solid black'>" + value52 + "</td><td style = 'border-top:1px solid black'>" + s26 + "</td><td style = 'border-top:1px solid black'>" + value53 + "</td><td style = 'border-top:1px solid black'>" + value54 + "</td><td style = 'border-top:1px solid black'>" + s27 + "</td><td style = 'border-top:1px solid black'>" + gs13 + "</td></tr><tr><td colspan = '17'  style = 'background-color:#ADEDEB;boder-top:1px solid black'>Jaundice cases of Less Than 4 Weeks Duration</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Cases of Acute Jaundice </td><td style = 'border-top:1px solid black'>" + value55 + "</td><td style = 'border-top:1px solid black'>" + value56 + "</td><td style = 'border-top:1px solid black'>" + s28 + "</td><td style = 'border-top:1px solid black'>" + value57 + "</td><td style = 'border-top:1px solid black'>" + value58 + "</td><td style = 'border-top:1px solid black'>" + s29 + "</td><td style = 'border-top:1px solid black'>" + gs14 + "</td></tr><tr><td colspan = '17'  style = 'background-color:#ADEDEB'>Acute Flacid Paralysis Cases in Less than 15 Years of Age</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Cases of Acute Flacid Paralysis </td><td style = 'border-top:1px solid black'>" + value59 + "</td><td style = 'border-top:1px solid black'>" + value60 + "</td><td style = 'border-top:1px solid black'>" + s30 + "</td><td style = 'border-top:1px solid black'>" + value61 + "</td><td style = 'border-top:1px solid black'>" + value62 + "</td><td style = 'border-top:1px solid black'>" + s31 + "</td><td style = 'border-top:1px solid black'>" + gs15 + "</td></tr><tr><td colspan = '17'  style = 'background-color:#ADEDEB;boder-top:1px solid black'>Malaria by Rapid Diagnostic Test</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>P. vivax </td><td style = 'border-top:1px solid black'>" + value63 + "</td><td style = 'border-top:1px solid black'>" + value64 + "</td><td style = 'border-top:1px solid black'>" + s32 + "</td><td style = 'border-top:1px solid black'>" + value65 + "</td><td style = 'border-top:1px solid black'>" + value66 + "</td><td style = 'border-top:1px solid black'>" + s33 + "</td><td style = 'border-top:1px solid black'>" + gs16 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>P. falciparum	</td><td style = 'border-top:1px solid black'>" + value67 + "</td><td style = 'border-top:1px solid black'>" + value68 + "</td><td style = 'border-top:1px solid black'>" + s34 + "</td><td style = 'border-top:1px solid black'>" + value69 + "</td><td style = 'border-top:1px solid black'>" + value70 + "</td><td style = 'border-top:1px solid black'>" + s35 + "</td><td style = 'border-top:1px solid black'>" + gs17 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Mixed</td><td style = 'border-top:1px solid black'>" + value71 + "</td><td style = 'border-top:1px solid black'>" + value72 + "</td><td style = 'border-top:1px solid black'>" + s36 + "</td><td style = 'border-top:1px solid black'>" + value73 + "</td><td style = 'border-top:1px solid black'>" + value74 + "</td><td style = 'border-top:1px solid black'>" + s37 + "</td><td style = 'border-top:1px solid black'>" + gs18 + "</td></tr><tr> <td colspan = '10' style = 'border-top:1px solid black;text-align:left'>Other disease by Rapid Diagnostic Test (If yes please mention disease name)</td><td style = 'border-top:1px solid black'>" + value75 + "</td><td style = 'border-top:1px solid black'>" + value76 + "</td><td style = 'border-top:1px solid black'>" + s38 + "</td><td style = 'border-top:1px solid black'>" + value77 + "</td><td style = 'border-top:1px solid black'>" + value78 + "</td><td style = 'border-top:1px solid black'>" + s39 + "</td><td style = 'border-top:1px solid black'>" + gs19 + "</td></tr>");
+
+        tabledata += "</tr>";
+
+
+        document.getElementById("tableid").tBodies[0].innerHTML += tabledata;
+        // document.getElementById("dataTable").innerHTML += tabledata;
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("printing").style.display = "block";
+
+
+
+
+    };
+
+
+    function datavalue1(dataJSON, id, id1) {
+        var value1 = 'No';
+        for (var i = 0; i < dataJSON.rows.length; i++) {
+            if (dataJSON.rows[i][0] == id) {
+                value1 = 'Yes';
+            }
+        }
+        return (value1);
+    };
+
+
+    function datavalue(dataJSON, id) {
+        var value1 = 0;
+        for (var i = 0; i < dataJSON.rows.length; i++) {
+            if (dataJSON.rows[i][0] == id) {
+                value1 = parseInt(dataJSON.rows[i][2]);
+            }
+        }
+        return (value1);
+    };
+
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    };
+
+
+
+
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+
+        }
+    })()
+
+    //period type : weekly
+    function weekly(sD, eD) {
+        var unchangedStartDate = new Date(sD);
+        var startDate = new Date(sD);
+        var endDate = new Date(eD);
+
+        //making start date's day to the prior Monday
+        if (startDate.getDay() == 0)
+            startDate.setDate(startDate.getDate() - 6);
+        else if (startDate.getDay() > 1)
+            startDate.setDate(startDate.getDate() - startDate.getDay() + 1);
+
+        //making start date's day to the prior Sunday
+        endDate.setDate(endDate.getDate() - endDate.getDay());
+
+        // *****************************************************************************************
+
+        // date for looping
+        var sDate = new Date(sD);
+        sDate.setDate(1);
+        sDate.setMonth(0);
+        var dateString = "Select Period";
+
+        //making start date's day to the first Monday of the year or last Monday of the previous year
+        if (sDate.getDay() == 0)
+            sDate.setDate(sDate.getDate() - 6);
+        else if (sDate.getDay() > 1)
+            sDate.setDate(sDate.getDate() - sDate.getDay() + 1);
+
+        var week = 0;
+        var year = "";
+
+        var isFirstIteration = true;
+
+        while (sDate <= endDate) {
+
+            var dummyYear = sDate.getFullYear();
+
+            if (isFirstIteration)
+                year = unchangedStartDate.getFullYear();
+            else
+                year = sDate.getFullYear();
+
+            week++;
+
+            if (sDate.getDate() == startDate.getDate() && sDate.getMonth() == startDate.getMonth() && sDate.getFullYear() == startDate.getFullYear()) {
+                var dhisDate = (week > 9) ? (year + "W" + week) : (year + "W" + week);
+                startDate = sDate;
+                dateString = (dateString == "") ? dhisDate : (dateString + ";" + dhisDate);
+            }
+
+            sDate.setDate(sDate.getDate() + 7);
+            if (dummyYear < sDate.getFullYear() && !isFirstIteration)
+                week = 0;
+
+            if (isFirstIteration)
+                isFirstIteration = false;
+        }
+
+        var fields = dateString.split(';');
+
+        var name = fields[0];
+        var street = fields[1];
+
+
+
+        return street;
+    }
+
+</script>
