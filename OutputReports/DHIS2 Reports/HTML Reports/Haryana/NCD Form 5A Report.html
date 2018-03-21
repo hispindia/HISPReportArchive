@@ -1,0 +1,959 @@
+
+<script type="text/javascript">
+	var periods = dhis2.report.periods;
+	var period = periods[0];
+	var orgUnit = dhis2.report.organisationUnit;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+	
+	var periodArray = [];
+	
+	var periodsStr = "";
+	var startDateStr;
+	var endDateStr;
+	var testSd;			
+	var testEd;
+	var url = window.location.href;
+	var params = url.split('=');
+	var gotPeriod=params[2];
+	var gotPeriode=params[2];
+	var gotOrg=params[3];
+	var getPeriodDate = gotPeriod.split('&')[0];		
+	    var trIDsArray = [];
+    var deUIDsArray = [];
+    var deUIDsStr = "";		
+	
+					
+    var UIDs = [];
+
+	
+	
+	var stringDEs="";
+	var arrayDEs;
+	var currentTableID;
+						
+	var count=3;
+		
+	var tableIDs=["datavalue1"];
+						
+	var urlParams = url.split('&');					
+	var sdParam = "";
+	var edParam = "";
+    var periodStr = "";
+
+		
+		
+		
+			
+			var stt=0;
+			var load=1;
+			var iteration = -1;
+			var rep=[false,false,false]
+	
+	var jsonGroup, jsonNepal, jsonDistricts;
+	//*******************************************************************************************************************************
+	//*******************************************************************************************************************************
+	
+	
+	var rtype=params[4];
+	
+
+	jQuery( document ).ready( function(){
+	
+		
+	
+		
+		
+     
+     
+		
+		 $("table").find("td").each(function (i, td) {
+		 
+		 if(td.id.search('-cumu') == -1)
+		 {
+
+                if (td.id.search("_") == -1)
+				{
+                    if (td.id.search("-") > -1 )
+					{
+					if ($.inArray(td.id.split('-')[0], deUIDsArray) == -1) {
+                            deUIDsArray.push(td.id.split('-')[0]);
+                        }
+                        trIDsArray.push(td.id);
+                        
+                    }
+					
+					
+                }
+				
+				
+				else {
+                    var ids = td.id.split('_');
+                    $.each(ids, function (j, uid) {
+                        if ($.inArray(uid.split('-')[0], deUIDsArray) == -1) {
+                            deUIDsArray.push(uid.split('-')[0]);
+                        }
+					
+                    });
+                    trIDsArray.push(td.id);
+                }
+
+          
+			}
+			else
+			
+			{
+			
+			if (td.id.search("_") == -1)
+				{
+                    if (td.id.search("-") > -1 )
+					{
+					if ($.inArray(td.id.split('-')[0], deUIDsArray) == -1) {
+                            deUIDsArray.push(td.id.split('-')[0]);
+                        }
+                        trIDsArray.push(td.id);
+                        
+                    }
+					
+					
+                }
+				
+				
+				else {
+                    var ids = td.id.split('_');
+                    $.each(ids, function (j, uid) {
+                        if ($.inArray(uid.split('-')[0], deUIDsArray) == -1) {
+                            deUIDsArray.push(uid.split('-')[0]);
+                        }
+					
+                    });
+                    trIDsArray.push(td.id);
+                }
+			}
+			  });
+			 $.each(deUIDsArray, function (i, item) {
+                deUIDsStr += item + ";";
+            });
+          
+		  getJson();
+		
+	     getPeriodsFromApr(gotPeriod);
+
+			$(".hideInPrint").hide();
+	
+
+		$(".tab_content").hide();
+		$(".tab_content:first").show(); 
+		
+
+	});
+	
+				function hideLoad()
+				{
+					document.getElementById("cover").style.display="none";
+					document.getElementById("loads").style.display="none";
+					document.getElementById("loading").style.display="none";
+					document.getElementsByTagName("body")[0].style.overflow="scroll";
+				}
+
+//get period *************************************************************
+		function getPeriod( pr )
+	{
+		var year = pr.substring(0,4);
+		var month = pr.substring(4,6);
+		var strMonth="";
+		
+		if(month=="01" || month=="1") 		strMonth="January";
+		else if(month=="02" || month=="2")	strMonth="February";
+		else if(month=="03" || month=="3")	strMonth="March";
+		else if(month=="04" || month=="4")	strMonth="April";
+		else if(month=="05" || month=="5")	strMonth="May";
+		else if(month=="06" || month=="6")	strMonth="June";
+		else if(month=="07" || month=="7")	strMonth="July";
+		else if(month=="08" || month=="8")	strMonth="August";
+		else if(month=="09" || month=="9")	strMonth="September";
+		else if(month=="10")				strMonth="October";
+		else if(month=="11") 				strMonth="November";
+		else if(month=="12")				strMonth="December";
+		
+		return strMonth + " " +year;
+	}
+
+    function getPeriods() {
+        var periodArray = [];
+        var year = parseInt(gotPeriod.substring(0, 4));
+        var mnth = parseInt(gotPeriod.substring(4, 6));
+       
+	   if(mnth > 3) {
+            for (var i = 4; i <= mnth; i++) {
+            if (i < 10) {
+                periodArray.push(year.toString() + "0" + i);
+            }
+            else {
+                periodArray.push(year.toString() + i);
+            }
+        }
+        }
+		
+		if(mnth <= 3)
+		{
+        for (var i = 4; i <= 12; i++) {
+            if (i < 10) {
+                periodArray.push((year - 1).toString() + "0" + i);
+            }
+            else {
+                periodArray.push((year - 1).toString() + i);
+            }
+        }
+
+        for (var i = 1; i <= mnth; i++) {
+            if (i < 10) {
+                periodArray.push(year.toString() + "0" + i);
+            }
+            else {
+                periodArray.push(year.toString() + i);
+            }
+        }
+		
+		}
+        return periodArray;
+    }
+
+
+	
+		    function getPeriodsFromApr(pe) {
+        var periodArray = [];
+        var year = pe.substring(0, 4);
+        var length = parseInt(pe.substring(4, 6));
+        if(length > 3) {
+            for (var i = 4; i <= length; i++) {
+                if (i < 10) {
+                    periodArray.push(year + "0" + i);
+                }
+                else {
+                    periodArray.push(year + i);
+                }
+            }
+        }
+        else if(length <= 3){
+            var lastYear = (parseInt(year) - 1).toString();
+
+            for(var i = 1; i <= length; i++){
+                periodArray.push(year + "0" + i);
+            }
+
+            for (var i = 4; i <= 12; i++) {
+                if (i < 10) {
+                    periodArray.push(lastYear + "0" + i);
+                }
+                else {
+                    periodArray.push(lastYear + i);
+                }
+            }
+        }
+        return periodArray;
+    }
+
+
+//*********************************************************************************
+//********************************************************************************
+		function getJson()
+		{	
+ var periodArray = getPeriods();
+        var periodStr = "";
+
+        $.each(periodArray, function (i, pe) {
+            periodStr += pe + ";";
+        });
+			var url = "../api/analytics.json?dimension=dx:"+deUIDsStr+"&dimension=co&filter=ou:"+orgUnit.id+"&dimension=pe:"+periodStr;
+			$.get( url ,function(json){				
+			
+				 $.each(trIDsArray, function (idx, val) {
+
+                  var periodArray = getPeriodsFromApr(gotPeriod);
+
+                var cellValue = 0;
+              if(val.search('-cumu') == -1)
+			  {
+			      if (val.search('_') == -1) {
+				if(val.search('-') > -1){
+				 var deUID = val.split("-")[0];
+					var cocUID = val.split("-")[1];
+                    cellValue = parseInt(getCellValue(json, deUID, cocUID,getPeriodDate));
+					}
+					
+				
+					
+                }else {
+                     UIDs = val.split('_');
+                    $.each(UIDs, function (j, deID) {
+					if(deID.search('-') > -1){
+					 var deUID = deID.split("-")[0];
+					var cocUID = deID.split("-")[1];
+                        cellValue += parseInt(getCellValue(json, deUID, cocUID,getPeriodDate));
+                  
+					}
+				
+					});
+                }
+                $("#" + val).append(cellValue);
+			  }
+			  else
+			  {
+                if (val.search('_') == -1) {
+				if(val.search('-') > -1){
+				 var deUID = val.split("-")[0];
+					var cocUID = val.split("-")[1];
+					$.each(periodArray, function (idx, pe) {
+                    cellValue += parseInt(getCellValue(json, deUID, cocUID,pe));
+					});
+					}
+					
+				
+					
+                }else {
+                     UIDs = val.split('_');
+                    $.each(UIDs, function (j, deID) {
+					if(deID.search('-') > -1){
+					 var deUID = deID.split("-")[0];
+					var cocUID = deID.split("-")[1];
+					$.each(periodArray, function (idx, pe) {
+                        cellValue += parseInt(getCellValue(json, deUID, cocUID,pe));
+						});
+                  
+					}
+				
+					});
+                }
+                $("#" + val).append(cellValue);
+				}
+				
+        });
+		
+					hideLoad();
+		
+			});
+		}
+		
+		
+		
+		function getCellValue( json, de, coc,pe )
+		{
+			var result=0;
+			for (var i=0; i < json.rows.length; i++)
+			{
+				if (json.rows[i][0] == de && json.rows[i][1] == coc && json.rows[i][2] == pe && json.rows[i][3]!= null)
+				{
+					result=json.rows[i][3];
+				}
+			}		
+			return result;
+		}
+		
+		
+		
+</script>
+
+
+
+
+		<!-- 		<!-- download script ------------------------------------------------------
+		--------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------- -->
+
+	<script>
+       var tableToExcel = (function () {
+           var uri = 'data:application/vnd.ms-excel;base64,'
+               , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+               , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+               , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+           return function (table, name, filename) {
+               // if (!table.nodeType)
+               table = document.getElementById(table);
+               // table1 = document.getElementById(table[1]);
+               var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+
+               document.getElementById("dlink").href = uri + base64(format(template, ctx));
+               document.getElementById("dlink").download = filename;
+               document.getElementById("dlink").click();
+
+           }
+       })()
+
+   </script>
+<script>
+ 	jQuery( document ).ready( function() {	
+	
+        document.getElementById('title1').innerHTML=orgUnit.name;
+		document.getElementById('month').innerHTML=getPeriod(gotPeriod);
+		//document.getElementById('endParam').innerHTML=testEd;
+        //document.getElementById("cover").style.display="none";
+		//document.getElementById("loads").style.display="none";
+		
+		$("#btnExport").click(function(e) {
+			window.open('data:application/vnd.ms-excel,'+ encodeURIComponent($('#printing').html()));
+			e.preventDefault();
+		});
+		
+	});
+
+	
+</script>
+<script type="text/javascript">
+	function printContent(el){
+	var restorepage = document.body.innerHTML;
+	var printcontent = document.getElementById(el).innerHTML;
+	document.body.innerHTML = printcontent;
+	window.print();
+	document.body.innerHTML = restorepage;
+}
+</script>
+<style type="text/css"><!--
+.style1 {font-size: 12px}
+-->
+</style>
+<p><span style="font-size:12px;">
+<style type="text/css"><!--
+
+-->
+#cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+		
+</style>
+<div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
+		<div id="cover" > </div>
+</span></p>
+<input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"/>
+            <input type="button"  onclick="printContent('printing');" value="Print"/>
+			
+ <button  onclick="tableToExcel('datavalue1', 'Form 5A','NCD Form 5A Report.xls')">Download Excel </button>
+		   <a id="dlink" style="display:none;"></a>
+<form>
+<div id="printing">
+<p><span style="font-size:12px;">
+<style type="text/css"><!--
+.style4 {font-size: 12px}
+.style5 {font-size: 12px; font-weight: bold; }
+-->
+</style>
+</span></p>
+
+
+        <table  id="datavalue1"  border="1" cellspacing="6" cellpadding="4"   width="100%" style="border-collapse:collapse;border-style: solid; border:2px;border-color: black; font:Arial, Helvetica, sans-serif;" >
+        <tbody>
+		 <tr >
+          <td bgcolor="silver" align="center"  width="100px"   align="center" colspan="8" ><b>Form 5A</b></td>
+        </tr>
+        <tr >
+          <td bgcolor="silver" align="center"  width="100px"    align="center" colspan="8" ><b>National Programme    on Prevention &amp; Control of Cancer, Diabetes, CVDs &amp; Stroke (NPCDCS)</b></td>
+        </tr>
+        <tr >
+          <td bgcolor="silver" align="center"  width="100px"   align="center" colspan="8"><b>Reporting    performa for District NCD Cell</b></td>
+        </tr>
+        <tr >
+          <td align="center"  width="100px"   colspan="1" align="right"><b>Name of the Facility:</b></td>
+		  <td align="center"  width="100px"   colspan="1" align="left" id="title1"></td>
+		    <td align="center"  width="100px"   colspan="2" align="right" >&nbsp; </td>
+			  
+          <td align="center"  width="100px"   colspan="1" align="right"><b>Reporting Month and Year:</b></td>
+		   <td align="center"  width="100px"   colspan="1" align="left" id="month"></td>
+		     <td align="center"  width="100px"   colspan="2" align="right" >&nbsp; </td>
+		
+			 
+		   
+        </tr>
+
+  
+
+        <tr>
+          <td width="100 px"  align="center"  colspan="2" ><b>Indicator</b></td>
+          <td width="100 px"  align="center"  colspan="3"><b>During the Reporting Month</b></td>
+          <td width="100 px"  align="center"  colspan="3"><b>Cumulative since April    during current Financial year</b></td>
+        </tr>
+        <tr>
+		
+		<td width="100 px"  colspan="2"></td>
+          <td width="100 px"  align="center" ><b>Male</b></td>
+          <td width="100 px"  align="center" ><b>Female</b></td>
+          <td width="100 px"  align="center" ><b>Total</b></td>
+          <td width="100 px"  align="center" ><b>Male</b></td>
+          <td width="100 px"  align="center" ><b>Female</b></td>
+          <td width="100 px"  align="center" ><b>Total</b></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left" bgcolor="silver" colspan="8"><b>I- Common NCDS    under NPCDCS</b></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  colspan="2">1- No- of persons    attended NCD Clinics (New and follow up)</td>
+          <td width="100 px"  align="center"  id="O3LPiWthiLO-a9Xcom4SHVh_YjcAcXoIQdS-a9Xcom4SHVh"></td>
+          <td width="100 px"  align="center"  id="O3LPiWthiLO-wsDizCyvY6m_YjcAcXoIQdS-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="O3LPiWthiLO-a9Xcom4SHVh_YjcAcXoIQdS-a9Xcom4SHVh_O3LPiWthiLO-wsDizCyvY6m_YjcAcXoIQdS-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="O3LPiWthiLO-a9Xcom4SHVh-cumu_YjcAcXoIQdS-a9Xcom4SHVh-cumu"></td>
+          <td width="100 px"  align="center"  id="O3LPiWthiLO-wsDizCyvY6m-cumu_YjcAcXoIQdS-wsDizCyvY6m-cumu"></td>
+          <td width="100 px"  align="center"  id="O3LPiWthiLO-a9Xcom4SHVh-cumu_YjcAcXoIQdS-a9Xcom4SHVh-cumu_O3LPiWthiLO-wsDizCyvY6m-cumu_YjcAcXoIQdS-wsDizCyvY6m-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  rowspan="9" >2-  No-    newly diagnosed with</td>
+          <td width="100 px"  align="left"  >A- Diabetes Only</td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XlMcoxYwnH7"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-jPnmrM5wCAI"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XlMcoxYwnH7_qGZRoDsxhcN-jPnmrM5wCAI"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XlMcoxYwnH7-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-jPnmrM5wCAI-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XlMcoxYwnH7-cumu_qGZRoDsxhcN-jPnmrM5wCAI-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >B-Hypertension Only</td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-fSXziYVp6BJ"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-T2hUC6FandC"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-fSXziYVp6BJ_qGZRoDsxhcN-T2hUC6FandC"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-fSXziYVp6BJ-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-T2hUC6FandC-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-fSXziYVp6BJ-cumu_qGZRoDsxhcN-T2hUC6FandC-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >C- HTN &amp; DM</td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-Oep4YtpZOfn"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-WT0LOsO15xk"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-Oep4YtpZOfn_qGZRoDsxhcN-WT0LOsO15xk"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-Oep4YtpZOfn-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-WT0LOsO15xk-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-Oep4YtpZOfn-cumu_qGZRoDsxhcN-WT0LOsO15xk-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left" >D- CVDs</td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-CrGPsIzI8xN"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-c9JbqcmAHC6"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-CrGPsIzI8xN_qGZRoDsxhcN-c9JbqcmAHC6"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-CrGPsIzI8xN-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-c9JbqcmAHC6-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-CrGPsIzI8xN-cumu_qGZRoDsxhcN-c9JbqcmAHC6-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >E- Stroke</td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XlCQm8JmwU5"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-q64iGv3NmcH"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XlCQm8JmwU5_qGZRoDsxhcN-q64iGv3NmcH"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XlCQm8JmwU5-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-q64iGv3NmcH-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XlCQm8JmwU5-cumu_qGZRoDsxhcN-q64iGv3NmcH-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >F-Oral Cancer</td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XPiL3QfXtN4"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-UEEwMpL9uNC"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XPiL3QfXtN4_qGZRoDsxhcN-UEEwMpL9uNC"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XPiL3QfXtN42-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-UEEwMpL9uNC-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-XPiL3QfXtN4-cumu_qGZRoDsxhcN-UEEwMpL9uNC-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >G- Breast cancer</td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-RB4AArkQR5Q"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-mAzduF2lDBU"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-RB4AArkQR5Q_qGZRoDsxhcN-mAzduF2lDBU"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-RB4AArkQR5Q-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-mAzduF2lDBU-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-RB4AArkQR5Q-cumu_qGZRoDsxhcN-mAzduF2lDBU-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >H- Cervical cancer</td>
+          <td width="100 px"  align="center"  ></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-WWg1q1AzI5D"></td>
+          <td width="100 px"  align="center"  id="_qGZRoDsxhcN-WWg1q1AzI5D"></td>
+          <td width="100 px"  align="center"  ></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-WWg1q1AzI5D-cumu"></td>
+          <td width="100 px"  align="center"  id="_qGZRoDsxhcN-WWg1q1AzI5D-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left" >I- Other cancers</td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-q7dA6BIouw2"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-rblqkNmpwVm"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-q7dA6BIouw2_qGZRoDsxhcN-rblqkNmpwVm"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-q7dA6BIouw2-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-rblqkNmpwVm-cumu"></td>
+          <td width="100 px"  align="center"  id="qGZRoDsxhcN-q7dA6BIouw2-cumu_qGZRoDsxhcN-rblqkNmpwVm-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  rowspan="3" >3- Number of persons suspected (Confirmatory    Diagnosis not available/ Pending)</td>
+          <td width="100 px"  align="left"  >A- CVDs</td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-uAE1rYT4L8U"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-kBDvgzeXC1D"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-uAE1rYT4L8U_fPp9iBIeZ9a-kBDvgzeXC1D"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-uAE1rYT4L8U-cumu"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-kBDvgzeXC1D-cumu"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-uAE1rYT4L8U-cumu_fPp9iBIeZ9a-kBDvgzeXC1D-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >B- Stroke</td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-nrpMyYJi7tD"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-PyLRr9180UZ"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-nrpMyYJi7tD_fPp9iBIeZ9a-PyLRr9180UZ"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-nrpMyYJi7tD-cumu"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-PyLRr9180UZ-cumu"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-nrpMyYJi7tD-cumu_fPp9iBIeZ9a-PyLRr9180UZ-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >C-Cancers</td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-rm5koamGCNB"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-k8nwlSvw3Z7"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-rm5koamGCNB_fPp9iBIeZ9a-k8nwlSvw3Z7"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-rm5koamGCNB-cumu"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-k8nwlSvw3Z7-cumu"></td>
+          <td width="100 px"  align="center"  id="fPp9iBIeZ9a-rm5koamGCNB-cumu_fPp9iBIeZ9a-k8nwlSvw3Z7-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  rowspan="9" >4- No- of newly diagnosed patients put on Treatment</td>
+          <td width="100 px"  align="left"  >A- Diabetes Only</td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XlMcoxYwnH7"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-jPnmrM5wCAI"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XlMcoxYwnH7_wj4Urn6GZf5-jPnmrM5wCAI"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XlMcoxYwnH7-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-jPnmrM5wCAI-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XlMcoxYwnH7-cumu_wj4Urn6GZf5-jPnmrM5wCAI-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >B-Hypertension Only</td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-fSXziYVp6BJ"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-T2hUC6FandC"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-fSXziYVp6BJ_wj4Urn6GZf5-T2hUC6FandC"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-fSXziYVp6BJ-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-T2hUC6FandC-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-fSXziYVp6BJ-cumu_wj4Urn6GZf5-T2hUC6FandC-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >C- HTN &amp; DM</td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-Oep4YtpZOfn"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-WT0LOsO15xk"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-Oep4YtpZOfn_wj4Urn6GZf5-WT0LOsO15xk"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-Oep4YtpZOfn-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-WT0LOsO15xk-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-Oep4YtpZOfn-cumu_wj4Urn6GZf5-WT0LOsO15xk-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >D- CVDs</td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-CrGPsIzI8xN"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-c9JbqcmAHC6"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-CrGPsIzI8xN_wj4Urn6GZf5-c9JbqcmAHC6"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-CrGPsIzI8xN-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-c9JbqcmAHC6-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-CrGPsIzI8xN-cumu_wj4Urn6GZf5-c9JbqcmAHC6-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >E- Stroke</td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XlCQm8JmwU5"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-q64iGv3NmcH"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XlCQm8JmwU5_wj4Urn6GZf5-q64iGv3NmcH"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XlCQm8JmwU5-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-q64iGv3NmcH-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XlCQm8JmwU5-cumu_wj4Urn6GZf5-q64iGv3NmcH-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >F-Oral Cancer</td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XPiL3QfXtN4"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-UEEwMpL9uNC"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XPiL3QfXtN4_wj4Urn6GZf5-UEEwMpL9uNC"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XPiL3QfXtN4-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-UEEwMpL9uNC-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-XPiL3QfXtN4-cumu_wj4Urn6GZf5-UEEwMpL9uNC-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >G- Breast cancer</td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-RB4AArkQR5Q"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-mAzduF2lDBU"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-RB4AArkQR5Q_wj4Urn6GZf5-mAzduF2lDBU"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-RB4AArkQR5Q-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-mAzduF2lDBU-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-RB4AArkQR5Q-cumu_wj4Urn6GZf5-mAzduF2lDBU-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >H- Cervical cancer</td>
+          <td width="100 px"  align="center"  ></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-WWg1q1AzI5D"></td>
+          <td width="100 px"  align="center"  id="_wj4Urn6GZf5-WWg1q1AzI5D"></td>
+          <td width="100 px"  align="center"  ></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-WWg1q1AzI5D-cumu"></td>
+          <td width="100 px"  align="center"  id="_wj4Urn6GZf5-WWg1q1AzI5D-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >I- Other cancers</td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-q7dA6BIouw2"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-rblqkNmpwVm"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-q7dA6BIouw2_wj4Urn6GZf5-rblqkNmpwVm"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-q7dA6BIouw2-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-rblqkNmpwVm-cumu"></td>
+          <td width="100 px"  align="center"  id="wj4Urn6GZf5-q7dA6BIouw2-cumu_wj4Urn6GZf5-rblqkNmpwVm-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  rowspan="9" >5- No- of persons on treatment follow up </td>
+          <td width="100 px"  align="left"  >A- Diabetes Only</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XlMcoxYwnH7"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-jPnmrM5wCAI"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XlMcoxYwnH7_zGHaJ5N6k31-jPnmrM5wCAI"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XlMcoxYwnH7-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-jPnmrM5wCAI-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XlMcoxYwnH7-cumu_zGHaJ5N6k31-jPnmrM5wCAI-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >B-Hypertension Only</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-fSXziYVp6BJ"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-T2hUC6FandC"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-fSXziYVp6BJ_zGHaJ5N6k31-T2hUC6FandC"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-fSXziYVp6BJ-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-T2hUC6FandC-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-fSXziYVp6BJ-cumu_zGHaJ5N6k31-T2hUC6FandC-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >C- HTN &amp; DM</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-Oep4YtpZOfn"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-WT0LOsO15xk"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-Oep4YtpZOfn_zGHaJ5N6k31-WT0LOsO15xk"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-Oep4YtpZOfn-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-WT0LOsO15xk-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-Oep4YtpZOfn-cumu_zGHaJ5N6k31-WT0LOsO15xk-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >D- CVDs</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-CrGPsIzI8xN"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-c9JbqcmAHC6"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-CrGPsIzI8xN_zGHaJ5N6k31-c9JbqcmAHC6"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-CrGPsIzI8xN-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-c9JbqcmAHC6-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-CrGPsIzI8xN-cumu_zGHaJ5N6k31-c9JbqcmAHC6-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >E- Stroke</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XlCQm8JmwU5"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-q64iGv3NmcH"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XlCQm8JmwU5_zGHaJ5N6k31-q64iGv3NmcH"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XlCQm8JmwU5-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-q64iGv3NmcH-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XlCQm8JmwU5-cumu_zGHaJ5N6k31-q64iGv3NmcH-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >F-Oral Cancer</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XPiL3QfXtN4"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-UEEwMpL9uNC"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XPiL3QfXtN4_zGHaJ5N6k31-UEEwMpL9uNC"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XPiL3QfXtN4-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-UEEwMpL9uNC-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-XPiL3QfXtN4-cumu_zGHaJ5N6k31-UEEwMpL9uNC-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >G- Breast cancer</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-RB4AArkQR5Q"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-mAzduF2lDBU"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-RB4AArkQR5Q_zGHaJ5N6k31-mAzduF2lDBU"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-RB4AArkQR5Q-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-mAzduF2lDBU-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-RB4AArkQR5Q-cumu_zGHaJ5N6k31-mAzduF2lDBU-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >H- Cervical cancer</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-O8psCqP90u5"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-WWg1q1AzI5D"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-O8psCqP90u5_zGHaJ5N6k31-WWg1q1AzI5D"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-O8psCqP90u5-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-WWg1q1AzI5D-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-O8psCqP90u5_zGHaJ5N6k31-WWg1q1AzI5D-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >I- Other cancers</td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-q7dA6BIouw2"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-rblqkNmpwVm"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-q7dA6BIouw2_zGHaJ5N6k31-rblqkNmpwVm"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-q7dA6BIouw2-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-rblqkNmpwVm-cumu"></td>
+          <td width="100 px"  align="center"  id="zGHaJ5N6k31-q7dA6BIouw2-cumu_zGHaJ5N6k31-rblqkNmpwVm-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  rowspan="8" >6- No-of     person referred to Tertiary hospital/TCCC</td>
+          <td width="100 px"  align="left"  >A-    Diabetes  (Complications)</td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XlMcoxYwnH7"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-jPnmrM5wCAI"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XlMcoxYwnH7_I9vO2zLeutq-jPnmrM5wCAI"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XlMcoxYwnH7-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-jPnmrM5wCAI-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XlMcoxYwnH7-cumu_I9vO2zLeutq-jPnmrM5wCAI-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >B- Hypertension ( Complications)</td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-fSXziYVp6BJ"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-T2hUC6FandC"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-fSXziYVp6BJ_I9vO2zLeutq-T2hUC6FandC"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-fSXziYVp6BJ-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-T2hUC6FandC-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-fSXziYVp6BJ-cumu_I9vO2zLeutq-T2hUC6FandC-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left" >C- CVDs</td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-CrGPsIzI8xN"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-c9JbqcmAHC6"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-CrGPsIzI8xN_I9vO2zLeutq-c9JbqcmAHC6"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-CrGPsIzI8xN-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-c9JbqcmAHC6-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-CrGPsIzI8xN-cumu_I9vO2zLeutq-c9JbqcmAHC6-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left" >D- Stroke</td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XlCQm8JmwU5"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-q64iGv3NmcH"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XlCQm8JmwU5_I9vO2zLeutq-q64iGv3NmcH"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XlCQm8JmwU5-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-q64iGv3NmcH-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XlCQm8JmwU5-cumu_I9vO2zLeutq-q64iGv3NmcH-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left" >E- Oral Cancers</td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XPiL3QfXtN4"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-UEEwMpL9uNC"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XPiL3QfXtN4_I9vO2zLeutq-UEEwMpL9uNC"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XPiL3QfXtN4-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-UEEwMpL9uNC-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-XPiL3QfXtN4-cumu_I9vO2zLeutq-UEEwMpL9uNC-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >F- Breast Cancer</td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-RB4AArkQR5Q"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-mAzduF2lDBU"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-RB4AArkQR5Q_I9vO2zLeutq-mAzduF2lDBU"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-RB4AArkQR5Q-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-mAzduF2lDBU-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-RB4AArkQR5Q-cumu_I9vO2zLeutq-mAzduF2lDBU-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >G- Cervical Cancer</td>
+          <td width="100 px"  align="center"  ></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-WWg1q1AzI5D"></td>
+          <td width="100 px"  align="center"  id="_I9vO2zLeutq-WWg1q1AzI5D"></td>
+          <td width="100 px"  align="center"  ></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-WWg1q1AzI5D-cumu"></td>
+          <td width="100 px"  align="center"  id="_I9vO2zLeutq-WWg1q1AzI5D-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >H- Other Cancers</td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-q7dA6BIouw2"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-rblqkNmpwVm"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-q7dA6BIouw2_I9vO2zLeutq-rblqkNmpwVm"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-q7dA6BIouw2-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-rblqkNmpwVm-cumu"></td>
+          <td width="100 px"  align="center"  id="I9vO2zLeutq-q7dA6BIouw2-cumu_I9vO2zLeutq-rblqkNmpwVm-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  rowspan="2" >7- No- of Patients treated at CCU</td>
+          <td width="100 px"  align="left" > A-CVDs</td>
+          <td width="100 px"  align="center"  id="k5H6GGNBRzE-a9Xcom4SHVh"></td>
+          <td width="100 px"  align="center"  id="k5H6GGNBRzE-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="k5H6GGNBRzE-a9Xcom4SHVh_k5H6GGNBRzE-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="k5H6GGNBRzE-a9Xcom4SHVh-cumu"></td>
+          <td width="100 px"  align="center"  id="k5H6GGNBRzE-wsDizCyvY6m-cumu"></td>
+          <td width="100 px"  align="center"  id="k5H6GGNBRzE-a9Xcom4SHVh-cumu_k5H6GGNBRzE-wsDizCyvY6m-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >B- Stroke</td>
+          <td width="100 px"  align="center"  id="AuhskJCtLMr-a9Xcom4SHVh"></td>
+          <td width="100 px"  align="center"  id="AuhskJCtLMr-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="AuhskJCtLMr-a9Xcom4SHVh_AuhskJCtLMr-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="AuhskJCtLMr-a9Xcom4SHVh-cumu"></td>
+          <td width="100 px"  align="center"  id="AuhskJCtLMr-wsDizCyvY6m-cumu"></td>
+          <td width="100 px"  align="center"  id="AuhskJCtLMr-a9Xcom4SHVh-cumu_AuhskJCtLMr-wsDizCyvY6m-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  colspan="2" width="554">8- No  of cancer patients    treated in Day Care facility  </td>
+          <td width="100 px"  align="center"  id="QcBBcya4L6k-a9Xcom4SHVh"></td>
+          <td width="100 px"  align="center"  id="QcBBcya4L6k-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="QcBBcya4L6k-a9Xcom4SHVh_QcBBcya4L6k-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="QcBBcya4L6k-a9Xcom4SHVh-cumu"></td>
+          <td width="100 px"  align="center"  id="QcBBcya4L6k-wsDizCyvY6m-cumu"></td>
+          <td width="100 px"  align="center"  id="QcBBcya4L6k-a9Xcom4SHVh-cumu_QcBBcya4L6k-wsDizCyvY6m-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  colspan="2" width="554">9- No- of persons counselled for health promotion &amp;    prevention of NCDs</td>
+          <td width="100 px"  align="center"  id="kF4HWykJ6mU-a9Xcom4SHVh"></td>
+          <td width="100 px"  align="center"  id="kF4HWykJ6mU-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="kF4HWykJ6mU-a9Xcom4SHVh_kF4HWykJ6mU-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="kF4HWykJ6mU-a9Xcom4SHVh-cumu"></td>
+          <td width="100 px"  align="center"  id="kF4HWykJ6mU-wsDizCyvY6m-cumu"></td>
+          <td width="100 px"  align="center"  id="kF4HWykJ6mU-a9Xcom4SHVh-cumu_kF4HWykJ6mU-wsDizCyvY6m-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  colspan="2">10- No- of patients    underwent Physiotherapy </td>
+          <td width="100 px"  align="center"  id="bJzhzud9wj6-a9Xcom4SHVh"></td>
+          <td width="100 px"  align="center"  id="bJzhzud9wj6-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="bJzhzud9wj6-a9Xcom4SHVh_bJzhzud9wj6-wsDizCyvY6m"></td>
+          <td width="100 px"  align="center"  id="bJzhzud9wj6-a9Xcom4SHVh-cumu"></td>
+          <td width="100 px"  align="center"  id="bJzhzud9wj6-wsDizCyvY6m-cumu"></td>
+          <td width="100 px"  align="center"  id="bJzhzud9wj6-a9Xcom4SHVh-cumu_bJzhzud9wj6-wsDizCyvY6m-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left" bgcolor="silver" colspan="8" width="1266"><b>II- Co-morbidities</b></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  rowspan="3" >1- Among all confirmed Diabetic patients [New  (2A+2C) &amp; Follow up (5A+5C)]</td>
+          <td width="100 px"  align="left"  >A- No- of known TB  cases on  ATT</td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-p1uCH5QVU7b"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-uCSWNbuL4vp"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-p1uCH5QVU7b_fdvY7CcfL4C-uCSWNbuL4vp"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-p1uCH5QVU7b-cumu"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-uCSWNbuL4vp-cumu"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-p1uCH5QVU7b-cumu_fdvY7CcfL4C-uCSWNbuL4vp-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left" >B- No- screened for TB Symptoms</td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-SACHyNgHIqO"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-Z0PJBHtNQji"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-SACHyNgHIqO_fdvY7CcfL4C-Z0PJBHtNQji"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-SACHyNgHIqO-cumu"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-Z0PJBHtNQji-cumu"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-SACHyNgHIqO-cumu_fdvY7CcfL4C-Z0PJBHtNQji-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="left"  >C- No- suspected for TB &amp; refered  to DMC/ PI </td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-qAmLTqZdr0m"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-vwJzQzQiUFN"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-qAmLTqZdr0m_fdvY7CcfL4C-vwJzQzQiUFN"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-qAmLTqZdr0m-cumu"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-vwJzQzQiUFN-cumu"></td>
+          <td width="100 px"  align="center"  id="fdvY7CcfL4C-qAmLTqZdr0m-cumu_fdvY7CcfL4C-vwJzQzQiUFN-cumu"></td>
+        </tr>
+        <tr>
+          <td width="100 px"  align="center" ></td>
+          <td width="100 px"  align="center" ></td>
+          <td width="100 px"  align="center" ></td>
+          <td width="100 px"  align="center" ></td>
+          <td width="100 px"  align="center" ></td>
+          <td width="100 px"  align="center" ></td>
+          <td width="100 px"  align="center" ></td>
+          <td width="100 px"  align="center" ></td>
+        </tr>
+    
+        <tr>
+          <td align="left" colspan="8" ><b>Signature:</b></td>
+
+        </tr>
+        <tr>
+          <td align="left"  colspan="8"><b>Name    and Designation ________________</b></td>
+    
+        </tr>
+        <tr>
+          <td align="left"  colspan="8">Date    of reporting_____________________</td>
+   
+        </tr>
+        <tr>
+          <td align="left"  colspan="8" width="1266"><i>*This report should be generated by compiling data of Form 3A    (CHC NCD Clinics)  and Form 4 (District    NCD Clinic) data</i> </td>
+        </tr>
+        <tr>
+          <td align="left"  colspan="8"><i>This report should    be verified and signed by District Nodal Officer</i></td>
+       
+        </tr>
+        <tr>
+          <td align="left"  colspan="8"><i>This report should    be sent to State NCD Cell by 10th day of every month</i></td>
+
+        </tr>
+
+	</tbody>
+</table>
+
+
+</div>
+</form>
