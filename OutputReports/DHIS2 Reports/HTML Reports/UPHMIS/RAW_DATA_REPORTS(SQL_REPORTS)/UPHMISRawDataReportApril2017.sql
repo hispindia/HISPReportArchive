@@ -958,34 +958,10 @@ from
          st,
          loc,
 		 
-		  case
-            when
-               dataelementid = 32185 
-            then
-               sag2.value 
-         end
-         de803, 
-         case
-            when
-               dataelementid = 32184 
-            then
-               sag2.value 
-         end
-         de804, 
-         case
-            when
-               dataelementid = 32187 
-            then
-               sag2.value 
-         end
-         de805, 
-         case
-            when
-               dataelementid = 9083 
-            then
-               sag2.value 
-         end
-         de806, 
+		  case when dataelementid = 32185 then sag2.value end de803, 
+          case when dataelementid = 32184 then sag2.value end de804, 
+         case  when dataelementid = 32187 then sag2.value end de805, 
+         case  when dataelementid = 9083  then sag2.value end de806, 
 		 
 		 		case when dataelementid = 807 and categoryoptioncomboid = 15 then sag2.value end v1,
 				case when dataelementid = 808 and categoryoptioncomboid = 15 then sag2.value end v2,
@@ -1302,7 +1278,7 @@ from
 				case when dataelementid = 7272535 and categoryoptioncomboid = 15 then sag2.value end v313,
 
 
-						 case when dataelementid = 1630944 and categoryoptioncomboid =  15 then sag2.value end a1,
+				case when dataelementid = 1630944 and categoryoptioncomboid =  15 then sag2.value end a1,
 				case when dataelementid = 1631316 and categoryoptioncomboid =  1625509 then sag2.value end a2,
 				case when dataelementid = 1631316 and categoryoptioncomboid =  1625510 then sag2.value end a3,
 				case when dataelementid = 1631317 and categoryoptioncomboid =  1625509 then sag2.value end a4,
