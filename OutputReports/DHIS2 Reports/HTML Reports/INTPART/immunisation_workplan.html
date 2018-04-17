@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+td {
+	border: 1px solid black;
+     padding: 1px;
+    text-align: center;
+	 
+}
+#table1 {
+    table-layout: auto;
+	border-collapse: collapse;
+	 border:none;
+}
+.emptyRow td {
+	border:none;
+}
+.less{
+    margin:0;
+    padding:0;
+}
+
+</style>
+</head>
+<body>
+
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+   
+Start Date:
+  <input type="date" name="entry" id="start">
+  End Date:
+  <input type="date" name="exit" id="end">
+   <button type="button" class="btn btn-success" id="getreport" style="font-size:20px;margin-left:100px;" onclick="getreportt()"><i class="fa fa-search"></i>  &nbsp&nbspWork Plan  </button>
+<!--<button style="font-size:24px;color:red;margin-left:450px;" onclick="abc()">Daily reminder  <i class="fa fa-clock-o"></i></button>-->
+<a class="btn btn-danger" onclick="location.reload();" style='font-size:20px;color:white;margin-left:60px;'><i class="fa fa-trash-o fa-lg"></i> &nbsp&nbspClear</a>
+
+<br>
+<br>
+<br>
+
+<table id="table1" class="reporttable"   style="width:100%">
+  
+ 
+    </table>
+   <script type="text/javascript" async>
+      $.ajaxSetup({
+        async: false
+    });
+	
+	     var count=0;
+	    var namee=[];
+		var objresul=[];
+		var objcontraception;
+		var sex=[];
+		var anmname=[];
+		var objtrack=[];
+		var housenumber;
+			var objdate=[];
+		var objhouse=[];
+		var objrefer;
+		var objname=[];
+		var objid=[];
+		var objmatchevent=[];;
+		var objahouseid=[];
+		var objage=[];
+		var objfinaldate=[];
+		var objtrack1=[];
+		var housedetailss=["xalnzkNfD77","nHR1zCU0maL","Dnm1mq6iq2d","PbEhJPnon0o","kelN057pfhq","zLsKdtlBCIx"];
+		var objatt=[];
+		var objattribute=[];
+		var basichouse=["YFjB0zhySP6","xalnzkNfD77","NG0XocGDXZp"];
+		var basicresult=["FnLijkR1Qku","wUfbKKnxLLn"];
+		var objanm=["yDCO4KM4WVA"];
+		 function getreportt(){
+		 
+		 var startdatee=document.getElementById('start').value;
+				var enddatee=document.getElementById('end').value;
+				
+				
+		  $.get("../api/trackedEntityInstances.json?ou=lZtSBQjZCaX&program=JdZ3gv6cx54&programStartDate="+startdatee+"&programEndDate="+enddatee+"&skipPaging=true", function (data1) {
+			  var trackdata=data1;
+			 
+			  			  for(var i=0;i<trackdata.trackedEntityInstances.length;i++)
+				{
+			 
+			   var attributepath=trackdata.trackedEntityInstances[i].attributes; 
+			   objtrack.push(trackdata.trackedEntityInstances[i].trackedEntityInstance);
+			  for(var q=0;q<attributepath.length;q++)
+                    {
+					 var idd =attributepath[q].attribute;
+					 objattribute.push(idd);
+				  
+				if(attributepath[q].attribute=="ZQMF7taSAw8")//house number
+				  {
+				var aa=attributepath[q].value;
+				
+				//housenumber=aa;
+				objhouse.push(aa);
+			
+				 
+				 }
+				 else if(attributepath[q].attribute=="xalnzkNfD77")//Name of woman
+				  {
+				var aa=attributepath[q].value;
+				
+				//nameofwoman=aa;
+				objname.push(aa);
+			
+				 
+				 }
+				  else if(attributepath[q].attribute=="kelN057pfhq")//date of birth
+				  {
+				var aa=attributepath[q].value;
+				objage.push(aa);
+				objdate.push(aa);
+					
+				function addDays(n,staticdate){
+					var t = new Date(staticdate);
+					t.setDate(t.getDate() + n); 
+					var month = "0"+(t.getMonth()+1);
+					 date = "0"+t.getDate();
+					month = month.slice(-2);
+					date = date.slice(-2);
+					var resultdate = t.getFullYear(); 
+	 resultdate=resultdate +"-"+month +"-"+date;
+					objdate.push(resultdate);
+					//console.log(objdate);
+				}
+				var staticdate=aa;
+
+				addDays(42,staticdate);// 6 weeks
+				addDays(70,staticdate);// 10 weeks
+				addDays(98,staticdate);// 14 weeks  
+				addDays(274,staticdate);// 9 months  
+				addDays(487,staticdate);  //16 months
+				objfinaldate.push(objdate);
+				  objdate=[];
+				}
+			 
+				  }
+			   }
+			    }); 
+				
+				
+				
+var header="<tr style='border:1px solid black;background-color:#fff2cc;'>  <td> S.no </td> <td> State</td>   <td> Name</td><td> Age</td><td>House No</td><td>At Birth</td><td>At 6 weeks</td><td>At 10 week</td><td>At 14 weeks</td><td>At 9 months</td><td>At 16-24 months</td></tr>";
+				
+			
+				$(".reporttable").append(header);
+		     for(var j=0;j<objtrack.length;j++){
+			 count++;
+		 $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=JdZ3gv6cx54&trackedEntityInstance="+objtrack[j]+"&order=eventDate:asc", function (data) {
+	
+			var trackdata=data;
+                console.log(trackdata);
+				 
+				for(var i=0;i<trackdata.events.length;i++)
+				{
+				 objmatchevent.push(trackdata.events[i].eventDate.substring(0,10));
+				
+		         
+		   }
+		 var length_ovjmatchevent=objmatchevent.length;
+		     var pushresult=6-parseInt(length_ovjmatchevent);
+			 
+			 for(var l=0;l<pushresult;l++)
+			 {
+			 objmatchevent.push("&nbsp&nbsp&nbsp");
+			 }
+		      
+		   
+		   });
+		    var idealstate="<tr style='border:1px solid black;background-color:#ccffcc'>  <td> "+count+"</td> <td style='background-color:#79ff4d'> ideal</td>   <td> "+objname[j]+"</td><td>"+objage[j]+"</td><td>"+objhouse[j]+"</td><td>"+objfinaldate[j][0]+"</td><td>"+objfinaldate[j][1]+"</td><td>"+objfinaldate[j][2]+"</td><td>"+objfinaldate[j][3]+"</td><td>"+objfinaldate[j][4]+"</td><td>"+objfinaldate[j][5]+"</td></tr>";
+				
+		  var res="<tr style='border:1px solid black'>  <td> "+count+"</td> <td style='background-color:#4dc3ff'> Running</td>   <td> "+objname[j]+"</td><td>"+objage[j]+"</td><td>"+objhouse[j]+"</td><td>"+objmatchevent[0]+"</td><td>"+objmatchevent[1]+"</td><td>"+objmatchevent[2]+"</td><td>"+objmatchevent[3]+"</td><td>"+objmatchevent[4]+"</td><td>"+objmatchevent[5]+"</td></tr>";
+				
+			     $(".reporttable").append(idealstate);
+				$(".reporttable").append(res);
+			  objmatchevent=[];
+		   }
+		    
+		     
+		   }
+   </script>
+  
+
+  </body>
+  </html>

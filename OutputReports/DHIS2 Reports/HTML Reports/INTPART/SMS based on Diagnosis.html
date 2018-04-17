@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -31,11 +32,13 @@ textarea {
     position: absolute;
     left: 30px;
 }
-
 </style>
 </head>
 <body>
-
+Start Date:
+  <input type="date" name="entry" id="start">
+  End Date:
+  <input type="date" name="exit" id="end">
  <button type="button"  id="myBtn" class="btn btn-info"  onclick="dm('dm');">DM</button>              
  <button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;'  onclick="dm('htn');">HTN</button>        
   <button type="button"  id="myBtn" class="btn btn-info"   style='margin-left:25px;' onclick="dm('copd');">COPD</button>   
@@ -56,6 +59,14 @@ textarea {
 </br>
 </br>
 </br>
+</br>    
+
+</br>
+</br>
+</br>
+</br>
+<a href="http://www.hindietools.com/2016/05/html-entity-to-unicode-unicode-to-html.html">CONVERT TO HTML ATTRIBUTE</a>
+</br>
 </br>
 <table id="table1" class="report"   style="width:100%">
   
@@ -71,13 +82,12 @@ textarea {
      	 $.ajaxSetup({
         async: false
     });
-	
+	 var unicodeString = '';  
 	    function dm(dmm){
 		var show_case=dmm;
 		//alert(dmabc);
 	   var Table = document.getElementById("table1");
         Table.innerHTML = "";
-
 	     var count=1;
 	    var namee=[];
 		var objid=[];
@@ -95,8 +105,9 @@ textarea {
 		var objatt=[];
 		var objattribute=[];
 		var basichouse=["ZQMF7taSAw8","p6cLzDqCy0c","Q3FM5tnqXwm","caLxHmzEsxO","gfdru4cqZS0","LQi7veXJQ5D","gu2sb8mD9sR"];
-		
-		   	 $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=jC8Gprj4pWV&skipPaging=true", function (data22) {
+		 var startdatee=document.getElementById('start').value;
+				var enddatee=document.getElementById('end').value;
+		   	 $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=jC8Gprj4pWV&startDate="+startdatee+"&endDate="+enddatee+"&skipPaging=true", function (data22) {
 	
 			var eventdata=data22;
                 console.log(eventdata);
@@ -198,12 +209,16 @@ textarea {
 		
 		
 		// getting family memeber according to diagnosis
-		var smsbutton="<tr class='emptyRow' style='height:20px'><td></td><td></td><td></td><td></td><td></td><td><input type='button' class='btn' value='Send Sms' onclick='sendsmss();'/></td></tr>";
+		var smsbutton="<tr class='emptyRow' style='height:20px'><td></td><td></td><td></td><td></td><td></td><td><input type='button' id='btn' value='Send Sms'/></td></tr>";
 		        
                var aadress="<tr style='border:1px solid black;background-color:orange;height:30px'><td>S.No</td><td> Name</td><td>Faimily_id</td><td>Sex</td><td>Mobile Number</td><td>Diagnosis</td></tr>";
 		        
 				  $(".report").append(smsbutton);
 				 $(".report").append(aadress);
+				 document.getElementById("btn").addEventListener("click", function() {
+    sendsmss(mobile);
+}, false);
+
 		  for(x=0;x<objtrackinstance.length;x++)
 		  {
 	   var url1=  "../api/trackedEntityInstances/"+objtrackinstance[x]+".json?";
@@ -279,27 +294,46 @@ textarea {
 			
 			}
 			 
-	function sendsmss(){
-	alert("its working here");
-	 smscontent= selct_date=document.getElementById('test').value;
-alert(smscontent);
+	function sendsmss(mobile){
 
-var smsurl="http://msdgweb.mgov.gov.in/esms/sendsmsrequest?username=***&password=***&smsservicetype=unicodemsg&content="+smscontent+"&mobileno=9643274071&senderid=PGIMER";
-httpGet(smsurl);
+	 smscontent= document.getElementById('test').value;
+ var finalcontent = encodeURIComponent(smscontent);
+
+var smsurl = "http://msdgweb.mgov.gov.in/esms/sendsmsrequest?username=PHD25PGIMER&password=sph@25&smsservicetype=unicodemsg&content="+finalcontent+"&mobileno="+mobile+"&senderid=PGIMER";
+ // var smsurl = "http://msdgweb.mgov.gov.in/esms/sendsmsrequest?username=PHD25PGIMER&password=sph@25&smsservicetype=unicodemsg&content=hyy&mobileno=8968999927&senderid=PGIMER";         
+		   httpGet(smsurl);
 
 	}
 	
+	
+
+	
 	function httpGet(theUrl)
 {
-alert("sms called");
-   var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", theUrl, false );
-    xmlHttp.send(null);
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "POST", theUrl, false );
+    xmlHttp.send( null );
     return xmlHttp.responseText;
-	consol.log(xmlHttp.responseText);
-	
 }
 
+	
+/*
+	  httpGet = function (theUrl) {
+        $.ajax({
+                type: 'post',
+                encoding: "UTF-8",
+                dataType: "html",
+                 contentType: 'application/x-www-form-urlencoded',
+                url: theUrl,
+                success: function (msg) {
+                    //alert(msg);
+                }
+
+        })
+	
+     }
+
+*/
 	
    </script>
   
