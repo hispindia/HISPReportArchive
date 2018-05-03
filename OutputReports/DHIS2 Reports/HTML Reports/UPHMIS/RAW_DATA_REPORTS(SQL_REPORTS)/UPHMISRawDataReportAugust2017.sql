@@ -1839,7 +1839,7 @@ from
 				case when dataelementid = 9490 and categoryoptioncomboid =  15 then sag2.value end a538,
 				case when dataelementid = 1631011 and categoryoptioncomboid =  15 then sag2.value end a539,
 				case when dataelementid = 9129 and categoryoptioncomboid =  15 then sag2.value end a540,
-				case when dataelementid = 877 and categoryoptioncomboid =  15 then sag2.value end a541,
+				case when dataelementid = 9130 and categoryoptioncomboid =  15 then sag2.value end a541,
 				case when dataelementid = 9131 and categoryoptioncomboid =  15 then sag2.value end a542,
 				case when dataelementid = 1631012 and categoryoptioncomboid =  15 then sag2.value end a543,
 				case when dataelementid = 1631013 and categoryoptioncomboid =  15 then sag2.value end a544,
