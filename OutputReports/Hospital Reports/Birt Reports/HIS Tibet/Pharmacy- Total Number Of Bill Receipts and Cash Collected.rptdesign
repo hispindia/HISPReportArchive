@@ -1750,7 +1750,7 @@ GROUP BY billid,BillTypes
 UNION
 
 
-SELECT billid,'Total Cash Refunded' NAME,BillTypes,CASE WHEN BillTypes LIKE 'Cash' THEN cashamount ELSE creditamount END AS voidedamount FROM
+SELECT billid,'Total Cash Voided' NAME,BillTypes,CASE WHEN BillTypes LIKE 'Cash' THEN cashamount ELSE creditamount END AS voidedamount FROM
 (SELECT BillTypes AS billtype FROM( 
 SELECT CASE WHEN bl.amount_credit IS NULL THEN 
  'Cash' ELSE 'Credit' END AS BillTypes,bl.id AS ids
@@ -1762,7 +1762,7 @@ GROUP BY billtype
 ) amb2
 LEFT JOIN
 (SELECT 
-'Total Cash Voided' NAME, ROUND(IFNULL(SUM(total), 0 )) AS creditamount,ROUND(IFNULL(SUM(total1), 0 )) cashamount ,BillTypes ,billid,void
+'Total Cash Voided' NAME, ROUND(IFNULL(-SUM(total), 0 )) AS creditamount,ROUND(IFNULL(-SUM(total1), 0 )) cashamount ,BillTypes ,billid,void
 FROM
 (SELECT i.id AS billid,CASE WHEN i.amount_credit IS NULL THEN (i.total_amount-i.total_amount_after_void)  END AS total1 ,
 CASE WHEN i.amount_credit IS NOT NULL THEN (i.amount_credit-i.total_amount_after_void)  END AS total,i.voided AS void,
