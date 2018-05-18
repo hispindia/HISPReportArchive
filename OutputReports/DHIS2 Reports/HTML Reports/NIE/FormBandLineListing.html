@@ -7,8 +7,11 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
         crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" type="text/javascript"></script>
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
     <style type="text/css" media="screen"></style>
-    <style type="text/css" href="../api/documents/IlCodOSjSxY/data" media="print">
+    <style type="text/css" href="http://139.162.61.147/nieodk_new/api/documents/IlCodOSjSxY/data" media="print">
         @media print {
             #notPrint {
                 display: none;
@@ -102,6 +105,29 @@
             }
         }
     </style>
+    <style>
+        .datedivmng{
+        float: left;position: relative;
+    }
+    .datedivmng .datepicker{
+        position: relative;width: 87%!important;
+        cursor: pointer;
+    }
+    .datedivmng:after {
+        /* symbol for "opening" panels */
+        font-family: 'FontAwesome';
+        content: "\f073";
+        color: #329ac4;
+        font-size: 16px;
+        text-shadow: none;
+        position: absolute;
+        vertical-align: middle;
+        pointer-events: none;
+        float: right;
+        top: 2px;
+        right: 7px;
+    }
+    </style>
 </head>
 
 <body>
@@ -110,9 +136,11 @@
         <div class="row">
             <div class="col-lg-*  custom">
                 <div id="notPrint">
-                    <b style="margin-left: 30%">Start Date : </b><input type="date" id="start" required>
-                    <input type="checkbox" id="checkit" onclick="checkfunction()" checked> Search only for single day End
-                    Date : <input type="date" id="end" disabled required><br><br>
+                    <div style="margin-left: 30%"><div class="datedivmng"><b>Start Date : </b>
+                        <input type="text" id="start" name="start" value="" placeholder="dd-mm-yyyy"/></div>
+                        <div class="datedivmng"><input type="checkbox" id="checkit" onclick="checkfunction()" checked> <b>Search only for single day End
+                        Date :</b>
+                        <input type="text" id="end" name="end" value="" placeholder="dd-mm-yyyy" disabled required /></div></div><br><br>
                     <button onClick="genFormA()" id="genformA" style="margin-left: 50%">Generate</button><br><br>
                 </div>
 
@@ -286,6 +314,16 @@
         </div>
     </div>
     <script>
+         $("#start").datepicker({
+            dateFormat: 'dd-mm-yy',
+            changeMonth: true
+           });
+           $("#end").datepicker({
+            dateFormat: 'dd-mm-yy',
+            changeMonth: true
+            });
+    </script>
+    <script>
         var orgUnitUid = dhis2.report.organisationUnit.id;
         var Total1, Total2, Total3, Total11;
 
@@ -369,30 +407,32 @@
 
         var checkfunction = function () {
             if ($('input:checkbox').is(':checked')) {
-                flag=3;
+                flag = 3;
                 document.getElementById("end").disabled = true;
             }
             else {
-                flag=1;
+                flag = 1;
                 document.getElementById("end").disabled = false;
             }
         };
 
         function genFormA() {
-//            if (flag != 1) {
-//                endDate = "";
-//            }
+            //            if (flag != 1) {
+            //                endDate = "";
+            //            }
             if (startDate == "" || endDate == "") {
                 startDate = document.getElementById("start").value;
+                startDate = startDate.split("-").reverse().join("-");
 
                 if ($('input:checkbox').is(':checked')) {
-                    flag=3;
+                    flag = 3;
                     endDate = startDate.substring(0, 8) + (Number(startDate.substring(8, 10)) + 1);
 
                 }
                 else {
                     endDate = document.getElementById("end").value;
-                    flag=1;
+                    endDate = endDate.split("-").reverse().join("-");
+                    flag = 1;
                 }
             }
 
@@ -419,7 +459,7 @@
             $('#forma').show();
 
             //Ml0ZNj9APN0
-            document.getElementById("date_header").innerHTML = "Government Institution (Govt. Medical College Hospital, DHQ Hospital, GHs, UG PHCs, ESI, Defence, Railway etc.,)" + startDate;
+            document.getElementById("date_header").innerHTML = "Government Institution (Govt. Medical College Hospital, DHQ Hospital, GHs, UG PHCs, ESI, Defence, Railway etc.,)" + startDate.split('-').reverse().join('-');
             var index2 = 1;
             for (var m = 0; m < filteredOrgUnitList.length; m++) {
                 var row = "<tbody>";
@@ -610,7 +650,7 @@
                     type: "GET",
                     url: "../api/events.json?orgUnit=" + ou3 + "&program=Ml0ZNj9APN0&startDate=" + startDate + "&endDate=" + endDate + "&skipPaging=true&order=eventDate:desc",
                     success: function (data) {
-                         var Pou = "";
+                        var Pou = "";
                         for (var p = 0; p < data.events.length; p++) {
                             if (ou != Pou) {
                                 var count_1 = 0, count_2 = 0, count_3 = 0, count_4 = 0, count_5 = 0, count_6 = 0, count_7 = 0, count_8 = 0, count_9 = 0, count_10 = 0, count_11 = 0, count_12 = 0;
@@ -702,7 +742,7 @@
 
                                 table.deleteRow(rowCount - 1);
                                 index1--;
-                                row = row + "<tr><td>" + index1 + "</td><td>" + insName + "</td><td>" + count_123 + "</td><td>" + count_22 + "</td><td>" + Total_1 + "</td><td>" + count_33 + "</td><td>" + count_44 + "</td><td>" + Total_2 + "</td><td>" + count_55 + "</td><td>" + count_66 + "</td><td>" + Total_3 + "</td><td>" + count_77 + "</td><td>" + count_88 + "</td><td>" + Total_4 + "</td><td>" + count_99 + "</td><td>" + count_101 + "</td><td>" + Total_5 + "</td><td>" + count_111 + "</td><td>" + count_122 + "</td><td>" + Total_6 + "</td></tr>";                                $('.custom-table-private').append(roww);
+                                row = row + "<tr><td>" + index1 + "</td><td>" + insName + "</td><td>" + count_123 + "</td><td>" + count_22 + "</td><td>" + Total_1 + "</td><td>" + count_33 + "</td><td>" + count_44 + "</td><td>" + Total_2 + "</td><td>" + count_55 + "</td><td>" + count_66 + "</td><td>" + Total_3 + "</td><td>" + count_77 + "</td><td>" + count_88 + "</td><td>" + Total_4 + "</td><td>" + count_99 + "</td><td>" + count_101 + "</td><td>" + Total_5 + "</td><td>" + count_111 + "</td><td>" + count_122 + "</td><td>" + Total_6 + "</td></tr>"; $('.custom-table-private').append(roww);
                                 index2++;
                             }
 
@@ -923,55 +963,56 @@
                         if (diagnosis[p] == "ADD") {
 
                         }
-                        if(flag==3){
-                            var dateNew = dateofAdd[p].substring(0,10);
-                            if(dateNew != startDate){}
                         else {
-                            var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + index11 + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] + "," + habitationu[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis_lab[p] + "</td>" +
-                                "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
-                                "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
-                            $(".table_both").append(row);
-                            index11++;
+                            if (flag == 3) {
+                                var dateNew = dateofAdd[p].substring(0, 10);
+                                if (dateNew != startDate) { }
+                                else {
+                                    var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + index11 + "</td>" +
+                                        "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].split('-').reverse().join('-') + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
+                                        "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
+                                        "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] + "," + habitationu[p] + "</td>" +
+                                        "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
+                                        "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis[p] + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis_lab[p] + "</td>" +
+                                        "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
+                                        "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
+                                    $(".table_both").append(row);
+                                    index11++;
+                                }
+
+                            }
+
+                            else {
+                                var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + index11 + "</td>" +
+                                    "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p].split('-').reverse().join('-') + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
+                                    "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
+                                    "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] + "," + habitationu[p] + "</td>" +
+                                    "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
+                                    "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis[p] + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis_lab[p] + "</td>" +
+                                    "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
+                                    "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
+                                $(".table_both").append(row);
+                                index11++;
+                            }
                         }
-
                     }
-
-                    else
-                    {
-                        var row = $("<tbody><tr><td  id = 'tablerowsh' colspan='1' id='td'>" + index11 + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + dateofAdd[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + patientname[p] + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + age[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + sex[p] + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + guardian[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + street1[p] + "," + habitationu[p] + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + village[p] + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + hud[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + block[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + districtu[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + contactnumber[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + diagnosis_lab[p] + "</td>" +
-                            "<td id = 'tablerowsh' colspan='1' id='td'>" + hospital[p] + "</td>" +
-                            "<td  id = 'tablerowsh' colspan='1' id='td'>" + remarks[p] + "</td></tr></tbody>");
-                        $(".table_both").append(row);
-                        index11++;
-                    }
-                    }
-                    document.getElementById("datedisplay").innerHTML = "Date:" + startDate;
+                    document.getElementById("datedisplay").innerHTML = "Date:" + startDate.split('-').reverse().join('-');
 
                     $("#loader").hide();
                 },
