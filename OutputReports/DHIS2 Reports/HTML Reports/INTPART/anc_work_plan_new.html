@@ -23,6 +23,15 @@ td {
     padding:0;
 }
 
+#myInput {
+  background-position: 10px 10px;
+  background-repeat: no-repeat;
+  width: 100%;
+  font-size: 16px;
+  padding: 12px 20px 12px 40px;
+  border: 1px solid #ddd;
+  margin-bottom: 12px;
+}
 </style>
 </head>
 <body>
@@ -44,6 +53,9 @@ Start Date:
 <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;
     Download As Excel
 </button>
+<br>
+<br>
+<input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for anm names.." title="Type in a name">
 <table id="table1" class="reporttable"   style="width:100%">
   
  
@@ -60,24 +72,38 @@ Start Date:
 		var sex=[];
 		var anmname=[];
 		var objtrack=[];
+		var obj_hb_gm_first=[];
+		var obj_hb_gm_second=[];
+		var obj_hb_gm_third=[];
+		var obj_hb_gm_fourth=[];
+		var objMobile=[];
 		var incentDate=[];
+		var objedd=[];
 		var housenumber;
 			var objdate=[];
+			var reportdate_first=[];
 			var objlocality=[];
 		var objhouse=[];
 		var objanmname=[];
 		var objrefer;
 		var objname=[];
 		var objid=[];
+		var obj_serialanc=[];
+		var obj_hb_value=[];
+		var report_third=[];
+		var report_second=[];
+		var report_fourth=[];
 		var objmatchevent=[];;
 		var objahouseid=[];
 		var objage=[];
+		var objcheck_hb_gm_1st=[];
 		var objfinaldate=[];
 		var objtrack1=[];
 		var housedetailss=["xalnzkNfD77","nHR1zCU0maL","Dnm1mq6iq2d","PbEhJPnon0o","kelN057pfhq","zLsKdtlBCIx"];
 		var objatt=[];
 		var objattribute=[];
-		var basichouse=["YFjB0zhySP6","xalnzkNfD77","MV4wWoZBrJS","yDCO4KM4WVA"];
+		var ancvisitdetail=["2nd Visit","3rd Visit","4th ANC"];
+		var basichouse=["YFjB0zhySP6","xalnzkNfD77","MV4wWoZBrJS","yDCO4KM4WVA","Lt9ZrfgAMuw"];
 		var basicresult=["FnLijkR1Qku","wUfbKKnxLLn"];
 		var objanm=["yDCO4KM4WVA"];
 		 function getreportt(){
@@ -141,6 +167,15 @@ Start Date:
 			
 				 
 				 }
+				 else if(attributepath[q].attribute=="Lt9ZrfgAMuw")//Mobile number 
+				  {
+				var aa=attributepath[q].value;
+				
+				//nameofwoman=aa;
+				objMobile.push(aa);
+			
+				 
+				 }
 				}
 				 var array3 = basichouse.filter(function(obj) { return objattribute.indexOf(obj) == -1; });
 		          for(var t=0;t<array3.length;t++)
@@ -153,7 +188,8 @@ Start Date:
 					objlocality.push("NA");
 					else if(array3[t]=="yDCO4KM4WVA")
 					objanmname.push("NA");
-				
+				else if(array3[t]=="Lt9ZrfgAMuw")
+					objMobile.push("NA");
 					
 					}
 					
@@ -166,7 +202,7 @@ Start Date:
 			   
 			    }); 
 				
-				for(var i=0;i<objtrack.length;i++){
+					for(var i=0;i<objtrack.length;i++){
 			var lmpurl=	"../api/enrollments.json?ou=lZtSBQjZCaX&program=SUCUF657zNe&trackedEntityInstance="+objtrack[i]+"";
 				 $.get(lmpurl, function (data1) {
 				 var enrolment=data1;
@@ -202,8 +238,7 @@ Start Date:
 				 });
 				 
 				 }
-				
-               var header="<tr style='border:1px solid black;background-color:#fff2cc;'>  <td> S.no </td> <td> State</td>   <td> Name</td><td>locality</td><td>ANM Name</td><td>House No</td><td>At 12 weeks</td><td>At 28 weeks</td><td>At 36 weeks</td><td>At 38 weeks</td></tr>";
+             var header="<tr style='border:1px solid black;background-color:#fff2cc;'>  <th> S.no </th> <th> State</th>   <th> Name</th><th>locality</th><th>ANM Name</th><th>House No</th><th>At 12 weeks</th><th>At 28 weeks</th><th>At 36 weeks</th><th>At 38 weeks</th></tr>";
 				
 			
 				$(".reporttable").append(header);
@@ -217,38 +252,123 @@ Start Date:
 				for(var i=0;i<trackdata.events.length;i++)
 				{
 				var matchevent=trackdata.events[i].programStage;
-				if(matchevent=="aAmtHNAQo7g" || matchevent=="WMnWjG8PS58") {
+				
+				if(matchevent=="aAmtHNAQo7g" && trackdata.events[i].enrollmentStatus=="ACTIVE") {  //ANC First visist
+				   
 				if(trackdata.events[i].eventDate){
-				 objmatchevent.push(trackdata.events[i].eventDate.substring(0,10));
+				objcheck_hb_gm_1st.push("yes");
+				 	   
+					 reportdate_first.push(trackdata.events[i].eventDate.substring(0, 10));
+					 
+				   
+			  
 				 }
-				 else if(!trackdata.events[i].eventDate){
+			
+				}
+				else if(matchevent=="WMnWjG8PS58" && trackdata.events[i].enrollmentStatus=="ACTIVE") {            // ANC SECOND VISIT
+				if(trackdata.events[i].eventDate){
+				 	   var dataval=trackdata.events[i].dataValues;
+				   for(var q=0;q<dataval.length;q++)
+				   {
+				   var id=dataval[q].dataElement;
+				  objid.push(id);
+				   if(id=="mkYehqhREe3")// Serial Number of ANC
+				   {
+				
+				   var vall=dataval[q].value;
+				   obj_serialanc.push(vall);
+		             var serial_anc=vall;
+					 
+				   }
+				
 				 
-				 objmatchevent.push(trackdata.events[i].dueDate.substring(0,10)+"(Sch-NR)");
+			  }
+			
+			  
+			   if(serial_anc){
+			   if(serial_anc =="2nd Visit"){
+			  report_second.push(trackdata.events[i].eventDate.substring(0, 10));
+			  
+			  }
+			  else  if(serial_anc =="3rd Visit"){
+			  
+			 report_third.push(trackdata.events[i].eventDate.substring(0, 10));
+			  }
+			  else  if(serial_anc =="4th ANC"){
+			  report_fourth.push(trackdata.events[i].eventDate.substring(0, 10));
+			  }
+			  
+			  }
+			  
+			
+			
 				 }
+			
 				}
 		         
 		   }
-		 var length_ovjmatchevent=objmatchevent.length;
-		     var pushresult=4-parseInt(length_ovjmatchevent);
-			 
-			 for(var l=0;l<pushresult;l++)
-			 {
-			 objmatchevent.push("&nbsp&nbsp&nbsp");
-			 }
+	 if(objcheck_hb_gm_1st.length<1){
+			  
+			   reportdate_first.push("&nbsp&nbsp&nbsp");
+	  }
+			
+			  	 var array3 = ancvisitdetail.filter(function(obj) { return obj_serialanc.indexOf(obj) == -1; });
+		          for(var t=0;t<array3.length;t++)
+					{
+					if(array3[t]=="2nd Visit"){
+					 report_second.push("&nbsp&nbsp&nbsp");
+					 }
+					else if(array3[t]=="3rd Visit"){
+					  report_third.push("&nbsp&nbsp&nbsp");
+					 }
+					else if(array3[t]=="4th ANC"){
+					 report_fourth.push("&nbsp&nbsp&nbsp");
+					 }
+				
+				
+					
+					}
+					  
+				 		obj_serialanc=[];
+						objcheck_hb_gm_1st=[];
 		      
 		   
 		   });
-		    var idealstate="<tr style='border:1px solid black;background-color:#ccffcc'>  <td> "+count+"</td> <td style='background-color:#79ff4d'> ideal</td>   <td> "+objname[j]+"</td><td>"+objlocality[j]+"</td><td>"+objanmname[j]+"</td><td>"+objhouse[j]+"</td><td>"+objfinaldate[j][0]+"</td><td>"+objfinaldate[j][1]+"</td><td>"+objfinaldate[j][2]+"</td><td>"+objfinaldate[j][3]+"</td></tr>";
+		    
 				
-		  var res="<tr style='border:1px solid black'>  <td> "+count+"</td> <td style='background-color:#4dc3ff'> Running</td>   <td> "+objname[j]+"</td><td>"+objlocality[j]+"</td><td>"+objanmname[j]+"</td><td>"+objhouse[j]+"</td><td>"+objmatchevent[0]+"</td><td>"+objmatchevent[1]+"</td><td>"+objmatchevent[2]+"</td><td>"+objmatchevent[3]+"</td></tr>";
+		 // var res="<tr style='border:1px solid black'>  <td> "+count+"</td><td> "+objname[j]+"</td><td>"+objlocality[j]+"</td><td>"+objanmname[j]+"</td><td>"+objhouse[j]+"</td><td>"+objMobile[j]+"</td><td>"+objedd[j]+"</td><td>"+obj_hb_gm_first[j]+"</td><td>"+reportdate_first[j]+"</td><td>"+obj_hb_gm_second[j]+"</td><td>"+report_second[j]+"</td><td>"+obj_hb_gm_third[j]+"</td><td>"+report_third[j]+"</td><td>"+obj_hb_gm_fourth[j]+"</td><td>"+report_fourth[j]+"</td></tr>";
+				
+			   
+			//	$(".reporttable").append(res);
+			var idealstate="<tr style='border:1px solid black;background-color:#ccffcc'>  <td> "+count+"</td> <td style='background-color:#79ff4d'> ideal</td>   <td> "+objname[j]+"</td><td>"+objlocality[j]+"</td><td>"+objanmname[j]+"</td><td>"+objhouse[j]+"</td><td>"+objfinaldate[j][0]+"</td><td>"+objfinaldate[j][1]+"</td><td>"+objfinaldate[j][2]+"</td><td>"+objfinaldate[j][3]+"</td></tr>";
+				
+		  var res="<tr style='border:1px solid black'>  <td> "+count+"</td> <td style='background-color:#4dc3ff'> Running</td>   <td> "+objname[j]+"</td><td>"+objlocality[j]+"</td><td>"+objanmname[j]+"</td><td>"+objhouse[j]+"</td><td>"+reportdate_first[j]+"</td><td>"+report_second[j]+"</td><td>"+report_third[j]+"</td><td>"+report_fourth[j]+"</td></tr>";
 				
 			     $(".reporttable").append(idealstate);
 				$(".reporttable").append(res);
-			  objmatchevent=[];
+			 
 		   }
 		    
 		     
 		   }
+		   function myFunction() {
+  var input, filter, table, tr, td, i;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("table1");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[4];
+    if (td) {
+      if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+
 		     $("#btnExport").click(function (e) {
                 var a = document.createElement('a');
                 var data_type = 'data:application/vnd.ms-excel';

@@ -34,14 +34,16 @@ Start Date:
   <input type="date" name="entry" id="start">
   End Date:
   <input type="date" name="exit" id="end">
-   <button type="button" class="btn btn-success" id="getreport" style="font-size:20px;margin-left:100px;" onclick="getreportt()"><i class="fa fa-search"></i>  &nbsp&nbspWork Plan  </button>
+   <button type="button" class="btn btn-success" id="getreport" style="font-size:20px;margin-left:100px;" onclick="getreportt()"><i class="fa fa-search"></i>  &nbsp&nbspImmunization Work Plan  </button>
 <!--<button style="font-size:24px;color:red;margin-left:450px;" onclick="abc()">Daily reminder  <i class="fa fa-clock-o"></i></button>-->
 <a class="btn btn-danger" onclick="location.reload();" style='font-size:20px;color:white;margin-left:60px;'><i class="fa fa-trash-o fa-lg"></i> &nbsp&nbspClear</a>
 
 <br>
 <br>
 <br>
-
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;
+    Download As Excel
+</button>
 <table id="table1" class="reporttable"   style="width:100%">
   
  
@@ -54,19 +56,30 @@ Start Date:
 	     var count=0;
 	    var namee=[];
 		var objresul=[];
+		var obj_locality=[];
 		var objcontraception;
 		var sex=[];
 		var anmname=[];
+		var obj_bcgbirth=[];
+		var obj_DPTPenta1=[];
 		var objtrack=[];
 		var housenumber;
 			var objdate=[];
 		var objhouse=[];
+		var obj_twenty_child=["X0LM2G9QrRq","pY9t6s0BPcx","pqBNLJWicCs","bLJEYJvjbtF","kq5XBCko5id","mtHUBDF91KG"];
 		var objrefer;
 		var objname=[];
 		var objid=[];
+		var basichouse_eighteen_child=["MV4wWoZBrJS","ZQMF7taSAw8","xalnzkNfD77","yDCO4KM4WVA","kelN057pfhq"];
 		var objmatchevent=[];;
 		var objahouseid=[];
 		var objage=[];
+		var obj_DPTPenta2=[];
+		var obj_ANMname=[];
+		var obj_Measles2ndDose=[];
+		var obj_DPTPenta3=[];
+		var obj_Measles1stdose=[];
+		var objid_child=[];
 		var objfinaldate=[];
 		var objtrack1=[];
 		var housedetailss=["xalnzkNfD77","nHR1zCU0maL","Dnm1mq6iq2d","PbEhJPnon0o","kelN057pfhq","zLsKdtlBCIx"];
@@ -103,7 +116,7 @@ Start Date:
 			
 				 
 				 }
-				 else if(attributepath[q].attribute=="xalnzkNfD77")//Name of woman
+				 else if(attributepath[q].attribute=="xalnzkNfD77")//Name of woman   
 				  {
 				var aa=attributepath[q].value;
 				
@@ -112,12 +125,39 @@ Start Date:
 			
 				 
 				 }
+				  else if(attributepath[q].attribute=="MV4wWoZBrJS")//locality
+				  {
+				var aa=attributepath[q].value;
+				
+				//nameofwoman=aa;
+				obj_locality.push(aa);
+			
+				 
+				 }
 				  else if(attributepath[q].attribute=="kelN057pfhq")//date of birth
 				  {
 				var aa=attributepath[q].value;
-				objage.push(aa);
+				
 				objdate.push(aa);
+					//-------------------------------------------------------
 					
+					var selectedDOBObject = new Date(aa);
+ 
+             var currentDateObject = new Date();
+ 
+             var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+             
+             var diffDays = Math.round(Math.abs((currentDateObject.getTime() - selectedDOBObject.getTime()) / (oneDay)));
+ 
+             var diffYear = diffDays/365;
+             
+             var dobage = ( Math.round(diffYear*100))/100;
+			 
+					objage.push(dobage);
+					
+					
+					
+					//--------------------------------------------------
 				function addDays(n,staticdate){
 					var t = new Date(staticdate);
 					t.setDate(t.getDate() + n); 
@@ -140,43 +180,164 @@ Start Date:
 				objfinaldate.push(objdate);
 				  objdate=[];
 				}
+				 else if(attributepath[q].attribute=="yDCO4KM4WVA")//ANM name  
+				  {
+				var aa=attributepath[q].value;
+				
+				//nameofwoman=aa;
+				obj_ANMname.push(aa);
+			
+				 
+				 }
 			 
 				  }
+				  
+				  var array3 = basichouse_eighteen_child.filter(function(obj) { return objattribute.indexOf(obj) == -1; });
+		          for(var t=0;t<array3.length;t++)
+					{
+					//
+					 if(array3[t]=="ZQMF7taSAw8")
+					objhouse.push("&nbsp&nbsp&nbsp");
+					else if(array3[t]=="xalnzkNfD77")
+					objname.push("&nbsp&nbsp&nbsp");
+					else if(array3[t]=="yDCO4KM4WVA")
+					obj_ANMname.push("&nbsp&nbsp&nbsp");
+					
+					else if(array3[t]=="kelN057pfhq")
+					objage.push("&nbsp&nbsp&nbsp");
+					else if(array3[t]=="MV4wWoZBrJS")
+					obj_locality.push("&nbsp&nbsp&nbsp");
+				  
+					
+					}
+					
+				 		objattribute=[];
+				  
+				  
+				  
 			   }
 			    }); 
 				
 				
 				
-var header="<tr style='border:1px solid black;background-color:#fff2cc;'>  <td> S.no </td> <td> State</td>   <td> Name</td><td> Age</td><td>House No</td><td>At Birth</td><td>At 6 weeks</td><td>At 10 week</td><td>At 14 weeks</td><td>At 9 months</td><td>At 16-24 months</td></tr>";
+var header="<tr style='border:1px solid black;background-color:#fff2cc;'>  <td> S.no </td> <td> State</td>   <td> Name</td><td> Age</td><td>ANM Name</td><td>Locality</td><td>House No</td><td>At Birth(BCG)</td><td>At 6 weeks(PENT 1)</td><td>At 10 week(PENT 2)</td><td>At 14 weeks(PENT 3)</td><td>At 9 months(MR 1)</td><td>At 16-24 months(Booster/MR 2)</td></tr>";
 				
 			
 				$(".reporttable").append(header);
 		     for(var j=0;j<objtrack.length;j++){
 			 count++;
-		 $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=JdZ3gv6cx54&trackedEntityInstance="+objtrack[j]+"&order=eventDate:asc", function (data) {
+		 $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=JdZ3gv6cx54&trackedEntityInstance="+objtrack[j]+"&order=dueDate:asc", function (data) {
 	
 			var trackdata=data;
                 console.log(trackdata);
 				 
 				for(var i=0;i<trackdata.events.length;i++)
 				{
-				 objmatchevent.push(trackdata.events[i].eventDate.substring(0,10));
+				var matchevent=trackdata.events[i].programStage;
+			
+				 if(matchevent=="Z0NnCljuPxL" && trackdata.events[i].enrollmentStatus=="ACTIVE"){            // Child Health Immunization
+				if(trackdata.events[i].eventDate){
+				//code for date mapping is here..
 				
+				// var event_date=trackdata.events[i].eventDate;
+
+				 	   var dataval=trackdata.events[i].dataValues;
+				   for(var q=0;q<dataval.length;q++)
+				   {
+				   var id=dataval[q].dataElement;
+				  objid_child.push(id);
+				   if(id=="X0LM2G9QrRq")// BCG(Birth Dose)
+				   {
+				
+				   var vall=dataval[q].value;
+				 if(vall=="true")
+				   obj_bcgbirth.push(trackdata.events[i].eventDate.substring(0,10));
+				   }
+				   else if(id=="pY9t6s0BPcx")//DPT/Penta 1  
+				   {
+				
+				    var vall=dataval[q].value;
+				   if(vall=="true")
+				   obj_DPTPenta1.push(trackdata.events[i].eventDate.substring(0,10));
+				   }
+				    else if(id=="pqBNLJWicCs")//DPT/Penta 2
+				   {
+				
+				   var vall=dataval[q].value;
+				 if(vall=="true")
+				   obj_DPTPenta2.push(trackdata.events[i].eventDate.substring(0,10));
+				   }
+				    else if(id=="bLJEYJvjbtF")//DPT/Penta 3
+				   {
+				
+				   var vall=dataval[q].value;
+				 if(vall=="true")
+				   obj_DPTPenta3.push(trackdata.events[i].eventDate.substring(0,10));
+				   }
+				    else if(id=="kq5XBCko5id")//Measles (1st dose)
+				   {
+				
+				   var vall=dataval[q].value;
+				 if(vall=="true")
+				   obj_Measles1stdose.push(trackdata.events[i].eventDate.substring(0,10));
+				   }
+				    else if(id=="mtHUBDF91KG")//Measles 2nd Dose
+				   {
+				
+				    var vall=dataval[q].value;
+				 if(vall=="true")
+				   obj_Measles2ndDose.push(trackdata.events[i].eventDate.substring(0,10));
+				   }
+				    
+				   
+				  
+			  }
+			
+				 }
+			
+				}
 		         
 		   }
-		 var length_ovjmatchevent=objmatchevent.length;
-		     var pushresult=6-parseInt(length_ovjmatchevent);
-			 
-			 for(var l=0;l<pushresult;l++)
-			 {
-			 objmatchevent.push("&nbsp&nbsp&nbsp");
-			 }
-		      
 		   
+			 
 		   });
-		    var idealstate="<tr style='border:1px solid black;background-color:#ccffcc'>  <td> "+count+"</td> <td style='background-color:#79ff4d'> ideal</td>   <td> "+objname[j]+"</td><td>"+objage[j]+"</td><td>"+objhouse[j]+"</td><td>"+objfinaldate[j][0]+"</td><td>"+objfinaldate[j][1]+"</td><td>"+objfinaldate[j][2]+"</td><td>"+objfinaldate[j][3]+"</td><td>"+objfinaldate[j][4]+"</td><td>"+objfinaldate[j][5]+"</td></tr>";
+		var array3 = obj_twenty_child.filter(function(obj) { return objid_child.indexOf(obj) == -1; });
+		          for(var t=0;t<array3.length;t++)
+					{
+					//
+					if(array3[t]=="X0LM2G9QrRq"){
+				     obj_bcgbirth.push("&nbsp&nbsp&nbsp");
+					 
+					 }
+					else if(array3[t]=="pY9t6s0BPcx"){
+					 obj_DPTPenta1.push("&nbsp&nbsp&nbsp");
+					  
+					 }
+					else if(array3[t]=="pqBNLJWicCs"){
+					 obj_DPTPenta2.push("&nbsp&nbsp&nbsp");
+					 
+					 }
+					 else if(array3[t]=="bLJEYJvjbtF"){
+					 obj_DPTPenta3.push("&nbsp&nbsp&nbsp");
+					
+					 }
+					 else if(array3[t]=="kq5XBCko5id"){
+					 obj_Measles1stdose.push("&nbsp&nbsp&nbsp");
+					 
+					 }
+					 else if(array3[t]=="mtHUBDF91KG"){
+					 obj_Measles2ndDose.push("&nbsp&nbsp&nbsp");
+					 
+					 }
+					 
+					
+					}
+					  
+				 		objid_child=[];
+		
+		    var idealstate="<tr style='border:1px solid black;background-color:#ccffcc'>  <td> "+count+"</td> <td style='background-color:#79ff4d'> ideal</td>   <td> "+objname[j]+"</td><td>"+objage[j]+"</td><td>"+obj_ANMname[j]+"</td><td>"+obj_locality[j]+"</td><td>"+objhouse[j]+"</td><td>"+objfinaldate[j][0]+"</td><td>"+objfinaldate[j][1]+"</td><td>"+objfinaldate[j][2]+"</td><td>"+objfinaldate[j][3]+"</td><td>"+objfinaldate[j][4]+"</td><td>"+objfinaldate[j][5]+"</td></tr>";
 				
-		  var res="<tr style='border:1px solid black'>  <td> "+count+"</td> <td style='background-color:#4dc3ff'> Running</td>   <td> "+objname[j]+"</td><td>"+objage[j]+"</td><td>"+objhouse[j]+"</td><td>"+objmatchevent[0]+"</td><td>"+objmatchevent[1]+"</td><td>"+objmatchevent[2]+"</td><td>"+objmatchevent[3]+"</td><td>"+objmatchevent[4]+"</td><td>"+objmatchevent[5]+"</td></tr>";
+		  var res="<tr style='border:1px solid black'>  <td> "+count+"</td> <td style='background-color:#4dc3ff'> Running</td>   <td> "+objname[j]+"</td><td>"+objage[j]+"</td><td>"+obj_ANMname[j]+"</td><td>"+obj_locality[j]+"</td><td>"+objhouse[j]+"</td><td>"+obj_bcgbirth[j]+"</td><td>"+obj_DPTPenta1[j]+"</td><td>"+obj_DPTPenta2[j]+"</td><td>"+obj_DPTPenta3[j]+"</td><td>"+obj_Measles1stdose[j]+"</td><td>"+obj_Measles2ndDose[j]+"</td></tr>";
 				
 			     $(".reporttable").append(idealstate);
 				$(".reporttable").append(res);
@@ -185,6 +346,17 @@ var header="<tr style='border:1px solid black;background-color:#fff2cc;'>  <td> 
 		    
 		     
 		   }
+		   
+		   $("#btnExport").click(function (e) {
+                var a = document.createElement('a');
+                var data_type = 'data:application/vnd.ms-excel';
+                var table_div = document.getElementById('table1');
+                var table_html = table_div.outerHTML.replace(/ /g, '%20');
+                a.href = data_type + ', ' + table_html;
+                a.download = 'childhealth.xls';
+                a.click();
+                e.preventDefault();
+            });
    </script>
   
 

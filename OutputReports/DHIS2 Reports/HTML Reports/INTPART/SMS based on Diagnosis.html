@@ -49,7 +49,16 @@ Start Date:
    <button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;'  onclick="dm('oral_ca');">Oral CA</button>  
    <button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;'  onclick="dm('cervical_ca');">Cervical CA</button>
     <button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;'  onclick="dm('breast_ca');">Breast CA</button>
-</br>
+	<button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;'  onclick="childhealthdata();">Penta 3</button>
+
+<button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;'  onclick="dm('tobacooi');">Child</button>
+
+<button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;'  onclick="tbprogramdata();">TB</button>
+
+<button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;margin-top:10px'  onclick="anemic_not_delivered();">Anemia</button>
+
+<button type="button"  id="myBtn" class="btn btn-info"  style='margin-left:25px;'  onclick="ANC_1st_Visit();">ANC 1st</button>
+	</br>
 </br>
 <textarea id="test" rows="6" placeholder='Type the Sms content' cols="55">
 
@@ -78,6 +87,17 @@ Start Date:
 	
    <script type="text/javascript" async>
    var smscontent;
+   var objatt=[];
+    var namee=[];
+	var familyuniqueid=[];
+	var mobile=[];
+	var sex=[];
+	var objtrackinstance=[];
+	var housedetailss=["xalnzkNfD77","nHR1zCU0maL","Dnm1mq6iq2d","PbEhJPnon0o","kelN057pfhq","zLsKdtlBCIx","Lt9ZrfgAMuw"];
+	var objdiagnosis=[];
+	var single_tei=[];
+	var single_tei_anc=[];
+	 
    //var  mobileee=["8968999927","NA","9650597410","NA"];
      	 $.ajaxSetup({
         async: false
@@ -89,24 +109,25 @@ Start Date:
 	   var Table = document.getElementById("table1");
         Table.innerHTML = "";
 	     var count=1;
-	    var namee=[];
+	   
 		var objid=[];
-		var mobile=[];
+		
 		var adharnumber=[];
-		var familyuniqueid=[];
-		var objtrackinstance=[];
+		
+		
 		var housenumber;
 		var objhouse=[];
 		var objcheck=[];
-		var sex=[];
+		
 		var objtrack1=[];
-		var objdiagnosis=[];
-		var housedetailss=["xalnzkNfD77","nHR1zCU0maL","Dnm1mq6iq2d","PbEhJPnon0o","kelN057pfhq","zLsKdtlBCIx","Lt9ZrfgAMuw"];
+		
+		
 		var objatt=[];
 		var objattribute=[];
 		var basichouse=["ZQMF7taSAw8","p6cLzDqCy0c","Q3FM5tnqXwm","caLxHmzEsxO","gfdru4cqZS0","LQi7veXJQ5D","gu2sb8mD9sR"];
-		 var startdatee=document.getElementById('start').value;
+		var startdatee=document.getElementById('start').value;
 				var enddatee=document.getElementById('end').value;
+				
 		   	 $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=jC8Gprj4pWV&startDate="+startdatee+"&endDate="+enddatee+"&skipPaging=true", function (data22) {
 	
 			var eventdata=data22;
@@ -114,9 +135,12 @@ Start Date:
 				for(var j=0;j<eventdata.events.length;j++)
 				{
 				
+				var matchevent=eventdata.events[j].programStage;
 				
+				if(matchevent=="YKX7e90j2DF"){
+				if(eventdata.events[j].eventDate){
 				   var dataval=eventdata.events[j].dataValues;
-				   var trackinstanceid=eventdata.events[j].trackedEntityInstance
+				   var trackinstanceid=eventdata.events[j].trackedEntityInstance;
 				   for(var q=0;q<dataval.length;q++)
 				   {
 				   var id=dataval[q].dataElement;
@@ -187,6 +211,26 @@ Start Date:
 				objdiagnosis.push("CVD1");
 				}
 				   }
+				    else if(id=="Ssnvxn9jJwd"){   // tobacoo
+				   if(show_case=="tobacooi"){
+				   var vall=dataval[q].value;
+				   if(vall=="true"){
+				   objcheck.push(id);
+				    
+				objdiagnosis.push("tobacoo");
+				}
+				}
+				   }
+				    else if(id=="kN3pAy7tNSh"){   // tobacoo
+				   if(show_case=="tobacooi"){
+				   var vall=dataval[q].value;
+				   if(vall=="true"){
+				   objcheck.push(id);
+				    
+				objdiagnosis.push("tobacoo");
+				}
+				}
+				   }
 				   else if(id=="bv7PMXbyOZD"){  
 				    if(show_case=="ca-other"){
 				   objcheck.push(id);
@@ -200,6 +244,8 @@ Start Date:
 				   objcheck=[];
 				   }
 				   }
+				   }
+				   }
 				   
 				 console.log(objtrackinstance.length);
 				 console.log("in loop"+count);
@@ -208,7 +254,6 @@ Start Date:
 	
 		
 		
-		// getting family memeber according to diagnosis
 		var smsbutton="<tr class='emptyRow' style='height:20px'><td></td><td></td><td></td><td></td><td></td><td><input type='button' id='btn' value='Send Sms'/></td></tr>";
 		        
                var aadress="<tr style='border:1px solid black;background-color:orange;height:30px'><td>S.No</td><td> Name</td><td>Faimily_id</td><td>Sex</td><td>Mobile Number</td><td>Diagnosis</td></tr>";
@@ -218,7 +263,375 @@ Start Date:
 				 document.getElementById("btn").addEventListener("click", function() {
     sendsmss(mobile);
 }, false);
-
+            get_tei_value(objtrackinstance);
+			
+			}
+			
+			
+			
+			//function for child health 
+			function childhealthdata(){
+		// child health api.....
+		var startdatee=document.getElementById('start').value;
+				var enddatee=document.getElementById('end').value;
+				
+			  $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=JdZ3gv6cx54&startDate="+startdatee+"&endDate="+enddatee+"&skipPaging=true", function (data) {
+                 var trackdata=data;
+                console.log(trackdata);
+                for(var i=0;i<trackdata.events.length;i++)
+				{		
+		        var eventdata=trackdata.events[i].dataValues; 
+                var trackinstanceid=trackdata.events[i].trackedEntityInstance;			
+				for(var q=0;q<eventdata.length;q++)
+				   {
+				   var id=eventdata[q].dataElement;
+				   
+					
+					
+					    if(id=="bLJEYJvjbtF")// DPT/Penta 3   
+				   {
+				   
+				   
+				   var vall=eventdata[q].value;
+				   if(vall=="true"){
+				  objtrackinstance.push(trackinstanceid);
+				  objdiagnosis.push("Penta 3");
+				  }
+				  
+                       }
+					
+					
+					   }
+		             
+					  }
+					  });
+					 	var smsbutton="<tr class='emptyRow' style='height:20px'><td></td><td></td><td></td><td></td><td></td><td><input type='button' id='btn' value='Send Sms'/></td></tr>";
+		        
+               var aadress="<tr style='border:1px solid black;background-color:orange;height:30px'><td>S.No</td><td> Name</td><td>Faimily_id</td><td>Sex</td><td>Mobile Number</td><td>Diagnosis</td></tr>";
+		        
+				  $(".report").append(smsbutton);
+				 $(".report").append(aadress);
+				 document.getElementById("btn").addEventListener("click", function() {
+    sendsmss(mobile);
+}, false);
+            get_tei_value(objtrackinstance); 
+					  
+		
+		
+		}
+			
+			//function for tb program 
+			function tbprogramdata(){
+		// child health api.....
+		var startdatee=document.getElementById('start').value;
+				var enddatee=document.getElementById('end').value;
+				
+			  $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=qAeWjN7Iqi7&startDate="+startdatee+"&endDate="+enddatee+"&skipPaging=true", function (data) {
+                 var trackdata=data;
+                console.log(trackdata);
+                for(var i=0;i<trackdata.events.length;i++)
+				{		
+				var matchevent=trackdata.events[i].programStage;
+				
+				if(matchevent=="hi4UhKtesxm"){
+				if(trackdata.events[i].eventDate){
+                var trackinstanceid=trackdata.events[i].trackedEntityInstance;	
+               var eventdata=trackdata.events[i].dataValues; 				
+				for(var q=0;q<eventdata.length;q++)
+				   {
+				   var id=eventdata[q].dataElement;
+				   
+					
+					
+					    if(id=="v9pO1CPPwES")//Pretreatment sputum examination 
+				   {
+				   
+				   
+				   var vall=eventdata[q].value;
+				   var tbvalue=vall;
+				 
+				  
+                       }
+					
+					
+					   }
+					     if(tbvalue!=="true"){
+				  objtrackinstance.push(trackinstanceid);
+				  objdiagnosis.push("Tb");
+				  }
+				  tbvalue="";
+					   }
+		             }
+					  }
+					  });
+					 	var smsbutton="<tr class='emptyRow' style='height:20px'><td></td><td></td><td></td><td></td><td></td><td><input type='button' id='btn' value='Send Sms'/></td></tr>";
+		        
+               var aadress="<tr style='border:1px solid black;background-color:orange;height:30px'><td>S.No</td><td> Name</td><td>Faimily_id</td><td>Sex</td><td>Mobile Number</td><td>Diagnosis</td></tr>";
+		        
+				  $(".report").append(smsbutton);
+				 $(".report").append(aadress);
+				 document.getElementById("btn").addEventListener("click", function() {
+    sendsmss(mobile);
+}, false);
+            get_tei_value(objtrackinstance); 
+					  
+		
+		
+		}
+			
+			
+			
+			
+			function anemic_not_delivered(){
+				var startdatee=document.getElementById('start').value;
+				var enddatee=document.getElementById('end').value;
+			
+			$.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=SUCUF657zNe&startDate="+startdatee+"&endDate="+enddatee+"&skipPaging=true", function (data) {
+	
+			var trackdata=data;
+                console.log(trackdata);
+				 
+				for(var i=0;i<trackdata.events.length;i++)
+				{
+				var matchevent=trackdata.events[i].programStage;
+				
+				if(matchevent=="aAmtHNAQo7g" && trackdata.events[i].enrollmentStatus=="ACTIVE") {  //ANC First visist
+				   
+				if(trackdata.events[i].eventDate){
+				 var trackinstanceid=trackdata.events[i].trackedEntityInstance;	
+				
+				 	   var dataval=trackdata.events[i].dataValues;
+				   for(var q=0;q<dataval.length;q++)
+				   {
+				   var id=dataval[q].dataElement;
+				  
+				  
+				  if(id=="yka2bblmdbM")// HB(gm)
+				   {
+				
+				   var vall=dataval[q].value;
+				   var hbgm_first=vall;
+				   if(hbgm_first<11){
+				   objtrackinstance.push(trackinstanceid);
+				   }
+		             
+					 
+					 
+				   }
+			  }
+			 
+				 }
+			
+				}
+				else if(matchevent=="WMnWjG8PS58" && trackdata.events[i].enrollmentStatus=="ACTIVE") {            // ANC SECOND VISIT
+				if(trackdata.events[i].eventDate){
+				var trackinstanceid=trackdata.events[i].trackedEntityInstance;	
+				 	   var dataval=trackdata.events[i].dataValues;
+				   for(var q=0;q<dataval.length;q++)
+				   {
+				   var id=dataval[q].dataElement;
+				 
+				    if(id=="XI9R4MyF4cP")// hb value 2nd visit
+				   {
+				
+				   var vall=dataval[q].value;
+		            if(vall<11){
+				   objtrackinstance.push(trackinstanceid);
+				   }
+				   }
+				   else if(id=="RMGf5pzvlGN")// hb value 3rd visit
+				   {
+				
+				   var vall=dataval[q].value;
+		            if(vall<11){
+				   objtrackinstance.push(trackinstanceid);
+				   }
+				   }
+				   else if(id=="HkOHsdUuQSl")// hb value 4th visit
+				   {
+				
+				   var vall=dataval[q].value;
+		            if(vall<11){
+				   objtrackinstance.push(trackinstanceid);
+				   }
+				   }
+				   
+			  }
+			
+				 }
+			
+				}
+		         
+		   }
+	
+			var smsbutton="<tr class='emptyRow' style='height:20px'><td></td><td></td><td></td><td></td><td></td><td><input type='button' id='btn' value='Send Sms'/></td></tr>";
+		        
+               var aadress="<tr style='border:1px solid black;background-color:orange;height:30px'><td>S.No</td><td> Name</td><td>Faimily_id</td><td>Sex</td><td>Mobile Number</td><td>Diagnosis</td></tr>";
+		        
+				  $(".report").append(smsbutton);
+				 $(".report").append(aadress);
+				 document.getElementById("btn").addEventListener("click", function() {
+    sendsmss(mobile);
+}, false);
+            filter_delivery(objtrackinstance); 
+			  	 
+		      
+		   
+		   });
+			
+			
+			
+			
+			}
+			
+			
+			function filter_delivery(objtrackinstance){		
+			//remove duplicates
+			var filter_teiobj=objtrackinstance;
+			 for(var i = 0;i < filter_teiobj.length; i++){
+        if(single_tei.indexOf(filter_teiobj[i]) == -1){
+            single_tei.push(filter_teiobj[i])
+        }
+    }
+	
+	objtrackinstance=[];
+	//api for checking where tei has delivery stage filled ...
+	        for(var p=0;p<single_tei.length;p++){
+	$.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=SUCUF657zNe&trackedEntityInstance="+single_tei[p]+"&&order=eventDate:asc&skipPaging=true", function (data) {
+	
+			var trackdata=data;
+                //console.log(trackdata);
+				 
+				for(var i=0;i<trackdata.events.length;i++)
+				{
+				var matchevent=trackdata.events[i].programStage;
+				
+				if(matchevent=="u0c2uIZBvks" && trackdata.events[i].enrollmentStatus=="ACTIVE") {  //ANC First visist
+			   var check_event_status=trackdata.events[i].status;
+			      if(check_event_status=="SCHEDULE"){
+				  var trackinstanceid=trackdata.events[i].trackedEntityInstance;
+				  objtrackinstance.push(trackinstanceid);
+				  objdiagnosis.push("Anemia");
+				  }
+			
+				}
+				
+		         
+		   }
+	
+		
+           
+			  	 
+		      
+		   
+		   });
+		   }
+	            
+			 get_tei_value(objtrackinstance); 
+			
+			}
+			
+			
+			function ANC_1st_Visit(){
+				var startdatee=document.getElementById('start').value;
+				var enddatee=document.getElementById('end').value;
+			
+			$.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=SUCUF657zNe&startDate="+startdatee+"&endDate="+enddatee+"&skipPaging=true", function (data) {
+	
+			var trackdata=data;
+                console.log(trackdata);
+				 
+				for(var i=0;i<trackdata.events.length;i++)
+				{
+				var matchevent=trackdata.events[i].programStage;
+				
+				if(matchevent=="aAmtHNAQo7g" && trackdata.events[i].enrollmentStatus=="ACTIVE") {  //ANC First visist
+				   
+				if(trackdata.events[i].eventDate){
+				 var trackinstanceid=trackdata.events[i].trackedEntityInstance;	
+				
+				 	
+				   objtrackinstance.push(trackinstanceid);
+				 
+			 
+				 }
+			
+				}
+				
+		         
+		   }
+	
+			var smsbutton="<tr class='emptyRow' style='height:20px'><td></td><td></td><td></td><td></td><td></td><td><input type='button' id='btn' value='Send Sms'/></td></tr>";
+		        
+               var aadress="<tr style='border:1px solid black;background-color:orange;height:30px'><td>S.No</td><td> Name</td><td>Faimily_id</td><td>Sex</td><td>Mobile Number</td><td>Diagnosis</td></tr>";
+		        
+				  $(".report").append(smsbutton);
+				 $(".report").append(aadress);
+				 document.getElementById("btn").addEventListener("click", function() {
+    sendsmss(mobile);
+}, false);
+            filter_anc_second(objtrackinstance); 
+			  	 
+		      
+		   
+		   });
+			
+			
+			
+			
+			}
+			
+				
+			function filter_anc_second(objtrackinstance){		
+			//remove duplicates
+			var filter_teiobj=objtrackinstance;
+			 for(var i = 0;i < filter_teiobj.length; i++){
+        if(single_tei_anc.indexOf(filter_teiobj[i]) == -1){
+            single_tei_anc.push(filter_teiobj[i])
+        }
+    }
+	
+	objtrackinstance=[];
+	//api for checking where tei has delivery stage filled ...
+	        for(var p=0;p<single_tei_anc.length;p++){
+	$.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=SUCUF657zNe&trackedEntityInstance="+single_tei_anc[p]+"&&order=eventDate:asc&skipPaging=true", function (data) {
+	
+			var trackdata=data;
+                //console.log(trackdata);
+				 
+				for(var i=0;i<trackdata.events.length;i++)
+				{
+				var matchevent=trackdata.events[i].programStage;
+				
+				if(matchevent=="WMnWjG8PS58" && trackdata.events[i].enrollmentStatus=="ACTIVE") {  //ANC First visist
+			   var check_event_status=trackdata.events[i].status;
+			      if(check_event_status=="SCHEDULE"){
+				  var trackinstanceid=trackdata.events[i].trackedEntityInstance;
+				  objtrackinstance.push(trackinstanceid);
+				  objdiagnosis.push("ANC");
+				  }
+			
+				}
+				
+		         
+		   }
+	
+		
+           
+			  	 
+		      
+		   
+		   });
+		   }
+	            
+			 get_tei_value(objtrackinstance); 
+			
+			}
+			
+			
+			
+			
+			 function get_tei_value(objtrackinstance){
 		  for(x=0;x<objtrackinstance.length;x++)
 		  {
 	   var url1=  "../api/trackedEntityInstances/"+objtrackinstance[x]+".json?";
@@ -290,10 +703,8 @@ Start Date:
 				  }
 				
 	
-				
+				}
 			
-			}
-			 
 	function sendsmss(mobile){
 
 	 smscontent= document.getElementById('test').value;
