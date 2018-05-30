@@ -17,7 +17,14 @@
 			<td style=" font-size: 18px;font-style:strong; background-color:#FFFFCC">COUNTRY:</td>
 			<td colspan="3" id="sel_country">&nbsp;</td>
 			<td colspan="2" style=" font-size: 18px;font-style:strong;background-color:#FFFFCC">REQUEST YEAR:</td>
-			<td align="left" id="periodID">&nbsp;</td>
+			<td align="left">
+				<select id="mySelect" onclick="myFunction()">
+					<option>Please Select</option>
+					<option id="periodID"></option>
+					<option id="periodID2"></option>
+				</select>&nbsp;
+				<span id="periodID3"></span>
+			</td>
 		</tr>
 		<tr style="font-weight:400;">
 			<td colspan="7">Information on import requirements</td>
@@ -261,7 +268,10 @@
 		</tr>
 		<tr>
 			<td colspan="7">
-				<button onclick="submitform()">Get Report</button>
+				<button class="instructions" onclick="downloadBlankExcel()" style="margin-right:10px ">
+					<span data-translate="button1">Download Blank Excel Form</span>
+				</button>
+				<button onclick="submitform()" id="getReport">Print Form</button>
 			</td>
 		</tr>
 	</tbody>
@@ -272,12 +282,24 @@
 </a> -->
 <script type="text/javascript">
 
+	setInterval(function () {
+		checkout();
+	}, 1000);
+
+	function downloadBlankExcel() {
+		window.location.href = "../api/documents/S9N4nAbqRsc/data";
+	}
+
+	$('#validationButton').hide();
+	$('#printButton').hide();
+	$('input[value="Print blank form"]').hide();
+
 	var nextISOPeriod = "";
 	var year = $('#selectedPeriodId').val().substring(0, 4).trim();
 	var yy = parseInt(year);
 	console.log(yy);
 	var requestyear = yy + 2;
-	var supyear = requestyear + 1;
+	var supyear = yy + 1;
 	console.log("year = " + year);
 	console.log("requestyear = " + requestyear);
 	var ou = dhis2.de.getCurrentOrganisationUnit();
@@ -286,13 +308,41 @@
 	console.log("ou" + ou);
 
 
-
+	document.getElementById('periodID2').innerHTML = supyear;
 	document.getElementById('periodID').innerHTML = requestyear;
 
 	function submitform() {
-		window.location.href = "../dhis-web-reporting/generateHtmlReport.action?uid=cZgo4yAM4CT&pe="+ year +"&ou="+ ou;
+		window.location.href = "../dhis-web-reporting/generateHtmlReport.action?uid=cZgo4yAM4CT&pe=" + year + "&ou=" + ou;
 	}
-//document.getElementById('selectedyear').innerHTML = year;
-//document.getElementById('reqyear').innerHTML = requestyear;
-//document.getElementById('supplyyear').innerHTML = supyear;
+
+	function checkout() {
+		if ((document.getElementById('completeButton').disabled) && (document.getElementById('undoButton').disabled == false) && (document.getElementById('selectedDataSetId').value == "HEldDUlDSFX")) {
+			$("input[type=radio]").attr('disabled', true);
+			$("input[type=text]").attr('disabled', true);
+			$("textarea").prop('disabled', true);
+		}
+		else {
+			$("input[type=radio]").attr('disabled', false);
+			$("input[type=text]").attr('disabled', false);
+			$("textarea").prop('disabled', false);
+		}
+		if ((document.getElementById('undoButton').disabled) && (document.getElementById('selectedDataSetId').value == "HEldDUlDSFX")) {
+			$('#getReport').attr('disabled', 'disabled');
+		}
+		else {
+			$('#getReport').removeAttr('disabled');
+		}
+	}
+
+	function myFunction() {
+
+		var periodInYear = document.getElementById("mySelect").value;
+		document.getElementById('periodID3').innerHTML = periodInYear;
+		console.log("=====" + periodInYear);
+
+	} (1000);
+	function downloadBlankExcel() {
+		var url1 = "../api/me/profile.json";
+		window.location.href = "../api/documents/pPAMRrczdnw/data";
+	}
 </script>
