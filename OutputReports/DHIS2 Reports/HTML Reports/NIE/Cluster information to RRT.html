@@ -1,90 +1,68 @@
 <html>
 <head>
     <title>Clusters</title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script type="text/javascript">
+   <script type="text/javascript" src="../dhis-web-commons/bootstrap/js/bootstrap.min.js"></script>
+    <link type="text/css" rel="stylesheet"  href="../dhis-web-commons/bootstrap/css/bootstrap.min.css">
 
+    <link rel="stylesheet" href="../dhis-web-commons/javascripts/jQuery/ui/css/redmond/jquery-ui.css">
+    <script type="text/javascript" src="../dhis-web-commons/javascripts/jQuery/ui/jquery-ui.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
 
-
-        var startDate,endDate,clusterId,clusterType;
-	var base = location.host + "/"+location.pathname.split("/")[1];
-
-        $(document).ready(function(){
-            var startDat = document.getElementById("start").value;
-           var  endDat = document.getElementById("end").value;
-            if(startDat !="" && endDat!=""){
-                submit();
-            }
-
-
-        });
-        var submit =  function(){
-
-            startDate = document.getElementById("start").value;
-            endDate = document.getElementById("end").value;
-
-            $('.reporttable tbody').remove();
-            $('.reporttable tbody').detach();
-            var index=1;
-            $.getJSON("../api/trackedEntityInstances.json?program=mcnt7nqNrNw&ouMode=ALL&fields=*&programStartDate="+ startDate +"&programEndDate="+ endDate+"&skipPaging=true",function(data){
-                for(var i=0;i<data.trackedEntityInstances.length;i++) {
-                    var tei= data.trackedEntityInstances[i].trackedEntityInstance;
-                    if(data.trackedEntityInstances[i].attributes.length!=0) {
-
-                        for (var j = 0; j < data.trackedEntityInstances[i].attributes.length; j++) {
-                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster ID"){
-                                clusterId = data.trackedEntityInstances[i].attributes[j].value;
-                            }
-                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster Type"){
-                                clusterType = data.trackedEntityInstances[i].attributes[j].value;
-                            }
-                            var reportRow = $("<tbody><tr><td class='rowdata'>" + index + "</td><td class='rowdata'>"+clusterId+"</td><td class='rowdata'>"+clusterType+"</td><td class='rowdata' ><a href='http://"+base+"/dhis-web-reporting/generateHtmlReport.action?uid=DnjzL5wPJE5&tei="+tei+"' target='_self'>Click here to view report</a></td><td class='rowdata'><a href='http://139.162.61.147:8000/sendClusterInformationReport?ou=Hy4VgekLJWM&tei="+tei+"'&name=Cluster_report.pdf' target='_self'>Click here to send Mail</a></td></tr>");
-                        }
-                    }
-                    else{
-                        clusterId="";
-                        clusterType="";
-                        var reportRow = $("<tr><td class='rowdata'>" + index + "</td><td class='rowdata'>"+clusterId+"</td><td class='rowdata'>"+clusterType+"</td><td class='rowdata'><a href='http://"+base+"/dhis-web-reporting/generateHtmlReport.action?uid=DnjzL5wPJE5tei="+tei+"' target='_self'>Click here to view report</a></td></tr>");
-                    }
-                    $('.reporttable').append(reportRow);
-                    index++;
-                }
-            });
-        };
-    </script>
-    <style>
-        .reporttable{
-            border-collapse: collapse;
-            border:1px solid black;
-            width:600px;
+<style>
+    .datedivmng{
+            float: left;position: relative;
         }
-        .tablerows{
-            text-align: center;
-            font-size:15px;
-            background-color: #81969B;
-            border:1px solid black;
-            height:30px;
-            width:150px;
+        .datedivmng .datepicker{
+            position: relative;width: 87%!important;
+            cursor: pointer;
         }
-        .rowdata{
-            border:1px solid black;
+        .datedivmng:after {
+            /* symbol for "opening" panels */
+            font-family: 'FontAwesome';
+            content: "\f073";
+            color: #329ac4;
+            font-size: 16px;
+            text-shadow: none;
+            position: absolute;
+            vertical-align: middle;
+            pointer-events: none;
+            float: right;
+            top: 2px;
+            right: 7px;
         }
-        a{
-            cursor:pointer;
-        }
+</style>
+<style>
+    .reporttable{
+        border-collapse: collapse;
+        border:1px solid black;
+        width:600px;
+    }
+    .tablerows{
+        text-align: center;
+        font-size:15px;
+        background-color: #81969B;
+        border:1px solid black;
+        height:30px;
+        width:150px;
+    }
+    .rowdata{
+        border:1px solid black;
+    }
+    a{
+        cursor:pointer;
+    }
 
-    </style>
-</head>
+</style>
 <body>
 
 <div id="printing">
-    Start Date : <input type="date" id ="start" required><br><br>
-    End Date :  <input type="date" id ="end" required><br><br>
+<div style="margin-left: 30%"><div class="datedivmng"><b>Start Date : </b>
+ <input type="text" id="start" name="start" value="" placeholder="dd-mm-yyyy"/></div> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+ <div class="datedivmng"><b>End Date :</b><input type="text" id="end" name="end" value="" placeholder="dd-mm-yyyy"/></div> &nbsp;
+    <button onClick="submit()" id="tap">Submit</button></div><br><br>
 
-    <button onClick="submit()" id="tap">Submit</button><br><br>
-
-    <table class="reporttable" style='border:1px solid black;border-collapse: collapse; text-align:center;'>
+    <table class="reporttable table table-hover table-bordered" style='width:100%;border:1px solid black;border-collapse: collapse; text-align:center;'>
         <thead>
         <tr>
             <td class="tablerows">S.No.</td>
@@ -94,7 +72,111 @@
             <td class="tablerows">Send Email</td>
         </tr>
         </thead>
-		
+
     </table>
+</div>
 </body>
+</head>
+    <script>
+        $("#start").datepicker({
+        dateFormat: 'dd-mm-yy',
+        changeMonth: true
+       });
+       $("#end").datepicker({
+        dateFormat: 'dd-mm-yy',
+        changeMonth: true
+        });
+    </script>
+    <script type="text/javascript">
+
+
+
+        var startDate,endDate,clusterId,clusterType,clustertei,clusterorg,clustermethod,sd,ed;
+	var base = location.host + "/"+location.pathname.split("/")[1];
+
+        $(document).ready(function(){
+            var startDat = document.getElementById("start").value;
+			startDat = startDat.split("-").reverse().join("-");
+           var  endDat = document.getElementById("end").value;
+		   endDat = endDat.split("-").reverse().join("-");
+            if(startDat !="" && endDat!=""){
+                submit();
+            }
+
+
+        });
+        var submit =  function(){
+            startDate = document.getElementById("start").value;
+			 startDate = startDate.split("-").reverse().join("-");
+            endDate = document.getElementById("end").value;
+			endDate = endDate.split("-").reverse().join("-");
+            $('.reporttable tbody').remove();
+            $('.reporttable tbody').detach();
+            var index=1;
+            $.getJSON("../api/trackedEntityInstances.json?program=mcnt7nqNrNw&ouMode=ALL&fields=*&programStartDate="+ startDate +"&programEndDate="+ endDate+"&skipPaging=true",function(data){
+                for(var i=0;i<data.trackedEntityInstances.length;i++) {
+                    var tei= data.trackedEntityInstances[i].trackedEntityInstance;
+                    if(data.trackedEntityInstances[i].attributes.length>10) {
+
+                        for (var j = 0; j < data.trackedEntityInstances[i].attributes.length; j++) {
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster ID"){
+                                clusterId = data.trackedEntityInstances[i].attributes[j].value;
+                                clustertei=data.trackedEntityInstances[i].trackedEntityInstance;
+                                clusterorg=data.trackedEntityInstances[i].orgUnit;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "1 Lab confirmed case"){
+                                clusterType = data.trackedEntityInstances[i].attributes[j].displayName;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "≥ 3 AFI cases (last 5 days)"){
+                                clusterType = data.trackedEntityInstances[i].attributes[j].displayName;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "≥ 5 AFI cases (last 7 days)"){
+                                clusterType = data.trackedEntityInstances[i].attributes[j].displayName;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "≥ 2 ADD cases (last 3 days)"){
+                                clusterType = data.trackedEntityInstances[i].attributes[j].displayName;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster Start Date"){
+                                sd = data.trackedEntityInstances[i].attributes[j].value;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Tail Case Date"){
+                                ed = data.trackedEntityInstances[i].attributes[j].value;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster Method"){
+                                clustermethod = data.trackedEntityInstances[i].attributes[j].value;
+                            }
+							if(data.trackedEntityInstances[i].attributes.length < 10){
+								clusterType = sd + " to " + ed;
+							}
+                            var reportRow = $("<tbody><tr><td class='rowdata'>" + index + "</td><td class='rowdata'><a href='../dhis-web-tracker-capture/index.html#/dashboard?tei="+clustertei+"&program=mcnt7nqNrNw&ou="+clusterorg+"'>"+clusterId+"</a></td><td class='rowdata'>"+clustermethod+"-"+clusterType+"</td><td class='rowdata' ><a href='http://"+base+"/dhis-web-reporting/generateHtmlReport.action?uid=DnjzL5wPJE5&tei="+tei+"' target='_self'>Click here to view report</a></td><td class='rowdata'><a href='http://112.133.207.124/odkService?ou=Hy4VgekLJWM&tei="+tei+"&name=Cluster_report.pdf' target='_self'>Click here to send Mail</a></td></tr>");
+                        }
+                    }
+                    else{
+                       for (var j = 0; j < data.trackedEntityInstances[i].attributes.length; j++) {
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster ID"){
+                                clusterId = data.trackedEntityInstances[i].attributes[j].value;
+                                clustertei=data.trackedEntityInstances[i].trackedEntityInstance;
+                                clusterorg=data.trackedEntityInstances[i].orgUnit;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster Start Date"){
+                                sd = data.trackedEntityInstances[i].attributes[j].value;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Tail Case Date"){
+                                ed = data.trackedEntityInstances[i].attributes[j].value;
+                            }
+                            if(data.trackedEntityInstances[i].attributes[j].displayName == "Cluster Method"){
+                                clustermethod = data.trackedEntityInstances[i].attributes[j].value;
+                            }
+								clusterType = sd + " to " + ed;
+                            var reportRow = $("<tbody><tr><td class='rowdata'>" + index + "</td><td class='rowdata'><a href='../dhis-web-tracker-capture/index.html#/dashboard?tei="+clustertei+"&program=mcnt7nqNrNw&ou="+clusterorg+"'>"+clusterId+"</a></td><td class='rowdata'>"+clustermethod+"-"+clusterType+"</td><td class='rowdata' ><a href='http://"+base+"/dhis-web-reporting/generateHtmlReport.action?uid=DnjzL5wPJE5&tei="+tei+"' target='_self'>Click here to view report</a></td><td class='rowdata'><a href='http://112.133.207.124/odkService?ou=Hy4VgekLJWM&tei="+tei+"&name=Cluster_report.pdf' target='_self'>Click here to send Mail</a></td></tr>");
+                        }
+						}
+                    $('.reporttable').append(reportRow);
+                    index++;
+                }
+            });
+        };
+    </script>
+
+
 </html>
