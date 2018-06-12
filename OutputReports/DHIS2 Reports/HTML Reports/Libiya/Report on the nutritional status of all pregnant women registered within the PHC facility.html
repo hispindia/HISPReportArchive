@@ -82,33 +82,37 @@ thead>tr>td {
 <button type="button" id="btnExport" onclick="tableToExcel('dataTable', 'name', 'Report on the nutritional status of all pregnant women registered within the PHC facility.xls')">Download</button>
 <br><br>
 
-<td><b>Select Period</b></td>
-<br><br>
-<tr>
-        <td>Start Date:</td>
-    </tr>
-    <tr>
-        <td><input type="date" id="startDate"></td>    
-    </tr>
-    <tr>
-        <td>End Date:</td>
-    </tr>
-    <tr>
-        <td><input type="date" id="endDate"></td>
-        </tr>    
-<button onClick="submit()" id="tap" >Submit</button><br><br>
 <br><br>
 
+<td><b>Select Period</b></td>
+</tr>
+<br><br>
+<tr>
+    <td>Start Date:</td>
+</tr>
+<tr>
+    <td><input type="text"  id="month1" name="month" class="monthPicker1" placeholder="Month Year"></td>
+</tr>
+<tr>
+    <td>End Date:</td>
+</tr>
+<tr>
+    <td><input type="text"  id="month2" name="month" class="monthPicker2" placeholder="Month Year"></td>
+</tr>
+
+<button onClick="submit()" id="tap">Submit</button>
+<br><br>
 <div id="printing" style="display:none;" class="animate-bottom ">
     <div id='state'>
         <table width="100%" id="dataTable" border="1" class="table table-bordered table-hover text-center" cellspacing="6" cellpadding="4">
             <thead style="font-weight:400; text-align:center"> 
                 <tr>
-                    <td colspan="9" style="text-align:center;background:rgb(209, 170, 153);font:bold;border:2px solid black;border-width:thin;border-collapse:collapse;">Report on the nutritional status of all pregnant women registered within the PHC facility</td>
+                    <td colspan="8" style="text-align:center;background:rgb(209, 170, 153);font:bold;border:2px solid black;border-width:thin;border-collapse:collapse;">Report on the nutritional status of all pregnant women registered within the PHC facility</td>
                 </tr>  
                 <tr style="background:rgb(209, 170, 153); font-weight:400; text-align:center; border:1px solid black">
-                    <td style="background:rgb(209, 170, 153);border:1px solid black" text-align="left" colspan="5">Organisation Unit:- <span id="ouname"></span></td>
-                    <td style="background:rgb(209, 170, 153);border:1px solid black;" text-align="left" colspan="4">TimeStamp:-<span id="timeStamp"></span></td>
+                    <td style="background:rgb(209, 170, 153);border:1px solid black" text-align="center" colspan="3">Organisation Unit:- <span id="ouname"></span></td>
+                    <td style="background:rgb(209, 170, 153);border:1px solid black" text-align="center" colspan="3">Date:- <span id="date1"></span> to <span id="date2"></span></td>
+                    <td style="background:rgb(209, 170, 153);border:1px solid black;" text-align="center" colspan="2">TimeStamp:-<span id="timeStamp"></span></td>
                 </tr>          
                 <tr>
                     <td style="text-align:center;background:rgb(209, 170, 153);font:bold;border:2px solid black;border-width:thin;border-collapse:collapse;" rowspan="2">S. No.</td>
@@ -180,6 +184,57 @@ $('#tap').click(function ()
  return false 
  
  });
+// Calendar
+$(".monthPicker1").datepicker({
+        dateFormat: 'yy MM',
+        changeMonth: true,
+        changeYear: true,
+        showButtonPanel: false,
+        onChangeMonthYear: function (year, month, inst) {
+        $(this).val($.datepicker.formatDate('yy-mm', new Date(year, month - 1, 1)));
+    },
+        onClose: function(dateText, inst) {
+             month1 = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+             year1 = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+           $(this).val($.datepicker.formatDate('yy MM', new Date(year1, month1, 1)));
+           startDate =  new Date(year1, month1, 1);
+        }
+    });
+
+    $(".monthPicker1").focus(function () {
+        $(".ui-datepicker-calendar").hide();
+        $("#ui-datepicker-div").position({
+            my: "center top",
+            at: "center bottom",
+            of: $(this)
+        });
+    });
+
+
+    $(".monthPicker2").datepicker({
+        dateFormat: 'yy MM',
+        changeMonth: true,
+        changeYear: true,
+        showButtonPanel: false,
+        onChangeMonthYear: function (year, month, inst) {
+        $(this).val($.datepicker.formatDate('yy-mm', new Date(year, month - 1, 1)));
+    },
+        onClose: function(dateText, inst) {
+             month2 = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+             year2 = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+             $(this).val($.datepicker.formatDate('yy MM', new Date(year2, month2, 1)));
+             endDate = new Date(year2, month2, 1);
+        }
+    });
+
+    $(".monthPicker2").focus(function () {
+        $(".ui-datepicker-calendar").hide();
+        $("#ui-datepicker-div").position({
+            my: "center top",
+            at: "center bottom",
+            of: $(this)
+        });
+    });
 
     var periods = dhis2.report.periods;
     var url = window.location.href;
@@ -202,24 +257,26 @@ $('#tap').click(function ()
     var date1;
     var date2;
 
-
     // New Code start from here
     var count1 = 0;
     function submit() {
+ 
+        startDate = moment(startDate);
+        date1 = moment(startDate).format('MMM-YYYY');
+        document.getElementById('date1').innerHTML = date1;
+        
+        endDate = moment(endDate);
+        date2 = moment(endDate).format('MMM-YYYY');
+        document.getElementById('date2').innerHTML = date2;
 
-        var date1 = document.getElementById('startDate').value;
-        var date2 = document.getElementById('endDate').value;
-
-        var startDate = moment(date1);
-        var endDate = moment(date2);
         var result = [];
         if (endDate.isBefore(startDate)) {
-             window.alert('Please select end date Accordinlgy');
-        }
+            window.alert('Please select end date Accordinlgy');
+            }
         var currentDate = startDate.clone();
-        while (currentDate.isBefore(endDate)) {
-             result.push(currentDate.format("YYYYMM"));
-             currentDate.add(1, 'month');
+        while (currentDate.isBefore(endDate+1)) {
+            result.push(currentDate.format("YYYYMM"));
+            currentDate.add(1, 'month');
         }
         var date = ("" + result.join(";") + "");
 
