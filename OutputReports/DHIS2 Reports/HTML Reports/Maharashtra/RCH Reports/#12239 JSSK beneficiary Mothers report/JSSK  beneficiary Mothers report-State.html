@@ -211,7 +211,7 @@
                                             }
                                         }); 
                                     }
-
+                                
                                 }
                             });
 
@@ -290,46 +290,40 @@
 
     var dataArray = [];
 
-    document.getElementById('ouname').innerHTML = orgUnit.name;
-
-
     $.each(orgUnitChildren, function (i, val) {
         orgUnitChildren_Array.push([val.id, val.name]);
     });
     orgUnitChildren_Array.sort(arraySorting);
-
-
+  
     // New Code start from here
     var count = 0;
     var values1 = [];
-
-    $.each(orgUnitChildren_Array, function (index, element) {
-        var ouId = element[0];
-        var ouName = element[1];
-        values.push(ouId);
-        values1.push(ouName);
-
-        dfdNext = dfdNext.pipe(function () {
-
-            var divName = values1.shift();
-            var value = values.shift();
-
-            return requestAjax(value).
-                done(function (response, response1, response2) {
-                    count++;
-
-
-                    finalvalue(response, response1, response2, divName, count);
-
-                    if (count == orgUnitChildren_Array.length) {
-                        finalvalue(0, 0, 0, 0, 0);
-                    }
-                });
-        });
+    $.when(
+        $.getJSON("../api/organisationUnitGroups/CXswpFTMKVB.json?fields=organisationUnits[id,name]", {
+            format: "json"
+        })
+    ).then(function ( res) {
+       console.log(res);
+        var values1 = [];
+        orgUnitChildren_Array = res;
+        for (var x = 0; x < res.organisationUnits.length; x++) {
+            values.push(res.organisationUnits[x].id);
+            values1.push(res.organisationUnits[x].name);
+            dfdNext = dfdNext.pipe(function () {
+                var divName = values1.shift();
+                var value = values.shift();
+                return requestAjax(value).
+                    done(function (response, response1, response2) {
+                        count++;
+                        finalvalue(response, response1, response2, divName, count);
+                        if (count == res.organisationUnits.length) {
+                            finalvalue(0, 0, 0, 0, 0);
+                        }
+                    });
+            });
+        }
     })
-
-
-
+///////////////////////////////////
 
     function finalvalue(res4, res5, res6, name, count) {
 
