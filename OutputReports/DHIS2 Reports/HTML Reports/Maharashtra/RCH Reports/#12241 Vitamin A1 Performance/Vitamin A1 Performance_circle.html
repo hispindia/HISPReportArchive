@@ -196,8 +196,17 @@
                                             data: JSON,
                                             success: function (data6, status) {
 
+                                                $.ajax(
+                                                {
+                                                    type: "GET",
+                                                    url: "../api/analytics.json?dimension=dx:zgUc4oDFVP5.HllvX50cXC0;&dimension=pe:" + yearMonth1 + "&filter=ou:OU_GROUP-SpO6cZEWuZx;" + value + "&displayProperty=NAME",
+                                                    data: JSON,
+                                                    success: function (data7, status) {
 
-                                                dfdAjax.resolve(data4, data5, data6);
+                                                dfdAjax.resolve(data4, data5, data6,data7);
+                                            }
+                                        });
+
                                             }
                                         });
 
@@ -235,6 +244,22 @@
     // vicky
     var lastperiod = getPeriod1(period)
     document.getElementById('lastyear').innerHTML = lastperiod;
+
+    var yearMonth = function(period){
+        var year = period.substring(0, 4);
+        var month = period.substring(4, 6);
+        var monthName = 'April';
+        if(month == '01' || month == '02' || month == '03')
+        {
+            year = year - 1;
+          var  complete = year+ "" + monthName;
+        }
+        else{
+           var complete = year+ "" + monthName;
+        } 
+        return complete;
+    } 
+    var yearMonth1 = yearMonth(period);
 
     var url = window.location.href;
     var params = url.split('=');
@@ -309,63 +334,67 @@
     document.getElementById('ouname').innerHTML = orgUnit.name;
 
 
-
-
-
-
     $.each(orgUnitChildren, function (i, val) {
         orgUnitChildren_Array.push([val.id, val.name]);
     });
     orgUnitChildren_Array.sort(arraySorting);
 
 
-
-
-
-
-
-    // New Code start from here
+    // New Code start from here // xErXLgdjqAn Mumbai district
     var count = 0;
     var values1 = [];
-
-
-
+    var val = [];
 
     $.each(orgUnitChildren_Array, function (index, element) {
         var ouId = element[0];
         var ouName = element[1];
 
+        if(ouId == "xErXLgdjqAn" && ouName == "MUMBAI District")
+        {
+            
+        }
+        else
+        {
+            val.push(ouId);
+            values.push(ouId);
+            values1.push(ouName);
 
-
-        values.push(ouId);
-        values1.push(ouName);
-
-        dfdNext = dfdNext.pipe(function () {
+            dfdNext = dfdNext.pipe(function () {
 
             var divName = values1.shift();
+
             var value = values.shift();
 
+
             return requestAjax(value).
-                done(function (response, response1, response2) {
-                    count++;
+                done(function (response, response1, response2,response3) {
+                count++;
 
 
-                    finalvalue(response, response1, response2, divName, count);
+                finalvalue(response, response1, response2,response3, divName, count);
 
-                    if (count == orgUnitChildren_Array.length) {
-                        finalvalue(0, 0, 0, 0, 0);
-                        corGroupList();
-                    }
-                });
+                if (count == val.length) {
+                    finalvalue(0, 0, 0,0, 0, 0);
+                    corGroupList();
+                }
+            });
         });
+    }
+
+       
+
+            // removeItem(values, 'xErXLgdjqAn');
+            // removeItem(values1, 'MUMBAI District');
+
+       
     })
 
 
 
 
-    function finalvalue(res4, res5, res6, name, count) {
+    function finalvalue(res4, res5, res6,res7, name, count) {
         if (count != 0 && count != undefined) {
-            value1 = datavalue(res4, 'zgUc4oDFVP5.HllvX50cXC0');
+            value1 = datavalue(res7, 'zgUc4oDFVP5.HllvX50cXC0');
             value1pro = Math.floor(((value1 / 12) * (periodArray.length)));
 
             value2 = datavalue(res4, 'mXN8hgjai3x.v5em9rXmyXm') + datavalue(res4, 'mXN8hgjai3x.GUNhDhI7FcG');
@@ -400,7 +429,7 @@
 
 
 
-            var dataObj = { "Serial": count, "OrgName": name, "ElAA": value1, "ELAP": value1pro, "PUIPD": value2, "PUIPP": value2pro, "PVIPD": value3, "PVIPP": value3pro, "TD": value23, "TP": value23pro, "PA": pvalue123pro, "PP": pvalue1p23pro, "Marks": marks, "Rank": 0, "LYP": lastyearcal(res5), "DIA": diff };
+            var dataObj = { "Serial": count, "OrgName": name, "ElAA": value1, "ELAP": value1pro, "PUIPD": value2, "PUIPP": value2pro, "PVIPD": value3, "PVIPP": value3pro, "TD": value23, "TP": value23pro, "PA": roundToTwo(pvalue123pro), "PP": roundToTwo(pvalue1p23pro), "Marks": marks, "Rank": 0, "LYP": lastyearcal(res5), "DIA": roundToTwo(diff) };
 
             dataArray.push(dataObj);
             arrMarks.push(marks);
@@ -481,7 +510,7 @@
         {
             type: "GET",
             async: false,
-            url: "../api/organisationUnitGroups/YBJEhiPcxsw.json?fields=organisationUnits[id,name,parent[id,name]]",
+            url: "../api/organisationUnits?fields=id,name,parent[id,name]&filter=organisationUnitGroups.id:eq:YBJEhiPcxsw&order=name:asc",
             data: JSON,
             success: function (data, status) {
                 corGroup = data;
@@ -497,6 +526,8 @@
                 }
             }
         }
+        corpList.sort(SortByName);
+
         corGroupData(corpList);
     }
 
@@ -510,7 +541,7 @@
                 {
                     type: "GET",
                     async: false,
-                    url: "../api/analytics.json?dimension=dx:zgUc4oDFVP5.HllvX50cXC0;mXN8hgjai3x.v5em9rXmyXm;mXN8hgjai3x.GUNhDhI7FcG;mXN8hgjai3x.MkIk8f8jTxz;&dimension=pe:OU_GROUP-M8aNrEBmf4K;OU_GROUP-UAnG4KYJ8LH;OU_GROUP-USYXisAI852;OU_GROUP-s1B0HZ22VBp;OU_GROUP-YBJEhiPcxsw;" + period + "&filter=ou:" + ouId + "&displayProperty=NAME",
+                    url: "../api/analytics.json?dimension=dx:zgUc4oDFVP5.HllvX50cXC0;mXN8hgjai3x.v5em9rXmyXm;mXN8hgjai3x.GUNhDhI7FcG;mXN8hgjai3x.MkIk8f8jTxz;&dimension=pe:OU_GROUP-M8aNrEBmf4K;OU_GROUP-UAnG4KYJ8LH;OU_GROUP-USYXisAI852;OU_GROUP-s1B0HZ22VBp;OU_GROUP-YBJEhiPcxsw;OU_GROUP-bMuNJdhKC3M;" + period + "&filter=ou:" + ouId + "&displayProperty=NAME",
                     data: JSON,
                     success: function (data, status) {
                     }
@@ -519,7 +550,7 @@
                 {
                     type: "GET",
                     async: false,
-                    url: "../api/analytics.json?dimension=dx:mXN8hgjai3x.v5em9rXmyXm;mXN8hgjai3x.GUNhDhI7FcG;mXN8hgjai3x.MkIk8f8jTxz;&dimension=pe:" + lastyear + "&filter=ou:OU_GROUP-M8aNrEBmf4K;OU_GROUP-UAnG4KYJ8LH;OU_GROUP-USYXisAI852;OU_GROUP-s1B0HZ22VBp;OU_GROUP-YBJEhiPcxsw;" + ouId + "&displayProperty=NAME",
+                    url: "../api/analytics.json?dimension=dx:mXN8hgjai3x.v5em9rXmyXm;mXN8hgjai3x.GUNhDhI7FcG;mXN8hgjai3x.MkIk8f8jTxz;&dimension=pe:" + lastyear + "&filter=ou:OU_GROUP-M8aNrEBmf4K;OU_GROUP-UAnG4KYJ8LH;OU_GROUP-USYXisAI852;OU_GROUP-s1B0HZ22VBp;OU_GROUP-YBJEhiPcxsw;OU_GROUP-bMuNJdhKC3M;" + ouId + "&displayProperty=NAME",
                     data: JSON,
                     success: function (data, status) {
 
@@ -531,7 +562,17 @@
                 {
                     type: "GET",
                     async: false,
-                    url: "../api/analytics.json?dimension=dx:mXN8hgjai3x.v5em9rXmyXm;mXN8hgjai3x.GUNhDhI7FcG;mXN8hgjai3x.MkIk8f8jTxz;&dimension=pe:" + periodcumulative + "&filter=ou:OU_GROUP-M8aNrEBmf4K;OU_GROUP-UAnG4KYJ8LH;OU_GROUP-USYXisAI852;OU_GROUP-s1B0HZ22VBp;OU_GROUP-YBJEhiPcxsw;" + ouId + "&displayProperty=NAME",
+                    url: "../api/analytics.json?dimension=dx:mXN8hgjai3x.v5em9rXmyXm;mXN8hgjai3x.GUNhDhI7FcG;mXN8hgjai3x.MkIk8f8jTxz;&dimension=pe:" + periodcumulative + "&filter=ou:OU_GROUP-M8aNrEBmf4K;OU_GROUP-UAnG4KYJ8LH;OU_GROUP-USYXisAI852;OU_GROUP-s1B0HZ22VBp;OU_GROUP-YBJEhiPcxsw;OU_GROUP-bMuNJdhKC3M;" + ouId + "&displayProperty=NAME",
+                    data: JSON,
+                    success: function (data, status) {
+
+                    }
+                });
+                var res4 = $.ajax(
+                {
+                    type: "GET",
+                    async: false,
+                    url: "../api/analytics.json?dimension=dx:zgUc4oDFVP5.HllvX50cXC0;&dimension=pe:" + yearMonth1 + "&filter=ou:OU_GROUP-YBJEhiPcxsw;" + ouId + "&displayProperty=NAME",
                     data: JSON,
                     success: function (data, status) {
 
@@ -539,11 +580,11 @@
                 });
 
 
-            $.when(res1, res2, res3).then(function (data4, data5, data6) {
+            $.when(res1, res2, res3, res4).then(function (data4, data5, data6, data7) {
                 count++;
-                finalvalue1(data4[0], data5[0], data6[0], ouName, count);
+                finalvalue1(data4[0], data5[0], data6[0],data7[0], ouName, count);
                 if (count == corpList.length) {
-                    finalvalue1(0, 0, 0, 0, 0);
+                    finalvalue1(0, 0, 0, 0, 0,0);
                 }
             });
         })
@@ -551,10 +592,10 @@
 
 
 
-    function finalvalue1(res4, res5, res6, name, count) {
+    function finalvalue1(res4, res5, res6,res7, name, count) {
 
         if (count != 0 && count != undefined) {
-            value1 = datavalue(res4, 'zgUc4oDFVP5.HllvX50cXC0');
+            value1 = datavalue(res7, 'zgUc4oDFVP5.HllvX50cXC0');
             value1pro = Math.floor(((value1 / 12) * (periodArray.length)));
 
             value2 = datavalue(res4, 'mXN8hgjai3x.v5em9rXmyXm') + datavalue(res4, 'mXN8hgjai3x.GUNhDhI7FcG');
@@ -587,9 +628,7 @@
 
             diff = value23pro - lastyearcal(res5);
 
-
-
-            var dataObj = { "Serial": count, "OrgName": name, "ElAA": value1, "ELAP": value1pro, "PUIPD": value2, "PUIPP": value2pro, "PVIPD": value3, "PVIPP": value3pro, "TD": value23, "TP": value23pro, "PA": pvalue123pro, "PP": pvalue1p23pro, "Marks": marks, "Rank": 0, "LYP": lastyearcal(res5), "DIA": diff };
+            var dataObj = { "Serial": count, "OrgName": name, "ElAA": value1, "ELAP": value1pro, "PUIPD": value2, "PUIPP": value2pro, "PVIPD": value3, "PVIPP": value3pro, "TD": value23, "TP": value23pro, "PA": roundToTwo(pvalue123pro), "PP": roundToTwo(pvalue1p23pro), "Marks": marks, "Rank": 0, "LYP": lastyearcal(res5), "DIA": roundToTwo(diff) };
 
             dataArray1.push(dataObj);
             arrMarks1.push(marks);
@@ -600,18 +639,6 @@
             document.getElementById("printing").style.display = "block";
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     function datavalue(dataJSON, id, id1) {
@@ -633,10 +660,20 @@
         }
         return sum;
     }
-
+    function removeItem(array, item){
+            for(var i in array){
+                if(array[i]==item){
+                array.splice(i,1);
+                break;
+            }
+        }
+    }
 
     function arraySorting(a, b) {
         return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+    function SortByName(x,y) {
+      return ((x.name == y.name) ? 0 : ((x.name > y.name) ? 1 : -1 ));
     }
 
     function getPeriod(pr) {
@@ -682,7 +719,9 @@
         return strMonth + " " + (parseInt(year) - 1);
     }
 
-
+    function roundToTwo(num) {    
+            return +(Math.round(num + "e+2")  + "e-2");
+        }
     function getPeriods() {
         var periodArray = [];
         var year = parseInt(gotPeriod.substring(0, 4));
