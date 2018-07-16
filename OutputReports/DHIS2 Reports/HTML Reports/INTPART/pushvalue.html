@@ -1,0 +1,217 @@
+	<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+<style>
+td {
+	border: 1px solid black;
+     padding: 1px;
+    text-align: center;
+	 
+}
+#table1 {
+    table-layout: auto;
+	border-collapse: collapse;
+	 border:none;
+}
+.emptyRow td {
+	border:none;
+}
+.less{
+    margin:0;
+    padding:0;
+}
+
+</style>
+</head>
+<body>
+
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+   
+Start Date:
+  <input type="date" name="entry" id="start">
+  End Date:
+  <input type="date" name="exit" id="end">
+   <button type="button" class="btn btn-success" id="getreport" style="margin-left:100px;" onclick="chartmodel()"><i class="fa fa-search"></i>  &nbsp&nbspIndicator  </button>
+<!--<button style="font-size:24px;color:red;margin-left:450px;" onclick="abc()">Daily reminder  <i class="fa fa-clock-o"></i></button>-->
+<a class="btn btn-danger" onclick="location.reload();" style='color:white;margin-left:60px;'><i class="fa fa-trash-o fa-lg"></i> &nbsp&nbspClear</a>
+
+<br>
+<br>
+<br>
+ <canvas id="myChart"></canvas>
+	 <script type="text/javascript" async>
+	function chartmodel () {
+
+   $.ajaxSetup({
+        async: false
+    });
+		var datavalueofchart_systolic=[];
+		var obj_check_htn=[];
+		var datavalueofchart_diastolic=[];
+		var orinalid=["HQz8UUWfvo0","pTuKCcPRn9k"];
+		var months = [];
+		var dateofvisit=[];
+		var jan_htn=0;
+		var Feb_htn=0;
+		var Mar_htn=0;
+		var Apr_htn=0;
+		var May_htn=0;
+		var June_htn=0;
+		var July_htn=0;
+		var Aug_htn=0;
+		var Sep_htn=0;
+		var Oct_htn=0;
+		var Nov_htn=0;
+		var Dec_htn=0;
+		var jan_htn_object=[];
+		var feb_htn_object=[];
+		var march_htn_object=[];
+		var april_htn_object=[];
+		var may_htn_object=[];
+		var june_htn_object=[];
+		var july_htn_object=[];
+		var aug_htn_object=[];
+		var sep_htn_object=[];
+		var oct_htn_object=[];
+		var november_htn_object=[];
+		var dec_htn_object=[];
+		var calcultevalue=[];
+		var obj_final_htn_vale=[];
+		var objid=[];
+		var monthNames = ["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"];
+			 var startdatee=document.getElementById('start').value;
+				var enddatee=document.getElementById('end').value;
+				
+				
+				var string1=startdatee.substring(5, 7);
+	if(string1.substring(0,1) =="0"){
+    string1.substring(0,1).replace("0","");
+	  var datedigit = parseInt(string1)-1;
+	 // console.log(datedigit);
+	  months.push(monthNames[datedigit]);
+      }
+	  else{
+	  var datedigit = parseInt(string1)-1;
+	 // console.log(datedigit);
+	  months.push(monthNames[datedigit]);
+	  
+	  
+	  }
+				
+			///-----------------------------------   Difference between the input dates and calculate its months---
+
+              var dates = [startdatee,enddatee];
+var diff = dates.map(function(i){
+    var m = moment(i);
+    
+    return {
+      month : m.month(),
+      year : m.year()
+    };
+});
+
+var start = Object.assign({},diff[0]), end= Object.assign({},diff[diff.length-1]);
+
+
+
+
+if(end.year>=start.year){
+while(start.month < end.month ||  start.year < end.year){
+       
+       if(start.month < 11){
+          start.month ++;
+       }else{
+         start.month = 0;
+         start.year++;
+       }
+       months.push(monthNames[start.month])
+}
+}
+console.log(months);
+
+
+
+
+
+
+
+
+
+//---------------------------------			
+			
+				var htn_followup=0;
+			var systolicbloodpresure_count=0;
+		
+			 $.get("../api/events.json?orgUnit=lZtSBQjZCaX&program=jC8Gprj4pWV&filter=FSD6mDILc7l:EQ:true&skipPaging=true", function (data1) {
+			  var trackdata=data1;
+			  for(var j=0;j<trackdata.events.length;j++)
+				{
+				
+			           	           
+				// leng=eventdata.events.length;
+				var dateofvisit= trackdata.events[j].eventDate;  //
+			     //  console.log(leng);
+				   var dataval=trackdata.events[j].dataValues;
+				   if(dataval.length >1){
+					  
+				   for(var q=0;q<dataval.length;q++)
+				   {
+				   var id=dataval[q].dataElement;
+				 
+				 
+				     if(id=="FSD6mDILc7l")// HTN
+				   {
+				      var systol=dataval[q].value;
+					  if(systol=="true")
+					systolicbloodpresure_count++;
+				  
+				   }
+				    
+				   }
+				   
+				   }
+				   
+				   }
+				   
+				   	var aggDataValue = {
+                                'de' : "Zr0B9Bguj12",
+                                'co' : "HllvX50cXC0",
+                                'ou' : "lZtSBQjZCaX",
+                                'pe' : "201805",
+                                'value' : systolicbloodpresure_count
+                            };
+             $.ajax({
+                url: '../api/dataValues',
+                data: aggDataValue,
+                type: 'post',
+                success: handleSuccess,
+                error: handleError
+            });
+			  function handleError( xhr, textStatus, errorThrown )
+            {
+                console.log(" ERROR in pushing data");
+       
+            }
+            return def;
+			function handleSuccess()
+            {
+                console.log("SUCESS in pushing the data");
+               
+            }
+            //return promise;
+        
+
+				 
+			  });
+			  
+  //console.log(systolicbloodpresure_count);
+			
+	
+	
+		}
+		</script>
+		 </body>
+  </html>
