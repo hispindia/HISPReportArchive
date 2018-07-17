@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.22" id="1">
     <property name="createdBy">Eclipse BIRT Designer Version 4.3.0.v201306041519 Build &lt;3.7.0.v20130611-1045></property>
+    <list-property name="propertyBindings">
+        <structure>
+            <property name="name">queryText</property>
+            <property name="id">442</property>
+        </structure>
+        <structure>
+            <property name="name">queryTimeOut</property>
+            <property name="id">442</property>
+        </structure>
+        <structure>
+            <property name="name">rowFetchSize</property>
+            <property name="id">442</property>
+        </structure>
+    </list-property>
     <property name="units">in</property>
     <property name="iconFile">/templates/blank_report.gif</property>
     <property name="bidiLayoutOrientation">ltr</property>
@@ -72,7 +86,7 @@
                 </ex-property>
             </list-property>
             <property name="odaDriverClass">com.mysql.jdbc.Driver</property>
-            <property name="odaURL">jdbc:mysql://192.168.0.25/tvha_05122017</property>
+            <property name="odaURL">jdbc:mysql://localhost:3308/bylakupe_test</property>
             <property name="odaUser">birt</property>
             <encrypted-property name="odaPassword" encryptionID="base64">YmlydA==</encrypted-property>
         </oda-data-source>
@@ -182,6 +196,12 @@
                     <property name="analysis">measure</property>
                     <text-property name="displayName">amount-waiver</text-property>
                     <text-property name="heading">amount-waiver</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">billtype</property>
+                    <property name="analysis">dimension</property>
+                    <text-property name="displayName">billtype</text-property>
+                    <text-property name="heading">billtype</text-property>
                 </structure>
             </list-property>
             <list-property name="parameters">
@@ -323,6 +343,11 @@
                         <property name="name">amount-waiver</property>
                         <property name="dataType">float</property>
                     </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">billtype</property>
+                        <property name="dataType">string</property>
+                    </structure>
                 </list-property>
             </structure>
             <property name="dataSource">Data Source</property>
@@ -432,14 +457,22 @@
                     <property name="dataType">float</property>
                     <property name="nativeDataType">8</property>
                 </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">billtype</property>
+                    <property name="nativeName">billtype</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[SELECT billid,patid ,ident,NAME,Age,drugid,form,formulation,dose,drug,categ,quant,amount,waiver,amount-waiver
+            <xml-property name="queryText"><![CDATA[SELECT billid,patid ,ident,NAME,Age,drugid,form,formulation,dose,drug,categ,quant,amount,waiver,amount-waiver,
+billtype
 FROM 
 (
-SELECT asd.name 'sub_cat'
+SELECT asd.name 'sub_cat' , id
 FROM
 (
-SELECT cn.name,cn.concept_id FROM concept_name cn
+SELECT cn.name,cn.concept_id AS id FROM concept_name cn
 INNER JOIN concept_answer ca ON ca.answer_concept=cn.concept_id
 INNER JOIN concept_name cn1 ON cn1.concept_id=ca.concept_id
 WHERE cn1.name  IN ('Paid Category','Programs')
@@ -475,8 +508,9 @@ CASE WHEN (YEAR(pat.date_created)-YEAR(ps.birthdate)>=1)
                     END 
                     END
     END 
-END AS 'Age',idp.id as billid,i.drug_id AS drugid,i.formulation_id AS form,idf.name AS 'formulation',idf.dozage AS dose,idr.name AS 'drug',
-cn1.name AS categ,i.issue_quantity AS quant,i.total_price AS amount,(i.waiver_percetage*.01)*i.total_price AS waiver
+END AS 'Age',idp.id AS billid,i.drug_id AS drugid,i.formulation_id AS form,idf.name AS 'formulation',idf.dozage AS dose,idr.name AS 'drug',
+cn1.name AS categ,idp.patient_category AS cats,i.issue_quantity AS quant,i.total_price AS amount,(i.waiver_percetage*.01)*i.total_price AS waiver,
+CASE WHEN i.amount_credit IS NULL THEN "Paid" ELSE "Credit" END AS billtype
 FROM inventory_store_drug_transaction_detail i
 INNER JOIN inventory_store_drug_patient_detail isd ON i.id=isd.transaction_detail_id
 INNER JOIN inventory_store_drug_patient idp ON isd.store_drug_patient_id=idp.id
@@ -488,16 +522,15 @@ INNER JOIN patient_search ps ON ps.patient_id=p.person_id
 INNER JOIN patient pat ON ps.patient_id=pat.patient_id
 INNER JOIN person_name pn ON p.person_id=pn.person_id
 INNER JOIN inventory_store_drug_transaction it ON i.transaction_id=it.id
-INNER JOIN concept_name cn1 ON pa.value = cn1.concept_id
+INNER JOIN concept_name cn1 ON idp.patient_category = cn1.concept_id
 INNER JOIN inventory_store ist ON it.store_id=ist.id AND ist.name LIKE '%pharmacy%'
 WHERE  DATE(i.created_on) BETWEEN ? AND ?
-AND i.amount_credit IS NULL 
 AND (cn1.name LIKE ? OR ? LIKE "All Category") 
-GROUP BY idp.patient_id,idr.name,idf.dozage
+GROUP BY idp.id,idp.patient_id,idr.name,idf.dozage
 )amb
-ON fin1.sub_cat=amb.categ
+ON fin1.id=amb.cats
 WHERE amb.categ IS NOT NULL
-order by billid]]></xml-property>
+ORDER BY billid]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
   <Version>2.0</Version>
@@ -667,7 +700,7 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
         <simple-master-page name="Simple MasterPage" id="2">
             <property name="type">custom</property>
             <property name="height">11in</property>
-            <property name="width">11.5in</property>
+            <property name="width">12.5in</property>
             <page-footer>
                 <text id="3">
                     <property name="contentType">html</property>
@@ -893,6 +926,12 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                     <expression name="expression" type="javascript">dataSetRow["billid"]</expression>
                     <property name="dataType">integer</property>
                 </structure>
+                <structure>
+                    <property name="name">Column Binding</property>
+                    <expression name="expression" type="javascript">dataSetRow["billtype"]</expression>
+                    <property name="dataType">string</property>
+                    <property name="allowExport">true</property>
+                </structure>
             </list-property>
             <property name="pageBreakInterval">20</property>
             <column id="486">
@@ -920,6 +959,9 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                 <property name="width">0.90625in</property>
             </column>
             <column id="431">
+                <property name="width">0.84375in</property>
+            </column>
+            <column id="496">
                 <property name="width">0.84375in</property>
             </column>
             <group id="324">
@@ -978,6 +1020,17 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                             <property name="borderTopWidth">1px</property>
                         </cell>
                         <cell id="426">
+                            <property name="backgroundColor">#C0C0C0</property>
+                            <property name="borderBottomStyle">solid</property>
+                            <property name="borderBottomWidth">1px</property>
+                            <property name="borderLeftStyle">solid</property>
+                            <property name="borderLeftWidth">1px</property>
+                            <property name="borderRightStyle">solid</property>
+                            <property name="borderRightWidth">1px</property>
+                            <property name="borderTopStyle">solid</property>
+                            <property name="borderTopWidth">1px</property>
+                        </cell>
+                        <cell id="491">
                             <property name="backgroundColor">#C0C0C0</property>
                             <property name="borderBottomStyle">solid</property>
                             <property name="borderBottomWidth">1px</property>
@@ -1098,6 +1151,16 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                             <property name="borderTopWidth">1px</property>
                         </cell>
                         <cell id="427">
+                            <property name="borderBottomStyle">solid</property>
+                            <property name="borderBottomWidth">1px</property>
+                            <property name="borderLeftStyle">solid</property>
+                            <property name="borderLeftWidth">1px</property>
+                            <property name="borderRightStyle">solid</property>
+                            <property name="borderRightWidth">1px</property>
+                            <property name="borderTopStyle">solid</property>
+                            <property name="borderTopWidth">1px</property>
+                        </cell>
+                        <cell id="492">
                             <property name="borderBottomStyle">solid</property>
                             <property name="borderBottomWidth">1px</property>
                             <property name="borderLeftStyle">solid</property>
@@ -1263,6 +1326,20 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                                 <text-property name="text">Total After Discount</text-property>
                             </label>
                         </cell>
+                        <cell id="493">
+                            <property name="backgroundColor">#C0C0C0</property>
+                            <property name="borderBottomStyle">solid</property>
+                            <property name="borderBottomWidth">1px</property>
+                            <property name="borderLeftStyle">solid</property>
+                            <property name="borderLeftWidth">1px</property>
+                            <property name="borderRightStyle">solid</property>
+                            <property name="borderRightWidth">1px</property>
+                            <property name="borderTopStyle">solid</property>
+                            <property name="borderTopWidth">1px</property>
+                            <label id="497">
+                                <text-property name="text">Bill Type</text-property>
+                            </label>
+                        </cell>
                     </row>
                 </header>
                 <footer>
@@ -1352,6 +1429,16 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                                 <property name="textAlign">center</property>
                                 <property name="resultSetColumn">Aggregation_1</property>
                             </data>
+                        </cell>
+                        <cell id="495">
+                            <property name="borderBottomStyle">solid</property>
+                            <property name="borderBottomWidth">1px</property>
+                            <property name="borderLeftStyle">solid</property>
+                            <property name="borderLeftWidth">1px</property>
+                            <property name="borderRightStyle">solid</property>
+                            <property name="borderRightWidth">1px</property>
+                            <property name="borderTopStyle">solid</property>
+                            <property name="borderTopWidth">1px</property>
                         </cell>
                     </row>
                 </footer>
@@ -1474,6 +1561,19 @@ AND cn.concept_name_type LIKE 'fully_specified']]></xml-property>
                         <property name="borderTopWidth">1px</property>
                         <data id="477">
                             <property name="resultSetColumn">amount-waiver</property>
+                        </data>
+                    </cell>
+                    <cell id="494">
+                        <property name="borderBottomStyle">solid</property>
+                        <property name="borderBottomWidth">1px</property>
+                        <property name="borderLeftStyle">solid</property>
+                        <property name="borderLeftWidth">1px</property>
+                        <property name="borderRightStyle">solid</property>
+                        <property name="borderRightWidth">1px</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">1px</property>
+                        <data id="498">
+                            <property name="resultSetColumn">Column Binding</property>
                         </data>
                     </cell>
                 </row>
