@@ -104,25 +104,23 @@
         <table width="100%" id="dataTable" border="1" class="table table-bordered table-hover text-center" cellspacing="6" cellpadding="4">
             <thead style="background:#ADD8E6; font-weight:400; text-align:center">
                 <tr>
-                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="14">State Family Welfare Bureau,Pune</td>
+                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="12">State Family Welfare Bureau,Pune</td>
                 </tr>
                 <tr>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="4">Organisation Unit :-
                         <span id="ouname"></span>
                     </td>
-                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="10">Districtwise Low Birth Weight Babies (Weight < 2.5 Kg) upto Month of
+                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="8">Districtwise Low Birth Weight Babies (Weight < 2.5 Kg) upto Month of
                         <span id="periodName"></span> (Total Marks-10)</td>
                 </tr>
                 <tr>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" rowspan="2">Sr No</td>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" rowspan="2">District</td>
-                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">Live Births</td>
+                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">Live births weight taken</td>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">Public Institutions Performance</td>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">Private Institutions Performance</td>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">Total</td>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">%</td>
-                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" rowspan="2">Marks</td>
-                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" rowspan="2">Rank</td>
                 </tr>
                 <tr>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" width="96">During Month</td>
@@ -282,8 +280,6 @@
     var value8 = 0;
     var value9 = 0;
     var value10 = 0;
-    var marks = 0;
-    var diff = 0;
 
 
     // Variable for total
@@ -297,8 +293,7 @@
     var sum8 = 0;
     var sum9 = 0;
     var sum10 = 0;
-    var sum11 = 0;
-    var sum12 = 0;
+
 
     var orgUnitChildren_Array = [];
     var secondChildren_Array = [];
@@ -473,31 +468,33 @@
         var ouId = element[0];
         var ouName = element[1];
 
-        val.push(ouId);
-        values.push(ouId);
-        values1.push(ouName);
+        if (ouId == "xErXLgdjqAn" && ouName == "MUMBAI District") {
 
-        dfdNext = dfdNext.pipe(function () {
+        }
+        else {
+            val.push(ouId);
+            values.push(ouId);
+            values1.push(ouName);
 
-            var divName = values1.shift();
+            dfdNext = dfdNext.pipe(function () {
 
-            var value = values.shift();
+                var divName = values1.shift();
+                var value = values.shift();
+
+                return requestAjax(value).
+                    done(function (response, response1) {
+                        count++;
 
 
-            return requestAjax(value).
-                done(function (response, response1) {
-                    count++;
+                        finalvalue(response, response1,divName, count);
 
-
-                    finalvalue(response, response1, divName, count);
-
-                    if (count == val.length) {
-                        finalvalue(0, 0, 0, 0);
-                        corGroupList();
-                    }
-                });
-        });
-
+                        if (count == val.length) {
+                            finalvalue(0, 0, 0, 0);
+                            corGroupList();
+                        }
+                    });
+            });
+        }
     })
 
     function finalvalue(res4, res5, name, count) {
@@ -526,7 +523,7 @@
                 value9 = 0;
             }
 
-            value10 = ((value9 / value2) * 100);
+            value10 = ((value8 / value2) * 100);
             if (isNaN(value10)) {
                 value10 = 0;
             }
@@ -542,7 +539,7 @@
             }
 
 
-            var dataObj = { "Serial": count, "OrgName": name, "value1": value1, "value2": value2, "value3": value3, "value4": value4, "value5": value5, "value6": value6, "value7": value7, "value8": value8, "value9": roundToTwo(value9), "value10": roundToTwo(value10), "Marks": roundToTwo(marks), "Rank": 0 };
+            var dataObj = { "Serial": count, "OrgName": name, "value1": value1, "value2": value2, "value3": value3, "value4": value4, "value5": value5, "value6": value6, "value7": value7, "value8": value8, "value9": roundToTwo(value9), "value10": roundToTwo(value10)};
 
             dataArray.push(dataObj);
             arrMarks.push(marks);
@@ -575,7 +572,7 @@
         for (var i = 0; i < dataArray.length; i++) {
             var tabledata = '<tr>';
 
-            tabledata += ("<td>" + dataArray[i].Serial + "</td><td>" + dataArray[i].OrgName + "</td><td>" + dataArray[i].value1 + "</td><td>" + dataArray[i].value2 + "</td><td>" + dataArray[i].value3 + "</td><td>" + dataArray[i].value4 + "</td><td>" + dataArray[i].value5 + "</td><td>" + dataArray[i].value6 + "</td><td>" + dataArray[i].value7 + "</td><td>" + dataArray[i].value8 + "</td><td>" + dataArray[i].value9 + "</td><td>" + dataArray[i].value10 + "</td><td>" + dataArray[i].Marks + "</td><td>" + dataArray[i].Rank + "</td>");
+            tabledata += ("<td>" + dataArray[i].Serial + "</td><td>" + dataArray[i].OrgName + "</td><td>" + dataArray[i].value1 + "</td><td>" + dataArray[i].value2 + "</td><td>" + dataArray[i].value3 + "</td><td>" + dataArray[i].value4 + "</td><td>" + dataArray[i].value5 + "</td><td>" + dataArray[i].value6 + "</td><td>" + dataArray[i].value7 + "</td><td>" + dataArray[i].value8 + "</td><td>" + dataArray[i].value9 + "</td><td>" + dataArray[i].value10 + "</td>");
 
             tabledata += "</tr>";
             document.getElementById("dataTable").innerHTML += tabledata;
@@ -590,11 +587,10 @@
             sum8 += dataArray[i].value8;
             sum9 += dataArray[i].value9;
             sum10 += dataArray[i].value10;
-            sum11 += dataArray[i].Marks;
-            sum12 += dataArray[i].Rank;
+          
         }
 
-        tabledata = ("<tr ><td style='background:#ADD8E6' colspan='2'>Total</td><td style='background:#ADD8E6'td>" + sum1 + "</td><td style='background:#ADD8E6'>" + sum2 + "</td><td style='background:#ADD8E6'>" + sum3 + "</td><td style='background:#ADD8E6'>" + sum4 + "</td><td style='background:#ADD8E6'>" + sum5 + "</td><td style='background:#ADD8E6'>" + sum6 + "</td><td style='background:#ADD8E6'>" + sum7 + "</td><td style='background:#ADD8E6'>" + sum8 + "</td><td style='background:#ADD8E6'>" + roundToTwo(sum9) + "</td><td style='background:#ADD8E6'>" + roundToTwo(sum10) + "</td><td style='background:#ADD8E6'>" + roundToTwo(sum11) + "</td><td style='background:#ADD8E6'>" + sum12 + "</td></tr>");
+        tabledata = ("<tr ><td style='background:#ADD8E6' colspan='2'>Total</td><td style='background:#ADD8E6'td>" + sum1 + "</td><td style='background:#ADD8E6'>" + sum2 + "</td><td style='background:#ADD8E6'>" + sum3 + "</td><td style='background:#ADD8E6'>" + sum4 + "</td><td style='background:#ADD8E6'>" + sum5 + "</td><td style='background:#ADD8E6'>" + sum6 + "</td><td style='background:#ADD8E6'>" + sum7 + "</td><td style='background:#ADD8E6'>" + sum8 + "</td><td style='background:#ADD8E6'></td><td style='background:#ADD8E6'></td></tr>");
         document.getElementById("dataTable").innerHTML += tabledata;
 
         sum1 = 0;
@@ -607,9 +603,6 @@
         sum8 = 0;
         sum9 = 0;
         sum10 = 0;
-        sum11 = 0;
-        sum12 = 0;
-
 
     }
 
@@ -709,7 +702,7 @@
                 value9 = 0;
             }
 
-            value10 = ((value9 / value2) * 100);
+            value10 = ((value8 / value2) * 100);
             if (isNaN(value10)) {
                 value10 = 0;
             }
@@ -725,7 +718,7 @@
             }
 
 
-            var dataObj = { "Serial": count, "OrgName": name, "value1": value1, "value2": value2, "value3": value3, "value4": value4, "value5": value5, "value6": value6, "value7": value7, "value8": value8, "value9": roundToTwo(value9), "value10": roundToTwo(value10), "Marks": roundToTwo(marks), "Rank": 0 };
+            var dataObj = { "Serial": count, "OrgName": name, "value1": value1, "value2": value2, "value3": value3, "value4": value4, "value5": value5, "value6": value6, "value7": value7, "value8": value8, "value9": roundToTwo(value9), "value10": roundToTwo(value10)};
 
             dataArray1.push(dataObj);
             arrMarks1.push(marks);
