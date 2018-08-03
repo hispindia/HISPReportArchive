@@ -116,7 +116,7 @@
                 <tr>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black"  width="64" rowspan="2">Sr No</td>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black"  width="64" rowspan="2">District</td>
-                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">Performance plananed</td>
+                    <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">Performance planned</td>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">Performance held</td>
                     <td style="background:#ADD8E6; font-weight:400; text-align:center; border:1px solid black" colspan="2">%</td>                   
                 </tr>
@@ -232,10 +232,7 @@
     var sum2 = 0;
     var sum3 = 0;
     var sum4 = 0;
-    var sum5 = 0;
-    var sum6 = 0;
-  
-
+ 
     var orgUnitChildren_Array = [];
     var secondChildren_Array = [];
     var orgUnit = dhis2.report.organisationUnit;
@@ -257,36 +254,32 @@
     // New Code start from here
     var count = 0;
     var values1 = [];
-
+    var val = [];
     $.each(orgUnitChildren_Array, function (index, element) {
         var ouId = element[0];
         var ouName = element[1];
-        values.push(ouId);
-        values1.push(ouName);
-
-        dfdNext = dfdNext.pipe(function () {
-
-            var divName = values1.shift();
-            var value = values.shift();
-
-            return requestAjax(value).
-                done(function (response, response1) {
-                    count++;
-
-
-                    finalvalue(response, response1, divName, count);
-
-                    if (count == orgUnitChildren_Array.length) {
-                        finalvalue(0, 0, 0, 0);
-                        corGroupList();
-                    }
-                });
-        });
+        if (ouId == "xErXLgdjqAn" && ouName == "MUMBAI District") {
+        }
+        else {
+            val.push(ouId);
+            values.push(ouId);
+            values1.push(ouName);
+            dfdNext = dfdNext.pipe(function () {
+                var divName = values1.shift();
+                var value = values.shift();
+                return requestAjax(value).
+                    done(function (response, response1) {
+                        count++;
+                        finalvalue(response, response1, divName, count);
+                        if (count == val.length) {
+                            finalvalue(0, 0, 0, 0);
+                            corGroupList();
+                        }
+                    });
+            });
+        }
     })
-
-
-
-
+	
     function finalvalue(res4, res5, name, count) {
 
         if (count != 0 && count != undefined) {
@@ -346,32 +339,28 @@
             sum2 += dataArray[i].value2;
             sum3 += dataArray[i].value3;
             sum4 += dataArray[i].value4;
-            sum5 += dataArray[i].value5;
-            sum6 += dataArray[i].value6;
+          
          
         }
 
-        tabledata = ("<tr><td  style='background:#ADD8E6' colspan='2'>Total</td><td  style='background:#ADD8E6'>" + sum1 + "</td><td  style='background:#ADD8E6'>" + sum2 + "</td><td  style='background:#ADD8E6'>" + sum3 + "</td><td  style='background:#ADD8E6'>" + sum4 + "</td><td  style='background:#ADD8E6'>" + sum5 + "</td><td  style='background:#ADD8E6'>" + sum6 + "</td></tr>");
+        tabledata = ("<tr><td  style='background:#ADD8E6' colspan='2'>Total</td><td  style='background:#ADD8E6'>" + sum1 + "</td><td  style='background:#ADD8E6'>" + sum2 + "</td><td  style='background:#ADD8E6'>" + sum3 + "</td><td  style='background:#ADD8E6'>" + sum4 + "</td><td  style='background:#ADD8E6'></td><td  style='background:#ADD8E6'></td></tr>");
         document.getElementById("dataTable").innerHTML += tabledata;
 
         sum1 = 0;
         sum2 = 0;
         sum3 = 0;
         sum4 = 0;
-        sum5 = 0;
-        sum6 = 0
-
+     
     }
 
-
-    // Code for Coorporation Data Data
+ // Code for Coorporation Data Data
     var corGroup;
 
     $.ajax(
         {
             type: "GET",
             async: false,
-            url: "../api/organisationUnitGroups/YBJEhiPcxsw.json?fields=organisationUnits[id,name,parent[id,name]]",
+            url: "../api/organisationUnits?fields=id,name,parent[id,name]&filter=organisationUnitGroups.id:eq:YBJEhiPcxsw&order=name:asc",
             data: JSON,
             success: function (data, status) {
                 corGroup = data;
@@ -387,6 +376,8 @@
                 }
             }
         }
+        corpList.sort(SortByName);
+
         corGroupData(corpList);
     }
 
@@ -491,7 +482,10 @@
         return (value1);
     }
 
- 
+	function SortByName(x,y) {
+      return ((x.name == y.name) ? 0 : ((x.name > y.name) ? 1 : -1 ));
+    }
+    
     function arraySorting(a, b) {
         return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
     }
