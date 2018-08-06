@@ -9,7 +9,7 @@
 		<center>
 			<b> Start Date :
 				<input type="date" id="start" required> End Date :
-				<input type="date" id="end" required> Donar Name :
+				<input type="date" id="end" required> Donor Name :
 				<select id="donName" style="width:200px"></select>
 				<button id="tap" onclick="preSubmit()">Get Report</button>
 				<br>
@@ -97,7 +97,7 @@
 			var donName = document.getElementById("donName");
 
 			var option = document.createElement("OPTION");
-			option.innerHTML = "Please select donar name";
+			option.innerHTML = "Please Select Donor Name";
 			option.value = "Please select";
 			donName.options.add(option);
 			//Add the Options to the DropDownList.
@@ -124,7 +124,7 @@
 			var endDat = document.getElementById("end").value;
 			if(strUser2==0 || strUser2==undefined || strUser2 ==null)
 			{
-			alert("Please select a donar first");
+			alert("Please select a donor first");
 			}
 			else if (startDat == '' ||startDat ==undefined || startDat==null)
 			{
@@ -155,12 +155,7 @@
 		var startDat = "";
 		var endDat = "";
 		var orgid = "";
-		var count18_24_male = 0;
-		var count18_24_female = 0;
-		var count25_male = 0;
-		var count25female = 0;
 		var row = '';
-		var total = 0;
 		var count18_24_male_final = 0;
 		var count25_male_final = 0;
 		var count18_24_female_final = 0;
@@ -178,17 +173,22 @@
 			var donarName = document.getElementById("donName").value;
 			document.getElementById("donorname").innerHTML = donarName;
           
-
+		if(orgUnitChildren.length != 0){
 		for(var w=0; w< orgUnitChildren.length ;w++){
 			$.ajax({
 				async: false,
 				type: "GET",
 				dataType: "json",
 				contentType: "application/json",
-
 				url:
 					"../api/enrollments.json?&programStartDate=" + startDat + "&programEndDate=" + endDat + "&program=y6lXVg8TdOj&ou=" + orgUnitChildren[w].id + "&ouMode=DESCENDANTS&skipPaging=true",
 				success: function (data) {
+				var count18_24_male = 0;
+				var count18_24_female = 0;
+				var count25_male = 0;
+				var count25female = 0;
+				var total = 0;
+				
 					for (var i = 0; i < data.enrollments.length; i++) {
 
 						var trackEntutyInstanceid = data.enrollments[i].trackedEntityInstance;
@@ -199,8 +199,7 @@
 							dataType: "json",
 							contentType: "application/json",
 
-							url:
-								"../api/trackedEntityInstances/" + trackEntutyInstanceid + ".json",
+							url:"../api/trackedEntityInstances/" + trackEntutyInstanceid + ".json",
 
 							success: function (data) {
 
@@ -208,14 +207,16 @@
 								for (var j = 0; j < data.attributes.length; j++) {
 									if (data.attributes[j].displayName == "Project Donor") {
 										if (donarName == data.attributes[j].value) {
-											for (var k = 0; k < data.attributes.length; k++)
+											for (var k = 0; k < data.attributes.length; k++){
 												if (data.attributes[k].displayName == "Gender") {
 
 													var genderValue = data.attributes[k].value;
+													
 													if (genderValue == "Male") {
 														for (var l = 0; l < data.attributes.length; l++) {
 															if (data.attributes[l].displayName == "Age") {
 																var ageValueM = data.attributes[l].value;
+															}
 															}
 															if (ageValueM >= "18" && ageValueM <= "24") {
 																count18_24_male = count18_24_male + 1;
@@ -225,14 +226,15 @@
 																count25_male = count25_male + 1;
 
 															}
-														}
+														
 													}
 
 													else if (genderValue = "Female") {
-														if (data.attributes[k].displayName == "Age") {
-															var ageValueF = data.attributes[k].value;
+													for (var m = 0; m < data.attributes.length; m++) {
+														if (data.attributes[m].displayName == "Age") {
+															var ageValueF = data.attributes[m].value;
 														}
-
+														}
 														if (ageValueF >= "18" || ageValueF <= "24") {
 															count18_24_female = count18_24_female + 1;
 
@@ -242,15 +244,16 @@
 
 														}
 
-
+													
 													}
+												}
 												}
 										}
 									}
-									console.log("count18_24_male" + count18_24_male);
-									console.log("count25_male" + count25_male);
-									console.log("count18_24_female" + count18_24_female);
-									console.log("count25female" + count25female);
+									//console.log("count18_24_male" + count18_24_male);
+									//console.log("count25_male" + count25_male);
+									//console.log("count18_24_female" + count18_24_female);
+									//console.log("count25female" + count25female);
 									total = count18_24_male + count25_male + count18_24_female + count25female; 
 								}
 
@@ -260,6 +263,106 @@
 			
 			var tabledata = '<tr>';
 			tabledata += ("<td>" + orgUnitChildren[w].name + "</td><td>" + count18_24_male + " </td><td>" + count25_male + "</td><td>" + count18_24_female + "</td><td>" + count25female + "</td><td>" + total + "</td></tr>")
+			document.getElementById("tbodyTable").innerHTML += tabledata;
+
+			count18_24_male_final += count18_24_male;
+		 	count25_male_final += count25_male;
+		 	count18_24_female_final += count18_24_female;
+		 	count25female_final += count25female;
+			total_final += total;
+				}
+			})
+			}
+			}
+			else{
+			$.ajax({
+				async: false,
+				type: "GET",
+				dataType: "json",
+				contentType: "application/json",
+				url:
+					"../api/enrollments.json?&programStartDate=" + startDat + "&programEndDate=" + endDat + "&program=y6lXVg8TdOj&ou=" + orgid + "&ouMode=DESCENDANTS&skipPaging=true",
+				success: function (data) {
+				var count18_24_male = 0;
+				var count18_24_female = 0;
+				var count25_male = 0;
+				var count25female = 0;
+				var total = 0;
+				
+					for (var i = 0; i < data.enrollments.length; i++) {
+
+						var trackEntutyInstanceid = data.enrollments[i].trackedEntityInstance;
+						console.log("tt " + trackEntutyInstanceid);
+						$.ajax({
+							async: false,
+							type: "GET",
+							dataType: "json",
+							contentType: "application/json",
+
+							url:"../api/trackedEntityInstances/" + trackEntutyInstanceid + ".json",
+
+							success: function (data) {
+
+
+								for (var j = 0; j < data.attributes.length; j++) {
+									if (data.attributes[j].displayName == "Project Donor") {
+										if (donarName == data.attributes[j].value) {
+											for (var k = 0; k < data.attributes.length; k++){
+												if (data.attributes[k].displayName == "Gender") {
+
+													var genderValue = data.attributes[k].value;
+													
+													if (genderValue == "Male") {
+														for (var l = 0; l < data.attributes.length; l++) {
+															if (data.attributes[l].displayName == "Age") {
+																var ageValueM = data.attributes[l].value;
+															}
+															}
+															if (ageValueM >= "18" && ageValueM <= "24") {
+																count18_24_male = count18_24_male + 1;
+
+															}
+															else if (ageValueM >= "25") {
+																count25_male = count25_male + 1;
+
+															}
+														
+													}
+
+													else if (genderValue = "Female") {
+													for (var m = 0; m < data.attributes.length; m++) {
+														if (data.attributes[m].displayName == "Age") {
+															var ageValueF = data.attributes[m].value;
+														}
+														}
+														if (ageValueF >= "18" || ageValueF <= "24") {
+															count18_24_female = count18_24_female + 1;
+
+														}
+														else if (ageValueF >= "25") {
+															count25female = count25female + 1;
+
+														}
+
+													
+													}
+												}
+												}
+										}
+									}
+									//console.log("count18_24_male" + count18_24_male);
+									//console.log("count25_male" + count25_male);
+									//console.log("count18_24_female" + count18_24_female);
+									//console.log("count25female" + count25female);
+									total = count18_24_male + count25_male + count18_24_female + count25female; 
+								}
+
+							}
+						})
+					}
+			
+			var tabledata = '<tr>';
+			tabledata += ("<td>" + orgName + "</td><td>" + count18_24_male + " </td><td>" + count25_male + "</td><td>" + count18_24_female + "</td><td>" + count25female + "</td><td>" + total + "</td></tr>")
 			document.getElementById("tbodyTable").innerHTML += tabledata;
 
 			count18_24_male_final += count18_24_male;
