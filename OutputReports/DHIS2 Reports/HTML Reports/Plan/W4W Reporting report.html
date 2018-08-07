@@ -9,7 +9,8 @@
 		<center>
 			<b> Start Date :
 				<input type="date" id="start" required> End Date :
-				<input type="date" id="end" required> Donor Name :
+				<input type="date" id="end" required> Program Name :
+				<select id="prgName" style="width:200px"></select> Donor Name :
 				<select id="donName" style="width:200px"></select>
 				<button id="tap" onclick="preSubmit()">Get Report</button>
 				<br>
@@ -75,29 +76,87 @@
                 a.click();
                 
             }
-		
-		var doname = [];
-		(function myFunction() {
-
+			
+		(function myFunction2() {
+			var programName = [];
+			
 			$.ajax({
 				async: false,
 				type: "GET",
-				url: "../api/optionSets/lbXAy7ywyXf.json?fields=id,name,options[id,name,code]",
+				url: "../api/programs.json?fields=id,name,code,attributeValues[attribute[id,name,code],value]&paging=false",
 				success: function (data) {
-					for (var i = 0; i < data.options.length; i++) {
-
-						dname = data.options[i];
-						doname.push(dname);
-
+				for(var w=0;w<data.programs.length;w++){
+				if(data.programs[w].attributeValues.length != 0){
+				for(var w1=0;w1< data.programs[w].attributeValues.length;w1++){
+				if(data.programs[w].attributeValues[w1].attribute.code == 'Report_program' && data.programs[w].attributeValues[w1].value == "true"){
+					
+						prgNm = data.programs[w].name;
+						prgId = data.programs[w].id;
+						programName.push({"name" :prgNm,"id": prgId});
 					}
-					console.log("doname" + doname);
+					}
+					}
+					}
+				}
+			});
+			
+			var progName = document.getElementById("prgName");
+
+			var option = document.createElement("OPTION");
+			option.innerHTML = "Please select program name";
+			option.value = "Please select";
+			progName.options.add(option);
+			//Add the Options to the DropDownList.
+			for (var i = 0; i < programName.length; i++) {
+				var option = document.createElement("OPTION");
+				
+				//Set Customer Name in Text part.
+				option.innerHTML = programName[i].name;
+
+				//Set CustomerId in Value part.
+				option.value = programName[i].id;
+
+				//Add the Option element to DropDownList.
+				progName.options.add(option);
+			}
+
+		})();
+		
+		$(function() {
+			$("#prgName").change(function() {
+				var programId = $(this).val();
+				$("#donName option").remove();
+				myFunction(programId);
+			});
+		});
+		
+		function myFunction(programId) {
+			var doname = [];
+			$.ajax({
+				async: false,
+				type: "GET",
+				url: "../api/optionSets.json?fields=id,name,attributeValues,options[id,name,code]&paging=FALSE",
+				success: function (data) {
+				for(var w=0;w<data.optionSets.length;w++){
+				if(data.optionSets[w].attributeValues.length != 0){
+				for(var w1=0;w1< data.optionSets[w].attributeValues.length;w1++){
+				if(data.optionSets[w].attributeValues[w1].value == programId){
+					for (var i = 0; i < data.optionSets[w].options.length; i++) {
+						dname = data.optionSets[w].options[i];
+						doname.push(dname);
+					}
+					}
+					}
+					}
+					}
+					//console.log("doname" + doname);
 
 				}
 			});
 			var donName = document.getElementById("donName");
 
 			var option = document.createElement("OPTION");
-			option.innerHTML = "Please Select Donor Name";
+			option.innerHTML = "Please select donor name";
 			option.value = "Please select";
 			donName.options.add(option);
 			//Add the Options to the DropDownList.
@@ -113,20 +172,16 @@
 				//Add the Option element to DropDownList.
 				donName.options.add(option);
 			}
-
-		})();
-		
+		}
 
 		function preSubmit(){
 			var e = document.getElementById("donName");
 			var strUser2 = e.selectedIndex;
+			var e2 = document.getElementById("prgName");
+			var strUser3 = e2.selectedIndex;
 			var startDat = document.getElementById("start").value;
 			var endDat = document.getElementById("end").value;
-			if(strUser2==0 || strUser2==undefined || strUser2 ==null)
-			{
-			alert("Please select a donor first");
-			}
-			else if (startDat == '' ||startDat ==undefined || startDat==null)
+			if (startDat == '' ||startDat ==undefined || startDat==null)
 			{
 				alert("Please select a start date first");
 			}
@@ -134,12 +189,21 @@
 			{
 				alert("Please select a end date first");
 			}
+			else if(strUser3==0 || strUser3==undefined || strUser3 ==null)
+			{
+			alert("Please select a program first");
+			}
+			else if(strUser2==0 || strUser2==undefined || strUser2 ==null)
+			{
+			alert("Please select a donor first");
+			}
 			else{
 				setTimeout(function(){ 			
   				timeoutTrigger();
 				}, 1000);
 				
 			}
+				
 		}
 		
 		function timeoutTrigger(){
@@ -161,7 +225,8 @@
 		var count18_24_female_final = 0;
 		var count25female_final = 0;
 		var total_final = 0;
-
+		var programId = document.getElementById("prgName").value;
+		
 			var orgUnit = dhis2.report.organisationUnit;
 			orgid = orgUnit.id;
 			orgName = orgUnit.name;
@@ -181,7 +246,7 @@
 				dataType: "json",
 				contentType: "application/json",
 				url:
-					"../api/enrollments.json?&programStartDate=" + startDat + "&programEndDate=" + endDat + "&program=y6lXVg8TdOj&ou=" + orgUnitChildren[w].id + "&ouMode=DESCENDANTS&skipPaging=true",
+					"../api/enrollments.json?&programStartDate=" + startDat + "&programEndDate=" + endDat + "&program="+ programId +"&ou=" + orgUnitChildren[w].id + "&ouMode=DESCENDANTS&skipPaging=true",
 				success: function (data) {
 				var count18_24_male = 0;
 				var count18_24_female = 0;
@@ -281,7 +346,7 @@
 				dataType: "json",
 				contentType: "application/json",
 				url:
-					"../api/enrollments.json?&programStartDate=" + startDat + "&programEndDate=" + endDat + "&program=y6lXVg8TdOj&ou=" + orgid + "&ouMode=DESCENDANTS&skipPaging=true",
+					"../api/enrollments.json?&programStartDate=" + startDat + "&programEndDate=" + endDat + "&program="+ programId +"&ou=" + orgid + "&ouMode=DESCENDANTS&skipPaging=true",
 				success: function (data) {
 				var count18_24_male = 0;
 				var count18_24_female = 0;
