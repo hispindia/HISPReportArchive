@@ -281,34 +281,46 @@
     orgUnitChildren_Array.sort(arraySorting);
 
 
-    // New Code start from here
+   
+    // New Code start from here // xErXLgdjqAn Mumbai district
     var count = 0;
     var values1 = [];
+    var val = [];
 
     $.each(orgUnitChildren_Array, function (index, element) {
         var ouId = element[0];
         var ouName = element[1];
-        values.push(ouId);
-        values1.push(ouName);
 
-        dfdNext = dfdNext.pipe(function () {
+        if (ouId == "xErXLgdjqAn" && ouName == "MUMBAI District") {
 
-            var divName = values1.shift();
-            var value = values.shift();
+        }
+        else {
+            val.push(ouId);
+            values.push(ouId);
+            values1.push(ouName);
 
-            return requestAjax(value).
-                done(function (response, response1, response2) {
-                    count++;
+            dfdNext = dfdNext.pipe(function () {
+
+                var divName = values1.shift();
+
+                var value = values.shift();
 
 
-                    finalvalue(response, response1, response2, divName, count);
+                return requestAjax(value).
+                    done(function (response, response1, response2) {
+                        count++;
 
-                    if (count == orgUnitChildren_Array.length) {
-                        finalvalue(0, 0, 0, 0, 0);
-                        corGroupList();
-                    }
-                });
-        });
+
+                        finalvalue(response, response1, response2, divName, count);
+
+                        if (count == val.length) {
+                            finalvalue(0, 0, 0, 0, 0);
+                            corGroupList();
+                        }
+                    });
+            });
+        }
+
     })
 
 
@@ -380,14 +392,14 @@
     }
 
 
-    // Code for Coorporation Data Data
+     // Code for Coorporation Data 
     var corGroup;
 
     $.ajax(
         {
             type: "GET",
             async: false,
-            url: "../api/organisationUnitGroups/YBJEhiPcxsw.json?fields=organisationUnits[id,name,parent[id,name]]",
+            url: "../api/organisationUnits?fields=id,name,parent[id,name]&filter=organisationUnitGroups.id:eq:YBJEhiPcxsw&order=name:asc",
             data: JSON,
             success: function (data, status) {
                 corGroup = data;
@@ -403,6 +415,8 @@
                 }
             }
         }
+        corpList.sort(SortByName);
+
         corGroupData(corpList);
     }
 
@@ -508,7 +522,9 @@
         return sum;
     }
 
-
+	function SortByName(x, y) {
+        return ((x.name == y.name) ? 0 : ((x.name > y.name) ? 1 : -1));
+    }
     function arraySorting(a, b) {
         return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
     }
