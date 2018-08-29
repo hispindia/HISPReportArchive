@@ -1500,7 +1500,7 @@ from
 				case when dataelementid = 9475 and categoryoptioncomboid =  15 then sag2.value end a199,
 				case when dataelementid = 9476 and categoryoptioncomboid =  15 then sag2.value end a200,
 				case when dataelementid = 9032 and categoryoptioncomboid =  15 then sag2.value end a201,
-				case when dataelementid = 9033 and categoryoptioncomboid =  15 then sag2.value end a202,
+				case when dataelementid = 9037 and categoryoptioncomboid =  15 then sag2.value end a202,
 				case when dataelementid = 9038 and categoryoptioncomboid =  15 then sag2.value end a203,
 				case when dataelementid = 1630856 and categoryoptioncomboid =  15 then sag2.value end a204,
 				case when dataelementid = 9457 and categoryoptioncomboid =  15 then sag2.value end a205,
@@ -1939,7 +1939,7 @@ from
 					
                      SUBSTRING(ou5.comment 
                   FROM
-                     1 FOR POSITION(':' IN ou5.comment) ) AS st,
+                     1 FOR POSITION(':' IN ou5.comment) -1 ) AS st,
                      SUBSTRING(ou5.comment 
                   FROM
                      position(':' in ou5.comment) + 1 )AS tp,
