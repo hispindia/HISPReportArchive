@@ -1935,7 +1935,7 @@ from
 					
                      SUBSTRING(ou5.comment 
                   FROM
-                     1 FOR POSITION(':' IN ou5.comment) ) AS st,
+                     1 FOR POSITION(':' IN ou5.comment)-1) AS st,
                      SUBSTRING(ou5.comment 
                   FROM
                      position(':' in ou5.comment) + 1 )AS tp,
