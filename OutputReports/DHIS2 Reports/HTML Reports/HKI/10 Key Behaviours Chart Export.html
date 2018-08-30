@@ -1,0 +1,300 @@
+
+<!-- Created by sudiksha on 29/08/18.-->
+
+<!DOCTYPE html>
+<html>
+    <head>
+      <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+      
+      <script src="https://code.highcharts.com/highcharts.js"></script>
+      <script src="https://code.highcharts.com/modules/exporting.js"></script>
+      <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    </head>
+
+
+    <style>
+    #dashboardTable {
+    border-collapse: collapse;
+    width: 100%;
+    margin-right: -10px;
+    margin-right: -10px
+}
+
+    #dashboardTable td, #dashboardTable th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        width: 33%; 
+        height: 50%;
+        
+    }
+
+    #dashboardTable tr{background-color: #f2f2f2;}
+
+    #dashboardTable td:hover {background-color: #ddd;}
+
+/* Second Laoder */
+.lds-facebook {
+    display: inline-block;
+    position: relative;
+    width: 64px;
+    height: 64px;
+  }
+  .lds-facebook div {
+    display: inline-block;
+    position: absolute;
+    left: 6px;
+    width: 13px;
+    background:#21618C;
+    animation: lds-facebook 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+  }
+  .lds-facebook div:nth-child(1) {
+    left: 6px;
+    animation-delay: -0.24s;
+  }
+  .lds-facebook div:nth-child(2) {
+    left: 26px;
+    animation-delay: -0.12s;
+  }
+  .lds-facebook div:nth-child(3) {
+    left: 45px;
+    animation-delay: 0;
+  }
+  @keyframes lds-facebook {
+    0% {
+      top: 6px;
+      height: 51px;
+    }
+    50%, 100% {
+      top: 19px;
+      height: 26px;
+    }
+  }
+  
+    
+</style>
+<body ng-app="HKIDashboadBarReports" ng-controller="HKIDashboadReportController" >
+    
+    <div id="mainpage">
+    <div id="loader" style="visibility: hidden" class="lds-facebook">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+        <table id="dashboardTable" style="visibility: hidden">
+            <tr>
+                <td ><div id="container0" style="width: 100%; height: 100%; "></div></td>
+                <td ><div id="container1" style="width: 100%; height: 100%; "></div></td>
+                <td ><div id="container2" style="width: 100%; height: 100%; "></div></td>
+            </tr>
+            <tr>
+                <td ><div id="container3" style="width: 100%; height: 100%; "></div></td>
+                <td ><div id="container4" style="width: 100%; height: 100%; "></div></td>
+                <td ><div id="container5" style="width: 100%; height: 100%; "></div></td>
+            </tr>
+            <tr>
+                <td ><div id="container6" style="width: 100%; height: 100%; "></div></td>
+                <td ><div id="container7" style="width: 100%; height: 100%; "></div></td>
+                <td ><div id="container8" style="width: 100%; height: 100%; "></div></td>
+            </tr>
+            <tr>
+                <td ><div id="container9" style="width: 100%; height: 100%; "></div></td>
+                <td ><div id="container10" style="width: 100%; height: 100%; "></div></td>
+                <td ><div id="container11" style="width: 100%; height: 100%; "></div></td>
+            </tr>
+            
+        </table>
+
+    </div>
+</body>
+<script>
+     var app = angular.module('HKIDashboadBarReports', []);
+        app.controller('HKIDashboadReportController', function($scope,MetadataService,$timeout) {
+                
+            
+    setTimeout(function(){
+        $('#loader').attr('style','visibility:visible !important');
+        $timeout(function(){$scope.createReport()}, 100);
+    });
+     
+            
+    $scope.createReport=function(){
+            $scope.chartsname=[]//charts name
+            $scope.dimensions=[]//dimensions in charts
+            //fetching dimension of all charts in dashboard :suaahara 10 key behavior  
+             MetadataService.getdashboarddata().then(function (data) {
+              var dimension_uid=""
+              for (var i=0;i<data.dashboardItems.length;i++)
+              {
+                $scope.chartsname[data.dashboardItems[i].chart.id]=data.dashboardItems[i].chart.name
+                for(var j=0;j<data.dashboardItems[i].chart.dataDimensionItems.length;j++){
+                    dimension_uid+=data.dashboardItems[i].chart.dataDimensionItems[j].indicator.id+";";
+                }
+                $scope.dimensions[data.dashboardItems[i].chart.id]=dimension_uid
+                obj={},dimension_uid="";
+                }
+
+
+                generateReport($scope.chartsname,$scope.dimensions)
+            
+                
+            });
+
+        }
+        generateReport=function(chartsname,dimensions){
+
+            $scope.chartsdata=[]
+                for(var key in dimensions){
+                    var paramdimension=dimensions[key]//dimension fetched
+                    $.ajax({
+                        type: "GET",
+                        dataType: "json",
+                        async: false,
+                        contentType: "application/json",
+                        url:"../api/analytics.json?dimension=dx:"+paramdimension+"&dimension=pe:LAST_4_QUARTERS&filter=ou:"+dhis2.report.organisationUnit.id+"&displayProperty=NAME&user=FCVCu79MC88",
+                        success:function(data){
+                            
+                            var allperiods=[],//values of x-axis
+                                dimensn=[],series=[]
+                                seriesdata=[]
+
+                            var pe=data.metaData.dimensions.pe,
+                                title_name=chartsname[key],
+                                dx=data.metaData.dimensions.dx
+                            
+                            //storing periods (x-axix)
+                            for(var i=0;i<pe.length;i++)
+                            {
+                                var val=data.metaData.items[pe[i]].name
+                                allperiods.push(val)
+                            }
+                            //storing points marked on graph
+                            for(var i=0;i<dx.length;i++)
+                            {
+                                var dimension_name=data.metaData.items[dx[i]].name
+                                dimensn.push(val)
+                                
+                                for(var j=0;j<data.height;j++)
+                                {
+                                    if(data.rows[j][0]==dx[i])
+                                    seriesdata.push(parseInt(data.rows[j][2]))
+                                }
+                                series[i]={
+                                    name:dimension_name,
+                                    data:seriesdata
+                                }
+                                seriesdata=[]
+                            }
+
+                            
+
+
+                            $scope.chartsdata.push({
+                                title:title_name,//title of the graph
+                                xAxis:allperiods,//x-axis values
+                                series:series//points marked on graph
+                            })
+                            
+                        
+                    
+                        },
+                        error:function(er){
+                            console.log(er);
+                  }
+               })
+          }
+          
+                   
+
+
+
+
+          $scope.finalchartdata=[]//array of all bar highcharts data
+                    for(var i=0;i<$scope.chartsdata.length;i++)
+                    {
+
+                
+                 $scope.chartdataObj={
+                                chart: {
+                                    type: 'column'
+                                },
+                                title: {
+                                    text: $scope.chartsdata[i].title//graph title
+                                },
+                                xAxis: {
+                                    categories: $scope.chartsdata[i].xAxis,//x-axis 
+                                    crosshair: true
+                                },
+                                yAxis: {  // y-axis
+                                    min:5,
+                                    max:100,
+                                    title: {
+                                        text: ''
+                                    }
+                                    },
+                                tooltip: {
+                                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                                        '<td style="padding:0"><b>{point.y:.1f} </b></td></tr>',
+                                    footerFormat: '</table>',
+                                    shared: true,
+                                    useHTML: true
+                                },
+                                plotOptions: {
+                                    column: {
+                                        pointPadding: 0.2,
+                                        borderWidth: 0,
+                                        dataLabels: {
+                                                    enabled: true,
+                                                    color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'black'
+                                                    }
+                                    }
+                                },
+                                series: $scope.chartsdata[i].series//point marked on graph
+                                }
+
+                                $scope.finalchartdata['container'+i]=$scope.chartdataObj
+                            }
+                            
+                            //creating highcharts 
+                            for(var key in $scope.finalchartdata)
+                            {
+                                Highcharts.chart(key,$scope.finalchartdata[key]);
+                            }
+
+                            document.getElementById("loader").style.visibility="hidden";
+                            document.getElementById("dashboardTable").style.visibility="visible";
+           
+                        
+        }
+        
+        }) .service('MetadataService',function(){
+                return {
+                    //service for fetching dimension of all charts in dashboard
+                    getdashboarddata : function(){
+                        var def = $.Deferred();
+                        $.ajax({
+                            type: "GET",
+                            dataType: "json",
+                            async: false,
+                            contentType: "application/json",
+                            url: '../api/dashboards/c1ybmBfokMK.json?fields=dashboardItems[chart[id,name,dataDimensionItems]]',
+                            success: function (data) {
+                                def.resolve(data);
+                            },
+                            error:function(er){
+                                console.log(er);
+                            }
+                        });
+                        return def;
+                    }
+                    } });
+
+
+
+
+
+
+   
+        </script>
+
+</html>
