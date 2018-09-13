@@ -107,8 +107,8 @@ try {
     });
 }
 
-const BASE_URL = "http://apps.hispindia.org/tibet";
-    const REPORT_URL = "/dhis-web-reporting/generateHtmlReport.action?uid=BdDfpNu2iqb&";
+const BASE_URL = "http://139.162.16.101/tibet_pro";
+    const REPORT_URL = "/dhis-web-reporting/generateHtmlReport.action?uid=ahFo0nbqWEQ&";
     const DEST_PATH_BASE = "";
 
 
