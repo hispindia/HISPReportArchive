@@ -1,4 +1,4 @@
-<html>
+
 <html>
 
 <head>
@@ -24,13 +24,23 @@
 	<div id="printing" style="display:none;" class="animate-bottom"></div>
 	<center>
 		<table class="table table-bordered reporttable" id="dataTable" border='1'>
-			<thead>
+			<thead >
 				<tr>
-					<td style="border:1px solid black;text-align:center;background-color:#A9A9A9" colspan='4' >User Wise Enrollment Count</td>
+					<td style="border:1px solid black;text-align:center;background-color:#A9A9A9" colspan='5' >User Wise Enrollment Count</td>
 
 				</tr>
 				
+				
+				<tr id= "tablerow">
+					<td  id ="orgcol" style="border:1px solid black;text-align:center;background-color:#A9A9A9" colspan='5' >Organisation Unit path - <span id = "orgpath"></span></td>
+
+				</tr>
+				
+				
 				<tr>
+				<td style="border:1px solid black;text-align:center;background-color:#A9A9A9" >Parent</span>
+					</td>
+					
 					<td style="border:1px solid black;text-align:center;background-color:#A9A9A9" >Org unit</span>
 					</td>
 					
@@ -44,18 +54,23 @@
 				</tr>
 			
 			<tbody id="tbodyTable"></tbody>
+			
 			</thead>
 	</center>
 </head>
 
 
-<body>
+
+
+<body id ="bodyid">
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
 	<script type="text/javascript">
+ var path = "";
 	
-	var SqlViewIdall='yxUmYuvDIyf';
-	
+		var SqlViewIdall='iMHLD9KowZ0'; 
+	//var SqlViewIdall='nAdDnGLKo59';
+
 		$(document).ready(function () {
 
 			document.getElementById("loader").style.display = "none";
@@ -121,6 +136,12 @@
 	
 		function preSubmit() {
 		
+		$( "#dataTable" ).load;
+	
+		
+		
+		
+		
 			var e2 = document.getElementById("prgName");
 			var strUser3 = e2.selectedIndex;
 			var startDat = document.getElementById("start").value;
@@ -153,6 +174,8 @@
 
 		function getValues() {
 			$('#tbodyTable').empty();
+			 $("#orgcol thead tr td").text(''); 
+		//	$('#tablerow').empty();
 
 			var startDat = "";
 			var endDat = "";
@@ -167,6 +190,7 @@
 
 			var orgUnit = dhis2.report.organisationUnit;
 			orgid = orgUnit.id;
+			
 			level = orgUnit.level;
 			console.log("level = " + level);
 			orgName = orgUnit.name;
@@ -180,31 +204,41 @@
 			//if (orgUnitChildren.length != 0) {
 				//for (var w = 0; w < orgUnitChildren.length; w++) {
 				
-			/* $.ajax({
+			 $.ajax({
                 type: "GET",
                 dataType: "json",
                 async:false,
                 contentType: "application/json",
-                url: '../api/organisationUnits/' + orgid + '.json?level=4&fields=id,name,level,children[id,name,level,displayName,children[id,name,displayName,level,children[id,name,level,displayName]]]&paging=false',
-				 url: '../api/sqlViews/' + SqlViewIdall + '/data.json?var=programId:' + programId +  '&var=startDat:' + startDat + '&var=endDate:' + endDat +'&paging=false',
-                success: function (data,data1) {
-                   console.log(data);
-				   console.log(data1);
+               url: '../api/organisationUnits/'+ orgid + '.json?fields=id,name,children[id,name],parent[id,name,parent[id,name,parent[id,name,parent[id,name]]]&paging=false',
+			   
+				
+                success: function (data4,status) {
+				
+				 for(var j = 0; j <data4.length;j++);
+					  {
+					  	  
+				
+				   var l4 = data4.parent.name;
+				   var l3 = data4.parent.parent.name;
+				   var l2 = data4.parent.parent.parent.name;
+				   var l1 =data4.parent.parent.parent.parent.name;
+				  
+				   path = l1 + '/' + l2 + '/' + l3 + '/' + l4 + '/' + orgName ;
+				   document.getElementById("orgpath").innerHTML = path;
 				   
-				   
-                }
-            }), */
+				  }
 				
 								
-				 $.ajax({
-                type: "GET",
-                dataType: "json",
-                async:false,
-                contentType: "application/json",
-                url: '../api/sqlViews/' + SqlViewIdall + '/data.json?var=programId:' + programId + '&var=orgUnitId:' + orgid + '&var=startDat:'  + startDat + '&var=endDate:' + endDat +'&paging=false',
-                success: function (data1) {
+				  $.ajax(
+                {
+                    type: "GET",
+                url: '../api/sqlViews/' + SqlViewIdall + '/data.json?var=programId:' + programId + '&var=orgUnitId:' + orgid + '&var=startDat:'  + startDat + '&var=endDate:' + endDat + '&paging=false',
+				 data: JSON,
+                success: function (data1, status) {
+				
+			
                   console.log(data1);
-				  
+				   
 				  if(data1.rows.length == 0)
 				  {
 				  $('#loader').hide();
@@ -227,41 +261,41 @@
 					 var lastName = lastname[2];
 					 
 					  var orgname = data1.rows[i];
-					 var orgName = orgname[3];
+					 var orgNamee = orgname[3];
+					 
+					 var parentname = data1.rows[i];
+					 var parentName = orgname[4];
 					 
 					  var count = data1.rows[i];
-					 var Count = count[5];
-					 var tabledata = '<tr>';
-						tabledata += ("<td>" + orgName + " </td><td>" + fname + "</td><td>" + lastName + "</td><td>" + Count + "</td></tr>")
-							document.getElementById("tbodyTable").innerHTML += tabledata;
-				  $('#loader').hide();	
-					  
-				  }
-				  
-				  }
-				  
-				  
-                }
-            });
+					 var Count = count[6];
 					
-									  
-									  
-									  
-							//	}
+					
+					
+					 
+					 var tabledata = '<tr>';
+						tabledata += ("<td>" + parentName + "</td><td>" + orgNamee + " </td><td>" + fname + "</td><td>" + lastName + "</td><td>" + Count + "</td></tr>")
+							document.getElementById("tbodyTable").innerHTML += tabledata;
+				  $('#loader').hide();
+
+			  
+				  }
+				 
+				  } 
+                }
+				
+				
+				
+            },1000);
+			
+			
+			 }
+				  })
+					
+							
 								}
 								
 								
-
-
-                               
-			
-			/*var tabledataTotal = '<tr>';
-			tabledataTotal += ("<td>Total</td><td>" + count18_24_male_final + " </td><td>" + count25_male_final + "</td></tr>")
-			document.getElementById("tbodyTable").innerHTML += tabledataTotal;*/
-
-			//$('#loader').hide();
-		
-
+								
 	</script>
 	<style>
 		.heading td {
