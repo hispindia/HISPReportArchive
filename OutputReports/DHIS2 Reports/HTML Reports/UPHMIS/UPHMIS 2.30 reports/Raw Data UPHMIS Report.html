@@ -1,0 +1,996 @@
+<script type="text/javascript" src="../dhis-web-commons/bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="../dhis-web-commons/bootstrap/css/bootstrap.min.css"/>
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<!-- Main Script -->
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2].toString().substring(0, 6) + '01';
+    var urlParams = url.split('&');
+    var dataJSONArray = [];
+    var selectedTABID = "";
+    var sdParam = "";
+    var edParam = "";
+	var startdate = gotPeriod;
+	var enddate = "";
+	var periodArray = [];
+	var periodidS;
+    var district_Array = [];
+    var division_Array = [];
+    var SC_Array = [];
+    var CHC_Array = [];
+    var PHC_Array = [];
+    var DH_Array = [];
+	
+	var TOTAL_Array = [];
+	var urlSC;
+	var facilityType = ["SC", "PHC", "CHC", "DH", "Total"];
+    var orgUnits_Array = [];
+    var resultSQLView;
+	var  confirmedCountS =0;
+	//var SqlViewIdallt = "n1rBRMlInCp";
+	//var SqlViewIdalldivt = "tpqAvNDJDg2";
+
+    
+   var SqlViewIdall = "qcvCpcUWXR1";
+   var dataJSON;
+   var dataJSON1;
+    jQuery(document).ready(function () {
+        $(".hideInPrint").hide();
+        $("#dataTable").fadeOut();
+        showLoad();
+      
+        if (selOrgUnitLevel == 2) {
+            loadData();
+
+            $("#btnExport").click(function (e) {
+                var a = document.createElement('a');
+                var data_type = 'data:application/vnd.ms-excel';
+                var table_div = document.getElementById('state');
+                var table_html = table_div.outerHTML.replace(/ /g, '%20');
+                a.href = data_type + ', ' + table_html;
+                a.download = 'Data Status HMIS.xls';
+                a.click();
+                e.preventDefault();
+            });
+			
+        }
+        else {
+            alert("Please select the State");
+            window.history.back();
+        }
+		
+    });
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+	
+	
+	function getPeriodYear(pey) {
+	
+        var year = pey.substring(0,4);
+        
+       
+        return year;
+    }
+	
+	
+    
+
+    function loadData() {
+           
+      
+    
+     var urlall = "../api/sqlViews/" + SqlViewIdall + "/data.json?var=valueType:int&var=startdate:" + startdate;
+	 $.get(urlall, function (json2) {
+            dataJSON = json2;
+	loadValues();
+		
+        });
+	
+    	     
+	}
+	
+	function loadValues()
+	{
+	var htmlReport = "";
+	var len = dataJSON.rows.length;
+	 for( var i= 0; i < len; i++)
+	 {
+	htmlReport += "<tr>";
+	//htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i].state + "</td>";
+	//htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][1] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][2] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][3] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][4] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][5] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][6] + "</td>";
+	//htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][7] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][8] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][9] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][10] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][11] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][12] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][13] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][14] + "</td>";
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][15] + "</td>";
+	
+	htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][16] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][17] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][18] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][19] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][20] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][21] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][22] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][23] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][24] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][25] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][26] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][27] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][28] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][29] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][30] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][31] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][32] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][33] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][34] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][35] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][36] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][37] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][38] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][39] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][40] + "</td>";
+
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][41] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][42] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][43] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][44] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][45] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][46] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][47] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][48] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][49] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][50] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][51] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][52] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][53] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][54] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][55] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][56] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][57] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][58] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][59] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][60] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][61] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][62] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][63] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][64] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][65] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][66] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][67] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][68] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][69] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][70] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][71] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][72] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][73] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][74] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][75] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][76] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][77] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][78] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][79] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][80] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][81] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][82] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][83] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][84] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][85] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][86] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][87] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][88] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][89] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][90] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][91] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][92] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][93] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][94] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][95] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][96] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][97] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][98] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][99] + "</td>";
+
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][100] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][101] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][102] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][103] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][104] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][105] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][106] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][107] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][108] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][109] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][110] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][111] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][112] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][113] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][114] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][115] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][116] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][117] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][118] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][119] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][120] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][121] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][122] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][123] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][124] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][125] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][126] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][127] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][128] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][129] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][130] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][131] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][132] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][133] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][134] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][135] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][136] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][137] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][138] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][139] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][140] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][141] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][142] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][143] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][144] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][145] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][146] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][147] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][148] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][149] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][150] + "</td>";
+/*
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][151] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][152] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][153] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][154] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][155] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][156] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][157] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][158] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][159] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][160] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][161] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][162] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][163] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][164] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][165] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][166] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][167] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][168] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][169] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][170] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][171] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][172] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][173] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][174] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][175] + "</td>";
+
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][176] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][177] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][178] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][179] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][180] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][181] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][182] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][183] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][184] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][185] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][186] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][187] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][188] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][189] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][190] + "</td>";
+
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][191] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][192] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][193] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][194] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][195] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][196] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][197] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][198] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][199] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][200] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][201] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][202] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][203] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][204] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][205] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][206] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][207] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][208] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][209] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][210] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][211] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][212] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][213] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][214] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][215] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][216] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][217] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][218] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][219] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][220] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][221] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][222] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][223] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][224] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][225] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][226] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][227] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][228] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][229] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][230] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][231] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][232] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][233] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][234] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][235] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][236] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][237] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][238] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][239] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][240] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][241] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][242] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][243] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][244] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][245] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][246] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][247] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][248] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][249] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][250] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][251] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][252] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][253] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][254] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][255] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][256] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][257] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][258] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][259] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][260] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][261] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][262] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][263] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][264] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][265] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][266] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][267] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][268] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][269] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][270] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][271] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][272] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][273] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][274] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][275] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][276] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][277] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][278] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][279] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][280] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][281] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][282] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][283] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][284] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][285] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][286] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][287] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][288] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][289] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][290] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][291] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][292] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][293] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][294] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][295] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][296] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][297] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][298] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][299] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][300] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][301] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][302] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][303] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][304] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][305] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][306] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][307] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][308] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][309] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][310] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][311] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][312] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][313] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][314] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][315] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][316] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][317] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][318] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][319] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][320] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][321] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][322] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][323] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][324] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][325] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][326] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][327] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][328] + "</td>";
+htmlReport += "<td style='text-align: center;'>" + dataJSON.rows[i][329] + "</td>";*/
+
+	htmlReport += "</tr>";
+	}
+	 $("#dataTable > tbody").append(htmlReport);
+	hideLoad();
+	$("#dataTable").fadeIn();
+	}
+
+
+    
+
+
+
+    
+
+    // function to convert periods to more visible info
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+    function getPeriodMonth(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(5, 7);
+        var strMonth = "";
+
+        if (month == "01" || month == "1")        strMonth = "January";
+        else if (month == "02" || month == "2")    strMonth = "February";
+        else if (month == "03" || month == "3")    strMonth = "March";
+        else if (month == "04" || month == "4")    strMonth = "April";
+        else if (month == "05" || month == "5")    strMonth = "May";
+        else if (month == "06" || month == "6")    strMonth = "June";
+        else if (month == "07" || month == "7")    strMonth = "July";
+        else if (month == "08" || month == "8")    strMonth = "August";
+        else if (month == "09" || month == "9")    strMonth = "September";
+        else if (month == "10")                strMonth = "October";
+        else if (month == "11")                strMonth = "November";
+        else if (month == "12")                strMonth = "December";
+
+        return strMonth;
+    }
+
+    // function to hide loading animation
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+        //document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+
+    function showLoad() {
+        document.getElementById("cover").style.display = "block";
+        document.getElementById("loads").style.display = "block";
+        //document.getElementById("loading").style.display="visible";
+        document.getElementsByTagName("body")[0].style.overflow = "visible";
+        //alert( "inside showload method" );
+    }
+
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                #periodTitle {
+                    font-weight: bold;
+                    background-color: #f1f1f1;
+                    text-align: center;
+                    font-size: 18px;
+                }
+                .vtext {
+                    width: 1px;
+                    height: 50px;
+                    -ms-transform: rotate(-90deg);
+                    -webkit-transform: rotate(-90deg);
+                    transform: rotate(-90deg);
+                    border-style: solid;
+                }
+
+            </style>
+            <div id="loads"><p class="loading" align="center" style="font-size: 12px;">Report is loading... Wait for a
+    while...</p></div>
+<div id="cover"></div>
+
+</span></p>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle;"
+        onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"><span
+        class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"
+><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;"
+        id="btnExport"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;
+    Download As Excel
+</button>
+
+<br><br>
+
+<div id="printing">
+    <div id='state'>
+        <table width="100%"  id="dataTable" class="table-condensed table-hover table-striped" border="1"
+               cellspacing="6" cellpadding="4"
+               style="border-collapse: collapse;font-size: 12px; font-family: Arial, Helvetica, sans-serif;">
+            <thead>
+      
+            <tr>
+                <td colspan="3"  style="background-color: #e9a9be; color: #000000; font-weight: bold;text-align: center;">period</td>
+                
+                <td id="periodID" colspan="88"
+                    style="background-color: #e9a9be; color: #000000; font-weight: bold;text-align: center;">&nbsp;</td>
+            </tr>
+      
+
+ 
+     <tr id="periodTitle" >
+                
+            </tr>
+ <tr bgcolor="#F2DDDC" align="center" height="20">
+								<td colspan="2" height="20" align="right"><b>Parent OU:</b></td>
+								<td colspan="4" id="title1">&nbsp;</td>				
+								<td colspan="4">&nbsp;</td>				
+								<td colspan="2" align="right"><b>Month: </b></td>
+								<td colspan="2" id="period">&nbsp;</td>
+								<td colspan="410" >&nbsp;</td>
+								
+							</tr>
+							<tr height="20">
+							<td style="background-color: #F2DDDC; font-size: 12px; font-weight: bold;text-align: center;" rowspan="3" height="400" width="80">State Name</td>
+    <td style="background-color: #F2DDDC; font-size: 12px; font-weight: bold;text-align: center;" rowspan="3" height="400" width="80">Division Name</td>
+    <td style="background-color: #F2DDDC; font-size: 12px; font-weight: bold;text-align: center;" rowspan="3" width="80">District Name</td>
+	<td style="background-color: #F2DDDC; font-size: 12px; font-weight: bold;text-align: center;" rowspan="3" width="80">Block Name</td>
+	<td style="background-color: #F2DDDC; font-size: 12px; font-weight: bold;text-align: center;" rowspan="3" width="80">Facility Name</td>
+	<td style="background-color: #F2DDDC; font-size: 12px; font-weight: bold;text-align: center;" rowspan="3" width="80">Category</td>
+	<td style="background-color: #F2DDDC; font-size: 12px; font-weight: bold;text-align: center;" rowspan="3" width="80">Facility Type</td>
+	<td style="background-color: #F2DDDC; font-size: 12px; font-weight: bold;text-align: center;" rowspan="3" width="80">Location</td>
+    <td style="background-color: #32849C; font-size: 12px; font-weight: bold;text-align: center;" colspan="6" width="426">&nbsp;</td>
+    <td style="background-color: #32849C; font-size: 12px; font-weight: bold;text-align: center;" colspan="217" width="17360">HMIS  </td>
+    <td style="background-color: #32849C; font-size: 12px; font-weight: bold;text-align: center;" colspan="204" width="17618">UPHMIS    </td>
+  </tr>
+  <tr height="20">
+
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of total    class IV employees working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Doctors    Level 1 working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Doctors    Level 2 working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Doctors    Level 3 working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Doctors    Level 4 working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Doctors    Level 5 &amp; above&nbsp;working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Medical    Superintendent (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Physician working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Paediatrician working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Radiologist working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Gynaecologist &amp; Obstetrics working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Anaesthetists working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Pathologist working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of General    Surgeon working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Staff    Nurse working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Administrative Staff (UDC,LDC) working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Accounts Staff working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Ward    boy working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Medical    staff received salary through PIS on time</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Paramedical staff received salary through PIS on time</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of LHV    associated  at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of regular ANM    working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Chest    &amp; TB Specialist working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Skin    &amp; VD Specialist working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Ortho    Surgeon working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ENT    Surgeon working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Dental    Surgeon working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of total    Surgeon working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of EMO    (Emergency Medical Officer) working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Other    Specialist working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of X-ray    Technician working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    optometrist working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Physiotherapist working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ANM    working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ASHA    positions Approved </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ASHA    associated at facility </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Contractual Medical officer working at facility </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Paramedical staff working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Program    Management/Administrative staff working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Paediatricians working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Anaesthetist working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Gynaecologists working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Surgeons working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of FP    counsellors working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ARSH    counsellors working at facility (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Medical    Officer AYUSH- working at facility (Male) (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Medical    Officer AYUSH working at facility (Female) (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ASHA    sangini approved in block     (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ASHA    sangini working in block (Contractual)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ANM/LHV    trained in SBA </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ANM/LHV    trained in PPIUCD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ANM/LHV    trained in IUCD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ANM/LHV    trained in NSSK</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of ASHA    trained for induction training/up to 5 module </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of ASHA    completed module 6 &amp; 7 training</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of EMOC    trained Doctors working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of BEMOC    trained Doctors working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of PPIUCD    trained AYUSH Female- Doctors working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of LSAS    trained Doctors working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of F-IMNCI    trained Doctors working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of F-IMNCI    trained Staff Nurses working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of  Paramedical/ANMs trained in SBA working at    facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No. of PPIUCD    trained Paramedical staff working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No. of IUCD    trained Paramedical staff working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of IUCD    trained AYUSH – Female Doctors working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No. of PPIUCD    trained AYUSH-LMO working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No. of    Laparoscopic  trained Doctors working    at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No. of Mini Lap    trained Doctors working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No. of    Counsellors trained on Family Planning working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No. of ARSH    Counsellors trained and working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of NSSK    trained doctors working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of NSSK    trained paramedical working at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ASHA    Sangini trained</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of IUCD    375,380A available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of IUCD 380 A    available at faciliity<br>
+    </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of OCP    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of ECP    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Condoms    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of    Mifepristone + Misoprostol (MMA) available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of MVA    Kit/EVA  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of IUCD Kit    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of NSV Kit    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of    Laparoscopic sterilization  kit    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Mini Lap    kit available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj.    Oxytocin available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab    Misoprostol available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab Alpha    methyldopa available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab    Labelatol available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab    Nifedipine  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj.    Magnesium Sulfate available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj.    Tetanus Toxoid available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Sterile    pads available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of IFA    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Pregnancy    Test Kit  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of    Haemoglobinometer available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Urine    albumin kit available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Blood grouping    typing (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">HIV screening    (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Hepatitis B    screening (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Partograph    (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Protocols    displayed in LR (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of IV Fluids    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj    Dexamethasone available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab –    Paracetamol available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab    –Calcium   available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj. Vit K1    (1 mg/ml) available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Mucus    Extractor  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Bag and    mask (240 ml) with both pre &amp; term mask (size 0,1)  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Clean    linen/towels for receiving new born available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Sterile    cord cutting equipment available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Designated    Newborn care Corner  (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Functional    Radiant Warmer (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of ORS pkt.    available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab Zinc DT    (20mg) available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Syp    Salbutamol available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Salbutamol    Nebulizing Solution available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Syrup    Albendazole available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Syrup Vit.    A available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj.    Gentamicin available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab    Amoxicillin DT (125 mg) available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab    Amoxicillin DT (250 mg) available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Amoxicillin    syrup available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj.    Ceftriaxone or Cefotaxime available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Tab    Doxycycline (tablet) available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj.    Ampicillin available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of Inj.    Amikacin available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Tab Dicyclomine</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Weekly iron folic    acid supplementation</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Tablet    Albendazole</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of    BCG available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of    OPV  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of    Hep B  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of    DPT available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of    Measles  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of    Syrup Vit. A  available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of JE    Vaccine (where relevant) available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of    IPV available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of vials of    Pentavalent available at faciliity</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Weighing Machine    (Adult)(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Weighing Machine    (Infant)(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Hub cutter with    needle destroyer (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Refrigerator(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">RTI/STI    Kit(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Bleaching Powder    (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Oxygen Cylinder    functional(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">BP apparatus with    stethoscope(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Thermometer(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">PPIUCD Forceps    (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Fetoscope/Doppler    (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Autoclave/Boiler(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Running    water(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Soap(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Colour coded bins    and bags(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Electricity Power    back-up – generator(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Electricity Power    back-up – Invertors(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Labor room with    attached toilet (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Cold Box(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">ILR(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Deep    Freezer(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">MCP cards)  in DPs(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">MUAC Tape(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Height scale    (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">X-ray    Machines(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">USG    Machines(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">CT scan    Machines(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">MRI    Machine(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">TMT    machines(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">ECG    Machine(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Dialysis    machine(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Boyles    trolleys(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Pulse    oximeter(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Semi auto    Analyser(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Blood bank    Refrigerator(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Computers(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Generator(Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">OPD cases– Old    cases only</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Beds    Available</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of X-ray    investigations at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of USG    investigations at  facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of CT scan    investigations at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Plasters at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Post-mortem at day in facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of  Post-mortem at night in facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Medico    Legal cases at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ECG at    facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Dialysis at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of EMG at    facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number Endoscopy    at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number Cystoscopy    at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Death    due to JE at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Death    due to AES at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    surgeons not conducted any surgeries during the month</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Indents    made </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Indents    pending</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Date of Physical    verification of stock</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of stock    out including emergency medicine</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of drugs    expired during the month</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Pregnant Women  HB  test conducted</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Of which  Number     of Pregnant Women severely anaemic</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Pregnant Women delivered before 37 weeks of Pregnancy</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Pregnant Women received corticosteroid before delivery</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Pregnant Women with APH/PPH </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Pregnant Women with sepsis</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Pregnant Women with other complication</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Pregnant Women referred to higher/other facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    facility based Maternal Death Review conducted</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    community based Maternal Death Review conducted</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of new    born with complication due to preterm delivery </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of new    born resisted </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of new    born with birth anomalies</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of new    born with complication due to sepsis</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of new    born with birth asphyxia </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of new    born with other complications</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of new    born referred to higher/other facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children diagnosed with diarrhoea in OPD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children admitted with diarrhoea</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) with diarrhoea who were referred</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children diagnosed with pneumonia in OPD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children admitted with pneumonia</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) with pneumonia who were referred</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of young    infants diagnosed with sepsis by ANM</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of young    infants given pre-referral dose</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of young    infants who completed 7-day antibiotic treatment</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of young    infants who were treated by ANM and survived</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) diagnosed with diarrhoea by ASHA</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) diagnosed with diarrhoea by ANM</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) with diarrhoea who received both ORS+zinc </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) with diarrhoea who were referred </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ASHA    with ORS &amp; Zinc stock </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) suspected with pneumonia by ASHA</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) diagnosed with pneumonia by ANM</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) with pneumonia who received amoxicillin</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children (2month-5 year) with pneumonia who were referred </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ASHA    with amoxicillin supply</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of camps    planned for FP services (FDOS)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of camps    held for FP services (FDOS)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    acceptors of FP service (FDOS)  (LAP+ML+NSV+IUCD)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    clinic/fixed days for FP services (FDS)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of camps    held for FP services (FDS)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    acceptors of FP service  (FDS)(LAP+ML+NSV+IUCD)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Any    follow-up made after male sterilization</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Any    follow-up made after female sterilization</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Cases    with complications due to&nbsp; IUCD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Any    follow-up made after IUCD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Any    follow-up made after PPIUCD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    beneficiaries presented with complete Basket of Choice</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    beneficiaries received counselling for FP</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Cases    with complications due to&nbsp; PPIUCD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Is NRC    established and operational in facility?</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of beds    available in NRC</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children admitted</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children completed 14 days of stay in the facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children discharged after recovery</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children followed-up at least 4 times after discharged </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of  Beneficiaries under JSSK received drugs and    Consumables </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of PW  under JSSK received  diet</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of PW  under JSSK received Blood Transfusion </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of PW  under JSSK received diagnostic    services </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of PW    under JSSK transported from home to hospital</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of PW  under JSSK transported from lower to higher    hospitals(IFT)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    Beneficiaries under JSSK received Drop back</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of newborn    received free treatment under JSSK</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of newborn    under JSSK transported from home to hospital</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of newborn    under JSSK received Drop back</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    complain received </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of complain    resolved </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Target of AFHS    clinic </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of AFHS    clinic establish up to the month</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of AFHS    counsellor recruited up to the month</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Total number of    client registered during the month</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of school    children (5 to 10 years) who received 4/5 IFA small tablets</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of school    children (5 to 10 years) who received &lt;4/5 IFA small tablets</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of school    children (10 to 19 years) who received 4/5 IFA small tablets</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of school    children (10 to 19 years) who received &lt;4/5 IFA small tablets</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of out of    school children (10 to 19 years) who received 4/5 IFA small tablets</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of out of    school children (10 to 19 years) who received &lt;4/5 IFA small tablets</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of regular    team </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    school </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of School    covered in the month</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children investigated (Screening) in School</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children referred for 4 Ds during the month in School</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children treated against referred during the month in school</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children treated on the spot during the month in School</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    AWC </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of AWC    covered during the month</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children investigated (screening) in AWC</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children referred for 4 Ds during the month in AWC</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    children referred during the month in AWC</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">of children    treated on the spot during the month in AWC</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Date of  AAA meetings  held</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of ASHA    participated in the AAA meeting</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of AWW in SC    area and participated in the AAA meeting</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of condom    distributed through ASHA to beneficiary by social Marketing </span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of OCP    distributed through ASHA to beneficiary by social Marketing</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of ECP    distributed through ASHA to beneficiary by social Marketing</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of sanitary    napkins distributed  through ASHA to    beneficiary by social Marketing</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of PTK    distributed  through ASHA to    beneficiary by social Marketing</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No adolescent    girls visited for health check-up during VNHD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No adolescent    girls tested for anaemia during VNHD</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of severely    anaemia adolescent girls (&lt;7 hb/dl)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of    moderate  anaemic adolescent girls    (&gt;=7  and &lt;11 hb/dl)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of adolescent    girls received IFA tablets during VHND</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of PW    received  full  ANC check-ups (4 ANC, 100 IFA tablets, 2    TT,HB, BP, Weight and urine albumin test)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of  PW planned their Birth as advised by FLW</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2"> No of     PW in the last trimester contacted by ASHA</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of PW Blood    pressure  &amp; U/Alb tested during ANC    check-up</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of SAM /    severely underweight children checked during VHND by ANMs</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    misbehaviour incidents by patients &amp; relatives</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of    employees reported absent during inspections</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Is the Agency    hired for bio medical waste management at facility? (Y/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Contract rate per    bed (in Rs.)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of times bio    medical waste lifted by agency during the month</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">DH / Block has    constituted HMIS/MCTS validation committee? (Y/N)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Date of District    Hospital/Block level HMIS/MCTS validation committee meeting?</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of cluster    meeting held in block</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of ASHA    absent in cluster meeting</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of ASHA due    for incentives (submitted vouchers) in the reporting month by type of program</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">No of facilities    visited by validation committee for HMIS supportive supervision</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Date of Purchase    Committee meeting</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Indents    made as per Rate Contract at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Value (Rs.) of    Purchase Orders placed as per Rate Contract</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Indent    made as per rate contract against which supply not received at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Number of Indents    made for Local Purchase at facility</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Value(Rs.) of    Purchase Orders placed as per Local Purchase</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Grievance    redressal cell functional at facility (Yes/No)</span></td>
+    <td width="64" bgcolor="#FFF0F8"><span class="style2">Citizen charter    available at facility (Yes/No)</span></td>
+  </tr>
+
+            </thead>
+
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
