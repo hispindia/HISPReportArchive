@@ -1,0 +1,210 @@
+﻿select ou.name,final.district,sum(final.actual) as actual, sum(final.expected) as expected ,(sum(actual)/sum(expected))*100 as completeness_percentage
+from
+(
+select defaultelem.district,sum(c) as actual,defaultelemdenom.expected
+from
+(select ous.uidlevel4 as district,concat (de.uid ,'.',coc.uid),count(value) as c
+	from datavalue dv 
+	inner join dataelement de on de.dataelementid = dv.dataelementid
+	inner join _orgunitstructure ous on ous.organisationunitid = dv.sourceid
+	inner join period pe on pe.periodid = dv.periodid
+	inner join periodtype pt on pt.periodtypeid = pe.periodtypeid
+	inner join categoryoptioncombo coc on dv.categoryoptioncomboid = coc.categoryoptioncomboid
+	where pe.startdate between '2018-01-01' and '2018-01-28'
+	and pt.name='Monthly'
+	and concat (de.uid ,'.',coc.uid)in (	'OP5Q3Ga5V3T.aRNxGm8EkXJ',
+						'aknlXIekL1Z.iRNhRMvoSCx',
+						'aknlXIekL1Z.wb51FJHqHxp',
+						'HOrR1amEU6x.WVDe9q7ihBV',
+						'HOrR1amEU6x.YOjJNrvr2j2',
+						'tN6dkfe6JLE.aRNxGm8EkXJ',
+						'ZpgnTGpSkeg.Ti9FJqkSK6J',
+						'fqM6fGLUqVD.Ti9FJqkSK6J',
+						'A89WukjS845.Ti9FJqkSK6J',
+						'qYpFbVo8WsL.Ti9FJqkSK6J',
+						'mexWK5BLs5H.Ti9FJqkSK6J',
+						'a1Itlc1Um1p.Ti9FJqkSK6J',
+						'YyUc4SanMDt.Ti9FJqkSK6J',
+						'SCutWcJX88a.Ti9FJqkSK6J',
+						'jhdL4rNP5pA.Ti9FJqkSK6J',
+						'bOFAAIzcaGZ.Ti9FJqkSK6J',
+						'Xg1j0efNUrP.Ti9FJqkSK6J',
+						'n3L9KZq55UM.Ti9FJqkSK6J',
+						'ui45G8KwpzU.Ti9FJqkSK6J',
+						'uTUcZv1fJfk.Ti9FJqkSK6J',
+						'NeNWp698eve.Ti9FJqkSK6J',
+						'NeNWp698eve.VhfovxbuwIs',
+						'NeNWp698eve.uBLH63dNSeY',
+						'NeNWp698eve.gZiING8oxqo',
+						'NeNWp698eve.NPYP4zMmba8',
+						'NeNWp698eve.e4vOZhidnTl',
+						'NeNWp698eve.JD3TbSsgoKa',
+						'FIaGENXR3c5.Ti9FJqkSK6J'
+						)
+	and de.uid in (
+			'OP5Q3Ga5V3T',
+			'a1Itlc1Um1p',
+			'A89WukjS845',
+			'aknlXIekL1Z',
+			'aknlXIekL1Z',
+			'bOFAAIzcaGZ',
+			'FiaGENXR3c5',
+			'fqM6fGLUqVD',
+			'HOrR1amEU6x',
+			'HOrR1amEU6x',
+			'jhdL4rNP5pA',
+			'mexWK5BLs5H',
+			'n3L9KZq55UM',
+			'NeNWp698eve',
+			'qYpFbVo8WsL',
+			'SCutWcJX88a',
+			'tN6dkfe6JLE',
+			'ui45G8KwpzU',
+			'uTUcZv1fJfk',
+			'Xg1j0efNUrP',
+			'YyUc4SanMDt',
+			'ZpgnTGpSkeg'
+			)
+	and coc.uid in ('Ti9FJqkSK6J',
+			'aRNxGm8EkXJ',
+			'iRNhRMvoSCx',
+			'wb51FJHqHxp',
+			'WVDe9q7ihBV',
+			'YOjJNrvr2j2',
+			'aRNxGm8EkXJ',
+			'VhfovxbuwIs',
+			'uBLH63dNSeY',
+			'gZiING8oxqo',
+			'NPYP4zMmba8',
+			'e4vOZhidnTl',
+			'JD3TbSsgoKa'
+			
+			)
+	group by ous.uidlevel4,de.uid ,coc.uid
+	order by ous.uidlevel4
+) defaultelem
+
+right join 
+
+(select ous.uidlevel4 as district,count(ous.uidlevel6)*22 as expected
+from _orgunitstructure ous
+where ous.uidlevel4 is not null
+and ous.organisationunitid in (
+				select distinct organisationunitid 
+				from orgunitgroup oug
+				inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+				where oug.uid in (
+				  'JRLIvJzK4H0', --sc
+				  'gBerHA2rUH0', --chc
+				  'nIVbiyAyRrb', --phc
+				  'UBuxUMmdz1U') --dh
+				)
+group by ous.uidlevel4
+order by ous.uidlevel4
+)defaultelemdenom
+on defaultelem.district = defaultelemdenom.district
+group by defaultelem.district,defaultelemdenom.expected
+
+union all
+
+--	For element v32 consider only SC,KPI,CHC,BPHC,BCHC organisation unit group.
+select v32.district,sum(c) as actual,v32denom.expected
+from
+
+	(select ous.uidlevel4 as district,concat (de.uid ,'.',coc.uid),count(value) as c
+	from datavalue dv 
+	inner join dataelement de on de.dataelementid = dv.dataelementid
+	inner join _orgunitstructure ous on ous.organisationunitid = dv.sourceid
+	inner join period pe on pe.periodid = dv.periodid
+		inner join periodtype pt on pt.periodtypeid = pe.periodtypeid
+
+	inner join categoryoptioncombo coc on dv.categoryoptioncomboid = coc.categoryoptioncomboid
+	where pe.startdate between '2018-01-01' and '2018-01-28'
+	and pt.name='Monthly'	
+	and concat (de.uid ,'.',coc.uid)in ('aRueVYr35yM.Ti9FJqkSK6J')
+	and de.uid in ('aRueVYr35yM')
+	and coc.uid in ('Ti9FJqkSK6J')
+	and dv.sourceid in (
+			select distinct organisationunitid 
+			from orgunitgroup oug
+			inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+			where oug.uid in ('JRLIvJzK4H0', -- SC
+					  'EvD2Cw0bvAn', --kpi
+					  'gBerHA2rUH0', --chc
+					  'FGrQvTRmfeb', --bphc
+					  'QF8UiPqHevI') --bchc
+				)
+	group by ous.uidlevel4,de.uid ,coc.uid
+	order by ous.uidlevel4) v32
+
+
+right join
+(select ous.uidlevel4 as district,count(ous.uidlevel6) as expected
+from _orgunitstructure ous
+where ous.uidlevel4 is not null
+and ous.organisationunitid in (
+				select distinct organisationunitid 
+				from orgunitgroup oug
+				inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+				where oug.uid in ('JRLIvJzK4H0', -- SC
+				  'EvD2Cw0bvAn', --kpi
+				  'gBerHA2rUH0', --chc
+				  'FGrQvTRmfeb', --bphc
+				  'QF8UiPqHevI') --bchc
+				)
+group by ous.uidlevel4
+order by ous.uidlevel4
+)v32denom
+on v32.district = v32denom.district
+group by v32.district,v32denom.expected
+
+union all
+
+select v35.district,sum(c) as actual,v35denom.expected
+from
+(select ous.uidlevel4 as district,concat (de.uid ,'.',coc.uid),count(value) as c
+from datavalue dv 
+inner join dataelement de on de.dataelementid = dv.dataelementid
+inner join _orgunitstructure ous on ous.organisationunitid = dv.sourceid
+inner join period pe on pe.periodid = dv.periodid
+	inner join periodtype pt on pt.periodtypeid = pe.periodtypeid
+
+inner join categoryoptioncombo coc on dv.categoryoptioncomboid = coc.categoryoptioncomboid
+	where pe.startdate between '2018-01-01' and '2018-01-28'
+	and pt.name='Monthly'
+	and concat (de.uid ,'.',coc.uid)in ('HIMRPikytRR.Ti9FJqkSK6J')
+and de.uid in ('HIMRPikytRR')
+and coc.uid in ('Ti9FJqkSK6J')
+and dv.sourceid in (
+		select distinct organisationunitid 
+		from orgunitgroup oug
+		inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+		where oug.uid in ('xfYm6TOHh99', -- dch
+				  'gBerHA2rUH0', --chc
+				  'QF8UiPqHevI') --bchc
+			)
+group by ous.uidlevel4,de.uid ,coc.uid
+order by ous.uidlevel4)v35
+
+right join
+(select ous.uidlevel4 as district,count(ous.uidlevel6) as expected
+from _orgunitstructure ous
+where ous.uidlevel4 is not null
+and ous.organisationunitid in (
+				select distinct organisationunitid 
+				from orgunitgroup oug
+				inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+				where oug.uid in ('xfYm6TOHh99', -- dch
+				  'gBerHA2rUH0', --chc
+				  'QF8UiPqHevI') --bchc
+				)
+group by ous.uidlevel4
+order by ous.uidlevel4
+)v35denom
+on v35.district = v35denom.district
+group by v35.district,v35denom.expected
+) final
+inner join organisationunit ou on final.district = ou.uid
+
+group by final.district,ou.name
+order by ou.name
