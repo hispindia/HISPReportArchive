@@ -1,0 +1,317 @@
+﻿select totallevel6.block, totallevel6.name as ouname, sum(numofoutliers) as numofoutliers,sum(expected) as expected,
+sum(numofoutliers) ::float / sum(expected)*100 as perc
+from
+	(select defaultelemdenom.block,ou.name,defaultoutliers.numofoutliers,defaultelemdenom.expected, 
+	(defaultoutliers.numofoutliers::float/defaultelemdenom.expected)*100 as perc
+	from
+	(
+		select block,count(*) as numofoutliers 
+		from
+		(
+			select block,organisationunitid,decoc,mean,listofval,(mean + 3*sqrt(mean)) as u , (mean - 3*sqrt(mean)) as l 
+			from
+			(
+				select ous.uidlevel5 as block, 
+				ous.organisationunitid,
+				concat (de.uid ,'.',coc.uid) as decoc,
+				array_agg(value::integer) as listofval,
+				sum(value::float) / (select count(*) as numofmonth 
+							from period pe
+							where pe.startdate 
+							between '2018-01-01' and '2018-03-28'
+							and periodtypeid = 3) as mean
+					
+				from datavalue dv 
+				inner join dataelement de on de.dataelementid = dv.dataelementid
+				inner join _orgunitstructure ous on ous.organisationunitid = dv.sourceid
+				inner join period pe on pe.periodid = dv.periodid
+				inner join periodtype pt on pt.periodtypeid = pe.periodtypeid
+				inner join categoryoptioncombo coc on dv.categoryoptioncomboid = coc.categoryoptioncomboid
+				where pe.startdate between '2018-01-01' and '2018-03-28'
+				and pt.name='Monthly'
+				and concat (de.uid ,'.',coc.uid)in (	'OP5Q3Ga5V3T.aRNxGm8EkXJ',
+									'aknlXIekL1Z.iRNhRMvoSCx',
+									'aknlXIekL1Z.wb51FJHqHxp',
+									'HOrR1amEU6x.WVDe9q7ihBV',
+									'HOrR1amEU6x.YOjJNrvr2j2',
+									'tN6dkfe6JLE.aRNxGm8EkXJ',
+									'ZpgnTGpSkeg.Ti9FJqkSK6J',
+									'A89WukjS845.Ti9FJqkSK6J',
+									'qYpFbVo8WsL.Ti9FJqkSK6J',
+									'mexWK5BLs5H.Ti9FJqkSK6J',
+									'a1Itlc1Um1p.Ti9FJqkSK6J',
+									'YyUc4SanMDt.Ti9FJqkSK6J',
+									'SCutWcJX88a.Ti9FJqkSK6J',
+									'jhdL4rNP5pA.Ti9FJqkSK6J',
+									'bOFAAIzcaGZ.Ti9FJqkSK6J',
+									'Xg1j0efNUrP.Ti9FJqkSK6J',
+									'n3L9KZq55UM.Ti9FJqkSK6J',
+									'ui45G8KwpzU.Ti9FJqkSK6J',
+									'uTUcZv1fJfk.Ti9FJqkSK6J',
+									'NeNWp698eve.Ti9FJqkSK6J',
+									'NeNWp698eve.VhfovxbuwIs',
+									'NeNWp698eve.uBLH63dNSeY',
+									'NeNWp698eve.gZiING8oxqo',
+									'NeNWp698eve.NPYP4zMmba8',
+									'NeNWp698eve.e4vOZhidnTl',
+									'NeNWp698eve.JD3TbSsgoKa'
+									)
+				and de.uid in (
+						'OP5Q3Ga5V3T',
+						'a1Itlc1Um1p',
+						'A89WukjS845',
+						'aknlXIekL1Z',
+						'aknlXIekL1Z',
+						'bOFAAIzcaGZ',
+						'HOrR1amEU6x',
+						'HOrR1amEU6x',
+						'jhdL4rNP5pA',
+						'mexWK5BLs5H',
+						'n3L9KZq55UM',
+						'NeNWp698eve',
+						'qYpFbVo8WsL',
+						'SCutWcJX88a',
+						'tN6dkfe6JLE',
+						'ui45G8KwpzU',
+						'uTUcZv1fJfk',
+						'Xg1j0efNUrP',
+						'YyUc4SanMDt',
+						'ZpgnTGpSkeg'
+						)
+				and coc.uid in ('Ti9FJqkSK6J',
+						'aRNxGm8EkXJ',
+						'iRNhRMvoSCx',
+						'wb51FJHqHxp',
+						'WVDe9q7ihBV',
+						'YOjJNrvr2j2',
+						'aRNxGm8EkXJ',
+						'VhfovxbuwIs',
+						'uBLH63dNSeY',
+						'gZiING8oxqo',
+						'NPYP4zMmba8',
+						'e4vOZhidnTl',
+						'JD3TbSsgoKa'
+						
+						)
+				--and ous.uidlevel5 = 'a2rjHSkns9X'		
+				group by ous.uidlevel5, ous.organisationunitid, de.uid ,coc.uid
+			) defaultelem
+		)test	
+		where u < any(listofval) or l > any(listofval) 
+		group by block
+		)defaultoutliers
+
+	right join
+
+		(select ous.uidlevel5 as block,
+		count(ous.uidlevel6)*22*(select count(*) as numofmonth 
+					from period pe
+					where pe.startdate 
+					between '2018-01-01' and '2018-03-28'
+					and periodtypeid = 3) as expected
+		from _orgunitstructure ous
+		where ous.uidlevel5 is not null
+		and ous.organisationunitid in (
+						select distinct organisationunitid 
+						from orgunitgroup oug
+						inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+						where oug.uid in (
+						  'JRLIvJzK4H0', --sc
+						  'gBerHA2rUH0', --chc
+						  'nIVbiyAyRrb', --phc
+						  'UBuxUMmdz1U', --dh
+						  'yIKlvvB6eCS') --urban 
+						)
+		group by ous.uidlevel5
+		order by ous.uidlevel5
+		)defaultelemdenom
+		
+	on defaultoutliers.block = defaultelemdenom.block
+	inner join organisationunit ou on defaultoutliers.block = ou.uid
+	group by defaultelemdenom.block,defaultelemdenom.expected,ou.name,defaultoutliers.numofoutliers
+
+
+	union all
+
+
+	select v32denom.block,ou.name,v32outliers.numofoutliers,v32denom.expected, (v32outliers.numofoutliers::float/v32denom.expected)*100 as perc
+	from
+	(
+		select block,count(*) as numofoutliers 
+		from
+		(
+			select block,organisationunitid,decoc,mean,listofval,(mean + 3*sqrt(mean)) as u , (mean - 3*sqrt(mean)) as l 
+			from
+			(
+				select ous.uidlevel5 as block, 
+				ous.organisationunitid,
+				concat (de.uid ,'.',coc.uid) as decoc,
+				array_agg(value::integer) as listofval,
+				sum(value::float) / (select count(*) as numofmonth 
+							from period pe
+							where pe.startdate 
+							between '2018-01-01' and '2018-03-28'
+							and periodtypeid = 3) as mean
+					
+				from datavalue dv 
+				inner join dataelement de on de.dataelementid = dv.dataelementid
+				inner join _orgunitstructure ous on ous.organisationunitid = dv.sourceid
+				inner join period pe on pe.periodid = dv.periodid
+				inner join periodtype pt on pt.periodtypeid = pe.periodtypeid
+				inner join categoryoptioncombo coc on dv.categoryoptioncomboid = coc.categoryoptioncomboid
+				where pe.startdate between '2018-01-01' and '2018-03-28'
+				and pt.name='Monthly'
+				and concat (de.uid ,'.',coc.uid)in ('aRueVYr35yM.Ti9FJqkSK6J')
+				and de.uid in ('aRueVYr35yM'	)
+				and coc.uid in ('Ti9FJqkSK6J')
+				and dv.sourceid in (
+				select distinct organisationunitid 
+				from orgunitgroup oug
+				inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+				where oug.uid in ('JRLIvJzK4H0', -- SC
+						  'EvD2Cw0bvAn', --kpi
+						  'gBerHA2rUH0', --chc
+						  'FGrQvTRmfeb', --bphc
+						  'QF8UiPqHevI') --bchc
+					)
+				group by ous.uidlevel5, ous.organisationunitid, de.uid ,coc.uid
+			) defaultelem
+		)test	
+		where u < any(listofval) or l > any(listofval) 
+		group by block
+		)v32outliers
+
+	right join
+
+		(select ous.uidlevel5 as block,count(ous.uidlevel6)*1*(select count(*) as numofmonth 
+							from period pe
+							where pe.startdate 
+							between '2018-01-01' and '2018-03-28'
+							and periodtypeid = 3) as expected
+		from _orgunitstructure ous
+		where ous.uidlevel5 is not null
+		and ous.organisationunitid in (
+						select distinct organisationunitid 
+						from orgunitgroup oug
+						inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+						where oug.uid in ('JRLIvJzK4H0', -- SC
+						  'EvD2Cw0bvAn', --kpi
+						  'gBerHA2rUH0', --chc
+						  'FGrQvTRmfeb', --bphc
+						  'QF8UiPqHevI') --bchc
+						)
+		group by ous.uidlevel5
+		order by ous.uidlevel5
+		)v32denom
+		
+	on v32outliers.block = v32denom.block
+	inner join organisationunit ou on v32outliers.block = ou.uid
+	group by v32denom.block,v32denom.expected,ou.name,v32outliers.numofoutliers
+
+
+
+
+	union all
+
+
+	select v35denom.block,ou.name,v35outliers.numofoutliers,v35denom.expected, (v35outliers.numofoutliers::float/v35denom.expected)*100 as perc
+	from
+	(
+		select block,count(*) as numofoutliers 
+		from
+		(
+			select block,organisationunitid,decoc,mean,listofval,(mean + 3*sqrt(mean)) as u , (mean - 3*sqrt(mean)) as l 
+			from
+			(
+				select ous.uidlevel5 as block, 
+				ous.organisationunitid,
+				concat (de.uid ,'.',coc.uid) as decoc,
+				array_agg(value::integer) as listofval,
+				sum(value::float) / (select count(*) as numofmonth 
+							from period pe
+							where pe.startdate 
+							between '2018-01-01' and '2018-03-28'
+							and periodtypeid = 3) as mean
+					
+				from datavalue dv 
+				inner join dataelement de on de.dataelementid = dv.dataelementid
+				inner join _orgunitstructure ous on ous.organisationunitid = dv.sourceid
+				inner join period pe on pe.periodid = dv.periodid
+				inner join periodtype pt on pt.periodtypeid = pe.periodtypeid
+				inner join categoryoptioncombo coc on dv.categoryoptioncomboid = coc.categoryoptioncomboid
+				where pe.startdate between '2018-01-01' and '2018-03-28'
+				and pt.name='Monthly'
+				and concat (de.uid ,'.',coc.uid)in ('HIMRPikytRR.Ti9FJqkSK6J')
+				and de.uid in ('HIMRPikytRR'	)
+				and coc.uid in ('Ti9FJqkSK6J')
+				and dv.sourceid in (
+				select distinct organisationunitid 
+				from orgunitgroup oug
+				inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+				where oug.uid in ('xfYm6TOHh99', -- dch
+					  'gBerHA2rUH0', --chc
+					  'QF8UiPqHevI') --bchc
+				)
+				group by ous.uidlevel5, ous.organisationunitid, de.uid ,coc.uid
+			) defaultelem
+		)test	
+		where u < any(listofval) or l > any(listofval) 
+		group by block
+		)v35outliers
+
+	right join
+
+		(select ous.uidlevel5 as block,count(ous.uidlevel6)*1*(select count(*) as numofmonth 
+							from period pe
+							where pe.startdate 
+							between '2018-01-01' and '2018-03-28'
+							and periodtypeid = 3) as expected
+		from _orgunitstructure ous
+		where ous.uidlevel5 is not null
+		and ous.organisationunitid in (
+						select distinct organisationunitid 
+						from orgunitgroup oug
+						inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+						where oug.uid in ('xfYm6TOHh99', -- dch
+						  'gBerHA2rUH0', --chc
+						  'QF8UiPqHevI') --bchc
+						)
+		group by ous.uidlevel5
+		order by ous.uidlevel5
+		)v35denom
+		
+	on v35outliers.block = v35denom.block
+	inner join organisationunit ou on v35outliers.block = ou.uid
+	group by v35denom.block,v35denom.expected,ou.name,v35outliers.numofoutliers
+	) final
+
+right join 
+(select ous.uidlevel5 as block,ou.name
+from _orgunitstructure ous
+inner join organisationunit ou on ous.uidlevel5= ou.uid
+where ous.uidlevel5 is not null
+and ous.organisationunitid in (
+				select distinct organisationunitid 
+				from orgunitgroup oug
+				inner join orgunitgroupmembers ougm on oug.orgunitgroupid = ougm.orgunitgroupid
+				where oug.uid in (
+				  'JRLIvJzK4H0', --sc
+				  'gBerHA2rUH0', --chc
+				  'nIVbiyAyRrb', --phc
+				  'UBuxUMmdz1U', --dh
+				  'yIKlvvB6eCS') --urban 
+				)
+group by ous.uidlevel5,ou.name
+order by ous.uidlevel5
+) totallevel6
+on final.block = totallevel6.block	
+group by totallevel6.block,totallevel6.name
+order by totallevel6.name
+
+
+
+
+
+
+
+
