@@ -2015,4 +2015,4 @@ from
 group by
    state , div, dis,dishmiscode, block,blockhmiscode, facility,facilityhmiscode, organisationunitid,NIN, tp, st, loc
 order by
-   state , div, dis, block, facility) TO '/DATA/DHIS/Apps/dhis/tomcat/dhis_home/RDreport/UPHMISRawDataReportOctober18.csv' (format CSV, HEADER);
+   state , div, dis, block, facility) TO '/DATA/DHIS/Apps/dhis/tomcat/dhis_home/RDreport/script/sql/Gen/UPHMISRawDataReportOctober18.csv' (format CSV, HEADER);
