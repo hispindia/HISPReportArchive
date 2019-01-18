@@ -24,6 +24,7 @@ facilityhmiscode as Facility_HMIS_Code, organisationunitid,  NIN,st as Category,
    array_to_string(array_agg(de803), '') as "v01", 
    array_to_string(array_agg(de804), '') as "v02", 
    array_to_string(array_agg(de805), '') as "v03", 
+   array_to_string(array_agg(de806), '') as "v04", 
  
    
 array_to_string(array_agg(v1), '') as "v1",
@@ -971,6 +972,7 @@ from
 		  case when dataelementid = 32185 then sag2.value end de803, 
         		case when dataelementid = 32184 then sag2.value end de804, 
         		case  when dataelementid = 32187 then sag2.value end de805, 
+        		case  when dataelementid = 9083 then sag2.value end de806, 
         
 		 		case when dataelementid = 807 and categoryoptioncomboid = 15 then sag2.value end v1,
 				case when dataelementid = 808 and categoryoptioncomboid = 15 then sag2.value end v2,
