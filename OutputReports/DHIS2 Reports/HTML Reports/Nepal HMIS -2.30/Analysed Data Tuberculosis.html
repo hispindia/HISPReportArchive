@@ -1,0 +1,1222 @@
+<script type="text/javascript">
+			var directDownload=true;
+			var periods = dhis2.report.periods;
+			var period = periods[0];
+			var orgUnit = dhis2.report.organisationUnit;
+			var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+			
+	
+			//	NO indicators given
+
+
+			var ArrStringDEs = ["pgnaV5VfSOY;iw2hQQskp7l;Mj8TWcTYbe0;dzYYXvvOrop;QXgiio9j1VM;GCFXrmjJccM;wDa3OEdka2d;J9yn7P8PoMo",//No indicators for table 1
+								"pgnaV5VfSOY;iw2hQQskp7l;Mj8TWcTYbe0;dzYYXvvOrop;QXgiio9j1VM;GCFXrmjJccM;wDa3OEdka2d;J9yn7P8PoMo",//NO indicators for table 2
+								"pgnaV5VfSOY;iw2hQQskp7l;Mj8TWcTYbe0;dzYYXvvOrop;QXgiio9j1VM;GCFXrmjJccM;wDa3OEdka2d;J9yn7P8PoMo"];//Indicators for table 3
+		
+			
+			var stringDEs="";
+			var arrayDEs;
+			var currentTableID;
+			var count=3;		
+			var tableIDs=["datavalue1","datavalue2","datavalue3"];
+						
+			var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;JM8keEP4z6r;mtNeiqIynwj;UcN4jZjv9Oo";
+			var url = window.location.href;
+			var params = url.split('=');
+			 var gotOr=params[2];
+				var gotPeriod = gotOr.substring(0, 4); 
+				var gotOrg=params[3];
+			//stringOrgGroups+=";"+gotOrg;
+
+			var arrOrgGroups = stringOrgGroups.split(";");
+		
+			var uidGroupSet = "VuilQBYZNIR";
+			var stt=0;
+			var load=1;
+			var iteration = -1;
+			var rep=[false]
+	
+			var jsonGroup, jsonNepal, jsonDistricts;
+			//*******************************************************************************************************************************
+			//*******************************************************************************************************************************
+	
+	
+	var rtype=params[4];
+	jQuery( document ).ready( function(){
+		console.log(periods);
+		console.log(orgUnit);	
+		
+		$(".tab_content").hide();
+		$(".tab_content:first").show(); 
+		
+		if(rtype>1)
+		generateFourMonths();
+		getJson();
+		loadall(0);
+		
+			$("ul.tabs li").click(function() {
+			$("ul.tabs li").removeClass("active");
+			$(this).addClass("active");
+			$(".tab_content").hide();
+			var activeTab = $(this).attr("rel"); 
+			$("#"+activeTab).fadeIn(); 
+			}); 
+	});
+	
+				function hideLoad()
+				{
+					document.getElementById("cover").style.display="none";
+					document.getElementById("loads").style.display="none";
+					//document.getElementById("loading").style.display="none";
+					document.getElementsByTagName("body")[0].style.overflow="scroll";
+				}
+
+//get period *************************************************************
+		var fourMonths=[];
+
+		function getPeriod()
+		{
+			if(rtype>1)
+			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[params[4]-1]);
+			
+			else			
+			return getPeriodTitle(gotPeriod);
+		}
+		function getPeriodTitle(pr)
+		{
+			var year = pr.substring(0,4);
+			var month = pr.substring(4,6);
+			var strMonth="";
+			
+			if(month=="01" || month=="1")
+				strMonth="Baishakh";
+			else if(month=="02" || month=="2")
+				strMonth="Jestha";
+			else if(month=="03" || month=="3")
+				strMonth="Ashadh";
+			else if(month=="04" || month=="4")
+				strMonth="Shrawan";
+			else if(month=="05" || month=="5")
+				strMonth="Bhadra";
+			else if(month=="06" || month=="6")
+				strMonth="Ashwin";
+			else if(month=="07" || month=="7")
+				strMonth="Kartik";
+			else if(month=="08" || month=="8")
+				strMonth="Mangsir";
+			else if(month=="09" || month=="9")
+				strMonth="Poush";
+			else if(month=="10")
+				strMonth="Magh";
+			else if(month=="11")
+				strMonth="Falgun";
+			else if(month=="12")
+				strMonth="Chaitra";
+			
+			return strMonth + " " +year;
+		}
+
+		function generateFourMonths()
+		{
+			var n=params[4];
+			gotPeriod = gotPeriod.substring(0,6);
+			var year = gotPeriod.substring(0,4);
+			var month = gotPeriod.substring(4,6);	
+			fourMonths[0]=gotPeriod;
+			gotPeriod+=";";
+			
+			for(var y=1; y<n; y++)
+			{
+				if(month<12)
+				{
+					month++;
+				}
+				else
+				{
+					month=1;
+					year++;
+				}
+				if(month<10)
+				month="0"+month;
+				fourMonths[y]=year+""+month;
+				gotPeriod+=fourMonths[y]+";";
+			}
+			
+		}
+//************************************************************************
+
+
+		function loadall(t)
+		{
+			load=1;
+			stt=0;
+			
+			iteration=t;
+			if(!rep[t])
+			{				
+				currentTableID=tableIDs[iteration];	
+				rep[t]=true;
+			}								
+		}
+
+//*********************************************************************************
+//********************************************************************************
+		function getJson()
+		{
+			for(var c=0; c<ArrStringDEs.length;c++)
+			stringDEs=stringDEs+ArrStringDEs[c]+";";
+							
+			arrayDEs=stringDEs.split(";");
+			
+			//getting json for org groups
+			$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+				//alert(jsonGroup);
+				jsonGroup=json;
+				//sum(jsonGroup);
+				getParentJson();
+			});
+		}
+		
+		function getParentJson()
+		{
+			var ouid=orgUnit.id;
+			$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=ou:"+ouid+"&filter=pe:"+gotPeriod,function(json){
+				//printChildren(jsonNepal,"Region");
+				jsonNepal=json;
+				getAllDistricts(0);
+			});
+		}
+		
+		var i=0;
+		function getAllDistricts(d)
+		{
+			//getting json for regions' districts, 5 means 5 regions, namely central, western etc
+				if(orgUnit.id=="cCTQiGkKcTk")
+				{
+					if(d<orgUnitChildrens.length)
+					{
+						if(0<orgUnitChildrens.length)
+						{					
+							var rOrder=["fNWuOzDCRSZ","SgKEcvFdUDb","pbVS1HW9NrY","TyDBQRJzkBw","z5ZOAH5rBFu"];
+							var orguid=rOrder[d];
+							//alert(orguid);
+							$.get("../api/organisationUnits/"+orguid+".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents",function(json)
+							{
+								
+								stringOrgChild(json);
+								if(i==4)
+								{
+									//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=ou:"+dIDs+"&filter=pe:"+period);
+									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=ou:"+dIDs+"&filter=pe:"+gotPeriod,function(json){
+										
+										jsonDistricts=json;
+										printAll();
+										hideLoad();
+									});
+								}
+								i++;
+								
+								if(i<5)
+									getAllDistricts(i);								
+							});
+						}								
+					}
+				}
+				else if(orgUnitChildrens.length!=0)
+				{
+							$.get("../api/organisationUnits/"+orgUnit.id+".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents",function(json)
+							{
+								
+									stringOrgChild(json);
+									//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=ou:"+dIDs+"&filter=pe:"+period);
+									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=ou:"+dIDs+"&filter=pe:"+gotPeriod,function(json){
+										
+										jsonDistricts=json;
+										printAll();
+										hideLoad();
+									});						
+							});
+				}
+		}
+//**************************************************************************************************************
+//**************************************************************************************************************
+	function printAll()
+	{
+		for(var c=0; c<ArrStringDEs.length;c++)
+		{
+			iteration=c;
+			currentTableID=tableIDs[iteration];	
+			//alert(jsonGroup+"...."+jsonNepal+"......"+jsonDistricts);
+			sum(jsonGroup);
+			printChildren(jsonNepal,"Region");
+			printChildren(jsonDistricts,dCodes);
+		}
+		 if(directDownload == true && iteration == 2)
+		tablesToExcel(['datavalue1','datavalue2','datavalue3'], ['Tuberculosis 1','Tuberculosis 2','Tuberculosis 3'], 'Analysed Data Tuberculosis.xls');
+	}
+//**********************************************************************************
+//*************************storeChildren*****************************************
+		var dIDs="";
+		var	dCodes="";
+		var s=0;
+		var isFirst=true;
+		
+		function storeChildren(disId,disCode)
+		{			
+			if(isFirst)
+			{
+				dIDs=disId+";";
+				dCodes=disCode+";";
+				isFirst=false;
+			}
+			else
+			{
+				dIDs=dIDs+disId+";";
+				dCodes=dCodes+disCode+";";
+			}
+			s++;
+			
+			//alert(dCodes);
+		}
+
+///********************************************************************************
+
+//***************************sorting***********************************
+			var ChildCount=0;
+			var childrens=[];
+			var allCodes=[];
+			var regionsLoaded=0;
+
+ function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+	
+		function stringOrgChild(json)
+		{
+				var stringOrg = "";
+				var stringCode = "";
+				
+				ChildCount=0;
+				childrens=[];
+				
+				json.children.forEach(function(child)
+				{
+					//console.log(child);	
+					var childID=child.id;
+					var childCode=child.code;
+					childrens.push([childID,childCode]);
+					childrens.sort(arraySorting);
+					ChildCount++;
+				});
+				
+				sortChildren();
+				//alert(ChildCount);
+				
+				for(var f=0; f<ChildCount; f++)
+				{
+					var childID=childrens[f][0];
+					var childCode=childrens[f][1];
+					stringOrg+=childID+";";
+					stringCode+=childCode+";";					
+				}
+				
+				if(orgUnit.id=="cCTQiGkKcTk")
+				{
+					stringOrg+=json.id;
+					stringCode+="Region";
+				}
+				storeChildren(stringOrg,stringCode);
+		}
+
+
+		function sortChildren()
+		{
+			for(var u=0;u<ChildCount;u++)
+			{
+				for(var k=0; k<ChildCount-1; k++)
+				{
+					if(parseInt(childrens[k][1])>parseInt(childrens[k+1][1]))
+					{
+						var tempID=childrens[k][0];
+						var tempCode=childrens[k][1];
+						
+						childrens[k][1]=childrens[k+1][1];
+						childrens[k][0]=childrens[k+1][0];
+						childrens[k+1][1]=tempCode;
+						childrens[k+1][0]=tempID;
+					}
+				}
+			}
+		}
+//******************************************************************		
+
+</script>
+	<style>
+		.ylw
+		{
+			background:#ffff99;
+		}
+		
+		.gray
+		{
+			background:#ccc;
+		}
+	</style>
+<script>
+function sum(json)
+{
+	var htmlReport="";
+	var t=0;
+						if(iteration==0)
+						{
+							arrOrgGroups.forEach(function(OrgGroup){
+							
+											//bg color and title******************************************************************************************
+									var cl="";
+									var fnt="";
+									var clr="";
+									if(t%2==0)
+										clr="ylw";
+									else
+										clr="gray";
+										
+										fnt="font-weight:bolder;";
+									t++;
+									htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+							
+													
+									htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.items[OrgGroup].name+"</td>";//1
+									
+										if(OrgGroup==gotOrg)
+										{
+											var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+											//document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.names[OrgGroup];
+											
+											document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+										}
+									//**************************************************************************************************************
+								
+								
+				
+								
+								/*
+
+								//No Indicator given
+								*/
+
+								htmlReport+="<td align='center' class='a'>"+getValueSum(json, '',OrgGroup)+"</td>";//1
+								htmlReport+="<td align='center' class='b'>"+getValueSum(json, '',OrgGroup)+"</td>";//2
+								htmlReport+="<td align='center' class='c'>"+getValueSum(json, '',OrgGroup)+"</td>";//3
+								htmlReport+="<td align='center' class='d'>"+getValueSum(json, '',OrgGroup)+"</td>";//4
+								htmlReport+="<td align='center' class='e'>"+getValueSum(json, '',OrgGroup)+"</td>";//5
+								htmlReport+="<td align='center' class='f'>"+getValueSum(json, '',OrgGroup)+"</td>";//6
+								htmlReport+="<td align='center' class='g'>"+getValueSum(json, '',OrgGroup)+"</td>";//7
+								htmlReport+="<td align='center' class='h'>"+getValueSum(json, '',OrgGroup)+"</td>";//8
+								htmlReport+="<td align='center' class='i'>"+getValueSum(json, '',OrgGroup)+"</td>";//9
+								htmlReport+="<td align='center' class='j'>"+getValueSum(json, '',OrgGroup)+"</td>";//10
+								htmlReport+="<td align='center' class='k'>"+getValueSum(json, '',OrgGroup)+"</td>";//11
+								htmlReport+="<td align='center' class='l'>"+getValueSum(json, '',OrgGroup)+"</td>";//12
+								htmlReport+="<td align='center' class='m'>"+getValueSum(json, '',OrgGroup)+"</td>";//13
+								htmlReport+="<td align='center' class='n'>"+getValueSum(json, '',OrgGroup)+"</td>";//14
+								
+								htmlReport+="</tr>";
+									
+							});
+						}
+						else if(iteration==1)// Tuberculosis table 2 sum
+						{
+							arrOrgGroups.forEach(function(OrgGroup){
+							
+											//bg color and title******************************************************************************************
+									var cl="";
+									var fnt="";
+									var clr="";
+									if(t%2==0)
+										clr="ylw";
+									else
+										clr="gray";
+										
+										fnt="font-weight:bolder;";
+									t++;
+									htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+							
+													
+									htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.items[OrgGroup].name+"</td>";//1
+									
+										if(OrgGroup==gotOrg)
+										{
+											var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+											//document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.names[OrgGroup];
+											
+											document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+										}
+									//**************************************************************************************************************
+								
+								
+				
+								
+								/*
+
+								//No Indicator given
+								*/
+
+								htmlReport+="<td align='center' class='a'>"+getValueSum(json, '',OrgGroup)+"</td>";//1
+								htmlReport+="<td align='center' class='b'>"+getValueSum(json, '',OrgGroup)+"</td>";//2
+								htmlReport+="<td align='center' class='c'>"+getValueSum(json, '',OrgGroup)+"</td>";//3
+								htmlReport+="<td align='center' class='d'>"+getValueSum(json, '',OrgGroup)+"</td>";//4
+								htmlReport+="<td align='center' class='e'>"+getValueSum(json, '',OrgGroup)+"</td>";//5
+								htmlReport+="<td align='center' class='f'>"+getValueSum(json, '',OrgGroup)+"</td>";//6
+								htmlReport+="<td align='center' class='g'>"+getValueSum(json, '',OrgGroup)+"</td>";//7
+								htmlReport+="<td align='center' class='h'>"+getValueSum(json, '',OrgGroup)+"</td>";//8
+								htmlReport+="<td align='center' class='i'>"+getValueSum(json, '',OrgGroup)+"</td>";//9
+								htmlReport+="<td align='center' class='j'>"+getValueSum(json, '',OrgGroup)+"</td>";//10
+								htmlReport+="<td align='center' class='k'>"+getValueSum(json, '',OrgGroup)+"</td>";//11
+								
+								htmlReport+="</tr>";
+									
+							});
+						}
+						//Tuberculosis table 3
+						else if(iteration==2)
+						{
+							arrOrgGroups.forEach(function(OrgGroup){
+							
+											//bg color and title******************************************************************************************
+									var cl="";
+									var fnt="";
+									var clr="";
+									if(t%2==0)
+										clr="ylw";
+									else
+										clr="gray";
+										
+										fnt="font-weight:bolder;";
+									t++;
+									htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+							
+													
+									htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.items[OrgGroup].name+"</td>";//1
+									
+										if(OrgGroup==gotOrg)
+										{
+											var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+											//document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.names[OrgGroup];
+											
+											document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+										}
+
+
+							//	["pgnaV5VfSOY;iw2hQQskp7l;Mj8TWcTYbe0;dzYYXvvOrop;QXgiio9j1VM;GCFXrmjJccM;wDa3OEdka2d;J9yn7P8PoMo"];
+							
+
+								htmlReport+="<td align='center' class='a'>"+getValueSum(json, '',OrgGroup)+"</td>";//1
+								htmlReport+="<td align='center' class='b'>"+getValueSum(json, 'pgnaV5VfSOY',OrgGroup)+"</td>";//2
+								htmlReport+="<td align='center' class='c'>"+getValueSum(json, 'iw2hQQskp7l',OrgGroup)+"</td>";//3
+								htmlReport+="<td align='center' class='d'>"+getValueSum(json, '',OrgGroup)+"</td>";//4
+								htmlReport+="<td align='center' class='e'>"+getValueSum(json, 'Mj8TWcTYbe0',OrgGroup)+"</td>";//5
+								htmlReport+="<td align='center' class='f'>"+getValueSum(json, '',OrgGroup)+"</td>";//6
+								htmlReport+="<td align='center' class='g'>"+getValueSum(json, '',OrgGroup)+"</td>";//7
+								htmlReport+="<td align='center' class='h'>"+getValueSum(json, '',OrgGroup)+"</td>";//8
+								htmlReport+="<td align='center' class='i'>"+getValueSum(json, 'dzYYXvvOrop',OrgGroup)+"</td>";//9
+								htmlReport+="<td align='center' class='j'>"+getValueSum(json, 'QXgiio9j1VM',OrgGroup)+"</td>";//10
+								htmlReport+="<td align='center' class='k'>"+getValueSum(json, 'GCFXrmjJccM',OrgGroup)+"</td>";//11
+								htmlReport+="<td align='center' class='l'>"+getValueSum(json, 'wDa3OEdka2d',OrgGroup)+"</td>";//12
+								htmlReport+="<td align='center' class='m'>"+getValueSum(json, 'J9yn7P8PoMo',OrgGroup)+"</td>";//13
+								
+								htmlReport+="</tr>";
+									
+							});
+						}
+
+							var prd="P"+currentTableID;
+							if(document.getElementsByClassName(prd)[0]){
+							var periodTitle=document.getElementsByClassName(prd)[0].innerHTML;
+							console.log(getPeriod());
+							document.getElementsByClassName(prd)[0].innerHTML=" "+periodTitle+" : "+getPeriod();
+							}
+							var dte="D"+currentTableID;
+							if(document.getElementsByClassName(dte)[0])
+							{
+							var dateTitle=document.getElementsByClassName(dte)[0].innerHTML;
+							}
+							var now= new Date();
+							var AmPm = (now.getHours() >= 12) ? "PM" : "AM";
+							var mints=(now.getMinutes()>9) ? now.getMinutes() : "0"+now.getMinutes();
+							var hrs= (now.getHours() > 12) ? now.getHours()%12 : now.getHours();
+							var dteString= now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear()+" "+hrs+":"+mints+" "+AmPm;
+							if(document.getElementsByClassName(dte)[0])
+							{
+							document.getElementsByClassName(dte)[0].innerHTML=dateTitle+" : "+dteString+" ";
+							}
+		
+		
+		$("#"+currentTableID).append(htmlReport);
+}
+
+var ct=0;
+function printChildren(json,disCodes)
+{
+		var htmlReport="";
+		var arrayCodes=disCodes.split(";");
+		//alert(arrayCodes.length);
+						if(iteration==0)//table 1 child
+						{
+								var i=0;
+							json.metaData.dimensions.ou.forEach(function(child){
+								
+								if(arrayCodes[i]!='undefined')
+									var dcode=arrayCodes[i];
+								else
+									var dcode="*";
+												
+								if(arrayCodes[i]=="Region"||orgUnit.id=="xxx")
+								{
+									htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+								}
+								else
+								{
+									htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+								}
+								htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+								i++;
+					
+									
+									//No indicator given
+								
+								htmlReport+="<td align='center' class='a'>"+getValueSum(json, '',child)+"</td>";//1
+								htmlReport+="<td align='center' class='b'>"+getValueSum(json, '',child)+"</td>";//2
+								htmlReport+="<td align='center' class='c'>"+getValueSum(json, '',child)+"</td>";//3
+								htmlReport+="<td align='center' class='d'>"+getValueSum(json, '',child)+"</td>";//4
+								htmlReport+="<td align='center' class='e'>"+getValueSum(json, '',child)+"</td>";//5
+								htmlReport+="<td align='center' class='f'>"+getValueSum(json, '',child)+"</td>";//6
+								htmlReport+="<td align='center' class='g'>"+getValueSum(json, '',child)+"</td>";//7
+								htmlReport+="<td align='center' class='h'>"+getValueSum(json, '',child)+"</td>";//8
+								htmlReport+="<td align='center' class='i'>"+getValueSum(json, '',child)+"</td>";//9
+								htmlReport+="<td align='center' class='j'>"+getValueSum(json, '',child)+"</td>";//10
+								htmlReport+="<td align='center' class='k'>"+getValueSum(json, '',child)+"</td>";//11
+								htmlReport+="<td align='center' class='l'>"+getValueSum(json, '',child)+"</td>";//12
+								htmlReport+="<td align='center' class='m'>"+getValueSum(json, '',child)+"</td>";//13
+								htmlReport+="<td align='center' class='n'>"+getValueSum(json, '',child)+"</td>";//14
+								htmlReport+="</tr>";
+								  
+
+								
+												
+									htmlReport+="</tr>";	
+							});
+						}
+						//Table 2 child Da
+						else if(iteration==1)
+						{
+								var i=0;
+								json.metaData.dimensions.ou.forEach(function(child){
+								
+								if(arrayCodes[i]!='undefined')
+									var dcode=arrayCodes[i];
+								else
+									var dcode="*";
+												
+								if(arrayCodes[i]=="Region"||orgUnit.id=="xxx")
+								{
+									htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+								}
+								else
+								{
+									htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+								}
+						htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+						i++;
+					
+									
+									//No indicator given
+								
+								htmlReport+="<td align='center' class='a'>"+getValueSum(json, '',child)+"</td>";//1
+								htmlReport+="<td align='center' class='b'>"+getValueSum(json, '',child)+"</td>";//2
+								htmlReport+="<td align='center' class='c'>"+getValueSum(json, '',child)+"</td>";//3
+								htmlReport+="<td align='center' class='d'>"+getValueSum(json, '',child)+"</td>";//4
+								htmlReport+="<td align='center' class='e'>"+getValueSum(json, '',child)+"</td>";//5
+								htmlReport+="<td align='center' class='f'>"+getValueSum(json, '',child)+"</td>";//6
+								htmlReport+="<td align='center' class='g'>"+getValueSum(json, '',child)+"</td>";//7
+								htmlReport+="<td align='center' class='h'>"+getValueSum(json, '',child)+"</td>";//8
+								htmlReport+="<td align='center' class='i'>"+getValueSum(json, '',child)+"</td>";//9
+								htmlReport+="<td align='center' class='j'>"+getValueSum(json, '',child)+"</td>";//10
+								htmlReport+="<td align='center' class='k'>"+getValueSum(json, '',child)+"</td>";//11
+							
+								htmlReport+="</tr>";
+								  
+
+								
+												
+									htmlReport+="</tr>";	
+							});
+						}
+						//Table 3
+						else if(iteration==2)
+						{
+								var i=0;
+							json.metaData.dimensions.ou.forEach(function(child){
+								
+								if(arrayCodes[i]!='undefined')
+									var dcode=arrayCodes[i];
+								else
+									var dcode="*";
+												
+								if(arrayCodes[i]=="Region"||orgUnit.id=="xxx")
+								{
+									htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+								}
+								else
+								{
+									htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+								}
+							htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+								i++;
+					
+									
+									
+								
+								htmlReport+="<td align='center' class='a'>"+getValueSum(json, '',child)+"</td>";//1
+								htmlReport+="<td align='center' class='b'>"+getValueSum(json, 'pgnaV5VfSOY',child)+"</td>";//2
+								htmlReport+="<td align='center' class='c'>"+getValueSum(json, 'iw2hQQskp7l',child)+"</td>";//3
+								htmlReport+="<td align='center' class='d'>"+getValueSum(json, '',child)+"</td>";//4
+								htmlReport+="<td align='center' class='e'>"+getValueSum(json, 'Mj8TWcTYbe0',child)+"</td>";//5
+								htmlReport+="<td align='center' class='f'>"+getValueSum(json, '',child)+"</td>";//6
+								htmlReport+="<td align='center' class='g'>"+getValueSum(json, '',child)+"</td>";//7
+								htmlReport+="<td align='center' class='h'>"+getValueSum(json, '',child)+"</td>";//8
+								htmlReport+="<td align='center' class='i'>"+getValueSum(json, 'dzYYXvvOrop',child)+"</td>";//9
+								htmlReport+="<td align='center' class='j'>"+getValueSum(json, 'QXgiio9j1VM',child)+"</td>";//10
+								htmlReport+="<td align='center' class='k'>"+getValueSum(json, 'GCFXrmjJccM',child)+"</td>";//11
+								htmlReport+="<td align='center' class='l'>"+getValueSum(json, 'wDa3OEdka2d',child)+"</td>";//12
+								htmlReport+="<td align='center' class='m'>"+getValueSum(json, 'J9yn7P8PoMo',child)+"</td>";//13
+							
+								htmlReport+="</tr>";
+								  
+
+								
+												
+									htmlReport+="</tr>";	
+							});
+						}
+		$("#"+currentTableID).append(htmlReport);
+		 
+}
+
+
+//******************************************************************				
+				
+		function getValueSum(json,de,orgGroup){
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][1] == orgGroup && json.rows[i][2]!= null)
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+
+		function getValueForCategoryOptionCombo( json, de, orgUnit)
+		{
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][1] == orgUnit  && json.rows[i][2] != null )
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+
+		function getValueTotal(json,de){
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][2]!= null)
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+</script>
+
+		<!-- 		<!-- download script ------------------------------------------------------
+		--------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------- -->
+<script type="text/javascript">
+	 var tablesToExcel = (function() {
+    var uri = 'data:application/vnd.ms-excel;base64,'
+    , tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+      + '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>ThaiND</Author><Created>{created}</Created></DocumentProperties>'
+	  +'<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>xxx<Style ss:ID="s26"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s23"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="0"/></Borders><Font ss:Bold="1"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s24"><Alignment ss:Horizontal="Left" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style>bbb<Style ss:ID="s28"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s29"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="10" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style></Styles>'
+      + '{worksheets}</Workbook>'
+    , tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="150"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/><Column ss:AutoFitWidth="0" ss:Width="80"/>{rows}</Table></Worksheet>'
+	, tmplCellXML = '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>'
+    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+	
+    return function(tables, wsnames, wbname) {
+		var ctx = "";
+		var workbookXML = "";
+		var worksheetsXML = "";
+		var rowsXML = "";
+		
+		for (var i = 0; i < tables.length; i++) 
+		{
+		
+			if (!tables[i].nodeType) 
+			tables[i] = document.getElementById(tables[i]);
+		
+			for (var j = 0; j < tables[i].rows.length; j++) 
+			{
+				rowsXML += '<Row>'
+				for (var k = 0; k < tables[i].rows[j].cells.length; k++) 
+				{
+					
+					var cols=tables[i].rows[j].cells[k].getAttribute("colspan");
+					var rws=tables[i].rows[j].cells[k].getAttribute("rowspan");
+					var styl=tables[i].rows[j].cells[k].getAttribute("bgcolor");
+					var styl2=tables[i].rows[j].getAttribute("bgcolor");
+					var cls=tables[i].rows[j].cells[k].getAttribute("class");
+					var algn=tables[i].rows[j].cells[k].getAttribute("align");
+					var cls2=tables[i].rows[j].getAttribute("class");
+					
+						var dataType = 'String';
+						var dataValue = tables[i].rows[j].cells[k].innerHTML;
+						var typeD="";
+						var parsed=parseInt(dataValue);
+						
+						if (parsed==dataValue)
+						{
+							typeD="Number";
+						}
+						else
+						{
+							typeD="String";
+						}
+					
+					
+					
+					if(cls2=="ylw")
+					{
+						if(k==1)
+						var cl="s22";
+						else
+						var cl="s26";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else if(cls2=="gray")
+					{
+						if(k==1)
+						var cl="s28";
+						else
+						var cl="s29";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					else if(styl2)
+					{
+						if(k==1)
+						var cl="s22";
+						else
+						var cl="s26";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					else if(cls=="all2")
+					{
+						
+							ctx = {data: dataValue, mrg: 0, sid: "s23",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						
+					}
+					
+					else if(styl)
+					{
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:"s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+							ctx = {data: dataValue, mrg: 0, sid: "s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else
+					{
+						if(cols)
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"Default",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+
+						else
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: 0, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: 0, sid: "Default",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+					
+					}
+					
+				}
+				  rowsXML += '</Row>'
+			}
+			ctx = {rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i};
+			worksheetsXML += format(tmplWorksheetXML, ctx);
+			rowsXML = "";
+      }
+
+		ctx = {created: (new Date()).getTime(), worksheets: worksheetsXML};
+		workbookXML = format(tmplWorkbookXML, ctx);
+
+		console.log(workbookXML);
+
+		var link = document.createElement("A");
+		link.href = uri + base64(workbookXML);
+		link.download = wbname || 'Workbook.xls';
+		link.target = '_blank';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+    }
+  })();
+</script>
+<script type="text/javascript">
+$(document).ready(function () {
+   $("input[value=Back]").closest('div').hide();
+});
+</script>
+
+	<style type="text/css">
+			body
+			{
+				overflow:none;
+			}
+			
+			ul.tabs {
+				margin: 0;
+				padding: 0;
+				float: left;
+				list-style: none;
+				height: 32px;
+				border-bottom: 1px solid #999999;
+				border-left: 1px solid #999999;
+				width: 100%;
+			}
+			ul.tabs li {
+				float: left;
+				margin: 0;
+				cursor: pointer;
+				padding: 0px 21px ;
+				height: 31px;
+				line-height: 31px;
+				border: 1px solid #999999;
+				border-left: none;
+				font-weight: bold;
+				background: #EEEEEE;
+				overflow: hidden;
+				position: relative;
+			}
+			ul.tabs li:hover {
+				background: #CCCCCC;
+			}	
+			ul.tabs li.active{
+				background: #FFFFFF;
+				border-bottom: 1px solid #FFFFFF;
+			}
+			.tab_container {
+				clear: both;
+				float: left; 
+				width: 100%;
+				background: #FFFFFF;
+			}
+			.tab_content {
+				padding: 0;
+				font-size: 1.2em;
+				display: none;
+			}
+			#container {
+				width: 100%;
+				margin: 0 auto;	
+			}
+			
+			.vtext{
+				min-width:40px;
+			}
+			
+			.borders{
+				border-bottom-color:#999999;
+			}
+			
+			.rightborder{
+				border-right-color:#999999;	
+			}
+			
+			.all{
+				font-weight:bolder;
+				padding:4px 5px;
+			}
+			
+			.all td
+			{
+				padding:3px 5px;
+			}
+			.all2{
+				font-weight:bolder;
+				padding:4px 5px;
+				
+				border:0;
+			}
+			
+			td
+			{
+				min-width:70px;
+				padding:3px;
+			}
+			td{	min-width:75px;	} #cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+		</style> 
+		<div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
+		<div id="cover" > </div>
+			
+<!--<input type="button" id="btnExport"  style="width:140px;" value=" Download Excel " class="hideInPrint" />-->
+<input type="button" value="Reports Home" style="width:140px;" onclick='window.open("http://202.70.86.3:8080/hmisnepal/dhis-web-reporting/generateHtmlReport.action?uid=yz1OQ7Wvpam&", "_self")'/>
+		</br></br>
+		<div id="printing">
+	
+	<!-- Menu Bar----->
+	<div id="container">
+
+	<ul class="tabs"> 
+        <li class="active" rel="tab1"> Tuberculosis 1</li>
+        <li rel="tab2"  onclick="loadall(2)">Tuberculosis 2</li>
+		<li rel="tab3" onclick="loadall(3)">Tuberculosis 3</li>
+    </ul>
+	
+	
+	<div class="tab_container"> 
+	
+	<!--Tab 1--->
+	<div id="tab1" class="tab_content"> 
+	<p>
+	<!--Table---Desgin-->  
+		<table id="datavalue1" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+			<!--Table Heading common-->
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="16" width="1622" align="center">Analyzed Data:Tuberculosis (Sheet 1 of 3)</td>
+			</tr >
+			<tr>
+				<td align="left" bgcolor="#FFF0F8" colspan="13" width="1237" id="period1"  class="Pdatavalue1 all2"  >Reporting Period</td>
+				<td align="right" bgcolor="#FFF0F8" colspan="3" width="385" class="Ddatavalue1 all2"  >Date  </td>
+			</tr>
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="13" width="1237"  align="left">Summary of Programme Performance by HF/VDC&amp;Municipality/District/Development &amp; Ecological Region</td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Department of Health Services</td>
+			</tr>
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="13" width="1237"  align="left">(Note to the Programme Heads : this compilation is based on Reports received at HMIS Section/District from the health facilities)</td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Management Division</td>
+			</tr >
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="13" width="1237"  align="left">Programme Heads/Focal Person are requested to verify the reported figures with HFs and notify back to Stat. Section if anything to correct. Thanks</td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Health Management Information System</td>
+			</tr>
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="13" width="1237"  align="left">Expected report/Health facility: 1</td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">[DEPARTMENT OF HEALTH SERVICE]</td>
+			</tr>
+			<tr>
+				<td bgcolor="#FFF0F8" width="759" height="20" colspan="13" ></td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right"><strong>(For Internal use only : Restricted to quote)</td>
+			</tr>
+			<!--Table Data -->
+			
+			<tr  class="all">		
+				<td bgcolor="#D5EAFF"  width="93"  align="center" class="vtext" >District/ HF Code</td>
+				<td bgcolor="#D5EAFF"  width="95"  align="center" class="vtext" >District Name</td>
+				<td bgcolor="#D5EAFF"  width="94"  align="center" class="vtext" >Received Reports</td>
+				<td bgcolor="#D5EAFF"  width="179"  align="center" class="vtext" >Case notification rate (New PBC and Relapse TB case)</td>
+				<td bgcolor="#D5EAFF"  width="160"  align="center" class="vtext" >Case notification rate (all forms of TB cases)</td>
+				<td bgcolor="#D5EAFF"  width="106"  align="center" class="vtext" >TB case finding rate</td>
+				<td bgcolor="#D5EAFF"  width="195"  align="center" class="vtext" >Quality assurance of smear examination: percentage agreement&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="106"  align="center" class="vtext" >% of TB cases with HIV infection&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="124"  align="center" class="vtext" >MDR TB cases per 10,000 population&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="118"  align="center" class="vtext" >X-DR TB cases per 10,000 population&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="217"  align="center" class="vtext" >% of drug resistant TB patients who completed full course of treatment&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="194"  align="center" class="vtext" >Chronic respiratory disease (CRD) cases per 10,000 population&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="181"  align="center" class="vtext" >%&nbsp; of CRD cases who underwent a sputum examination&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="163"  align="center" class="vtext" >% of examined CRD cases who were sputum positive&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="156"  align="center" class="vtext" >% of pulmonary TB cases identified as smokers</td>
+				<td bgcolor="#D5EAFF"  width="184"  align="center" class="vtext" >% of pulmonary TB smokers who quit smoking after counselling&nbsp;</td>
+			</tr>
+		</table>
+		</p>
+		</div>
+	<!-- Tab 2-->
+ <div id="tab2" class="tab_content"> 
+
+		<p>
+		<!--Table---Desgin-->  
+		<table id="datavalue2" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+			<!--Table Heading common-->
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="13" width="1622" align="center">Analyzed Data:Tuberculosis (Sheet 2 of 3)</td>
+			</tr >
+			<tr>
+				<td align="left" bgcolor="#FFF0F8" colspan="10" width="1237" id="period1"  class="Pdatavalue2 all2"  >Reporting Period</td>
+				<td align="right" bgcolor="#FFF0F8" colspan="3" width="385" class="Ddatavalue2 all2"  >Date  </td>
+			</tr>
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="10" width="1237"  align="left">Summary of Programme Performance by HF/VDC&amp;Municipality/District/Development &amp; Ecological Region</td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Department of Health Services</td>
+			</tr>
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="10" width="1237"  align="left">(Note to the Programme Heads : this compilation is based on Reports received at HMIS Section/District from the health facilities)</td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Management Division</td>
+			</tr >
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="10" width="1237"  align="left">Programme Heads/Focal Person are requested to verify the reported figures with HFs and notify back to Stat. Section if anything to correct. Thanks</td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Health Management Information System</td>
+			</tr>
+			<tr>
+				<td bgcolor="#FFF0F8" colspan="10" width="1237"  align="left">Expected report/Health facility: 1</td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">[DEPARTMENT OF HEALTH SERVICE]</td>
+			</tr>
+			<tr>
+				<td bgcolor="#FFF0F8" width="759" height="20" colspan="10"></td>
+				<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right"><strong>(For Internal use only : Restricted to quote)</td>
+			</tr>
+			<!--Table Data -->
+			
+			<tr  class="all">		
+				<td bgcolor="#D5EAFF"  width="48"  align="center" class="vtext" >District / HF Code</td>
+				<td  bgcolor="#D5EAFF"  width="95"  align="center" class="vtext" >District Name</td>
+				<td bgcolor="#D5EAFF"  width="52"  align="center" class="vtext" >Received Reports</td>
+				<td bgcolor="#D5EAFF"  width="143"  align="center" class="vtext" >Cure rates among new smear positive cases&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="111"  align="center" class="vtext" >Treatment success rate</td>
+				<td bgcolor="#D5EAFF"  width="204"  align="center" class="vtext" >Treatment completion rates for EP and pulmonary positive cases</td>
+				<td bgcolor="#D5EAFF"  width="109"  align="center" class="vtext" >Number of defaulted cases&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="132"  align="center" class="vtext" >Number of treatment failure cases&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="126"  align="center" class="vtext" >Death rate per 100,000 population</td>
+				<td bgcolor="#D5EAFF"  width="121"  align="center" class="vtext" >Number of cases transferred out&nbsp;</td>
+				<td bgcolor="#D5EAFF"  width="177"  align="center" class="vtext" >Number of cases referred from private to public facilities</td>
+				<td bgcolor="#D5EAFF"  width="151"  align="center" class="vtext" >Number of cases referred from other countries</td>
+				<td bgcolor="#D5EAFF"  width="169"  align="center" class="vtext" >Smear conversion rate at 2 months of treatment</td>
+			</tr>
+
+		</table>
+	   </p>
+</div>
+	<!-- Tab 3-->
+ <div id="tab3" class="tab_content"> 
+
+		<p>
+			<!--Table---Desgin-->  
+			<table id="datavalue3" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+				<!--Table Heading common-->
+				<tr>
+					<td bgcolor="#FFF0F8" colspan="15" width="1622" align="center">Analyzed Data:Tuberculosis (Sheet 3 of 3)</td>
+				</tr >
+				<tr>
+					<td align="left" bgcolor="#FFF0F8" colspan="12" width="1237" id="period1"  class="Pdatavalue3 all2"  >Reporting Period</td>
+					<td align="right" bgcolor="#FFF0F8" colspan="3" width="385" class="Ddatavalue3 all2"  >Date  </td>
+				</tr>
+				<tr>
+					<td bgcolor="#FFF0F8" colspan="12" width="1237"  align="left">Summary of Programme Performance by HF/VDC&amp;Municipality/District/Development &amp; Ecological Region</td>
+					<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Department of Health Services</td>
+				</tr>
+				<tr>
+					<td bgcolor="#FFF0F8" colspan="12" width="1237"  align="left">(Note to the Programme Heads : this compilation is based on Reports received at HMIS Section/District from the health facilities)</td>
+					<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Management Division</td>
+				</tr >
+				<tr>
+					<td bgcolor="#FFF0F8" colspan="12" width="1237"  align="left">Programme Heads/Focal Person are requested to verify the reported figures with HFs and notify back to Stat. Section if anything to correct. Thanks</td>
+					<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">Health Management Information System</td>
+				</tr>
+				<tr>
+					<td bgcolor="#FFF0F8" colspan="12" width="1237"  align="left">Expected report/Health facility: 1</td>
+					<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right">[DEPARTMENT OF HEALTH SERVICE]</td>
+				</tr>
+				<tr>
+					<td bgcolor="#FFF0F8" width="759" height="20" colspan="12" ></td>
+					<td bgcolor="#FFF0F8" colspan="3" width="385"  align="right"><strong>(For Internal use only : Restricted to quote)</td>
+				</tr>
+				<!--Table Data -->
+				
+				<tr class="all">		
+					<td bgcolor="#D5EAFF"  width="56"  align="center" class="vtext" >District / HF Code</td>
+					<td bgcolor="#D5EAFF"  width="95"  align="center" class="vtext" >District Name</td>
+					<td bgcolor="#D5EAFF"  width="52"  align="center" class="vtext" >Received Reports</td>
+					<td bgcolor="#D5EAFF"  width="118"  align="center" class="vtext" >Number of TB cases registered&nbsp;</td>
+					<td bgcolor="#D5EAFF"  width="127"  align="center" class="vtext" >Sex ratio of new positive smear cases&nbsp;</td>
+					<td bgcolor="#D5EAFF"  width="170"  align="center" class="vtext" >% of children aged 0-14 years with a new positive smear&nbsp;</td>
+					<td bgcolor="#D5EAFF"  width="112"  align="center" class="vtext" >Number of relapse cases&nbsp;</td>
+					<td bgcolor="#D5EAFF"  width="116"  align="center" class="vtext" >Number of failure cases</td>
+					<td bgcolor="#D5EAFF"  width="141"  align="center" class="vtext" >Number of lost to follow up cases&nbsp;</td>
+					<td bgcolor="#D5EAFF"  width="159" align="center" class="vtext" >Number of pulmonary negative cases</td>
+					<td bgcolor="#D5EAFF"  width="134"  align="center" class="vtext" >Number of extra pulmonary cases&nbsp;</td>
+					<td bgcolor="#D5EAFF"  width="121"  align="center" class="vtext" >Number of cases classified as 'other'&nbsp;</td>
+					<td bgcolor="#D5EAFF"  width="250"  align="center" class="vtext" >Ratio of new smear-positive cases to new smear-negative and extra-pulmonary cases</td>
+					<td bgcolor="#D5EAFF"  width="141"  align="center" class="vtext" >Positivity rate among suspected cases</td>
+					<td bgcolor="#D5EAFF"  width="193"  align="center" class="vtext" >Tuberculosis case detection rate per 100,000 population&nbsp;</td>
+				</tr>
+			</table>
+
+		</p>
+</div>
+</div>
