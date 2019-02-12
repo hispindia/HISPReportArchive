@@ -16,7 +16,7 @@ else
 from
    timestamp '2018-09-01'), '-', extract(year 
 from
-   timestamp '201-09-01') + 1) 
+   timestamp '2018-09-01') + 1) 
    end
    Financial_Year , state state , div as Division, dis as District,dishmiscode as District_HMIS_Code, block, blockhmiscode as Block_HMIS_Code, facility,
 facilityhmiscode as Facility_HMIS_Code, organisationunitid,  st as Category,NIN, tp as Facility_Type, loc as Location,
