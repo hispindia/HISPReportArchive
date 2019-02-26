@@ -1,0 +1,527 @@
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+crossorigin="anonymous">
+
+<style>
+thead>tr>td {
+font-weight: bold;
+}
+tbody>tr>td {
+font-weight: bold;
+}
+
+/* Center the loader  */
+
+#loader {
+position: absolute;
+left: 50%;
+top: 50%;
+z-index: 1;
+width: 150px;
+height: 150px;
+margin: -75px 0 0 -75px;
+border: 16px solid #f3f3f3;
+border-radius: 50%;
+border-top: 16px solid #34B4DB;
+width: 120px;
+height: 120px;
+-webkit-animation: spin 2s linear infinite;
+animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+0% {
+    -webkit-transform: rotate(0deg);
+}
+100% {
+    -webkit-transform: rotate(360deg);
+}
+}
+
+@keyframes spin {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(360deg);
+}
+}
+/* Add animation to "page content" */
+
+.animate-bottom {
+position: relative;
+-webkit-animation-name: animatebottom;
+-webkit-animation-duration: 1s;
+animation-name: animatebottom;
+animation-duration: 1s
+}
+
+@-webkit-keyframes animatebottom {
+from {
+    bottom: -100px;
+    opacity: 0
+}
+to {
+    bottom: 0px;
+    opacity: 1
+}
+}
+
+@keyframes animatebottom {
+from {
+    bottom: -100px;
+    opacity: 0
+}
+to {
+    bottom: 0;
+    opacity: 1
+}
+}
+
+#printing {
+
+text-align: center;
+}
+
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span
+    class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', 'Excel Report', 'Excel Report.xls')"><span
+    class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+<br><br>
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+<div id='state'>
+    <table id="dataTable" border="1" class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
+        <thead>
+            <tr style=" font-weight:400; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6;">Region and country</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Code</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Population 2017 (in '000)</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Total Number of New Cases Detected in 2016</td>
+                <td style="border:1px solid black;background:#ADD8E6;">New Case Detection Rate</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Number of Cases Registered for Treatment at
+                    end of Year 2016</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Prevalence Rate (per 10,000 Population)</td>
+                <td style="border:1px solid black;background:#ADD8E6;">MB Cases</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Proportion of MB</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Female cases</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Proportion of Female cases</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Children Under 15 Years of Age</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Proportion of Child Cases</td>
+
+                <td style="border:1px solid black;background:#ADD8E6;">New Cases With Grade-2 Disabilities children
+                    (< 15 Years)</td> <td style="border:1px solid black;background:#ADD8E6;">New Cases with Grade-2
+                        Disabilities Adult (>= 15 Years)</td>
+                <td style="border:1px solid black;background:#ADD8E6;">New Cases with Grade-2 Disabilities (G2D
+                    Cases</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Proportion of New G2D Cases</td>
+                <td style="border:1px solid black;background:#ADD8E6;">New G2D Case Rate</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Number of Relapses Reported During the Year</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Number of Re-treatment cases Reported During
+                    the Year2</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Cure Rate PB% - Cohort Year 2014</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Cure Rate MB% - Cohort Year 2013</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Foreign Cases</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Legistation against discrimination</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Number of Cases with Drug Resistance</td>
+            </tr>
+        </thead>
+    </table>
+</div>
+</div>
+
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
+
+<!-- Main Script -->
+
+<script type="text/javascript">
+    $(document).ready(function () {
+                var startDate = (dhis2.report.date.split('-'))[0];  
+                let arrSorting = (a,b)=>{
+                                if (a.name < b.name) //sort string ascending
+                                        return -1 
+                                if (a.name > b.name)
+                                        return 1
+                                 return 0}
+                    
+                var tabledatalevel2Orgs='';
+                var firstOrgUnitid = dhis2.report.organisationUnit.name;  
+                let orgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+                let orgUnitChildren=[];
+                let orgUnitChildrenAll=[];
+            
+
+                var value1;
+                var value2 = 0;
+                var value3;
+                var value4 = 0;
+                var value5;
+                var value6;
+                var value7;
+                var value8;
+                var value9;
+                var value10 = 0;
+                var value11;
+                var value12;
+                var value13;
+                var value14 = 0;
+                var value15;
+                var value16;
+                var value17 = 0;
+                var value18 = 0;
+                var value19;
+                var value20;
+                var value21;
+                var value22;
+                var value23 = 0;
+                var totalValue1 = 0, totalValue2 = 0, totalValue3 = 0, totalValue4 = 0, totalValue5 = 0, totalValue6 = 0, totalValue7 = 0, totalValue8 = 0, totalValue9 = 0, totalValue10 = 0, totalValue11 = 0, totalValue12 = 0, totalValue13 = 0, totalValue14 = 0, totalValue15 = 0, totalValue16 = 0, totalValue17 = 0, totalValue18 = 0, totalValue19 = 0, totalValue20 = 0, totalValue21 = 0, totalValue22 = 0, totalValue23 = 0;
+                var globalTotalValue1 = 0, globalTotalValue2 = 0, globalTotalValue3 = 0, globalTotalValue4 = 0, globalTotalValue5 = 0, globalTotalValue6 = 0, globalTotalValue7 = 0, globalTotalValue8 = 0, globalTotalValue9 = 0, globalTotalValue10 = 0, globalTotalValue11 = 0, globalTotalValue12 = 0, globalTotalValue13 = 0, globalTotalValue14 = 0, globalTotalValue15 = 0, globalTotalValue16 = 0, globalTotalValue17 = 0, globalTotalValue18 = 0, globalTotalValue19 = 0, globalTotalValue20 = 0, globalTotalValue21 = 0, globalTotalValue22 = 0, globalTotalValue23 = 0;
+
+                
+                const  getOrgUnitChildern = function(){
+                    if(orgUnitLevel == 1) { 
+                    dhis2.report.organisationUnitChildren.forEach((child,index)=>{
+                    
+                        $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "../api/organisationUnits/" + child.id + ".json?fields=children[id,name,code]&paging=false",
+                        data: JSON,
+                        success: function (data, status) {
+                            orgUnitChildren[child.name]=data.children;
+                            
+                            let sortedChildrens = orgUnitChildren[child.name].sort(arrSorting);
+
+                            orgUnitChildrenAll[child.name]=[]
+                            for(let i=0;i<sortedChildrens.length;i++) {
+                            orgUnitChildrenAll[child.name][i+"-"+sortedChildrens[i].id] ={name:sortedChildrens[i].name ,code:sortedChildrens[i].code};
+                            }
+                                
+                        }
+                    });
+                })
+                    }
+                    else if( orgUnitLevel == 2) {
+                        orgUnitChildren[firstOrgUnitid] = dhis2.report.organisationUnitChildren.sort(arrSorting);
+                        let sortedChildrens = dhis2.report.organisationUnitChildren.sort(arrSorting);
+                        orgUnitChildrenAll[firstOrgUnitid] = []
+                        for(let i=0;i<sortedChildrens.length;i++) {
+                            orgUnitChildrenAll[firstOrgUnitid][i+"-"+sortedChildrens[i].id] ={name:sortedChildrens[i].name ,code:sortedChildrens[i].code};
+                        }
+
+                    }
+                    else {
+                        let id = dhis2.report.organisationUnit;
+                        orgUnitChildren[id.name] =  id;
+                        orgUnitChildrenAll[firstOrgUnitid] = [];
+                        orgUnitChildrenAll[firstOrgUnitid]["0-"+id.id] ={name:id.name ,code:id.code};
+                      
+                    }
+                
+            
+
+                    let orgUnitChildrenKeys=Object.keys(orgUnitChildren).sort();
+
+                    orgUnitChildrenKeys.forEach((val,i)=>{
+                        if(orgUnitLevel != 3) {
+                        var orgUnitChildrenkeysTotal=orgUnitChildren[val].reduce((total,currentVal,index)=>(index==1)? total.id+";"+currentVal.id+";":total+currentVal.id+";");
+                        } else {
+                            orgUnitChildrenkeysTotal = orgUnitChildren[val].id; 
+                        } 
+                        $.ajax({
+                            type: "GET",
+                            async: false,
+                            url: "../api/26/analytics.json?dimension=pe:" + startDate + "&dimension=dx:d1d6EWQZJGB;evXyDr6c7eu;gVmFx873rdZ;IQgrP2W9gTV;ubgNtdy3h9H.GcQ4Ep0wmnH;ElAjdwOrjMq;bLR7YvL1f5O;ubgNtdy3h9H.xC5PhT2YVtr;mdupOTsRJ58;lzbsUQJvvJB;sAXV6Hnve4i;LhfXR2fKhsZ;xdbnQxRVTBq;KrvcvcTLqIh;MiHLzmsVFPf.xC5PhT2YVtr;eBG4XbLqTmY;C6xcdI95huJ;xl4EXfRMBrK.Te9RyzefSAz;xl4EXfRMBrK.ZZFiCRpT37i;xl4EXfRMBrK.sdMU6tpPki6;j62SFyBOrSN;v1Fr4On014j;VBEhMPsLu53.HllvX50cXC0;YVj2PYy0Slj.HllvX50cXC0;lhSRNgfsxYC.HllvX50cXC0;EHT4ON2ZtNl.HllvX50cXC0;PQCJ1jNYVMU;xWUvequQxeM;nbDlMYKljTK.HllvX50cXC0;fWOu6CXWmYj.HllvX50cXC0;CAwisvSGkaj.qqJwrOzkzcz;CAwisvSGkaj.G0EY8ZnkmVI;CAwisvSGkaj.oSHl2cUvHmk;sgdAybfDzTl.qqJwrOzkzcz;sgdAybfDzTl.G0EY8ZnkmVI;sgdAybfDzTl.oSHl2cUvHmk&dimension=ou:" + orgUnitChildrenkeysTotal + "&displayProperty=NAME&user=dcMT9xWEWHA",
+                            data: JSON,
+                            success: function (res4, status) {
+
+                            finalvalue(res4, ouidRegion = orgUnitChildrenKeys[i]);
+                            }
+                        });
+                        
+                })
+            
+            }
+            
+            getOrgUnitChildern();
+
+                function finalvalue(res4, ouidRegion) {
+            
+                    let data = res4.rows;
+                    let count1=0,count2=0,count3=0,count4=0,count5=0,count6=0,count7=0;
+                    tabledatalevel2Orgs = '<tr>';
+                    tabledatalevel2Orgs += ('<td colspan="25" align="left" style="border:1px solid black; background-color:#DCDCDC">' + ouidRegion + "</td>");
+                    tabledatalevel2Orgs += "</tr>";
+                    document.getElementById("dataTable").innerHTML += tabledatalevel2Orgs;
+
+                    for(let keys in orgUnitChildrenAll[ouidRegion]){
+                
+                        let newdata=data.filter((val,i)=>(keys.split("-")[1]==val[2]));
+                        let ouname, ouidCode;
+
+                        for (let j = 0; j < newdata.length; j++) {
+                
+
+                            if (newdata[j][0] == "d1d6EWQZJGB") {
+                                value1 = (newdata[j][3])/1000;
+                            }
+                            if (newdata[j][0] == "ElAjdwOrjMq") {
+                                value3 = newdata[j][3];
+                            } 
+                            if (newdata[j][0] == "sAXV6Hnve4i") {
+                                value5 = newdata[j][3];
+                            }
+                            if (newdata[j][0] == "evXyDr6c7eu") {
+                                value6 = parseInt(newdata[j][3]);
+                            }
+                            if (newdata[j][0] == "LhfXR2fKhsZ") {
+                                value7 = newdata[j][3];
+                            }
+                            if (newdata[j][0] == "xdbnQxRVTBq") {
+                                value8 = parseInt(newdata[j][3]);
+                            }
+                            if (newdata[j][0] == "KrvcvcTLqIh") {
+                                value9 = newdata[j][3];
+                            }
+                            if (newdata[j][0] == "C6xcdI95huJ") {
+                                value11 = newdata[j][3];
+                            }
+                            if (newdata[j][0] == "xl4EXfRMBrK.ZZFiCRpT37i") {
+                                value12 = parseInt(newdata[j][3]);
+                            }
+                            if (newdata[j][0] == "xl4EXfRMBrK.Te9RyzefSAz") {
+                                value13 = parseInt(newdata[j][3]);
+                            }
+                            if (newdata[j][0] == "j62SFyBOrSN") {
+                                value15 = newdata[j][3];
+                            }
+                            if (newdata[j][0] == "v1Fr4On014j") {
+                                value16 = newdata[j][3];
+                            }
+                            if (newdata[j][0] == "PQCJ1jNYVMU") {
+                                value19 = newdata[j][3];
+                            }
+                            if (newdata[j][0] == "xWUvequQxeM") {
+                                value20 = newdata[j][3];
+                            }
+                            if (newdata[j][0] == "nbDlMYKljTK.HllvX50cXC0") {
+                                value21 = parseInt(newdata[j][3]);
+                            }
+                            if (newdata[j][0] == "fWOu6CXWmYj.HllvX50cXC0") {
+                                value22 = parseInt(newdata[j][3]);
+                            }           
+
+                            let value=Number(newdata[j][3]);
+                            
+                            if (newdata[j][0] == "evXyDr6c7eu" || newdata[j][0] == "gVmFx873rdZ" || newdata[j][0] == "IQgrP2W9gTV") {
+                               if(newdata[j][3]=="0.0")  count1++;
+                                value2 += value;
+                            }
+                            
+                            if (newdata[j][0] == "lzbsUQJvvJB" || newdata[j][0] == "bLR7YvL1f5O" || newdata[j][0] == "mdupOTsRJ58") {
+                                if(newdata[j][3]=="0.0") count2++;
+                                    value4 += value;              
+                            }
+                            if (newdata[j][0] == "MiHLzmsVFPf.xC5PhT2YVtr" || newdata[j][0] == "MiHLzmsVFPf.GcQ4Ep0wmnH"  || newdata[j][0] == "ubgNtdy3h9H.GcQ4Ep0wmnH" || newdata[j][0] == "ubgNtdy3h9H.xC5PhT2YVtr") {
+                                if(newdata[j][3]=="0.0") count3++;
+                                    value10 += value; 
+                                
+                            }
+                            
+                            if (newdata[j][0] == "xl4EXfRMBrK.ZZFiCRpT37i" || newdata[j][0] == "xl4EXfRMBrK.Te9RyzefSAz" || newdata[j][0] == "xl4EXfRMBrK.sdMU6tpPki6") {
+                                if(newdata[j][3]=="0.0") count4++;
+                                    value14 += value;
+                                
+                            }
+                            if (newdata[j][0] == "VBEhMPsLu53.HllvX50cXC0" || newdata[j][0] == "YVj2PYy0Slj.HllvX50cXC0") {
+                                if(newdata[j][3]=="0.0") count5++;
+                                    value17 += value; 
+                                
+                            }
+                            if (newdata[j][0] == "EHT4ON2ZtNl.HllvX50cXC0" || newdata[j][0] == "lhSRNgfsxYC.HllvX50cXC0") {
+                                if(newdata[j][3]=="0.0") count6++;
+                                    value18 += value;
+                                
+                            }
+                            if (newdata[j][0] == "CAwisvSGkaj.qqJwrOzkzcz" || newdata[j][0] == "CAwisvSGkaj.G0EY8ZnkmVI" || newdata[j][0] == "CAwisvSGkaj.oSHl2cUvHmk" || newdata[j][0] == "sgdAybfDzTl.qqJwrOzkzcz" || newdata[j][0] == "sgdAybfDzTl.G0EY8ZnkmVI" || newdata[j][0] == "sgdAybfDzTl.oSHl2cUvHmk") {
+                                if(newdata[j][3]=="0.0") count7++;
+                                    value23 += value; 
+                                    
+                            }
+                        
+                        }
+                        
+                        
+                        //for single values
+                        if (value1 == undefined) value1 = "";
+                        if (value3 == undefined) value3 = "";
+                        if (value5 == undefined) value5 = "";
+                        if (value6 == undefined) value6 = "";
+                        
+                        if (value7 == undefined) value7 = "";
+                        if (value8 == undefined) value8 = "";
+                        if (value9 == undefined) value9 = "";
+                        if (value11 == undefined) value11 = "";
+                        if (value12 == undefined) value12 = "";
+                        if (value13 == undefined) value13 = "";
+                        if (value15 == undefined) value15 = "";
+                        if (value16 == undefined) value16 = "";
+                        if (value19 == undefined) value19 = "";
+                        if (value20 == undefined) value20 = "";
+                        if (value21 == undefined) value21 = "";
+                        if (value22 == undefined) value22 = "";
+                    
+                        //for total value
+                        //Incase total value is 0 then print empty string
+                        if (value2 == 0) value2 = "";
+                        if (value4 == 0) value4 = "";
+                        if (value10 == 0) value10 = "";
+                        if (value14 == 0) value14 = "";
+                        if (value17 == 0) value17 = "";
+                        if (value18 == 0) value18 = "";
+                        if (value23 == 0) value23 = "";
+
+                        //changed the rate percent of 0.0 to empty string.
+                        
+                        if(value3 == '0.0') value3 = "";
+                        if(value5 == '0.0') value5 = "";
+                        if(value9 == '0.0') value9 = "";
+                        if(value11 == '0.0') value11 = 0;
+                        if(value15 == '0.0') value15 = "";
+                        if(value16 == '0.0') value16 = "";
+                        if(value6 === 0) { value7 = 0;}
+                        if(value8 === 0) { value9 = 0;}
+                                                
+                        if (count1 > 0 && value2==0) {value2 = 0; value3 = 0; }
+                        if (count2 > 0 && value4==0) {value4 = 0; value5 = 0;}
+                        if (count3 > 0 && value10==0) value10 = 0;
+                        if (count4 > 0 && value14==0) {value14 = 0; value15 = 0; value16 = 0;}
+                        if (count5 > 0 && value17==0) value17 = 0;
+                        if (count6 > 0 && value18==0) value18 = 0;
+                        if (count7 > 0 && value23==0) value23 = 0;
+                        
+                        
+                    
+                        
+
+                        totalValue1 += value1;
+                        totalValue2 += Number(value2);
+                        totalValue3 = ((totalValue2/totalValue1)*100).toFixed(2);
+                        totalValue4 += Number(value4);
+                        totalValue5 = ((totalValue4/totalValue1)*10).toFixed(2);
+                        totalValue6 += Number(value6);
+                        totalValue7 = ((totalValue6/totalValue1)*100).toFixed(2);
+                        totalValue8 += Number(value8);
+                        totalValue9 = ((totalValue8/totalValue2)*100).toFixed(2);
+                        totalValue10 += Number(value10);
+                        totalValue11 = ((totalValue10/totalValue2)*100).toFixed(2);
+                        totalValue12 += Number(value12);
+                        totalValue13 += Number(value13);
+                        totalValue14 += Number(value14);
+                        totalValue15 = ((totalValue14/totalValue2)*100).toFixed(2);
+                        totalValue16 = ((totalValue14/totalValue1)*1000).toFixed(2);
+                        totalValue17 += Number(value17);
+                        totalValue18 += Number(value18);
+                        totalValue19 += Number(value19);
+                        totalValue20 += Number(value20);
+                        totalValue21 += Number(value21);
+                        totalValue22 += Number(value22);
+                        totalValue23 += Number(value23);
+                        if(totalValue9  == 'NaN' ) totalValue9 = 0;
+                        if(totalValue11  == 'NaN' ) totalValue11 = 0;
+                        if(totalValue15  == 'NaN' ) totalValue15 = 0;
+
+                        ouname=orgUnitChildrenAll[ouidRegion][keys].name;
+                        ouidCode = orgUnitChildrenAll[ouidRegion][keys].code;
+                        if(ouidCode == undefined) {
+                            ouidCode = '';
+                        }
+                        
+                   
+                        var tabledata = '<tr>';
+                        tabledata += '<td style="font:bold;">' + ouname + '</td><td style="font:bold;">' + ouidCode + '</td><td>' + value1 + '</td><td>' + value2 + '</td><td>' + value3 + '</td><td>' + value4 + '</td><td>' + value5 + '</td><td>' + value6 + '</td><td>' + value7 + '</td><td>' + value8 + '</td><td>' + value9 + '</td><td>' + value10 + '</td><td>' + value11 + '</td><td>' + value12 + '</td><td>' + value13 + '</td><td>' + value14 + '</td><td>' + value15 + '</td><td>' + value16 + '</td><td>' + value17 + '</td><td>' + value18 + '</td><td>' + value19 + '</td><td>' + value20 + '</td><td>' + value21 + '</td><td>' + value22 + '</td><td>' + value23 + '</td>';
+                        tabledata += '</tr>';  
+                        document.getElementById("dataTable").innerHTML += tabledata;                
+                    
+                        value1 = undefined ; value2 = 0; value3 = undefined;  value4 = 0; value5 = undefined; value6 = undefined; value7 = undefined;  value8 = undefined;  value9 = undefined; value10 = 0;  value11 = undefined; value12 =  undefined; value13 =  undefined; value14 = 0; value15 =  undefined; value16 = undefined; value17 = 0; value18 = 0; value19 =  undefined; value20 = undefined; value21 = undefined; value22 = undefined; value23 = 0;
+                        count1=0,count2=0,count3=0,count4=0,count5=0,count6=0,count7=0;
+                } 
+                        globalTotalValue1 += totalValue1;
+                        globalTotalValue2 += Number(totalValue2);
+                        globalTotalValue3 = ((globalTotalValue2/globalTotalValue1)*100).toFixed(2);
+                        globalTotalValue4 += Number(totalValue4);
+                        globalTotalValue5 = ((globalTotalValue4/globalTotalValue1)*10).toFixed(2);
+                        globalTotalValue6 += Number(totalValue6);
+                        globalTotalValue7 = ((globalTotalValue6/globalTotalValue1)*100).toFixed(2);
+                        globalTotalValue8 += Number(totalValue8);
+                        globalTotalValue9 = ((globalTotalValue8/globalTotalValue2)*100).toFixed(2);
+                        globalTotalValue10 += Number(totalValue10);
+                        globalTotalValue11 = ((globalTotalValue10/globalTotalValue2)*100).toFixed(2);
+                        globalTotalValue12 += Number(totalValue12);
+                        globalTotalValue13 += Number(totalValue13);
+                        globalTotalValue14 += Number(totalValue14);
+                        globalTotalValue15 = ((globalTotalValue14/globalTotalValue2)*100).toFixed(2);
+                        globalTotalValue16 = ((globalTotalValue14/globalTotalValue1)*1000).toFixed(2);
+                        globalTotalValue17 += Number(totalValue17);
+                        globalTotalValue18 += Number(totalValue18);
+                        globalTotalValue19 += Number(totalValue19);
+                        globalTotalValue20 += Number(totalValue20);
+                        globalTotalValue21 += Number(totalValue21);
+                        globalTotalValue22 += Number(totalValue22);
+                        globalTotalValue23 += Number(totalValue23);
+                        if(globalTotalValue9  == 'NaN' ) globalTotalValue9 = 0;
+                        if(globalTotalValue11  == 'NaN' ) globalTotalValue11 = 0;
+                        if(globalTotalValue15  == 'NaN' ) globalTotalValue15 = 0;
+
+
+
+                var tabledata = '<tr style="border:1px solid black; background-color:#DCDCDC">';
+                tabledata += '<td style="font:bold;" colspan = "2">Total</td><td>' + Math.round(totalValue1) + '</td><td>' + totalValue2 + '</td><td>' + totalValue3 + '</td><td>' + totalValue4 + '</td><td>' + totalValue5 + '</td><td>' + totalValue6 + '</td><td>' + totalValue7 + '</td><td>' + totalValue8 + '</td><td>' + totalValue9 + '</td><td>' + totalValue10 + '</td><td>' + totalValue11 + '</td><td>' + totalValue12 + '</td><td>' + totalValue13 + '</td><td>' + totalValue14 + '</td><td>' + totalValue15 + '</td><td>' + totalValue16 + '</td><td>' + totalValue17 + '</td><td>' + totalValue18 + '</td><td>' + totalValue19.toFixed(2) + '</td><td>' + totalValue20.toFixed(2) + '</td><td>' + totalValue21 + '</td><td>' + totalValue22 + '</td><td>' + totalValue23 + '</td>';
+                tabledata += '</tr>';
+                totalValue1 = 0, totalValue2 = 0, totalValue3 = 0, totalValue4 = 0, totalValue5 = 0, totalValue6 = 0, totalValue7 = 0, totalValue8 = 0, totalValue9 = 0, totalValue10 = 0, totalValue11 = 0, totalValue12 = 0, totalValue13 = 0, totalValue14 = 0, totalValue15 = 0, totalValue16 = 0, totalValue17 = 0, totalValue18 = 0, totalValue19 = 0, totalValue20 = 0, totalValue21 = 0, totalValue22 = 0, totalValue23 = 0;
+  
+                document.getElementById("dataTable").innerHTML += tabledata;
+                
+            };  
+            
+                var tabledata = '<tr style="border:1px solid black; background-color:#DCDCDC">';
+                tabledata += '<td style="font:bold;" colspan = "2"> Global Total</td><td>' + Math.round(globalTotalValue1) + '</td><td>' + globalTotalValue2 + '</td><td>' + globalTotalValue3 + '</td><td>' + globalTotalValue4 + '</td><td>' + globalTotalValue5 + '</td><td>' + globalTotalValue6 + '</td><td>' + globalTotalValue7 + '</td><td>' + globalTotalValue8 + '</td><td>' + globalTotalValue9 + '</td><td>' + globalTotalValue10 + '</td><td>' + globalTotalValue11 + '</td><td>' + globalTotalValue12 + '</td><td>' + globalTotalValue13 + '</td><td>' + globalTotalValue14 + '</td><td>' + globalTotalValue15 + '</td><td>' + globalTotalValue16 + '</td><td>' + globalTotalValue17 + '</td><td>' + globalTotalValue18 + '</td><td>' + globalTotalValue19.toFixed(2) + '</td><td>' + globalTotalValue20.toFixed(2) + '</td><td>' + globalTotalValue21 + '</td><td>' + globalTotalValue22 + '</td><td>' + globalTotalValue23 + '</td>';
+                tabledata += '</tr>';
+               
+                document.getElementById("dataTable").innerHTML += tabledata;
+                document.getElementById("loader").style.display = "none";
+                document.getElementById("printing").style.display = "block"; 
+        });
+
+     var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+           return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>
+
