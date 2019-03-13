@@ -19,6 +19,23 @@
         -webkit-animation: spin 2s linear infinite;
         animation: spin 2s linear infinite;
     }
+    #loader1 {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
 
     @-webkit-keyframes spin {
         0% {
@@ -77,11 +94,11 @@
 </style>
 <a id="dlink" style="display:none;"></a>
 
-<button type="button" id="btnExport" onclick="tableToExcel('dataTable', 'name', 'SS Report.xls')">Download</button>
-
 <br>
 <br>
 
+<div id="loader1"></div>
+<div id="selection" style="display:none;">
 <td>
     <b>Select Period</b>
 </td>
@@ -104,10 +121,24 @@
         <input type="text" id="month2" name="month" class="monthPicker2" placeholder="Month Year">
     </td>
 </tr>
+<tr>
+    <td>Select Organisation Unit Group</td>
+</tr>
+<tr>
+    <td>
+        <select id="orgUnitGroups">
+            
+        </select>
+    </td>
+</tr>
 
 <button onClick="submit()" id="tap">Submit</button>
+
+<button type="button" id="btnExport" onclick="tableToExcel('dataTable', 'name', 'SS Report.xls')">Download</button>
+</div>
 <br>
 <br>
+
 
 <div id="printing" style="display:none;" class="animate-bottom ">
     <div id='state'>
@@ -3940,6 +3971,36 @@
 
     var count = 0;
 
+    var orgUnitGroup = function() {
+            var arr = [];
+        $.ajax({
+            type:'GET',
+            async:false,
+            url:'../api/organisationUnitGroups.json?fields=id,name,code,attributeValues[attribute[id,name,code],value]&paging=false',
+            data:JSON,
+            success: function (data,status) {
+
+            for (var w = 0; w < data.organisationUnitGroups.length; w++) {
+                                    if (data.organisationUnitGroups[w].attributeValues.length != 0) {
+                                        for (var w1 = 0; w1 < data.organisationUnitGroups[w].attributeValues.length; w1++) {
+                                            if (data.organisationUnitGroups[w].attributeValues[w1].attribute.code == 'Org-unit-group' 
+                                            && data.organisationUnitGroups[w].attributeValues[w1].value == "true") {
+
+                                                orgGrpName = data.organisationUnitGroups[w].name;
+                                                orgGrpIdId = data.organisationUnitGroups[w].id;
+                                                arr.push({ "name": orgGrpName, "id": orgGrpIdId });
+                                            }
+                                        }
+                                    }
+                                }
+               
+            }
+        })
+        return arr;
+    }
+    orgUnitGroup().forEach((val, index) => document.getElementById('orgUnitGroups').innerHTML += "<option value= " + orgUnitGroup()[index].id + ">" + orgUnitGroup()[index].name + "</option>");
+    document.getElementById("selection").style.display = "block"
+    document.getElementById("loader1").style.display = "none";
 
     var orgUnitChildren_Array = [];
     var secondChildren_Array = [];
@@ -3958,6 +4019,9 @@
 
     // New Code start from here
     var count1 = 0;
+
+   
+
     function submit() {
 
 
@@ -3980,32 +4044,37 @@
         }
         var date = ("" + result.join(";") + "");
 
+        
+        //to get the selected id of OU_Group
+        var e = document.getElementById('orgUnitGroups');
+        var OU_Group = e.options[e.selectedIndex].value;
+
         $.when(
-            $.getJSON("../api/analytics.json?dimension=dx:AaMkKZ4cy0D;paKH35SUxZ8;cWfdIveBgyA;saY1Gf4dLtY;XsTXGBPe6yQ;F3dhqpyn1Wc;XM7hMSZNBM7;v4efnFmDnld;T4gmwVRTok7;yE4clpLtTMK;kbU5SaajYKP;Im5HIzJdppS;aEH7d5oSl6Z;RRY3vneQC3Y;KXeDEJvmQ8n;vV6lJ67rZUo;jN6mDbdsSv0;SvFGFVh0Xsp;pwUiFuSCjBi;yWf1soUEKjN;J5mq7sUVdBO;ZJ0BVsJORvJ;JJgWsAaxaFG;pTOFGTB3Cfp;R9UEZ2eL37V;D7uwMd3GmNM;Yxe18jNooyG;x80ltp0q8tt;du38O2RGtP8;h5lh6USIsoU;EsBB5FhAJjH;iyMsQTfU2KL;PXFwPBcd0Um;XTnn2MPbT5y;hQKBaT90CWq;cUmnVb8oWqq;dhH8bA9uAUY;vn1XTgt5b34;hLr6y23dE6T;PF9uTK43Bti;mtt2AO7FvS7;vA6Iq3Zt45j;M19DubMptu6;tQNdjcJKdKM;aedpzwsoF6z;jATTce2NP8g;vOpeoNqPL8k;YwMaL85aRks;iVBUEQIQH8i;XEbVxYUJZw7;VFknTu9IjZF;rMgGOLZkoRS;q6pWxJ33BTc;MxADVeEsLWN;jbdpT6cxHfa;Oy2VJ6ogt7k;fePEd1C7DFH;gtv0tJW7YZT;MFeJ03czG9V;jZ9NWvJhfx3;qLNvrUf4t7C;ggpCC4oXNAR;V4Qx7SokZnd;W3oBuDH5WLe;DGK0lVQpY5u;fbwQ8m0PLRJ;UpSFF2IOoJS;GhgRrM31HXP;iMWxFL0QQjk;nU5vQpTXDDA;Sk4sDmRTARC;ZgbeDkKV1uR;oPNtZfxDUBm;oPNtZfxDUBm;C2QjfO4cFvv;kEtA2908IVK;rBovMM6BtQi;rHrTATtLMGm;WG6dLvdWC41;ecMFEyoLXXS;vRtscEnfHFL;nsq2cftozDT;Cnch3DY9XSo;JI596ojYZ8b;r9ZT3eThy5Q;IAYLCPPHPSi;bqH8JY7o5Lt;jYTwjLZZZ8W;lf0tBkOkq0H;TJvkJYo3VxA;JClFCOVKj1S;hdOMYWA6hGt;E09E7Efu0NB;A47ONyeQA21;fWuoDbgi4s9;WG6dLvdWC41;Xn1ns1iK1qO;QGik888vdy5;hXyRH4ZUQ05;SpHlKQw8ykW;Ci77k6rjOAx;SC7ysaG5mRR;KpXQhKttQIU;nIo3XTpLyzk;ubZR9B1JIzS;C5gxwk1s5Sv;MujVYU6WoiZ;vJrZ85a03qq;aiiPAF4nDHE;HVKeMADWPCy;cvVsYNZV7Cu;kjIkHfHKlTM;MyKLPrwHF9Y;UH0I0h9KQsD;FAuhruJZaOT;lOUf8jtnJgu;tQQXrVhJZcK;V9D1wLNYo37;YzG7y3AAiOq;r0lI2UFIcGy;xk7SvEVRFYQ;Ib4iiR4S9M7;qg1gAdtKK8M;Ct0DjDOqhof;oitRkp7NkXv;TcceynnurSO;CxpNxh1YPFY;o4h14lF3e7T;FZi4cwkwa4A;MiWyOcTnQft;l0CJDXFBpbV;pGroxDTx9WD;fSA1DFyLb8U;KJVRKXEb01T;hhQDC9dlEAD;hZ2Wj7SZ2Q3;ckGnR9qmr3I;kI6M3gBIRpB;HjzynAau5L7;ymVHkbQAQkg;L8l1oEU7wHF;KjLGnyFVS3l;eyLmMNuejEK;foWDl8MghJS;HdUQ01RIIts;Dx8WGIdvvnf;DxLDjutP5qQ;jWcG1HwFpSU;iufpl3SdRFw;p0FU1Vau2Qi;FTidz5RCji7;eZzts5vTA3j;Q3BjSEacxhw;DsrSILZIH7S;xGaki2vxugg;IRcSgVh2hTv;j4JXpjWOCii;crg6uuKEoZV;bQutgqIBzIx;HtgFfu1SaZQ;HEicOpbhqit;ROeZm4akRAp;BJNVsAuCdZu;gfMqCdiGsmD;TC9dFJEke3t;Kg1Z61rr9e3;xXwP1oO0E32;GLdiIgGBfjG;vwWzqd5Uyhv;iWi2vvVU8Py;VSEW0WtspNM;fmWTq4QMiM1;dmdCKWSr7Np;AIOsN5klvwq;oIoDaXbYh8L;Ap9dJBuyfil;qMwFeDcd9fk;nxiiIbBF4JN;z70dbOfrdM7;aB1FbKl2vUf;UVhOLLepGux;URAdcWZGJCT;zYiACab1qHL;J9iQaCLObTC;oKDjYcckDTz;calB0gtd8cR;M4OIMkme23L;bD6VS5H6QET;DVn9Qgg9jaI;NF99iBBQNS4;Pat6wau9rxG;LDZirjG0b8h;QHm83Q7dabH;NKCrENExfjl;k2W5713xJa8;ZGFOCRoCr4i;AFUAEoY6SO5;AgPHoKIhMf1;QgEbFjQGQnK;Kq84kiPrKCK;aYKrJGFgPv9;l5DhjJJ6aeY;faJ71eceqIJ;RSSbwIp3vyv;Pww5cHUI1EE;ScdrrN721Qh;DsRL5B8t5lP;sdswFu1V8vc;W6pCxqCjDxl;yZ7uM9k1mDH;KQHxsXLYIZu;RsjEElr6Wf2;QNeoXYMXpU0;GfdOJXNrez4;xSJoWjCpPkj;nlmN8NpQV07;DRao2AD7UFa;pCCbQYjPv9h;URLueOcjczz;IoM26Pxlppb;e2VfLLo97pQ;hvAJH2H7mBe;UdvfWj17qQa;T0pIR6CyGNR;AmWS0v1nW01;fXtvgbFL8Sd;ncBUFUIFGNW;DQrcIRhTfJZ;jPoRhM3gdBl;smjBkGSTJGW;xvY2aRjrK28;yZGnTNB4PIo;wL1rIDm0Bwa;PjMlYWmp5xt;Ja9J0HUaFPD;UMppSsTngrZ;yrAA8UspOWX;NlBjPIGDxkJ;FnffElEqK2v;tXOv8NFtMDj;OEsovmJJLT3;gyNzsZsETM7;saFYvFQQNQL;e7XRR0h5Eql;B2rGTRBpfhB;eYFBxLr4M13;nEJN4gaTmw9;UkcNilAQzaX;IMWSzvYWMKn;Trlz64Tf9Wx;ptmZ3vztI4a;UhVk7UioXgy;OQY7vRElEi9;WsAHlbPBF1P;d6alFbkYomE;VI2nVPDwwbp;QR4rtGcumPi;CgK95Wso8Sv;KNvgrsciQpQ;zGmBBrGm0UV;b7vCrSYlGlT;b7vCrSYlGlT;djzLZL7BhYA;qIJDXxMMIsH;dbNvtgtdFDW;YQyriXE8E7c;jRBfYbQWnCH;ebmuswcWOR0;KT9DcKGfZHZ;uzmM5DGlvYh;cyUEzFbfJpy;mdqsSogJd0q;nysWN4pEVIi;PrxwmpdNKlf;ZuH54bskXao;R5yOrcW1u6W;xoFMoQdW7J1;XNntPtwXnb1;w8oXJIGmb8c;gGeiODJznXa;qyLyjVDQk9T;VnxrbM0IGSV;qedLPwtnCal;w6a86yj1cAm;kroCCWONYEe;alEupDrJmhA;PaxSVuoi3RF;GVMew4fN6Ug;N2DTEllMBb4;VsMHlGWptSD;QxJRwmIvHfy;tRyRfw53kQT;AIvaFvR5ctA;fRVsuOOaBAA;g0EwIUe98i8;LlVnSkK7yuo;pdBTI3XsBPH;q1HZJHTY896;Jz8yieaX1gZ;tvWXebsXFq6;GG17hSYlqT3;pZT5J4p8CkC;AGxqyFTohlG;PivcFyHMTjH;yHqeB0bgby0;MtW8bpR40sD;uWExEiyqnMS;J8UyWpjnQFI;cbEamoKmtwk;S8jCqSKLPZv;aECYirPMwAN;PZG0J6D7xgT;QgbrKkDIAi7;hsTXtaiIGgq;N3T1xcjXdMC;VJQyt4hgVLt;HnvgXbcXRwB;G9SyTENVCrJ;ivnhrV2hPmd;lIeTMPSxzxq;IYSga41QaDp;yo4rlihB8cq;USRcxxOwRBX;iZZGNccfQjz;v1XwH1dpDPr;x937en7mYeQ;zAa8aN96A2O;Oss5WHqVJRD;J3qOAsXg9wo;MUekqKd3fz2;qtYHyDvbAfh;b1KYet4bx5j;JUNUwV5vvhB;dH7rQVnOjYJ;ZB2feAi87Na;S5rxk8K2Ib7;vbv3OzAvqmW;j5if6jr72A3;aw2RIeS0lkp;QRYSup60yHp;W0ME9TOd6sr;pSgapsxolfq;nwIbu9vf77H;qB34dUBCMMq;PaGcJnCDf7o;BDD9gU4pgGx;ThRnB2r6QOp;kgIg45YN1da;aBJBrtyRh22;dJVEKifayJB;TAM58JqO2Vc;XAKDS262fk3;Qk8dOGxdCFg;BjaXrMomARk;ipibt7fdmmB;uLH3KabNS3m;ao3csWtKalu;BWDvIjW63RL;wvGagiV5lkB;kqbQKL1byK6;O8TOoPIdnOk;PqU6E1F8Dun;vxYfP1NOhoG;MYRozK2tO1j;HEmrS38a1ym;Cp9466wVosJ;ejj3QMm6oqc;KzT3C4QIAWv;uIShhLSEsxB;R1Ia1iD0QVj;k2N1pNkh7km;oPxw2MWENEh;P8YKxJR9UQK;SnoEqPr5BzG;e2G6LYkbwMz;GldkmmwyKO4;bsQkkEkfqZs;fg4vEnt5b3J;SwcDwh2dmPn;XLsAgJaueMX;tUtWiPFFjvt;Rk4OJ55dL3Z;hvzItmnoK91;DuZAMMknCXN;JzqefqqpmFu;jhJ2egZP6Qv;iEb56A3rjEV;DldptIG6QQ7;gcanWJj2QN5;Rcmt95xCIuZ;DK9XeoQyAUs;MKdjMGodtRR;owaOMGNaDJq;uXNd18KN8fl;W0ME9TOd6sr;eZzts5vTA3j;j7dmmrj5pkz;qQvz3RmsT9q;sdmMiVfdQjW;tdWDVVyq0he;SHprDm4pEZn;VovGQNc92Z9;gC2Gz73QDsg;YZyQF6W5fLR;lVFsaJKBj2Q;jATTce2NP8g;PjMlYWmp5xt;UMteYp812j5;PxSgrbO97KZ&dimension=ou:" + ouid + "&filter=pe:" + date + "&displayProperty=NAME", {
+            $.getJSON("../api/analytics.json?dimension=dx:AaMkKZ4cy0D;paKH35SUxZ8;cWfdIveBgyA;saY1Gf4dLtY;XsTXGBPe6yQ;F3dhqpyn1Wc;XM7hMSZNBM7;v4efnFmDnld;T4gmwVRTok7;yE4clpLtTMK;kbU5SaajYKP;Im5HIzJdppS;aEH7d5oSl6Z;RRY3vneQC3Y;KXeDEJvmQ8n;vV6lJ67rZUo;jN6mDbdsSv0;SvFGFVh0Xsp;pwUiFuSCjBi;yWf1soUEKjN;J5mq7sUVdBO;ZJ0BVsJORvJ;JJgWsAaxaFG;pTOFGTB3Cfp;R9UEZ2eL37V;D7uwMd3GmNM;Yxe18jNooyG;x80ltp0q8tt;du38O2RGtP8;h5lh6USIsoU;EsBB5FhAJjH;iyMsQTfU2KL;PXFwPBcd0Um;XTnn2MPbT5y;hQKBaT90CWq;cUmnVb8oWqq;dhH8bA9uAUY;vn1XTgt5b34;hLr6y23dE6T;PF9uTK43Bti;mtt2AO7FvS7;vA6Iq3Zt45j;M19DubMptu6;tQNdjcJKdKM;aedpzwsoF6z;jATTce2NP8g;vOpeoNqPL8k;YwMaL85aRks;iVBUEQIQH8i;XEbVxYUJZw7;VFknTu9IjZF;rMgGOLZkoRS;q6pWxJ33BTc;MxADVeEsLWN;jbdpT6cxHfa;Oy2VJ6ogt7k;fePEd1C7DFH;gtv0tJW7YZT;MFeJ03czG9V;jZ9NWvJhfx3;qLNvrUf4t7C;ggpCC4oXNAR;V4Qx7SokZnd;W3oBuDH5WLe;DGK0lVQpY5u;fbwQ8m0PLRJ;UpSFF2IOoJS;GhgRrM31HXP;iMWxFL0QQjk;nU5vQpTXDDA;Sk4sDmRTARC;ZgbeDkKV1uR;oPNtZfxDUBm;oPNtZfxDUBm;C2QjfO4cFvv;kEtA2908IVK;rBovMM6BtQi;rHrTATtLMGm;WG6dLvdWC41;ecMFEyoLXXS;vRtscEnfHFL;nsq2cftozDT;Cnch3DY9XSo;JI596ojYZ8b;r9ZT3eThy5Q;IAYLCPPHPSi;bqH8JY7o5Lt;jYTwjLZZZ8W;lf0tBkOkq0H;TJvkJYo3VxA;JClFCOVKj1S;hdOMYWA6hGt;E09E7Efu0NB;A47ONyeQA21;fWuoDbgi4s9;WG6dLvdWC41;Xn1ns1iK1qO;QGik888vdy5;hXyRH4ZUQ05;SpHlKQw8ykW;Ci77k6rjOAx;SC7ysaG5mRR;KpXQhKttQIU;nIo3XTpLyzk;ubZR9B1JIzS;C5gxwk1s5Sv;MujVYU6WoiZ;vJrZ85a03qq;aiiPAF4nDHE;HVKeMADWPCy;cvVsYNZV7Cu;kjIkHfHKlTM;MyKLPrwHF9Y;UH0I0h9KQsD;FAuhruJZaOT;lOUf8jtnJgu;tQQXrVhJZcK;V9D1wLNYo37;YzG7y3AAiOq;r0lI2UFIcGy;xk7SvEVRFYQ;Ib4iiR4S9M7;qg1gAdtKK8M;Ct0DjDOqhof;oitRkp7NkXv;TcceynnurSO;CxpNxh1YPFY;o4h14lF3e7T;FZi4cwkwa4A;MiWyOcTnQft;l0CJDXFBpbV;pGroxDTx9WD;fSA1DFyLb8U;KJVRKXEb01T;hhQDC9dlEAD;hZ2Wj7SZ2Q3;ckGnR9qmr3I;kI6M3gBIRpB;HjzynAau5L7;ymVHkbQAQkg;L8l1oEU7wHF;KjLGnyFVS3l;eyLmMNuejEK;foWDl8MghJS;HdUQ01RIIts;Dx8WGIdvvnf;DxLDjutP5qQ;jWcG1HwFpSU;iufpl3SdRFw;p0FU1Vau2Qi;FTidz5RCji7;eZzts5vTA3j;Q3BjSEacxhw;DsrSILZIH7S;xGaki2vxugg;IRcSgVh2hTv;j4JXpjWOCii;crg6uuKEoZV;bQutgqIBzIx;HtgFfu1SaZQ;HEicOpbhqit;ROeZm4akRAp;BJNVsAuCdZu;gfMqCdiGsmD;TC9dFJEke3t;Kg1Z61rr9e3;xXwP1oO0E32;GLdiIgGBfjG;vwWzqd5Uyhv;iWi2vvVU8Py;VSEW0WtspNM;fmWTq4QMiM1;dmdCKWSr7Np;AIOsN5klvwq;oIoDaXbYh8L;Ap9dJBuyfil;qMwFeDcd9fk;nxiiIbBF4JN;z70dbOfrdM7;aB1FbKl2vUf;UVhOLLepGux;URAdcWZGJCT;zYiACab1qHL;J9iQaCLObTC;oKDjYcckDTz;calB0gtd8cR;M4OIMkme23L;bD6VS5H6QET;DVn9Qgg9jaI;NF99iBBQNS4;Pat6wau9rxG;LDZirjG0b8h;QHm83Q7dabH;NKCrENExfjl;k2W5713xJa8;ZGFOCRoCr4i;AFUAEoY6SO5;AgPHoKIhMf1;QgEbFjQGQnK;Kq84kiPrKCK;aYKrJGFgPv9;l5DhjJJ6aeY;faJ71eceqIJ;RSSbwIp3vyv;Pww5cHUI1EE;ScdrrN721Qh;DsRL5B8t5lP;sdswFu1V8vc;W6pCxqCjDxl;yZ7uM9k1mDH;KQHxsXLYIZu;RsjEElr6Wf2;QNeoXYMXpU0;GfdOJXNrez4;xSJoWjCpPkj;nlmN8NpQV07;DRao2AD7UFa;pCCbQYjPv9h;URLueOcjczz;IoM26Pxlppb;e2VfLLo97pQ;hvAJH2H7mBe;UdvfWj17qQa;T0pIR6CyGNR;AmWS0v1nW01;fXtvgbFL8Sd;ncBUFUIFGNW;DQrcIRhTfJZ;jPoRhM3gdBl;smjBkGSTJGW;xvY2aRjrK28;yZGnTNB4PIo;wL1rIDm0Bwa;PjMlYWmp5xt;Ja9J0HUaFPD;UMppSsTngrZ;yrAA8UspOWX;NlBjPIGDxkJ;FnffElEqK2v;tXOv8NFtMDj;OEsovmJJLT3;gyNzsZsETM7;saFYvFQQNQL;e7XRR0h5Eql;B2rGTRBpfhB;eYFBxLr4M13;nEJN4gaTmw9;UkcNilAQzaX;IMWSzvYWMKn;Trlz64Tf9Wx;ptmZ3vztI4a;UhVk7UioXgy;OQY7vRElEi9;WsAHlbPBF1P;d6alFbkYomE;VI2nVPDwwbp;QR4rtGcumPi;CgK95Wso8Sv;KNvgrsciQpQ;zGmBBrGm0UV;b7vCrSYlGlT;b7vCrSYlGlT;djzLZL7BhYA;qIJDXxMMIsH;dbNvtgtdFDW;YQyriXE8E7c;jRBfYbQWnCH;ebmuswcWOR0;KT9DcKGfZHZ;uzmM5DGlvYh;cyUEzFbfJpy;mdqsSogJd0q;nysWN4pEVIi;PrxwmpdNKlf;ZuH54bskXao;R5yOrcW1u6W;xoFMoQdW7J1;XNntPtwXnb1;w8oXJIGmb8c;gGeiODJznXa;qyLyjVDQk9T;VnxrbM0IGSV;qedLPwtnCal;w6a86yj1cAm;kroCCWONYEe;alEupDrJmhA;PaxSVuoi3RF;GVMew4fN6Ug;N2DTEllMBb4;VsMHlGWptSD;QxJRwmIvHfy;tRyRfw53kQT;AIvaFvR5ctA;fRVsuOOaBAA;g0EwIUe98i8;LlVnSkK7yuo;pdBTI3XsBPH;q1HZJHTY896;Jz8yieaX1gZ;tvWXebsXFq6;GG17hSYlqT3;pZT5J4p8CkC;AGxqyFTohlG;PivcFyHMTjH;yHqeB0bgby0;MtW8bpR40sD;uWExEiyqnMS;J8UyWpjnQFI;cbEamoKmtwk;S8jCqSKLPZv;aECYirPMwAN;PZG0J6D7xgT;QgbrKkDIAi7;hsTXtaiIGgq;N3T1xcjXdMC;VJQyt4hgVLt;HnvgXbcXRwB;G9SyTENVCrJ;ivnhrV2hPmd;lIeTMPSxzxq;IYSga41QaDp;yo4rlihB8cq;USRcxxOwRBX;iZZGNccfQjz;v1XwH1dpDPr;x937en7mYeQ;zAa8aN96A2O;Oss5WHqVJRD;J3qOAsXg9wo;MUekqKd3fz2;qtYHyDvbAfh;b1KYet4bx5j;JUNUwV5vvhB;dH7rQVnOjYJ;ZB2feAi87Na;S5rxk8K2Ib7;vbv3OzAvqmW;j5if6jr72A3;aw2RIeS0lkp;QRYSup60yHp;W0ME9TOd6sr;pSgapsxolfq;nwIbu9vf77H;qB34dUBCMMq;PaGcJnCDf7o;BDD9gU4pgGx;ThRnB2r6QOp;kgIg45YN1da;aBJBrtyRh22;dJVEKifayJB;TAM58JqO2Vc;XAKDS262fk3;Qk8dOGxdCFg;BjaXrMomARk;ipibt7fdmmB;uLH3KabNS3m;ao3csWtKalu;BWDvIjW63RL;wvGagiV5lkB;kqbQKL1byK6;O8TOoPIdnOk;PqU6E1F8Dun;vxYfP1NOhoG;MYRozK2tO1j;HEmrS38a1ym;Cp9466wVosJ;ejj3QMm6oqc;KzT3C4QIAWv;uIShhLSEsxB;R1Ia1iD0QVj;k2N1pNkh7km;oPxw2MWENEh;P8YKxJR9UQK;SnoEqPr5BzG;e2G6LYkbwMz;GldkmmwyKO4;bsQkkEkfqZs;fg4vEnt5b3J;SwcDwh2dmPn;XLsAgJaueMX;tUtWiPFFjvt;Rk4OJ55dL3Z;hvzItmnoK91;DuZAMMknCXN;JzqefqqpmFu;jhJ2egZP6Qv;iEb56A3rjEV;DldptIG6QQ7;gcanWJj2QN5;Rcmt95xCIuZ;DK9XeoQyAUs;MKdjMGodtRR;owaOMGNaDJq;uXNd18KN8fl;W0ME9TOd6sr;eZzts5vTA3j;j7dmmrj5pkz;qQvz3RmsT9q;sdmMiVfdQjW;tdWDVVyq0he;SHprDm4pEZn;VovGQNc92Z9;gC2Gz73QDsg;YZyQF6W5fLR;lVFsaJKBj2Q;jATTce2NP8g;PjMlYWmp5xt;UMteYp812j5;PxSgrbO97KZ&dimension=pe:" + date + "&filter=ou:OU_GROUP-" + OU_Group + ";" + ouid + "&displayProperty=NAME&aggregationType=SUM", {
                 format: "json"
             }),
-            $.getJSON("../api/analytics.json?&dimension=dx:DE_GROUP-yfX1FJfDhad&dimension=ou:" + ouid + "&filter=pe:" + date + "&displayProperty=NAME", {
+            $.getJSON("../api/analytics.json?&dimension=dx:DE_GROUP-yfX1FJfDhad&dimension=pe:"+date +"&filter=ou:OU_GROUP-"+ OU_Group +";" + ouid + "&displayProperty=NAME&aggregationType=SUM", {
                 format: "json" // non srh services
             }),
-            $.getJSON("../api/analytics.json?&dimension=dx:DE_GROUP-iyGDJGVButq&dimension=ou:" + ouid + "&filter=pe:" + date + "&displayProperty=NAME", {
+            $.getJSON("../api/analytics.json?&dimension=dx:DE_GROUP-iyGDJGVButq&dimension=pe:"+date +"&filter=ou:OU_GROUP-"+ OU_Group +";" + ouid + "&displayProperty=NAME&aggregationType=SUM", {
                 format: "json" // non srh referral
             }),
-            $.getJSON("../api/analytics.json?&dimension=dx:OKK7lii7RNv;azeoX9cmRBa;abT2f2SKhaX;Q8Eyj6acCZd;AuqF1Wv2Kmx;ywSLvhMzD7M;ViIhGF6CHE4;dBe9dDQ2VSI;REWE4lcGKBx;OHOgwavYUAH;fxThJLuNwQt;Tp6iAz43wTt;IuAa73uen0T;hNzEAIInGwe;ovhYsQTdfQx;s5DU7dMwDR8;KwQxaoza0VJ;n2azGd8HnW1;XCjU1G2782I;qEwIR57T15d;DVW6XuTMEpg;Jj1vd5cLzwt;U7fxQhV85XN;TZP81eJ3f21;Kg89Efllt1D;GWifuk5uKMB;bbmzVw9VVc8;hNzEAIInGwe;eSWNNG2mOTV;WKmjcdDsVw6;ak5XoxnZ5Dw;j3VQdJsKFXc;IuAa73uen0T&dimension=ou:" + ouid + "&filter=pe:" + date + "&displayProperty=NAME", {
+            $.getJSON("../api/analytics.json?&dimension=dx:OKK7lii7RNv;azeoX9cmRBa;abT2f2SKhaX;Q8Eyj6acCZd;AuqF1Wv2Kmx;ywSLvhMzD7M;ViIhGF6CHE4;dBe9dDQ2VSI;REWE4lcGKBx;OHOgwavYUAH;fxThJLuNwQt;Tp6iAz43wTt;IuAa73uen0T;hNzEAIInGwe;ovhYsQTdfQx;s5DU7dMwDR8;KwQxaoza0VJ;n2azGd8HnW1;XCjU1G2782I;qEwIR57T15d;DVW6XuTMEpg;Jj1vd5cLzwt;U7fxQhV85XN;TZP81eJ3f21;Kg89Efllt1D;GWifuk5uKMB;bbmzVw9VVc8;hNzEAIInGwe;eSWNNG2mOTV;WKmjcdDsVw6;ak5XoxnZ5Dw;j3VQdJsKFXc;IuAa73uen0T&dimension=pe:"+date +"&filter=ou:OU_GROUP-"+ OU_Group +";" + ouid + "&displayProperty=NAME&aggregationType=SUM", {
                 format: "json"
             }),
             $.getJSON("../api/constants.json?fields=id,value,displayName&displayProperty=NAME", {
                 format: "json"
             }),
-            $.getJSON("../api/analytics.json?dimension=ID3CGIXZNp9:wzqerAiRUfl;&dimension=dx:AaMkKZ4cy0D;paKH35SUxZ8;cWfdIveBgyA;saY1Gf4dLtY;XsTXGBPe6yQ;F3dhqpyn1Wc;XM7hMSZNBM7;v4efnFmDnld;T4gmwVRTok7;yE4clpLtTMK;kbU5SaajYKP;Im5HIzJdppS;aEH7d5oSl6Z;RRY3vneQC3Y;KXeDEJvmQ8n;vV6lJ67rZUo;jN6mDbdsSv0;SvFGFVh0Xsp;pwUiFuSCjBi;yWf1soUEKjN;J5mq7sUVdBO;ZJ0BVsJORvJ;JJgWsAaxaFG;pTOFGTB3Cfp;R9UEZ2eL37V;D7uwMd3GmNM;Yxe18jNooyG;x80ltp0q8tt;du38O2RGtP8;h5lh6USIsoU;EsBB5FhAJjH;iyMsQTfU2KL;PXFwPBcd0Um;XTnn2MPbT5y;hQKBaT90CWq;cUmnVb8oWqq;dhH8bA9uAUY;vn1XTgt5b34;hLr6y23dE6T;PF9uTK43Bti;mtt2AO7FvS7;vA6Iq3Zt45j;M19DubMptu6;tQNdjcJKdKM;aedpzwsoF6z;jATTce2NP8g;vOpeoNqPL8k;YwMaL85aRks;iVBUEQIQH8i;XEbVxYUJZw7;VFknTu9IjZF;rMgGOLZkoRS;q6pWxJ33BTc;MxADVeEsLWN;jbdpT6cxHfa;Oy2VJ6ogt7k;fePEd1C7DFH;gtv0tJW7YZT;MFeJ03czG9V;jZ9NWvJhfx3;qLNvrUf4t7C;ggpCC4oXNAR;V4Qx7SokZnd;W3oBuDH5WLe;DGK0lVQpY5u;fbwQ8m0PLRJ;UpSFF2IOoJS;GhgRrM31HXP;iMWxFL0QQjk;nU5vQpTXDDA;Sk4sDmRTARC;ZgbeDkKV1uR;oPNtZfxDUBm;oPNtZfxDUBm;C2QjfO4cFvv;kEtA2908IVK;rBovMM6BtQi;rHrTATtLMGm;WG6dLvdWC41;ecMFEyoLXXS;vRtscEnfHFL;nsq2cftozDT;Cnch3DY9XSo;JI596ojYZ8b;r9ZT3eThy5Q;IAYLCPPHPSi;bqH8JY7o5Lt;jYTwjLZZZ8W;lf0tBkOkq0H;TJvkJYo3VxA;JClFCOVKj1S;hdOMYWA6hGt;E09E7Efu0NB;A47ONyeQA21;fWuoDbgi4s9;WG6dLvdWC41;Xn1ns1iK1qO;QGik888vdy5;hXyRH4ZUQ05;SpHlKQw8ykW;Ci77k6rjOAx;SC7ysaG5mRR;KpXQhKttQIU;nIo3XTpLyzk;ubZR9B1JIzS;C5gxwk1s5Sv;MujVYU6WoiZ;vJrZ85a03qq;aiiPAF4nDHE;HVKeMADWPCy;cvVsYNZV7Cu;kjIkHfHKlTM;MyKLPrwHF9Y;UH0I0h9KQsD;FAuhruJZaOT;lOUf8jtnJgu;tQQXrVhJZcK;V9D1wLNYo37;YzG7y3AAiOq;r0lI2UFIcGy;xk7SvEVRFYQ;Ib4iiR4S9M7;qg1gAdtKK8M;Ct0DjDOqhof;oitRkp7NkXv;TcceynnurSO;CxpNxh1YPFY;o4h14lF3e7T;FZi4cwkwa4A;MiWyOcTnQft;l0CJDXFBpbV;pGroxDTx9WD;fSA1DFyLb8U;KJVRKXEb01T;hhQDC9dlEAD;hZ2Wj7SZ2Q3;ckGnR9qmr3I;kI6M3gBIRpB;HjzynAau5L7;ymVHkbQAQkg;L8l1oEU7wHF;KjLGnyFVS3l;eyLmMNuejEK;foWDl8MghJS;HdUQ01RIIts;Dx8WGIdvvnf;DxLDjutP5qQ;jWcG1HwFpSU;iufpl3SdRFw;p0FU1Vau2Qi;FTidz5RCji7;eZzts5vTA3j;Q3BjSEacxhw;DsrSILZIH7S;xGaki2vxugg;IRcSgVh2hTv;j4JXpjWOCii;crg6uuKEoZV;bQutgqIBzIx;HtgFfu1SaZQ;HEicOpbhqit;ROeZm4akRAp;BJNVsAuCdZu;gfMqCdiGsmD;TC9dFJEke3t;Kg1Z61rr9e3;xXwP1oO0E32;GLdiIgGBfjG;vwWzqd5Uyhv;iWi2vvVU8Py;VSEW0WtspNM;fmWTq4QMiM1;dmdCKWSr7Np;AIOsN5klvwq;oIoDaXbYh8L;Ap9dJBuyfil;qMwFeDcd9fk;nxiiIbBF4JN;z70dbOfrdM7;aB1FbKl2vUf;UVhOLLepGux;URAdcWZGJCT;zYiACab1qHL;J9iQaCLObTC;oKDjYcckDTz;calB0gtd8cR;M4OIMkme23L;bD6VS5H6QET;DVn9Qgg9jaI;NF99iBBQNS4;Pat6wau9rxG;LDZirjG0b8h;QHm83Q7dabH;NKCrENExfjl;k2W5713xJa8;ZGFOCRoCr4i;AFUAEoY6SO5;AgPHoKIhMf1;QgEbFjQGQnK;Kq84kiPrKCK;aYKrJGFgPv9;l5DhjJJ6aeY;faJ71eceqIJ;RSSbwIp3vyv;Pww5cHUI1EE;ScdrrN721Qh;DsRL5B8t5lP;sdswFu1V8vc;W6pCxqCjDxl;yZ7uM9k1mDH;KQHxsXLYIZu;RsjEElr6Wf2;QNeoXYMXpU0;GfdOJXNrez4;xSJoWjCpPkj;nlmN8NpQV07;DRao2AD7UFa;pCCbQYjPv9h;URLueOcjczz;IoM26Pxlppb;e2VfLLo97pQ;hvAJH2H7mBe;UdvfWj17qQa;T0pIR6CyGNR;AmWS0v1nW01;fXtvgbFL8Sd;ncBUFUIFGNW;DQrcIRhTfJZ;jPoRhM3gdBl;smjBkGSTJGW;xvY2aRjrK28;yZGnTNB4PIo;wL1rIDm0Bwa;PjMlYWmp5xt;Ja9J0HUaFPD;UMppSsTngrZ;yrAA8UspOWX;NlBjPIGDxkJ;FnffElEqK2v;tXOv8NFtMDj;OEsovmJJLT3;gyNzsZsETM7;saFYvFQQNQL;e7XRR0h5Eql;B2rGTRBpfhB;eYFBxLr4M13;nEJN4gaTmw9;UkcNilAQzaX;IMWSzvYWMKn;Trlz64Tf9Wx;ptmZ3vztI4a;UhVk7UioXgy;OQY7vRElEi9;WsAHlbPBF1P;d6alFbkYomE;VI2nVPDwwbp;QR4rtGcumPi;CgK95Wso8Sv;KNvgrsciQpQ;zGmBBrGm0UV;b7vCrSYlGlT;b7vCrSYlGlT;djzLZL7BhYA;qIJDXxMMIsH;dbNvtgtdFDW;YQyriXE8E7c;jRBfYbQWnCH;ebmuswcWOR0;KT9DcKGfZHZ;uzmM5DGlvYh;cyUEzFbfJpy;mdqsSogJd0q;nysWN4pEVIi;PrxwmpdNKlf;ZuH54bskXao;R5yOrcW1u6W;xoFMoQdW7J1;XNntPtwXnb1;w8oXJIGmb8c;gGeiODJznXa;qyLyjVDQk9T;VnxrbM0IGSV;qedLPwtnCal;w6a86yj1cAm;kroCCWONYEe;alEupDrJmhA;PaxSVuoi3RF;GVMew4fN6Ug;N2DTEllMBb4;VsMHlGWptSD;QxJRwmIvHfy;tRyRfw53kQT;AIvaFvR5ctA;fRVsuOOaBAA;g0EwIUe98i8;LlVnSkK7yuo;pdBTI3XsBPH;q1HZJHTY896;Jz8yieaX1gZ;tvWXebsXFq6;GG17hSYlqT3;pZT5J4p8CkC;AGxqyFTohlG;PivcFyHMTjH;yHqeB0bgby0;MtW8bpR40sD;uWExEiyqnMS;J8UyWpjnQFI;cbEamoKmtwk;S8jCqSKLPZv;aECYirPMwAN;PZG0J6D7xgT;QgbrKkDIAi7;hsTXtaiIGgq;N3T1xcjXdMC;VJQyt4hgVLt;HnvgXbcXRwB;G9SyTENVCrJ;ivnhrV2hPmd;lIeTMPSxzxq;IYSga41QaDp;yo4rlihB8cq;USRcxxOwRBX;iZZGNccfQjz;v1XwH1dpDPr;x937en7mYeQ;zAa8aN96A2O;Oss5WHqVJRD;J3qOAsXg9wo;MUekqKd3fz2;qtYHyDvbAfh;b1KYet4bx5j;JUNUwV5vvhB;dH7rQVnOjYJ;ZB2feAi87Na;S5rxk8K2Ib7;vbv3OzAvqmW;j5if6jr72A3;aw2RIeS0lkp;QRYSup60yHp;W0ME9TOd6sr;pSgapsxolfq;nwIbu9vf77H;qB34dUBCMMq;PaGcJnCDf7o;BDD9gU4pgGx;ThRnB2r6QOp;kgIg45YN1da;aBJBrtyRh22;dJVEKifayJB;TAM58JqO2Vc;XAKDS262fk3;Qk8dOGxdCFg;BjaXrMomARk;ipibt7fdmmB;uLH3KabNS3m;ao3csWtKalu;BWDvIjW63RL;wvGagiV5lkB;kqbQKL1byK6;O8TOoPIdnOk;PqU6E1F8Dun;vxYfP1NOhoG;MYRozK2tO1j;HEmrS38a1ym;Cp9466wVosJ;ejj3QMm6oqc;KzT3C4QIAWv;uIShhLSEsxB;R1Ia1iD0QVj;k2N1pNkh7km;oPxw2MWENEh;P8YKxJR9UQK;SnoEqPr5BzG;e2G6LYkbwMz;GldkmmwyKO4;bsQkkEkfqZs;fg4vEnt5b3J;SwcDwh2dmPn;XLsAgJaueMX;tUtWiPFFjvt;Rk4OJ55dL3Z;hvzItmnoK91;DuZAMMknCXN;JzqefqqpmFu;jhJ2egZP6Qv;iEb56A3rjEV;DldptIG6QQ7;gcanWJj2QN5;Rcmt95xCIuZ;DK9XeoQyAUs;MKdjMGodtRR;owaOMGNaDJq;uXNd18KN8fl;W0ME9TOd6sr;eZzts5vTA3j;j7dmmrj5pkz;qQvz3RmsT9q;sdmMiVfdQjW;tdWDVVyq0he;SHprDm4pEZn;VovGQNc92Z9;gC2Gz73QDsg;YZyQF6W5fLR;lVFsaJKBj2Q;jATTce2NP8g;PjMlYWmp5xt;UMteYp812j5;PxSgrbO97KZ&dimension=ou:" + ouid + "&filter=pe:" + date + "&displayProperty=NAME", {
+            $.getJSON("../api/analytics.json?dimension=ID3CGIXZNp9:wzqerAiRUfl;&dimension=dx:AaMkKZ4cy0D;paKH35SUxZ8;cWfdIveBgyA;saY1Gf4dLtY;XsTXGBPe6yQ;F3dhqpyn1Wc;XM7hMSZNBM7;v4efnFmDnld;T4gmwVRTok7;yE4clpLtTMK;kbU5SaajYKP;Im5HIzJdppS;aEH7d5oSl6Z;RRY3vneQC3Y;KXeDEJvmQ8n;vV6lJ67rZUo;jN6mDbdsSv0;SvFGFVh0Xsp;pwUiFuSCjBi;yWf1soUEKjN;J5mq7sUVdBO;ZJ0BVsJORvJ;JJgWsAaxaFG;pTOFGTB3Cfp;R9UEZ2eL37V;D7uwMd3GmNM;Yxe18jNooyG;x80ltp0q8tt;du38O2RGtP8;h5lh6USIsoU;EsBB5FhAJjH;iyMsQTfU2KL;PXFwPBcd0Um;XTnn2MPbT5y;hQKBaT90CWq;cUmnVb8oWqq;dhH8bA9uAUY;vn1XTgt5b34;hLr6y23dE6T;PF9uTK43Bti;mtt2AO7FvS7;vA6Iq3Zt45j;M19DubMptu6;tQNdjcJKdKM;aedpzwsoF6z;jATTce2NP8g;vOpeoNqPL8k;YwMaL85aRks;iVBUEQIQH8i;XEbVxYUJZw7;VFknTu9IjZF;rMgGOLZkoRS;q6pWxJ33BTc;MxADVeEsLWN;jbdpT6cxHfa;Oy2VJ6ogt7k;fePEd1C7DFH;gtv0tJW7YZT;MFeJ03czG9V;jZ9NWvJhfx3;qLNvrUf4t7C;ggpCC4oXNAR;V4Qx7SokZnd;W3oBuDH5WLe;DGK0lVQpY5u;fbwQ8m0PLRJ;UpSFF2IOoJS;GhgRrM31HXP;iMWxFL0QQjk;nU5vQpTXDDA;Sk4sDmRTARC;ZgbeDkKV1uR;oPNtZfxDUBm;oPNtZfxDUBm;C2QjfO4cFvv;kEtA2908IVK;rBovMM6BtQi;rHrTATtLMGm;WG6dLvdWC41;ecMFEyoLXXS;vRtscEnfHFL;nsq2cftozDT;Cnch3DY9XSo;JI596ojYZ8b;r9ZT3eThy5Q;IAYLCPPHPSi;bqH8JY7o5Lt;jYTwjLZZZ8W;lf0tBkOkq0H;TJvkJYo3VxA;JClFCOVKj1S;hdOMYWA6hGt;E09E7Efu0NB;A47ONyeQA21;fWuoDbgi4s9;WG6dLvdWC41;Xn1ns1iK1qO;QGik888vdy5;hXyRH4ZUQ05;SpHlKQw8ykW;Ci77k6rjOAx;SC7ysaG5mRR;KpXQhKttQIU;nIo3XTpLyzk;ubZR9B1JIzS;C5gxwk1s5Sv;MujVYU6WoiZ;vJrZ85a03qq;aiiPAF4nDHE;HVKeMADWPCy;cvVsYNZV7Cu;kjIkHfHKlTM;MyKLPrwHF9Y;UH0I0h9KQsD;FAuhruJZaOT;lOUf8jtnJgu;tQQXrVhJZcK;V9D1wLNYo37;YzG7y3AAiOq;r0lI2UFIcGy;xk7SvEVRFYQ;Ib4iiR4S9M7;qg1gAdtKK8M;Ct0DjDOqhof;oitRkp7NkXv;TcceynnurSO;CxpNxh1YPFY;o4h14lF3e7T;FZi4cwkwa4A;MiWyOcTnQft;l0CJDXFBpbV;pGroxDTx9WD;fSA1DFyLb8U;KJVRKXEb01T;hhQDC9dlEAD;hZ2Wj7SZ2Q3;ckGnR9qmr3I;kI6M3gBIRpB;HjzynAau5L7;ymVHkbQAQkg;L8l1oEU7wHF;KjLGnyFVS3l;eyLmMNuejEK;foWDl8MghJS;HdUQ01RIIts;Dx8WGIdvvnf;DxLDjutP5qQ;jWcG1HwFpSU;iufpl3SdRFw;p0FU1Vau2Qi;FTidz5RCji7;eZzts5vTA3j;Q3BjSEacxhw;DsrSILZIH7S;xGaki2vxugg;IRcSgVh2hTv;j4JXpjWOCii;crg6uuKEoZV;bQutgqIBzIx;HtgFfu1SaZQ;HEicOpbhqit;ROeZm4akRAp;BJNVsAuCdZu;gfMqCdiGsmD;TC9dFJEke3t;Kg1Z61rr9e3;xXwP1oO0E32;GLdiIgGBfjG;vwWzqd5Uyhv;iWi2vvVU8Py;VSEW0WtspNM;fmWTq4QMiM1;dmdCKWSr7Np;AIOsN5klvwq;oIoDaXbYh8L;Ap9dJBuyfil;qMwFeDcd9fk;nxiiIbBF4JN;z70dbOfrdM7;aB1FbKl2vUf;UVhOLLepGux;URAdcWZGJCT;zYiACab1qHL;J9iQaCLObTC;oKDjYcckDTz;calB0gtd8cR;M4OIMkme23L;bD6VS5H6QET;DVn9Qgg9jaI;NF99iBBQNS4;Pat6wau9rxG;LDZirjG0b8h;QHm83Q7dabH;NKCrENExfjl;k2W5713xJa8;ZGFOCRoCr4i;AFUAEoY6SO5;AgPHoKIhMf1;QgEbFjQGQnK;Kq84kiPrKCK;aYKrJGFgPv9;l5DhjJJ6aeY;faJ71eceqIJ;RSSbwIp3vyv;Pww5cHUI1EE;ScdrrN721Qh;DsRL5B8t5lP;sdswFu1V8vc;W6pCxqCjDxl;yZ7uM9k1mDH;KQHxsXLYIZu;RsjEElr6Wf2;QNeoXYMXpU0;GfdOJXNrez4;xSJoWjCpPkj;nlmN8NpQV07;DRao2AD7UFa;pCCbQYjPv9h;URLueOcjczz;IoM26Pxlppb;e2VfLLo97pQ;hvAJH2H7mBe;UdvfWj17qQa;T0pIR6CyGNR;AmWS0v1nW01;fXtvgbFL8Sd;ncBUFUIFGNW;DQrcIRhTfJZ;jPoRhM3gdBl;smjBkGSTJGW;xvY2aRjrK28;yZGnTNB4PIo;wL1rIDm0Bwa;PjMlYWmp5xt;Ja9J0HUaFPD;UMppSsTngrZ;yrAA8UspOWX;NlBjPIGDxkJ;FnffElEqK2v;tXOv8NFtMDj;OEsovmJJLT3;gyNzsZsETM7;saFYvFQQNQL;e7XRR0h5Eql;B2rGTRBpfhB;eYFBxLr4M13;nEJN4gaTmw9;UkcNilAQzaX;IMWSzvYWMKn;Trlz64Tf9Wx;ptmZ3vztI4a;UhVk7UioXgy;OQY7vRElEi9;WsAHlbPBF1P;d6alFbkYomE;VI2nVPDwwbp;QR4rtGcumPi;CgK95Wso8Sv;KNvgrsciQpQ;zGmBBrGm0UV;b7vCrSYlGlT;b7vCrSYlGlT;djzLZL7BhYA;qIJDXxMMIsH;dbNvtgtdFDW;YQyriXE8E7c;jRBfYbQWnCH;ebmuswcWOR0;KT9DcKGfZHZ;uzmM5DGlvYh;cyUEzFbfJpy;mdqsSogJd0q;nysWN4pEVIi;PrxwmpdNKlf;ZuH54bskXao;R5yOrcW1u6W;xoFMoQdW7J1;XNntPtwXnb1;w8oXJIGmb8c;gGeiODJznXa;qyLyjVDQk9T;VnxrbM0IGSV;qedLPwtnCal;w6a86yj1cAm;kroCCWONYEe;alEupDrJmhA;PaxSVuoi3RF;GVMew4fN6Ug;N2DTEllMBb4;VsMHlGWptSD;QxJRwmIvHfy;tRyRfw53kQT;AIvaFvR5ctA;fRVsuOOaBAA;g0EwIUe98i8;LlVnSkK7yuo;pdBTI3XsBPH;q1HZJHTY896;Jz8yieaX1gZ;tvWXebsXFq6;GG17hSYlqT3;pZT5J4p8CkC;AGxqyFTohlG;PivcFyHMTjH;yHqeB0bgby0;MtW8bpR40sD;uWExEiyqnMS;J8UyWpjnQFI;cbEamoKmtwk;S8jCqSKLPZv;aECYirPMwAN;PZG0J6D7xgT;QgbrKkDIAi7;hsTXtaiIGgq;N3T1xcjXdMC;VJQyt4hgVLt;HnvgXbcXRwB;G9SyTENVCrJ;ivnhrV2hPmd;lIeTMPSxzxq;IYSga41QaDp;yo4rlihB8cq;USRcxxOwRBX;iZZGNccfQjz;v1XwH1dpDPr;x937en7mYeQ;zAa8aN96A2O;Oss5WHqVJRD;J3qOAsXg9wo;MUekqKd3fz2;qtYHyDvbAfh;b1KYet4bx5j;JUNUwV5vvhB;dH7rQVnOjYJ;ZB2feAi87Na;S5rxk8K2Ib7;vbv3OzAvqmW;j5if6jr72A3;aw2RIeS0lkp;QRYSup60yHp;W0ME9TOd6sr;pSgapsxolfq;nwIbu9vf77H;qB34dUBCMMq;PaGcJnCDf7o;BDD9gU4pgGx;ThRnB2r6QOp;kgIg45YN1da;aBJBrtyRh22;dJVEKifayJB;TAM58JqO2Vc;XAKDS262fk3;Qk8dOGxdCFg;BjaXrMomARk;ipibt7fdmmB;uLH3KabNS3m;ao3csWtKalu;BWDvIjW63RL;wvGagiV5lkB;kqbQKL1byK6;O8TOoPIdnOk;PqU6E1F8Dun;vxYfP1NOhoG;MYRozK2tO1j;HEmrS38a1ym;Cp9466wVosJ;ejj3QMm6oqc;KzT3C4QIAWv;uIShhLSEsxB;R1Ia1iD0QVj;k2N1pNkh7km;oPxw2MWENEh;P8YKxJR9UQK;SnoEqPr5BzG;e2G6LYkbwMz;GldkmmwyKO4;bsQkkEkfqZs;fg4vEnt5b3J;SwcDwh2dmPn;XLsAgJaueMX;tUtWiPFFjvt;Rk4OJ55dL3Z;hvzItmnoK91;DuZAMMknCXN;JzqefqqpmFu;jhJ2egZP6Qv;iEb56A3rjEV;DldptIG6QQ7;gcanWJj2QN5;Rcmt95xCIuZ;DK9XeoQyAUs;MKdjMGodtRR;owaOMGNaDJq;uXNd18KN8fl;W0ME9TOd6sr;eZzts5vTA3j;j7dmmrj5pkz;qQvz3RmsT9q;sdmMiVfdQjW;tdWDVVyq0he;SHprDm4pEZn;VovGQNc92Z9;gC2Gz73QDsg;YZyQF6W5fLR;lVFsaJKBj2Q;jATTce2NP8g;PjMlYWmp5xt;UMteYp812j5;PxSgrbO97KZ&dimension=pe:"+date +"&filter=ou:OU_GROUP-"+ OU_Group +";" + ouid + "&displayProperty=NAME&aggregationType=SUM", {
                 format: "json"
             }),
             $.getJSON("../api/organisationUnits/" + ouid + ".json?fields=id,name,organisationUnitGroups,level,children[id,name,organisationUnitGroups,children[id,name,organisationUnitGroups,children[id,name,organisationUnitGroups,children[id,name,organisationUnitGroups,children]]]]", {
                 format: "json"
             }),
-            $.getJSON("../api/analytics.json?dimension=dx:elK6qRJNWub;dlB7Pehmelp;AEQclOXgrsy;pWzHq6RbcuW;bT7w4aXGt6U;G0GNuodTYm4;dPVNtdA4BKN;UdlKC2xyv2t;V9WyHo86ntX;HqceGBDECZ2;nx8TJqIakCf;gMVs6QXruRa;xvJIRoXtnLD&dimension=ou:" + ouid + "&filter=pe:" + date + "&displayProperty=NAME", {
+            $.getJSON("../api/analytics.json?dimension=dx:elK6qRJNWub;dlB7Pehmelp;AEQclOXgrsy;pWzHq6RbcuW;bT7w4aXGt6U;G0GNuodTYm4;dPVNtdA4BKN;UdlKC2xyv2t;V9WyHo86ntX;HqceGBDECZ2;nx8TJqIakCf;gMVs6QXruRa;xvJIRoXtnLD&dimension=pe:"+date +"&filter=ou:OU_GROUP-"+ OU_Group +";" + ouid + "&displayProperty=NAME&aggregationType=SUM", {
                 format: "json" // new users 
             }),
-            $.getJSON("../api/analytics.json?dimension=ID3CGIXZNp9:wzqerAiRUfl&dimension=dx:elK6qRJNWub;dlB7Pehmelp;AEQclOXgrsy;pWzHq6RbcuW;bT7w4aXGt6U;G0GNuodTYm4;dPVNtdA4BKN;UdlKC2xyv2t;V9WyHo86ntX;HqceGBDECZ2;nx8TJqIakCf;gMVs6QXruRa;xvJIRoXtnLD&dimension=ou:" + ouid + "&filter=pe:" + date + "&displayProperty=NAME", {
+            $.getJSON("../api/analytics.json?dimension=ID3CGIXZNp9:wzqerAiRUfl&dimension=KynUfFIGber:VnGNfO08w38&dimension=dx:elK6qRJNWub;dlB7Pehmelp;AEQclOXgrsy;pWzHq6RbcuW;bT7w4aXGt6U;G0GNuodTYm4;dPVNtdA4BKN;UdlKC2xyv2t;V9WyHo86ntX;HqceGBDECZ2;nx8TJqIakCf;gMVs6QXruRa;xvJIRoXtnLD&dimension=pe:"+date +"&filter=ou:OU_GROUP-"+ OU_Group +";" + ouid + "&displayProperty=NAME&aggregationType=SUM", {
                 format: "json" // new users filter
             }),
         ).then(function (res4, res5, res6, res7, res8, res9, res10, res11, res12) {
@@ -6212,7 +6281,7 @@
 
 
         // table sixteen starts
-
+        
         var cbd = datavalue4(res10, 'GhuHmwRnPBs'); document.getElementById('cbd').innerHTML = cbd;
         var static = datavalue4(res10, 'VnGNfO08w38'); document.getElementById('static').innerHTML = static;
         var mobile = datavalue4(res10, 'oPJQbzZ20Ff'); document.getElementById('mobile').innerHTML = mobile;
@@ -6356,7 +6425,7 @@
         var value1 = 0;
         for (var i = 0; i < dataJSON.rows.length; i++) {
             if (dataJSON.rows[i][0] == id) {
-                value1 = parseInt(dataJSON.rows[i][3]);
+                value1 = parseInt(dataJSON.rows[i][4]);
             }
         }
         return (value1);
@@ -6439,5 +6508,4 @@
             document.getElementById("dlink").click();
         }
     })()
-
 </script>
