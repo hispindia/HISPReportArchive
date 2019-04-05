@@ -3,7 +3,9 @@
 			var periods = dhis2.report.periods;
 			var period = periods[0];
 			var orgUnit = dhis2.report.organisationUnit;
-			var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+			var orgUnitChildrens = dhis2.report.organisationUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+			var rOrder = orgUnitChildrens.map(a=>a.id);
+	
 			
 			
 			
@@ -29,20 +31,19 @@
 var stringOrgGroups ="Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;JM8keEP4z6r;mtNeiqIynwj;UcN4jZjv9Oo";
 var url = window.location.href;
 var params = url.split('=');
-   var gotOr=params[2];
-				var gotPeriod = gotOr.substring(0, 4); 
-				var gotOrg=params[3];
+var gotOrg=params[3];
+var gotPeriod=params[2];
 //stringOrgGroups+=";"+gotOrg;
 
 var arrOrgGroups = stringOrgGroups.split(";");
 		
 		
 		
-			var uidGroupSet = "VuilQBYZNIR"; 
+			var uidGroupSet = "VuilQBYZNIR";
 			var stt=0;
 			var load=1;
 			var iteration = -1;
-			var rep=[false,false,false]
+			var rep=[false,false,false];
 	
 	var jsonGroup, jsonNepal, jsonDistricts;
 	//*******************************************************************************************************************************
@@ -128,7 +129,7 @@ var arrOrgGroups = stringOrgGroups.split(";");
 		function generateFourMonths()
 		{ 
 		    var n=params[4];
-			gotPeriod = gotPeriod.substring(0,6);
+			gotPeriod = gotPeriod.substring(0,4);
 			var year = gotPeriod.substring(0,4);
 			var month = gotPeriod.substring(4,6);	
 			fourMonths[0]=gotPeriod;
@@ -177,13 +178,26 @@ var arrOrgGroups = stringOrgGroups.split(";");
 							
 			arrayDEs=stringDEs.split(";");
 			
-			//getting json for org groups
-			$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
-				//alert(jsonGroup);
-				jsonGroup=json;
-				//sum(jsonGroup);
-				getParentJson();
+			// //getting json for org groups
+			// $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+			// 	//alert(jsonGroup);
+			// 	jsonGroup=json;
+			// 	//sum(jsonGroup);
+			// 	getParentJson();
+			// });
+
+			$.when(
+				$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=Eq1bKUKYRMO:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+				$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=VuilQBYZNIR:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+				$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=xFgSXyUMalf:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+			
+			).done(function(geographicalArea, publicNonpublic, urbanRural){
+				var meta_data = [], rows = [];
+				meta_data = {"metaData": geographicalArea[0].metaData};
+				rows = [].concat(geographicalArea[0].rows).concat(publicNonpublic[0].rows).concat(urbanRural[0].rows)
+				jsonGroup = {"metaData":meta_data.metaData, "rows" : rows };
 			});
+			getParentJson();
 		}
 		
 		function getParentJson()
@@ -206,14 +220,14 @@ var arrOrgGroups = stringOrgGroups.split(";");
 					{
 						if(0<orgUnitChildrens.length)
 						{					
-							var rOrder=["fNWuOzDCRSZ","SgKEcvFdUDb","pbVS1HW9NrY","TyDBQRJzkBw","z5ZOAH5rBFu"];
+							
 							var orguid=rOrder[d];
 							//alert(orguid);
 							$.get("../api/organisationUnits/"+orguid+".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents",function(json)
 							{
 								
 								stringOrgChild(json);
-								if(i==4)
+								if(i==6)
 								{
 									//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+period);
 									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+gotPeriod,function(json){
@@ -225,7 +239,7 @@ var arrOrgGroups = stringOrgGroups.split(";");
 								}
 								i++;
 								
-								if(i<5)
+								if(i<7)
 									getAllDistricts(i);								
 							});
 						}								
@@ -541,7 +555,7 @@ function printChildren(json,disCodes)
 						else if(iteration==1)
 						{
 							var i=0;
-							json.metaData.dimensions.ou.forEach(function(child){
+								json.metaData.dimensions.ou.forEach(function(child){
 								
 								if(arrayCodes[i]!='undefined')
 									var dcode=arrayCodes[i];
@@ -568,7 +582,7 @@ function printChildren(json,disCodes)
 						else if(iteration==2)
 						{
 								var i=0;
-							json.metaData.dimensions.ou.forEach(function(child){
+								json.metaData.dimensions.ou.forEach(function(child){
 								
 								if(arrayCodes[i]!='undefined')
 									var dcode=arrayCodes[i];
@@ -961,7 +975,7 @@ $(document).ready(function () {
 			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
 			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
 		</style> 
-		<div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
+		<div id="loads" > <p class="loading" style="text-align:center">Reports Loading... Please Wait...</p></div>
 		<div id="cover" > </div>
 	<!--	<input type="button" value="Download all" style="width:140px;" onclick="tablesToExcel(['datavalue1','datavalue2','datavalue3'], ['EPI1','EPI2','EPI3'], 'RAW Data EPI.xls')" id="dwnAll"/>-->
 		<input type="button" value="Reports Home" style="width:140px;" onclick='window.open("http://202.70.86.3:8080/hmisnepal/dhis-web-reporting/generateHtmlReport.action?uid=yz1OQ7Wvpam&", "_self")'/>

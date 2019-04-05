@@ -13,7 +13,8 @@
 	var period = periods[0];
 	//var period = "LAST_MONTH";
 	var orgUnit = dhis2.report.organisationUnit;
-	var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+				var rOrder = orgUnitChildrens.map(a=>a.id);
 	var ArrStringDEs = ["CaMTpkTWWBZ;f60vNZX1J0a;OosqBGrHiwW;dVs9Txg7Kba;dVs9Txg7Kba;EFSOZE2OOFg;CaMTpkTWWBZ;YmHULt1YbW4;dVs9Txg7Kba;X7pKNdTja8U;OosqBGrHiwW;LJ3B1C9HbzE;BNdVWRrLRKa;u5vn6WYT982;f60vNZX1J0a;DeC5yyoMu6v;EFSOZE2OOFg;EGnC5n5Q2kP;ejBJjaRprm4;spKJslN2lrS;JFfNeS87bEz;bAOLmUYdHfP;xnojKupd4UW;bAOLmUYdHfP;xnojKupd4UW;vnlcPlZecpF;bq9k9ObBv5O;m363PRvwqpZ;lUA6rAs6cHJ;Anq3fiynEpp", "sJlRE8pCxD8;yIzJZ2BmFd6;GXJ2iH9UQaq;JqDGVQbcTtV;ycIp2mBbTfu;JFx9b2mlFlf", "R8po0GOj34q;dPRbZQANfL8;ydW0M6PkpBt;XClnCko5qQh;kj687W8jXg8;JAG6AU2yvSy;vqA3rf2MjaZ;HJtrw2rMSOU", "R8po0GOj34q;dPRbZQANfL8;PLaEGEei2kj;dkctIyi9ymh;Z62U9greQvZ;CVFfiniCNC1;QAgJq8StYNg;cL7UQL05XZC;uWDx72HqzPB;NGP9fiylUVR", "Uv1mfVzdQPT;Z1a49yZVRgK;ZZGa9fiBKmc;KEn411yvRWn;rOmpUcDVlzL;hEf5ZsPNANO;Xl1eVNX0C1D;NEFIlX1povw;ePg9O2Sf1ud;eAAPGAp3tUO;ZreLpnzs7C2;XhRreR7KN4C;pD6X0nQEiA5;OvTOZ34zPpv;ONw97WB7mIl;EsCPjTBWz8T;C2gBSEWpf3L;hrokHhxMqJA;pTXq7orydD1;Ihx8Sa1A318;j3F7YDajCsv;EEpOk6EXFMx"];
 	var stringDEs = "";
 	var arrayDEs = stringDEs.split(";");
@@ -160,21 +161,35 @@ var gotOrg=params[3];
 
 	//*********************************************************************************
 	//********************************************************************************
-	function getJson() {
-		for (var c = 0; c < ArrStringDEs.length; c++)
-			stringDEs = stringDEs + ArrStringDEs[c] + ";";
+	    
+    function getJson()
+            {
+                for(var c=0; c<ArrStringDEs.length;c++)
+                stringDEs=stringDEs+ArrStringDEs[c]+";";
+                                
+                arrayDEs=stringDEs.split(";");
+                
+                // //getting json for org groups
+                // $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+                // 	//alert(jsonGroup);
+                // 	jsonGroup=json;
+                // 	//sum(jsonGroup);
+                // 	getParentJson();
+                // });
 
-		arrayDEs = stringDEs.split(";");
-
-		//getting json for org groups
-		$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=co&dimension=" + uidGroupSet + ":" + stringOrgGroups + "&filter=ou:" + orgUnit.id + "&filter=pe:" + gotPeriod + "", function (json) {
-			//alert(jsonGroup);
-			jsonGroup = json;
-			//sum(jsonGroup);
-			getParentJson();
-		});
-	}
-
+                $.when(
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=Eq1bKUKYRMO:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=VuilQBYZNIR:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=xFgSXyUMalf:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                
+                ).done(function(geographicalArea, publicNonpublic, urbanRural){
+                    var meta_data = [], rows = [];
+                    meta_data = {"metaData": geographicalArea[0].metaData};
+                    rows = [].concat(geographicalArea[0].rows).concat(publicNonpublic[0].rows).concat(urbanRural[0].rows)
+                    jsonGroup = {"metaData":meta_data.metaData, "rows" : rows };
+                });
+                getParentJson();
+            }
 	function getParentJson() {
 		var ouid = orgUnit.id;
 		$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=co&dimension=ou:" + ouid + "&filter=pe:" + gotPeriod, function (json) {
@@ -190,13 +205,14 @@ var gotOrg=params[3];
 		if (orgUnit.id == "cCTQiGkKcTk") {
 			if (d < orgUnitChildrens.length) {
 				if (0 < orgUnitChildrens.length) {
-					var rOrder = ["fNWuOzDCRSZ", "SgKEcvFdUDb", "pbVS1HW9NrY", "TyDBQRJzkBw", "z5ZOAH5rBFu"];
+				//	var rOrder = ["fNWuOzDCRSZ", "SgKEcvFdUDb", "pbVS1HW9NrY", "TyDBQRJzkBw", "z5ZOAH5rBFu"];
 					var orguid = rOrder[d];
 					//alert(orguid);
 					$.get("../api/organisationUnits/" + orguid + ".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents", function (json) {
 
 						stringOrgChild(json);
-						if (i == 4) {
+						if(i == (orgUnitChildrens.length-1))
+						{
 							//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+period);
 							$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=co&dimension=ou:" + dIDs + "&filter=pe:" + gotPeriod, function (json) {
 
@@ -207,7 +223,7 @@ var gotOrg=params[3];
 						}
 						i++;
 
-						if (i < 5)
+					if(i <(orgUnitChildrens.length))
 							getAllDistricts(i);
 					});
 				}

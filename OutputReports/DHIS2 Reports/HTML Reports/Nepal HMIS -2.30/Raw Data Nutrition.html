@@ -13,7 +13,8 @@
 	var period = periods[0];
 	//var period = "LAST_MONTH";
 	var orgUnit = dhis2.report.organisationUnit;
-	var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+				var rOrder = orgUnitChildrens.map(a=>a.id);
 	var ArrStringDEs = ["CaMTpkTWWBZ;f60vNZX1J0a;OosqBGrHiwW;dVs9Txg7Kba;dVs9Txg7Kba;EFSOZE2OOFg;CaMTpkTWWBZ;YmHULt1YbW4;dVs9Txg7Kba;X7pKNdTja8U;OosqBGrHiwW;LJ3B1C9HbzE;BNdVWRrLRKa;u5vn6WYT982;f60vNZX1J0a;DeC5yyoMu6v;EFSOZE2OOFg;EGnC5n5Q2kP;ejBJjaRprm4;spKJslN2lrS;JFfNeS87bEz;bAOLmUYdHfP;xnojKupd4UW;bAOLmUYdHfP;xnojKupd4UW;vnlcPlZecpF;bq9k9ObBv5O;m363PRvwqpZ;lUA6rAs6cHJ;Anq3fiynEpp", "sJlRE8pCxD8;yIzJZ2BmFd6;GXJ2iH9UQaq;JqDGVQbcTtV;ycIp2mBbTfu;JFx9b2mlFlf", "R8po0GOj34q;dPRbZQANfL8;ydW0M6PkpBt;XClnCko5qQh;kj687W8jXg8;JAG6AU2yvSy;vqA3rf2MjaZ;HJtrw2rMSOU", "R8po0GOj34q;dPRbZQANfL8;PLaEGEei2kj;dkctIyi9ymh;Z62U9greQvZ;CVFfiniCNC1;QAgJq8StYNg;cL7UQL05XZC;uWDx72HqzPB;NGP9fiylUVR", "Uv1mfVzdQPT;Z1a49yZVRgK;ZZGa9fiBKmc;KEn411yvRWn;rOmpUcDVlzL;hEf5ZsPNANO;Xl1eVNX0C1D;NEFIlX1povw;ePg9O2Sf1ud;eAAPGAp3tUO;ZreLpnzs7C2;XhRreR7KN4C;pD6X0nQEiA5;OvTOZ34zPpv;ONw97WB7mIl;EsCPjTBWz8T;C2gBSEWpf3L;hrokHhxMqJA;pTXq7orydD1;Ihx8Sa1A318;j3F7YDajCsv;EEpOk6EXFMx"];
 	var stringDEs = "";
 	var arrayDEs = stringDEs.split(";");
@@ -54,7 +55,7 @@ var gotOrg=params[3];
 		console.log(orgUnit);
 
 		$(".tab_content").hide();
-		$(".tab_content:first").show();
+		$("#tab2").show();
 
 		if (rtype > 1)
 			generateFourMonths();
@@ -160,20 +161,35 @@ var gotOrg=params[3];
 
 	//*********************************************************************************
 	//********************************************************************************
-	function getJson() {
-		for (var c = 0; c < ArrStringDEs.length; c++)
-			stringDEs = stringDEs + ArrStringDEs[c] + ";";
+	    
+    function getJson()
+            {
+                for(var c=0; c<ArrStringDEs.length;c++)
+                stringDEs=stringDEs+ArrStringDEs[c]+";";
+                                
+                arrayDEs=stringDEs.split(";");
+                
+                // //getting json for org groups
+                // $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+                // 	//alert(jsonGroup);
+                // 	jsonGroup=json;
+                // 	//sum(jsonGroup);
+                // 	getParentJson();
+                // });
 
-		arrayDEs = stringDEs.split(";");
-
-		//getting json for org groups
-		$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=co&dimension=" + uidGroupSet + ":" + stringOrgGroups + "&filter=ou:" + orgUnit.id + "&filter=pe:" + gotPeriod + "", function (json) {
-			//alert(jsonGroup);
-			jsonGroup = json;
-			//sum(jsonGroup);
-			getParentJson();
-		});
-	}
+                $.when(
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=Eq1bKUKYRMO:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=VuilQBYZNIR:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=xFgSXyUMalf:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                
+                ).done(function(geographicalArea, publicNonpublic, urbanRural){
+                    var meta_data = [], rows = [];
+                    meta_data = {"metaData": geographicalArea[0].metaData};
+                    rows = [].concat(geographicalArea[0].rows).concat(publicNonpublic[0].rows).concat(urbanRural[0].rows)
+                    jsonGroup = {"metaData":meta_data.metaData, "rows" : rows };
+                });
+                getParentJson();
+            }
 
 	function getParentJson() {
 		var ouid = orgUnit.id;
@@ -190,13 +206,14 @@ var gotOrg=params[3];
 		if (orgUnit.id == "cCTQiGkKcTk") {
 			if (d < orgUnitChildrens.length) {
 				if (0 < orgUnitChildrens.length) {
-					var rOrder = ["fNWuOzDCRSZ", "SgKEcvFdUDb", "pbVS1HW9NrY", "TyDBQRJzkBw", "z5ZOAH5rBFu"];
+				//	var rOrder = ["fNWuOzDCRSZ", "SgKEcvFdUDb", "pbVS1HW9NrY", "TyDBQRJzkBw", "z5ZOAH5rBFu"];
 					var orguid = rOrder[d];
 					//alert(orguid);
 					$.get("../api/organisationUnits/" + orguid + ".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents", function (json) {
 
 						stringOrgChild(json);
-						if (i == 4) {
+						if(i == (orgUnitChildrens.length-1))
+						{
 							//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+period);
 							$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=co&dimension=ou:" + dIDs + "&filter=pe:" + gotPeriod, function (json) {
 
@@ -207,7 +224,7 @@ var gotOrg=params[3];
 						}
 						i++;
 
-						if (i < 5)
+					if(i <(orgUnitChildrens.length))
 							getAllDistricts(i);
 					});
 				}
@@ -347,11 +364,11 @@ var gotOrg=params[3];
 
 
 
-				htmlReport += "<td align='left' style='padding:3px 5px 3px 15px'>" + json.metaData.items[OrgGroup].name+ "</td>";//1
+				htmlReport += "<td align='left' style='padding:3px 5px 3px 15px'>" + json.metaData.items[OrgGroup].name + "</td>";//1
 
 				if (OrgGroup == gotOrg) {
 					var title = document.getElementsByClassName(currentTableID)[0].innerHTML;
-					document.getElementsByClassName(currentTableID)[0].innerHTML = title + " of " + json.metaData.items[OrgGroup].name;
+					document.getElementsByClassName(currentTableID)[0].innerHTML = title + " of " +json.metaData.items[OrgGroup].name;
 
 					document.getElementsByClassName(currentTableID)[0].style.padding = "10px 0";
 				}
@@ -392,35 +409,6 @@ var gotOrg=params[3];
 				htmlReport += "<td align='center'>" + (severe1 + severe2) + "</td>";
 
 				htmlReport += "<td align='center'>" + (normal1 + moderate1 + severe1 + normal2 + moderate2 + severe2) + "</td>";
-
-				// vicky
-				var normal3 = getValueForCategoryOptionCombo(json, 'YmHULt1YbW4', OrgGroup, 'kdsirVNKdhm');
-				var moderate3 = getValueForCategoryOptionCombo(json, 'X7pKNdTja8U', OrgGroup, 'kdsirVNKdhm');
-				var severe3 = getValueForCategoryOptionCombo(json, 'LJ3B1C9HbzE', OrgGroup, 'kdsirVNKdhm');
-
-				htmlReport += "<td align='center'>" + normal3 + "</td>";
-				htmlReport += "<td align='center'>" + moderate3 + "</td>";
-				htmlReport += "<td align='center'>" + severe3 + "</td>";
-				htmlReport += "<td align='center'>" + (normal3 + moderate3 + severe3) + "</td>";
-
-
-				var normal4 = getValueForCategoryOptionCombo(json, 'u5vn6WYT982', OrgGroup, 'kdsirVNKdhm');
-				var moderate4 = getValueForCategoryOptionCombo(json, 'DeC5yyoMu6v', OrgGroup, 'kdsirVNKdhm');
-				var severe4 = getValueForCategoryOptionCombo(json, 'EGnC5n5Q2kP', OrgGroup, 'kdsirVNKdhm');
-
-				htmlReport += "<td align='center'>" + normal4 + "</td>";
-				htmlReport += "<td align='center'>" + moderate4 + "</td>";
-				htmlReport += "<td align='center'>" + severe4 + "</td>";
-				htmlReport += "<td align='center'>" + (normal4 + moderate4 + severe4) + "</td>";
-
-				var normal5 = getValueForCategoryOptionCombo(json, 'YmHULt1YbW4', OrgGroup, 'kdsirVNKdhm') + getValueForCategoryOptionCombo(json, 'u5vn6WYT982', OrgGroup, 'kdsirVNKdhm');
-				var moderate5 = getValueForCategoryOptionCombo(json, 'X7pKNdTja8U', OrgGroup, 'kdsirVNKdhm') + getValueForCategoryOptionCombo(json, 'DeC5yyoMu6v', OrgGroup, 'kdsirVNKdhm');
-				var severe5 = getValueForCategoryOptionCombo(json, 'LJ3B1C9HbzE', OrgGroup, 'kdsirVNKdhm') + getValueForCategoryOptionCombo(json, 'EGnC5n5Q2kP', OrgGroup, 'kdsirVNKdhm');
-
-				htmlReport += "<td align='center'>" + normal5 + "</td>";
-				htmlReport += "<td align='center'>" + moderate5 + "</td>";
-				htmlReport += "<td align='center'>" + severe5 + "</td>";
-				htmlReport += "<td align='center'>" + (normal5 + moderate5 + severe5) + "</td>";
 
 				var preg1 = getValueForCategoryOptionCombo(json, 'ejBJjaRprm4', OrgGroup, 'kdsirVNKdhm');
 				var preg2 = getValueForCategoryOptionCombo(json, 'spKJslN2lrS', OrgGroup, 'kdsirVNKdhm');
@@ -464,7 +452,7 @@ var gotOrg=params[3];
 
 
 
-				htmlReport += "<td align='left' style='padding:3px 5px 3px 15px'>" + json.metaData.items[OrgGroup].name+ "</td>";//1
+				htmlReport += "<td align='left' style='padding:3px 5px 3px 15px'>" + json.metaData.items[OrgGroup].name + "</td>";//1
 
 				if (OrgGroup == gotOrg) {
 					var title = document.getElementsByClassName(currentTableID)[0].innerHTML;
@@ -882,35 +870,6 @@ var gotOrg=params[3];
 				htmlReport += "<td align='center'>" + (severe1 + severe2) + "</td>";
 
 				htmlReport += "<td align='center'>" + (normal1 + moderate1 + severe1 + normal2 + moderate2 + severe2) + "</td>";
-
-						// vicky
-				var normal3 = getValueForCategoryOptionCombo(json, 'YmHULt1YbW4', child, 'kdsirVNKdhm');
-				var moderate3 = getValueForCategoryOptionCombo(json, 'X7pKNdTja8U', child, 'kdsirVNKdhm');
-				var severe3 = getValueForCategoryOptionCombo(json, 'LJ3B1C9HbzE', child, 'kdsirVNKdhm');
-
-				htmlReport += "<td align='center'>" + normal3 + "</td>";
-				htmlReport += "<td align='center'>" + moderate3 + "</td>";
-				htmlReport += "<td align='center'>" + severe3 + "</td>";
-				htmlReport += "<td align='center'>" + (normal3 + moderate3 + severe3) + "</td>";
-
-
-				var normal4 = getValueForCategoryOptionCombo(json, 'u5vn6WYT982', child, 'kdsirVNKdhm');
-				var moderate4 = getValueForCategoryOptionCombo(json, 'DeC5yyoMu6v', child, 'kdsirVNKdhm');
-				var severe4 = getValueForCategoryOptionCombo(json, 'EGnC5n5Q2kP', child, 'kdsirVNKdhm');
-
-				htmlReport += "<td align='center'>" + normal4 + "</td>";
-				htmlReport += "<td align='center'>" + moderate4 + "</td>";
-				htmlReport += "<td align='center'>" + severe4 + "</td>";
-				htmlReport += "<td align='center'>" + (normal4 + moderate4 + severe4) + "</td>";
-
-				var normal5 = getValueForCategoryOptionCombo(json, 'YmHULt1YbW4', child, 'kdsirVNKdhm') + getValueForCategoryOptionCombo(json, 'u5vn6WYT982', child, 'kdsirVNKdhm');
-				var moderate5 = getValueForCategoryOptionCombo(json, 'X7pKNdTja8U', child, 'kdsirVNKdhm') + getValueForCategoryOptionCombo(json, 'DeC5yyoMu6v', child, 'kdsirVNKdhm');
-				var severe5 = getValueForCategoryOptionCombo(json, 'LJ3B1C9HbzE', child, 'kdsirVNKdhm') + getValueForCategoryOptionCombo(json, 'EGnC5n5Q2kP', child, 'kdsirVNKdhm');
-
-				htmlReport += "<td align='center'>" + normal5 + "</td>";
-				htmlReport += "<td align='center'>" + moderate5 + "</td>";
-				htmlReport += "<td align='center'>" + severe5 + "</td>";
-				htmlReport += "<td align='center'>" + (normal5 + moderate5 + severe5) + "</td>";
 
 				var preg1 = getValueForCategoryOptionCombo(json, 'ejBJjaRprm4', child, 'kdsirVNKdhm');
 				var preg2 = getValueForCategoryOptionCombo(json, 'spKJslN2lrS', child, 'kdsirVNKdhm');
@@ -1504,9 +1463,9 @@ var gotOrg=params[3];
 
 </script>
 <script type="text/javascript">
-	$(document).ready(function () {
-		$("input[value=Back]").closest('div').hide();
-	});
+		$(document).ready(function () {
+			$("input[value=Back]").closest('div').hide();
+		});
 
 </script>
 <style type="text/css">
@@ -1653,11 +1612,11 @@ var gotOrg=params[3];
 <div id="container">
 
 	<ul class="tabs">
-		<li class="active" rel="tab1"> Nutrition 1</li>
-		<!--<li rel="tab2"	onclick="loadall(1)"> Nutrition 2</li>
-        <li rel="tab3"  onclick="loadall(2)"> Nutrition 3</li>
-        <li rel="tab4"  onclick="loadall(3)"> Nutrition 4</li>
-		<li rel="tab5"  onclick="loadall(4)"> Nutrition 5</li>-->
+		<!--<li class="active" rel="tab1" > Nutrition 1</li>-->
+		<li rel="tab2" class="active" onclick="loadall(1)"> Nutrition 2</li>
+		<li rel="tab3" onclick="loadall(2)"> Nutrition 3</li>
+		<li rel="tab4" onclick="loadall(3)"> Nutrition 4</li>
+		<li rel="tab5" onclick="loadall(4)"> Nutrition 5</li>
 
 	</ul>
 
@@ -1683,7 +1642,7 @@ var gotOrg=params[3];
 					</tr>
 					<tr>
 						<td style="border-color:#999999" class="all2" align="center" colspan="10" bgcolor="#999999"> </td>
-						<td style="border-color:#999999" class="all2" align="center" colspan="8" bgcolor="#999999">(Sheet 1 of 1)</td>
+						<td style="border-color:#999999" class="all2" align="center" colspan="8" bgcolor="#999999">(Sheet 1 of 5)</td>
 						<td style="border-color:#999999" class="all2" align="right" colspan="10" bgcolor="#999999"> Health Management Information Systems </td>
 					</tr>
 					<tr>
@@ -1709,10 +1668,7 @@ var gotOrg=params[3];
 						<td style="min-width:200px" class="borders" bgcolor="#999999"> OrgUnit Name </td>
 						<td class="borders" bgcolor="#999999"> Received Reports </td>
 						<td class="borders" colspan="3" bgcolor="#999999"> Newly regd. children for GM in this month</td>
-						<td colspan="12" bgcolor="#999999"> Nutritional status of registered children (New)</td>
-
-						<td colspan="12" bgcolor="#999999"> Nutritional status of registered children (Repeated)</td>
-
+						<td colspan="12" bgcolor="#999999"> Nutritional status of registered children (new + old)</td>
 						<td class="borders" colspan="3" bgcolor="#999999">Pregnant women receiving </td>
 						<td class="borders" colspan="2" bgcolor="#999999">PP mother receiving</td>
 						<td colspan="3" bgcolor="#999999">&lt; 5 yrs Children receiving(Bi-annual)</td>
@@ -1724,15 +1680,9 @@ var gotOrg=params[3];
 						<td class="borders" bgcolor="#999999"></td>
 						<td class="borders" bgcolor="#999999"></td>
 						<td colspan="3" bgcolor="#999999"></td>
-
 						<td height="17" colspan="4" bgcolor="#999999"> 0-11 M </td>
 						<td colspan="4" bgcolor="#999999">12-23 M </td>
 						<td colspan="4" bgcolor="#999999"> Total </td>
-
-						<td height="17" colspan="4" bgcolor="#999999"> 0-11 M </td>
-						<td colspan="4" bgcolor="#999999">12-23 M </td>
-						<td colspan="4" bgcolor="#999999"> Total </td>
-
 						<td colspan="3" bgcolor="#999999"></td>
 						<td colspan="2" bgcolor="#999999"></td>
 						<td colspan="2" bgcolor="#999999">Vitamin A</td>
@@ -1747,7 +1697,6 @@ var gotOrg=params[3];
 						<td class="vtext" height="53" bgcolor="#999999"> 0-11 M </td>
 						<td class="vtext" bgcolor="#999999"> 12-23 M </td>
 						<td class="vtext" bgcolor="#999999"> Total </td>
-
 						<td class="vtext" bgcolor="#999999"> Normal </td>
 						<td class="vtext" bgcolor="#999999"> Moderate </td>
 						<td class="vtext" bgcolor="#999999"> Severe </td>
@@ -1760,20 +1709,6 @@ var gotOrg=params[3];
 						<td class="vtext" bgcolor="#999999"> Moderate </td>
 						<td class="vtext" bgcolor="#999999"> Severe </td>
 						<td class="vtext" bgcolor="#999999"> Total </td>
-
-						<td class="vtext" bgcolor="#999999"> Normal </td>
-						<td class="vtext" bgcolor="#999999"> Moderate </td>
-						<td class="vtext" bgcolor="#999999"> Severe </td>
-						<td class="vtext" bgcolor="#999999"> Total </td>
-						<td class="vtext" bgcolor="#999999"> Normal </td>
-						<td class="vtext" bgcolor="#999999"> Moderate </td>
-						<td class="vtext" bgcolor="#999999"> Severe </td>
-						<td class="vtext" bgcolor="#999999"> Total </td>
-						<td class="vtext" bgcolor="#999999"> Normal </td>
-						<td class="vtext" bgcolor="#999999"> Moderate </td>
-						<td class="vtext" bgcolor="#999999"> Severe </td>
-						<td class="vtext" bgcolor="#999999"> Total </td>
-
 						<td class="vtext" bgcolor="#999999"> Iron tablets at first time </td>
 						<td class="vtext" bgcolor="#999999"> 180 iron tablets </td>
 						<td class="vtext" bgcolor="#999999"> De-worming tablets </td>
