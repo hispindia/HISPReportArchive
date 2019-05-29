@@ -1,0 +1,237 @@
+<style>
+    #dataTable {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    #dataTable td,
+    #dataTable th {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    #dataTable tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    #dataTable tr:hover {
+        background-color: #ddd;
+    }
+
+    #dataTable th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+<label> Financial Year:
+    <select>
+        <option value="2074">2074-75</option>
+        <option value="2073">2073-74</option>
+        <option value="2072">2072-73</option>
+        <option value="2071">2071-72</option>
+    </select>
+</label><br/>
+<div id="status" style="font-size:16px;background:#caf9cc;padding:5px;margin-top:3px;"></div><br/>
+<div class="loader"></div>
+<div id="buttons">
+	<a href="#" id="sortbtn" onclick="sortTable()" style="padding:5px;border:1px solid #efefef;background:#eee;margin-right:10px;color:black;text-decoration:none">Sort by Palika Name</a>
+	<a href="#" onclick="tableToExcel('dataTable', 'CU Table')" style="padding:5px;border:1px solid #efefef;background:#eee;margin-right:10px;color:black;text-decoration:none">Export to Excel</a>
+</div>
+<br/>
+<table id="dataTable">
+    <thead>
+        <tr id="tableHeader"></tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+</table>
+
+<!--div>
+    CPR: Current Users / MWRA = <span id="cpr"></span>
+</div-->
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript">
+function sortTable() {
+  var table, rows, switching, i, x, y, shouldSwitch;
+  table = document.getElementById("dataTable");
+  switching = true;
+  /*Make a loop that will continue until
+  no switching has been done:*/
+  while (switching) {
+    //start by saying: no switching is done:
+    switching = false;
+    rows = table.rows;
+    /*Loop through all table rows (except the
+    first, which contains table headers):*/
+    for (i = 1; i < (rows.length - 1); i++) {
+      //start by saying there should be no switching:
+      shouldSwitch = false;
+      /*Get the two elements you want to compare,
+      one from current row and one from the next:*/
+      x = rows[i].getElementsByTagName("TD")[0];
+      y = rows[i + 1].getElementsByTagName("TD")[0];
+      //check if the two rows should switch place:
+      if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+        //if so, mark as a switch and break the loop:
+        shouldSwitch = true;
+        break;
+      }
+    }
+    if (shouldSwitch) {
+      /*If a switch has been marked, make the switch
+      and mark that a switch has been done:*/
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+    }
+  }
+}
+
+var tableToExcel = (function() {
+  var uri = 'data:application/vnd.ms-excel;base64,'
+    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+  return function(table, name) {
+    if (!table.nodeType) table = document.getElementById(table)
+    var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
+    window.location.href = uri + base64(format(template, ctx))
+  }
+})();
+</script>
+
+<script type="text/javascript">
+    var orgUnit = dhis2.report.organisationUnit; // An object
+    var ouUid = orgUnit.id; 
+	
+    $('select').on('change', function () {
+        var year = this.value;
+        var nextYear = '' + (parseInt(year, 10) + 1);
+        var queryPeriods = [
+            year.concat("04"), year.concat("05"), year.concat("06"), year.concat("07"), year.concat("08"), year.concat("09"), year.concat("10"), year.concat("11"),
+            year.concat("12"), nextYear.concat("01"), nextYear.concat("02"), nextYear.concat("03")
+		];
+		
+		$('#tableBody').empty();
+		
+		// Get the list of Palikas
+		var url = '../api/analytics.json?dimension=dx:xSVY3vvt3me.EXPECTED_REPORTS&dimension=ou:LEVEL-4;'+ouUid+'&filter=pe:'+year.concat("April")+'&displayProperty=NAME&outputIdScheme=UID';
+		$.get(url, function (palikas) {
+			$('#status').show();
+			$('#status').html('Palika names fetched. Calculating....');
+			var palikaCount = palikas.metaData.dimensions.ou.length;
+			palikas.metaData.dimensions.ou.forEach(function (palika, palikaCountIndex) {
+				var palikaName = palikas.metaData.items[palika].name;
+				var palikaUid = palika;
+				var apiUrl = '../api/analytics.json?dimension=dx:xtAxxbdo7it;lPDmcklspNe;tobLk0FbS9k;vaRoCnJ7Xwl;Mg77ZuyM6fe;wJ0d4pvhud7;XcWK8DnxZgE&dimension=pe:' + queryPeriods.join(';') + '&dimension=ou:LEVEL-6;' + palikaUid + '&displayProperty=NAME&outputIdScheme=UID';
+				
+				$.get(apiUrl, function (response) {
+					var html = '';
+					// create headers
+					$('#tableHeader').empty();
+					$('#tableHeader').append('<th>Palika</th>');
+					
+					response.metaData.dimensions.dx.forEach(function (value, index) {
+						$('#tableHeader').append('<th>' + response.metaData.items[value].name + '</th>');
+					});
+					
+					$('#tableHeader').append('<th>total current Users</th>');
+					
+					html += '<tr><td>'+palikaName+'</td>';
+					var currentUsers = 0;
+					response.metaData.dimensions.dx.forEach(function (dx, index){
+						var returnValue = 0;
+						var cndm = 0;
+						response.metaData.dimensions.ou.forEach(function (ou, index) {
+							var latestValue = 0;
+							var latestPeriod = 0;
+							var condom = 0;
+							response.rows.forEach(function(row, index){
+								var period = parseInt(row[1]);
+								if(ou == row[2] && dx == row[0] && row[0] == 'XcWK8DnxZgE'){
+									condom += parseInt(row[3]);
+								}else{
+									if(ou == row[2] && period > latestPeriod && row[0] == dx){
+										latestPeriod = period;
+										latestValue = parseInt(row[3]);
+									}
+								}								
+							});
+							
+							if(dx == 'XcWK8DnxZgE'){
+								cndm += condom;
+								//returnValue += parseInt(condom/150);
+								
+							}else{
+								returnValue += parseInt(latestValue);
+							}
+						});
+						//alert(palikaName+'-'+cndm);
+						//currentUsers += returnValue;
+						var value = 0;
+						if(dx =='XcWK8DnxZgE'){
+							value = parseInt(cndm/150);
+						}else{
+							value = returnValue;
+						}
+						currentUsers += value;
+						html += '<td id = "'+palika+dx+'">'+value+'</td>';
+					});
+					html += '<td id="'+palika+'total">'+currentUsers+'</td>';
+					html += '</tr>';
+					$('#tableBody').append(html);
+					
+					if(palikaCount == (palikaCountIndex+1)){
+						$('#status').html('<span style="color:green;">Finished</span>');
+						$('#buttons').show();
+					}else{
+						$('#status').html((palikaCountIndex+1)+' of '+palikaCount+" completed");
+					}
+				});
+			});
+			var mwraUrl = '../api/analytics.json?dimension=dx:xtAxxbdo7it&filter=pe:'+year.concat("April")+'&dimension=ou:LEVEL-4;'+ouUid+'&displayProperty=NAME&outputIdScheme=UID';
+			$.get(mwraUrl, function (mwra) {
+				mwra.rows.forEach(function (value, index) {
+					var mwraValue = 0;
+					var cellId = value[1]+value[0];
+					mwraValue = parseInt(value[2]);
+					$('#'+cellId).html(mwraValue);
+				});
+			});
+		});
+		// End
+    });
+   
+    $.ajaxSetup({
+            beforeSend: function () {
+                $('.loader').show();
+            },
+            complete: function () {
+                $('.loader').hide();
+            },
+    });
+    $('.loader').hide();
+	$('#status').hide();
+	$('#buttons').hide();
+    $('select').prop('selectedIndex', -1);
+</script>
+
+
+

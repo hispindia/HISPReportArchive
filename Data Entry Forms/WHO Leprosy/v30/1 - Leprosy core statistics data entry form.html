@@ -1,0 +1,479 @@
+<style type="text/css">tbody>tr>td { 		font-weight: bold; 		text-align: left; 	}
+</style>
+<style type="text/css">/* tooltip */ 	.tooltip { 		position: relative; 	} 	.tooltip .tooltiptext { 		visibility: hidden; 		width: 400px; 		background-color: black; 		color: #fff; 		text-align: center; 		border-radius: 6px; 		padding: 5px 0; 		/* Position the tooltip */ 		position: absolute; 		z-index: 1; 	} 	.tooltip:hover .tooltiptext { 		visibility: visible; 	}
+</style>
+<script type="text/javascript">
+	setInterval(function () {
+        autoPopulateData();
+		hideUnhideChildBreakupSection();
+    }, 0);
+	function autoPopulateData() {
+	document.getElementById("sel_country").value = document.getElementById("selectedOrganisationUnit").value;
+		
+	var year = $('#selectedPeriodId').val();
+	//alert( year );
+	var tempYear1 = parseInt(year) - 1;
+	var tempYear2 = parseInt(year) - 2;
+	document.getElementById("currentYear1").innerHTML = parseInt(year);
+	document.getElementById("currentYear2").innerHTML = parseInt(year);
+	
+	document.getElementById("tooTip1prvYear").innerHTML = tempYear2;
+	document.getElementById("twoYearGap").innerHTML = tempYear2;
+	document.getElementById("tooTip1NextYear").innerHTML = tempYear1;
+	document.getElementById("oneYearGap").innerHTML = tempYear1;
+	
+	}
+	
+   function downloadBlankExcel() {
+        var url1 = "../api/me/profile.json";
+        $.get(url1, function (data1) {
+            var selectedLanguage = data1.settings.keyUiLocale;
+            if (selectedLanguage == "en") {
+                window.location.href = "../api/documents/FyRBPBSTfCl/data";
+            }
+            else if (selectedLanguage == "es") {
+                window.location.href = "../api/documents/hGltNkRci1v/data";
+            }
+            else if (selectedLanguage == "ru") {
+                window.location.href = "../api/documents/u7dGrUchn3z/data";
+            }
+            else if (selectedLanguage == "fr") {
+                window.location.href = "../api/documents/rpBdyZhMrD9/data";
+            }
+        });
+    }	
+	
+	function hideUnhideChildBreakupSection() {
+		var selectedOrgUnit = document.getElementById("selectedOrganisationUnit").value;	
+		var year = $('#selectedPeriodId').val();
+
+		var value1 = document.getElementById("evXyDr6c7eu-ZZFiCRpT37i-val").value;
+		var value2 = document.getElementById("gVmFx873rdZ-ZZFiCRpT37i-val").value;
+		var value3 = document.getElementById("IQgrP2W9gTV-ZZFiCRpT37i-val").value;
+		
+		//alert( value1 + "--" +  value2 + "--" + value3 );
+		if ( parseInt(value1) >= 0 || parseInt(value2) >= 0 || parseInt(value3) >= 0){
+			//alert( "1" +" -- " + value1 + " -- " +  value2 + " -- " + value3 );
+			$('.childbreakup').show();
+		}	
+		else if (( value1 === undefined || value1 === null || value1.length <= 0 || value1 === "NaN" ) &&
+				( value2 === undefined || value2 === null || value2.length <= 0 || value1 === "NaN" ) && ( value3 === undefined || value3 === null || value3.length <= 0 || value1 === "NaN" )) {
+			//alert( "2" + " -- " + value1 + " -- " +  value2 + " -- " + value3 );
+			$('.childbreakup').hide();
+			deleteSelectedValues();
+		}
+	}
+	
+	function deleteSelectedValues() {
+	
+		var tempValue1 = document.getElementById("MiHLzmsVFPf-xC5PhT2YVtr-val").value;
+		var tempValue2 = document.getElementById("ubgNtdy3h9H-xC5PhT2YVtr-val").value;
+		var tempValue3 = document.getElementById("tyHgOKrZsMJ-xC5PhT2YVtr-val").value;
+		var tempValue4 = document.getElementById("MiHLzmsVFPf-GcQ4Ep0wmnH-val").value;
+		var tempValue5 = document.getElementById("ubgNtdy3h9H-GcQ4Ep0wmnH-val").value;
+		var tempValue6 = document.getElementById("tyHgOKrZsMJ-GcQ4Ep0wmnH-val").value;
+		
+		if ( parseInt(tempValue1) >= 0 || parseInt(tempValue2) >= 0 || parseInt(tempValue3) >= 0
+			|| parseInt(tempValue4) >= 0 || parseInt(tempValue5) >= 0 || parseInt(tempValue6) >= 0 ){
+			
+			var selectedOrgUnit = dhis2.de.getCurrentOrganisationUnit();
+			var selectedPeriod = $('#selectedPeriodId').val();
+			var selectedDataSet = $('#selectedDataSetId').val();
+				
+			var dataValueSet =
+			{
+			  "dataSet": selectedDataSet,
+			  "period": selectedPeriod,
+			  "orgUnit": selectedOrgUnit,
+			  "dataValues": [
+				{ "dataElement": "MiHLzmsVFPf", "categoryOptionCombo": "xC5PhT2YVtr", "value": " " },
+				{ "dataElement": "ubgNtdy3h9H", "categoryOptionCombo": "xC5PhT2YVtr", "value": " " },
+				{ "dataElement": "tyHgOKrZsMJ", "categoryOptionCombo": "xC5PhT2YVtr", "value": " " },
+				{ "dataElement": "MiHLzmsVFPf", "categoryOptionCombo": "GcQ4Ep0wmnH", "value": " " },
+				{ "dataElement": "ubgNtdy3h9H", "categoryOptionCombo": "GcQ4Ep0wmnH", "value": " " },
+				{ "dataElement": "tyHgOKrZsMJ", "categoryOptionCombo": "GcQ4Ep0wmnH", "value": " " }
+			  ]
+			}	
+			
+			console.log(JSON.stringify(dataValueSet));
+			$.ajax({
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json'
+				},
+				url: '../api/dataValueSets',
+				data: JSON.stringify(dataValueSet),
+				dataType: 'json',
+				type: 'post',
+				async: false,
+				success: returnSuccess,
+				error: returnError
+			});
+			function returnSuccess(response) {
+			}
+			
+			function returnError(xhr, textStatus, errorThrown) {
+			}	
+		}	
+	}
+</script>
+<table border="1" cellpadding="1" cellspacing="1" id="printing">
+	<tbody>
+		<tr>
+			<td colspan="6" style="background-color: #dce6f1; text-align: center;">
+			<p><strong><span style="color:#00ff00;">&nbsp;</span> <span data-translate="text1" style="font-size:16px;">Core information from National Leprosy Programmes </span> </strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="6" style="background-color: #dce6f1; text-align: justify;"><strong><span data-translate="text2">Country &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> </strong> <input disabled="disabled" id="sel_country" name="sel_country" type="text" value="" /> &nbsp;</td>
+		</tr>
+		<tr>
+			<td colspan="6" style="background-color: #dce6f1; text-align: justify;"><strong><span data-translate="text3">&nbsp;Population &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> </strong> <input id="d1d6EWQZJGB-HllvX50cXC0-val" name="entryfield" title="Population " value="[ Population  ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="6" style="background-color: #dce6f1; text-align: center;">
+			<p><strong><span data-translate="text4">Case detection during the year <span id="currentYear1"></span></span> <span id="periodID">&nbsp;</span> </strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" style="background-color: #dce6f1;"><strong><span data-translate="text5">New cases</span> </strong></td>
+			
+			<td class="tooltip" style="background-color: #dce6f1;">
+			<p>&nbsp; &nbsp; &nbsp; &nbsp; <strong> &nbsp; &nbsp; <span data-translate="text6">Adult</span> &nbsp;</strong></p>
+			
+			<span class="tooltiptext" data-translate="tooltip1">New MB cases above 15 years of age / New PB cases above 15 years of age / New Unclassified cases &gt;15 years of age</span></td>
+			
+			<td class="tooltip" style="background-color: #dce6f1;">
+			<p>&nbsp; &nbsp; &nbsp; &nbsp; <strong> &nbsp; &nbsp; <span data-translate="text6">Children</span> &nbsp;</strong></p>
+			
+			<span class="tooltiptext" data-translate="tooltip37">New Child MB cases less than 15 years of age / New Child PB cases less than 15 years of age / New Child Unclassified cases less than 15 years of age</span></td>
+			
+			<td class="tooltip" style="background-color: #dce6f1;">&nbsp; &nbsp; &nbsp; &nbsp; <strong> <span data-translate="text8"> Age unknown </span> </strong> <span class="tooltiptext" data-translate="tooltip2">New MB cases with no information about age / New PB cases without information about age / New Unclassified cases with no information on age</span></td>
+			
+			<td colspan="1" style="background-color: #dce6f1;"><strong><span data-translate="subtotal1">Sub - Total&nbsp;</span> </strong></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text9"><strong>New MB cases</strong></td>
+			<td><input id="evXyDr6c7eu-Te9RyzefSAz-val" name="entryfield" title="MB Cases Adult" value="[ MB Cases Adult ]" /></td>
+			<td class="checkZero" colspan="1"><input id="evXyDr6c7eu-ZZFiCRpT37i-val" name="entryfield" title="MB Cases Child" value="[ MB Cases Child ]" onblur="hideUnhideChildBreakupSection();"/></td>
+			<td><input id="evXyDr6c7eu-sdMU6tpPki6-val" name="entryfield" title="MB Cases Unknown" value="[ MB Cases Unknown ]" /></td>
+			<td colspan="1"><input dataelementid="evXyDr6c7eu" id="totalevXyDr6c7eu" name="total" readonly="readonly" title="MB Cases" value="[ MB Cases ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text10"><strong>New PB cases</strong></td>
+			<td><input id="gVmFx873rdZ-Te9RyzefSAz-val" name="entryfield" title="PB Cases Adult" value="[ PB Cases Adult ]" /></td>
+			<td class="checkZero" colspan="1"><input id="gVmFx873rdZ-ZZFiCRpT37i-val" name="entryfield" title="PB Cases Child" value="[ PB Cases Child ]" onblur="hideUnhideChildBreakupSection();"/></td>
+			<td><input id="gVmFx873rdZ-sdMU6tpPki6-val" name="entryfield" title="PB Cases Unknown" value="[ PB Cases Unknown ]" /></td>
+			<td colspan="1"><input dataelementid="gVmFx873rdZ" id="totalgVmFx873rdZ" name="total" readonly="readonly" title="PB Cases" value="[ PB Cases ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text11"><strong>New Unclassified cases</strong></td>
+			<td><input id="IQgrP2W9gTV-Te9RyzefSAz-val" name="entryfield" title="Unclassified Cases Adult" value="[ Unclassified Cases Adult ]" /></td>
+			<td class="checkZero" colspan="1"><input id="IQgrP2W9gTV-ZZFiCRpT37i-val" name="entryfield" title="Unclassified Cases Child" value="[ Unclassified Cases Child ]" onblur="hideUnhideChildBreakupSection();" /></td>
+			<td><input id="IQgrP2W9gTV-sdMU6tpPki6-val" name="entryfield" title="Unclassified Cases Unknown" value="[ Unclassified Cases Unknown ]" /></td>
+			<td colspan="1"><input dataelementid="IQgrP2W9gTV" id="totalIQgrP2W9gTV" name="total" readonly="readonly" title="Unclassified Cases" value="[ Unclassified Cases ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text12" rowspan="1"><strong>% of children</strong></td>
+			<td colspan="4"><input id="indicatorC6xcdI95huJ" indicatorid="C6xcdI95huJ" name="indicator" readonly="readonly" title="Percentage of children" value="[ Percentage of children ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text13" style="background-color: rgb(255, 255, 255);"><strong>Total new cases &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</strong></td>
+			<td colspan="4" rowspan="1" style="background-color: rgb(255, 255, 255);"><input id="indicatorgY7b9azcUQG" indicatorid="gY7b9azcUQG" name="indicator" readonly="readonly" title="Total cases" value="[ Total cases ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text14" style="background-color: rgb(255, 255, 255);"><strong>New case detection rate ( per100,000 population)</strong></td>
+			<td colspan="4" rowspan="1" style="background-color: rgb(255, 255, 255);"><input id="indicatorElAjdwOrjMq" indicatorid="ElAjdwOrjMq" name="indicator" readonly="readonly" title="Case detection rate (Per 100,000 population)" value="[ Case detection rate (Per 100,000 population) ]" /></td>
+		</tr>
+			<tr class="childbreakup">
+				<td colspan="6" data-translate="text15" style="background-color: #dce6f1; text-align: center;">
+				<p><strong>Child cases - Age breakup</strong></p>
+				</td>
+			</tr>
+			<tr class="childbreakup">
+				<td colspan="2" style="background-color: #dce6f1;text-align:center;">&nbsp;</td>
+				<td class="tooltip" colspan="1" style="background-color: #dce6f1;text-align:center;"><strong><span data-translate="mb1">MB</span> </strong> <span class="tooltiptext" data-translate="tooltip3">New Child MB cases less than 15 years of age / New MB Child cases less than five years of age / New MB child cases between 06 and 15 years of age</span></td>
+				<td class="tooltip" colspan="1" style="background-color: #dce6f1;text-align:center;"><strong><span data-translate="pb1">PB</span> </strong> <span class="tooltiptext" data-translate="tooltip4">New Child PB cases less than 15 years of age / New PB Child cases less than five years of age / New PB Child cases between 06 and 15 years of age</span></td>
+				<td class="tooltip" colspan="1" style="background-color: #dce6f1;text-align:center;"><strong><span data-translate="text16">Unclassified</span> </strong> <span class="tooltiptext" data-translate="tooltip5">New Child Unclassifed cases &lt;15 years of age / New Unclassifed Child cases five years of age / New unclassifed cases between 06 and 15 years of age</span></td>
+				<td colspan="1" style="background-color: #dce6f1;text-align:center;"><strong><span data-translate="total1">Total</span> </strong></td>
+			</tr>
+			<tr class="childbreakup">
+				<td colspan="2" data-translate="text17"><strong>New child cases &lt;= 5 years of age</strong></td>
+				<td colspan="1"><input id="MiHLzmsVFPf-xC5PhT2YVtr-val" name="entryfield" title="MB cases - child - age wise 0-5 years" value="[ MB cases - child - age wise 0-5 years ]" /></td>
+				<td colspan="1"><input id="ubgNtdy3h9H-xC5PhT2YVtr-val" name="entryfield" title="PB cases - child - age wise 0-5 years" value="[ PB cases - child - age wise 0-5 years ]" /></td>
+				<td colspan="1"><input id="tyHgOKrZsMJ-xC5PhT2YVtr-val" name="entryfield" title="Unclassified cases - child - age wise 0-5 years" value="[ Unclassified cases - child - age wise 0-5 years ]" /></td>
+				<td colspan="1"><input id="indicatoryMIaVLPC3P9" indicatorid="yMIaVLPC3P9" name="indicator" readonly="readonly" title="Total &lt;5 yrs of age" value="[ Total &lt;5 yrs of age ]" /></td>
+			</tr>
+			<tr class="childbreakup">
+				<td colspan="2" data-translate="text18"><strong>New child cases between 6-15 years of age</strong></td>
+				<td colspan="1"><input id="MiHLzmsVFPf-GcQ4Ep0wmnH-val" name="entryfield" title="MB cases - child - age wise 11-15 years" value="[ MB cases - child - age wise 11-15 years ]" /></td>
+				<td colspan="1"><input id="ubgNtdy3h9H-GcQ4Ep0wmnH-val" name="entryfield" title="PB cases - child - age wise 11-15 years" value="[ PB cases - child - age wise 11-15 years ]" /></td>
+				<td colspan="1"><input id="tyHgOKrZsMJ-GcQ4Ep0wmnH-val" name="entryfield" title="Unclassified cases - child - age wise 11-15 years" value="[ Unclassified cases - child - age wise 11-15 years ]" /></td>
+				<td colspan="1"><input id="indicatoreBG4XbLqTmY" indicatorid="eBG4XbLqTmY" name="indicator" readonly="readonly" title="Total 6 -15 yrs of age" value="[ Total 6 -15 yrs of age ]" /></td>
+			</tr>
+			<tr class="childbreakup">
+				<td colspan="2" data-translate="text19"><strong>New child cases of unknown age</strong></td>
+				<td colspan="1"><input id="MiHLzmsVFPf-HOFS6i6eMIm-val" name="entryfield" title="MB cases - child - age wise Unknown" value="[ MB cases - child - age wise Unknown ]" /></td>
+				<td colspan="1"><input id="ubgNtdy3h9H-HOFS6i6eMIm-val" name="entryfield" title="PB cases - child - age wise Unknown" value="[ PB cases - child - age wise Unknown ]" /></td>
+				<td colspan="1"><input id="tyHgOKrZsMJ-HOFS6i6eMIm-val" name="entryfield" title="Unclassified cases - child - age wise Unknown" value="[ Unclassified cases - child - age wise Unknown ]" /></td>
+				<td colspan="1"><input id="indicatorGuJBnVdikkv" indicatorid="GuJBnVdikkv" name="indicator" readonly="readonly" title="Total child cases of unknown age" value="[ Total child cases of unknown age ]" /></td>
+			</tr>
+		<tr>
+			<td colspan="1" style="background-color: #dce6f1;">&nbsp;</td>
+			<td class="tooltip" colspan="1" rowspan="1" style="background-color: #dce6f1; text-align:center;">
+			<p data-translate="text20"><strong>Female</strong></p>
+			<span class="tooltiptext" data-translate="tooltip6">Number of Female cases reported during the year</span></td>
+			<td class="tooltip" colspan="1" rowspan="1" style="text-align: center; background-color: #dce6f1;"><span data-translate="text21"><strong>Gender unknown&nbsp;</strong> </span> <span class="tooltiptext" data-translate="tooltip7">Number of cases reported during the year without information about gender</span></td>
+			<td class="tooltip" colspan="1" rowspan="1" style="text-align: center; background-color: #dce6f1;"><span data-translate="text22"><strong>Male</strong> </span> <span class="tooltiptext" data-translate="tooltip8">Auto calculated: number of male cases reported during the year</span></td>
+			<td colspan="2" style="background-color: #dce6f1;">&nbsp;</td>
+		</tr>
+		<tr>
+			<td colspan="1" data-translate="text23"><strong>New cases by gender</strong></td>
+			<td colspan="1" rowspan="1"><input id="xdbnQxRVTBq-HllvX50cXC0-val" name="entryfield" title="Leprosy Cases - Female" value="[ Leprosy Cases - Female ]" /></td>
+			<td colspan="1" rowspan="1"><input id="coycFHeZ257-HllvX50cXC0-val" name="entryfield" title="Leprosy Cases - Unknown" value="[ Leprosy Cases - Unknown ]" /></td>
+			<td colspan="1" rowspan="1"><input id="indicatorbpV1kODa6MB" indicatorid="bpV1kODa6MB" name="indicator" readonly="readonly" title="New male cases " value="[ New male cases  ]" /></td>
+			<td class="tooltip" colspan="1"><span data-translate="text24"><strong>% Female</strong> </span> <span class="tooltiptext" data-translate="tooltip9">Proportion of females cases reported during the year</span></td>
+			<td colspan="1" rowspan="1"><input id="indicatorKrvcvcTLqIh" indicatorid="KrvcvcTLqIh" name="indicator" readonly="readonly" title="Percentage of female" value="[ Percentage of female ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" rowspan="1" style="background-color: #dce6f1;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
+			<td class="tooltip" rowspan="1" style="background-color: #dce6f1;">
+			<p data-translate="text25">&nbsp; &nbsp; &nbsp; <strong> &nbsp;Adult&nbsp;</strong></p>
+			<span class="tooltiptext" data-translate="tooltip10">New G2D cases &gt;15 years of age</span></td>
+			<td class="tooltip" colspan="1" style="background-color: #dce6f1;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span data-translate="text26"> <strong> &nbsp; Children</strong> </span> <span class="tooltiptext" data-translate="tooltip11">New G2D cases &lt;15 years of age</span></td>
+			<td class="tooltip" style="background-color: #dce6f1;">&nbsp; &nbsp; &nbsp; &nbsp; <span data-translate="text27"> <strong>&nbsp;Age unknown&nbsp;</strong> </span> <span class="tooltiptext" data-translate="tooltip12">New G2D Cases without information about their age</span></td>
+			<td class="tooltip" colspan="1" style="background-color: #dce6f1;">&nbsp; &nbsp; <strong> <span data-translate="subtotal2">Sub - Total&nbsp;</span> </strong> <span class="tooltiptext" data-translate="tooltip13">All G2D cases, i.e., Adults, Children and G2D cases without information about their age</span></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text28"><strong>New cases with grade 2 disabilities&nbsp;</strong></td>
+			<td><input id="xl4EXfRMBrK-Te9RyzefSAz-val" name="entryfield" title="Leprosy Cases - Grade 2 Disability Adult" value="[ Leprosy Cases - Grade 2 Disability Adult ]" /></td>
+			<td colspan="1"><input id="xl4EXfRMBrK-ZZFiCRpT37i-val" name="entryfield" title="Leprosy Cases - Grade 2 Disability Child" value="[ Leprosy Cases - Grade 2 Disability Child ]" /></td>
+			<td><input id="xl4EXfRMBrK-sdMU6tpPki6-val" name="entryfield" title="Leprosy Cases - Grade 2 Disability Unknown" value="[ Leprosy Cases - Grade 2 Disability Unknown ]" /></td>
+			<td colspan="1"><input dataelementid="xl4EXfRMBrK" id="totalxl4EXfRMBrK" name="total" readonly="readonly" title="Leprosy Cases - Grade 2 Disability" value="[ Leprosy Cases - Grade 2 Disability ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text29"><strong>&nbsp;% of grade 2 disabilities</strong></td>
+			<td colspan="1" rowspan="1"><input id="indicatorj62SFyBOrSN" indicatorid="j62SFyBOrSN" name="indicator" readonly="readonly" title="Percentage of grade 2 disabilities " value="[ Percentage of grade 2 disabilities  ]" /></td>
+			<td colspan="2" data-translate="text30" rowspan="1"><strong>Grade 2 disability rate (Per million population)</strong></td>
+			<td colspan="1" rowspan="1"><input id="indicatorv1Fr4On014j" indicatorid="v1Fr4On014j" name="indicator" readonly="readonly" title="Grade 2 disability rate (Per million population)" value="[ Grade 2 disability rate (Per million population) ]" /></td>
+		</tr>
+		<tr>
+			<td class="tooltip" colspan="6" style="text-align: center; background-color: #dce6f1;">
+			<p><span data-translate="text31"><strong>Foreign born cases</strong> </span></p>
+			<span class="tooltiptext" data-translate="tooltip14">Leprosy cases detected during the year who were born in other countries</span></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text32" style="background-color: rgb(255, 255, 255);"><strong>New foreign born cases&nbsp;</strong></td>
+			<td colspan="1" style="background-color: rgb(255, 255, 255); text-align: center;"><input id="nbDlMYKljTK-HllvX50cXC0-val" name="entryfield" title="Foreign Born Leprosy Cases" value="[ Foreign Born Leprosy Cases ]" /></td>
+			<td colspan="2" data-translate="text33" style="background-color: rgb(255, 255, 255);"><strong>&nbsp; &nbsp; % foreign born cases&nbsp;</strong></td>
+			<td colspan="1"><input id="indicatorKmggYyaINdB" indicatorid="KmggYyaINdB" name="indicator" readonly="readonly" title="Percentage of foreign born cases" value="[ Percentage of foreign born cases ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="6" data-translate="text34" style="background-color: #dce6f1; text-align:center;">
+			<p><strong>&nbsp; Retreatment cases</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" style="background-color: #dce6f1;">&nbsp;</td>
+			<td class="tooltip" colspan="1" style="background-color: #dce6f1; text-align:center;"><strong><span data-translate="mb2">MB</span> </strong> <span class="tooltiptext" data-translate="tooltip15">Number of MB cases who have completed a full course of treatment for leprosy in the past and who returns with signs and symptoms of the disease that are not deemed to be due to areaction according to a clinician / An MB patient who has received treatment for leprosy in the past excepting relapses</span></td>
+			<td class="tooltip" colspan="1" style="background-color: #dce6f1; text-align:center;"><strong><span data-translate="pb2">PB</span> </strong> <span class="tooltiptext" data-translate="tooltip16">Number of PB cases who have completed a full course of treatment for leprosy in the past and who returns with signs and symptoms of the disease that are not deemed to be due to areaction according to a clinician / A PB patient who has received treatment for leprosy in the past excepting relapses</span></td>
+			<td class="tooltip" colspan="2" style="background-color: #dce6f1; text-align:center;"><strong><span data-translate="total2">Total</span> </strong> <span class="tooltiptext" data-translate="tooltip17">All Relapse cases / All (PB and MB) Retreatment cases</span></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text35"><strong>Number of relapses detected&nbsp;</strong></td>
+			<td colspan="1"><input id="VBEhMPsLu53-HllvX50cXC0-val" name="entryfield" title="MB - Retreatment Cases - Relapses" value="[ MB - Retreatment Cases - Relapses ]" /></td>
+			<td colspan="1"><input id="YVj2PYy0Slj-HllvX50cXC0-val" name="entryfield" title="PB - Retreatment Cases - Relapses" value="[ PB - Retreatment Cases - Relapses ]" /></td>
+			<td colspan="2"><input id="indicatornurKIGXhFri" indicatorid="nurKIGXhFri" name="indicator" readonly="readonly" title="Total retreatement cases - Relapses" value="[ Total retreatement cases - Relapses ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text36"><strong>All other retreatment cases &nbsp;</strong></td>
+			<td colspan="1"><input id="lhSRNgfsxYC-HllvX50cXC0-val" name="entryfield" title="MB - Retreatment Cases - Others" value="[ MB - Retreatment Cases - Others ]" /></td>
+			<td colspan="1"><input id="EHT4ON2ZtNl-HllvX50cXC0-val" name="entryfield" title="PB - Retreatment Cases - Others" value="[ PB - Retreatment Cases - Others ]" /></td>
+			<td colspan="2"><input id="indicatordNCXh6M60Vw" indicatorid="dNCXh6M60Vw" name="indicator" readonly="readonly" title="Total retreatement cases - Others" value="[ Total retreatement cases - Others ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text36">Total retreatment cases&nbsp;</td>
+			<td colspan="4" rowspan="1"><input id="indicatorSSmKGrwFLyR" indicatorid="SSmKGrwFLyR" name="indicator" readonly="readonly" title="Total Re-treatment cases " value="[ Total Re-treatment cases  ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="6" style="background-color: #dce6f1; text-align:center;">
+			<p><strong><span data-translate="text37">Cases registered for treatment at the end of year <span id="currentYear2"></span> &nbsp;</span> <span id="periodID2">&nbsp;</span> </strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text38" style="background-color: #dce6f1;"><strong>Cases on treatment at the end of year (including new and retreatment cases)</strong></td>
+			<td colspan="1" data-translate="text39" rowspan="1" style="background-color: #dce6f1; text-align:center;">
+			<p><strong>Adult</strong></p>
+			</td>
+			<td data-translate="text40" rowspan="1" style="background-color: #dce6f1; text-align:center;"><strong>Child</strong></td>
+			<td colspan="2" style="text-align: center; background-color: #dce6f1; text-align:center;"><strong><span data-translate="subtotal3">Sub - Total</span> </strong></td>
+		</tr>
+		<tr>
+			<td class="tooltip" colspan="2"><span data-translate="text41"><strong>MB cases</strong> </span> <span class="tooltiptext" data-translate="tooltip18">Number of all MB cases &gt;15 years of age on record for treatment at the end of the year / Number of all MB cases &lt; 15 years of age on record for treatment at the end of the year</span></td>
+			<td colspan="1"><input id="bLR7YvL1f5O-Te9RyzefSAz-val" name="entryfield" title="MB Cases on Treatment Adult" value="[ MB Cases on Treatment Adult ]" /></td>
+			<td><input id="bLR7YvL1f5O-ZZFiCRpT37i-val" name="entryfield" title="MB Cases on Treatment Child" value="[ MB Cases on Treatment Child ]" /></td>
+			<td colspan="2"><input dataelementid="bLR7YvL1f5O" id="totalbLR7YvL1f5O" name="total" readonly="readonly" title="MB Cases on Treatment" value="[ MB Cases on Treatment ]" /></td>
+		</tr>
+		<tr>
+			<td class="tooltip" colspan="2"><span data-translate="text42"><strong>PB cases</strong> </span> <span class="tooltiptext" data-translate="tooltip19">Number of all PB cases &lt;15 years of age on record for treatment at the end of the year / Number of all PB cases &lt; 15 years of age on record for treatment at the end of the year</span></td>
+			<td colspan="1"><input id="mdupOTsRJ58-Te9RyzefSAz-val" name="entryfield" title="PB Cases on Treatment Adult" value="[ PB Cases on Treatment Adult ]" /></td>
+			<td><input id="mdupOTsRJ58-ZZFiCRpT37i-val" name="entryfield" title="PB Cases on Treatment Child" value="[ PB Cases on Treatment Child ]" /></td>
+			<td colspan="2"><input dataelementid="mdupOTsRJ58" id="totalmdupOTsRJ58" name="total" readonly="readonly" title="PB Cases on Treatment" value="[ PB Cases on Treatment ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-translate="text43"><strong>Unclassified&nbsp;</strong></td>
+			<td colspan="1"><input id="lzbsUQJvvJB-Te9RyzefSAz-val" name="entryfield" title="Unclassified Cases on Treatment  Adult" value="[ Unclassified Cases on Treatment  Adult ]" /></td>
+			<td><input id="lzbsUQJvvJB-ZZFiCRpT37i-val" name="entryfield" title="Unclassified Cases on Treatment  Child" value="[ Unclassified Cases on Treatment  Child ]" /></td>
+			<td colspan="2"><input dataelementid="lzbsUQJvvJB" id="totallzbsUQJvvJB" name="total" readonly="readonly" title="Unclassified Cases on Treatment " value="[ Unclassified Cases on Treatment  ]" /></td>
+		</tr>
+		<tr>
+			<td class="tooltip" colspan="3"><span data-translate="text44"><strong>Total cases registered for treatment</strong> </span> <span class="tooltiptext" data-translate="tooltip20">All cases on record for MDT at the end of the year </span></td>
+			<td colspan="3" rowspan="1"><input id="indicatorYgvbZE63e8T" indicatorid="YgvbZE63e8T" name="indicator" readonly="readonly" title="Total cases registered at end of year" value="[ Total cases registered at end of year ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="3" data-translate="text45"><strong>Prevalence rate (per 10,000 population)</strong></td>
+			<td colspan="3"><input id="indicatorsAXV6Hnve4i" indicatorid="sAXV6Hnve4i" name="indicator" readonly="readonly" title="Prevalence rate (Per 10,000 population)" value="[ Prevalence rate (Per 10,000 population) ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="6" data-translate="text46" style="background-color: #dce6f1; text-align:center;">
+			<p><strong>Case detection method</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="1" style="background-color: #dce6f1;">&nbsp;</td>
+			<td class="tooltip" style="background-color: #dce6f1;"><span data-translate="text47"><strong>Number of people enumerated /estimated</strong>&nbsp;</span> <span class="tooltiptext" data-translate="tooltip21">Number of family contacts of leprosy patients registered for MDT during the year / Number of school students emuemerated for examination to rule out or detect leprosy / Number of general population enurmerated through different campaigns in the year / Number of people enurmerated through different campaigns in the year </span></td>
+			<td class="tooltip" style="background-color: #dce6f1;">
+			<p>&nbsp; &nbsp; &nbsp; &nbsp; <span data-translate="text48"> <strong> &nbsp;Examined&nbsp;</strong> </span> <span class="tooltiptext" data-translate="tooltip22">Of them number of family contacts examined for leprosy / Number of school students examined for signs of leprosy / Number of people examined for leprosy during the campaign focussing on general population / Number of people examined for leprosy during the campaign focussing on general population</span></p>
+			</td>
+			<td class="tooltip" colspan="1" style="background-color: #dce6f1;"><span data-translate="text49"><strong>&nbsp;Percentage examined&nbsp;</strong> </span> <span class="tooltiptext" data-translate="tooltip23">Proportion of family contacts examined / Proportion of school students examined for leprosy / Proportion of people examined in campaigns during the year / Proportion of people examined in campaigns during the year </span></td>
+			<td class="tooltip" style="background-color: #dce6f1;">&nbsp; <span data-translate="text50"> <strong>&nbsp;Cases detected&nbsp;</strong> </span> <span class="tooltiptext" data-translate="tooltip24">Number of cases detected from contact examination / Number of cases detected from school student examination / Number of cases detected with leprosy during the campaigns / Number of cases detected with leprosy during the campaigns</span></td>
+			<td colspan="1" data-translate="text51" style="background-color: #dce6f1; text-align: center;"><strong>Percentage detected among new</strong></td>
+		</tr>
+		<tr>
+			<td colspan="1" data-translate="text52"><strong>Contact examination&nbsp;</strong></td>
+			<td><input id="qHIGkVqSItK-HllvX50cXC0-val" name="entryfield" title="Active case contact examination - People estimated" value="[ Active case contact examination - People estimated ]" /></td>
+			<td><input id="GuZ5MKrfrBp-HllvX50cXC0-val" name="entryfield" title="Active case detection contact examination - People examined" value="[ Active case detection contact examination - People examined ]" /></td>
+			<td colspan="1"><input id="indicatortrqV4BI71xI" indicatorid="trqV4BI71xI" name="indicator" readonly="readonly" title="People examined during contact examination " value="[ People examined during contact examination  ]" /></td>
+			<td><input id="Xzuid5sSSg3-HllvX50cXC0-val" name="entryfield" title="Active case contact examination - Cases detected" value="[ Active case contact examination - Cases detected ]" /></td>
+			<td colspan="1" style="text-align: center;"><input id="indicatorM2kzreZCnhv" indicatorid="M2kzreZCnhv" name="indicator" readonly="readonly" title="Cases detected in contact examination " value="[ Cases detected in contact examination  ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="1" data-translate="text53"><strong>School children examination for leprosy</strong></td>
+			<td><input id="hcmT8KR85PW-HllvX50cXC0-val" name="entryfield" title="School children examination - People Estimated" value="[ School children examination - People Estimated ]" /></td>
+			<td><input id="zZcTJntCnMe-HllvX50cXC0-val" name="entryfield" title="School children examination - People Examined" value="[ School children examination - People Examined ]" /></td>
+			<td colspan="1"><input id="indicatorZkf5ceFIHMi" indicatorid="Zkf5ceFIHMi" name="indicator" readonly="readonly" title="People examined in school survey " value="[ People examined in school survey  ]" /></td>
+			<td><input id="lk5YKbM2SEu-HllvX50cXC0-val" name="entryfield" title="School children examination - Cases Detected" value="[ School children examination - Cases Detected ]" /></td>
+			<td colspan="1" style="text-align: center;"><input id="indicatorw0DzxpCd0aq" indicatorid="w0DzxpCd0aq" name="indicator" readonly="readonly" title="Cases detected in school survey " value="[ Cases detected in school survey  ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="1" data-translate="text54"><strong>Active case detection campaigns (General population)</strong></td>
+			<td><input id="v7CDzOUjTE6-HllvX50cXC0-val" name="entryfield" title="General Survey - People estimated " value="[ General Survey - People estimated  ]" /></td>
+			<td><input id="ztfAqeY7ruz-HllvX50cXC0-val" name="entryfield" title="General Survey - People examined " value="[ General Survey - People examined  ]" /></td>
+			<td colspan="1"><input id="indicatorBaYDxDArnGF" indicatorid="BaYDxDArnGF" name="indicator" readonly="readonly" title="People examined in general survey " value="[ People examined in general survey  ]" /></td>
+			<td><input id="NlyC1FwJWy9-HllvX50cXC0-val" name="entryfield" title="General Survey - Cases detected" value="[ General Survey - Cases detected ]" /></td>
+			<td colspan="1" style="text-align: center;"><input id="indicatorJcTzoupKdtG" indicatorid="JcTzoupKdtG" name="indicator" readonly="readonly" title="Cases detected in general survey" value="[ Cases detected in general survey ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="1" data-translate="text55"><strong>Active case detection campaigns(Special population group) e.g., Migrants, Urban slum population, Refugees, Prison inmates</strong></td>
+			<td><input id="g04IY5svOKO-HllvX50cXC0-val" name="entryfield" title="Active case detection campaigns - People estimated" value="[ Active case detection campaigns - People estimated ]" /></td>
+			<td><input id="FNTigvSTOVL-HllvX50cXC0-val" name="entryfield" title="Active case detection campaign - People examined" value="[ Active case detection campaign - People examined ]" /></td>
+			<td colspan="1"><input id="indicatorbIBNtoqBkTL" indicatorid="bIBNtoqBkTL" name="indicator" readonly="readonly" title="People examined in campaigns" value="[ People examined in campaigns ]" /></td>
+			<td><input id="uhtjTobhtHO-HllvX50cXC0-val" name="entryfield" title="Active case detection campaigns - Cases detected" value="[ Active case detection campaigns - Cases detected ]" /></td>
+			<td colspan="1" style="text-align: center;"><input id="indicatorRJcnYMtVxOS" indicatorid="RJcnYMtVxOS" name="indicator" readonly="readonly" title="Cases detected in campaigns" value="[ Cases detected in campaigns ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="6" data-translate="text56" style="background-color: #dce6f1; text-align:center;">
+			<p><strong>&nbsp;Treatment outcome</strong></p>
+			</td>
+		</tr>
+		<!-- <tr>
+                <td colspan="2"><strong>New MB Cases who started treatment in 2014</strong></td>
+                <td colspan="5" rowspan="1">(Data from 2014 will appear here)</td>
+            </tr> -->
+		<tr>
+			<td class="tooltip" colspan="3"><strong><span data-translate="text57">New MB cases who started treatment in </span> <span id="twoYearGap">&nbsp;</span> </strong> <span class="tooltiptext" data-translate="tooltip25">Number of MB cases started treatment for MB Leprosy in <span id="tooTip1prvYear"></span></span></td>
+			<td colspan="3" style="text-align: center;"><input id="VVBrsKiEqdh-HllvX50cXC0-val" name="entryfield" title="Baseline - MB cases on treatment (2 yrs before)" value="[ Baseline - MB cases on treatment (2 yrs before) ]" /></td>
+		</tr>
+		<tr>
+			<td class="tooltip" colspan="2"><span data-translate="text58"><strong>Of them, how many completed treatment within 18 months ?</strong> </span> <span class="tooltiptext" data-translate="tooltip26">Of them number of MB cases which completed treatment with in12-18 months</span></td>
+			<td colspan="1" rowspan="1" style="text-align: center;"><input id="TCJv5BNVYCw-HllvX50cXC0-val" name="entryfield" title="MB Cases - Treatment Completed in 18 months" value="[ MB Cases - Treatment Completed in 18 months ]" /></td>
+			<td colspan="2" rowspan="1" style="text-align: center;"><span data-translate="text59"><strong>MB Treatment completion rate (%)&nbsp;</strong> </span></td>
+			<td colspan="1" rowspan="1" style="text-align: center;"><input id="indicatorxWUvequQxeM" indicatorid="xWUvequQxeM" name="indicator" readonly="readonly" title="MB cure rate " value="[ MB cure rate  ]" /></td>
+		</tr>
+		<tr>
+			<td class="tooltip" colspan="2"><span data-translate="text60"><strong>Of them, how many were &#39;lost to follow-up&#39; ? </strong> </span> <span class="tooltiptext" data-translate="tooltip27">Of them number of MB cases wwhich were lost to follow up</span></td>
+			<td colspan="1" rowspan="1" style="text-align: center;"><input id="bjLIfOy4KuR-HllvX50cXC0-val" name="entryfield" title="MB - lost to follow-up - 18 months " value="[ MB - lost to follow-up - 18 months  ]" /></td>
+			<td colspan="2" data-translate="text61" rowspan="1" style="text-align: center;"><strong>MB lost to follow up rate (%)&nbsp;</strong></td>
+			<td colspan="1" rowspan="1" style="text-align: center;"><input id="indicatory8GFUBw2dMD" indicatorid="y8GFUBw2dMD" name="indicator" readonly="readonly" title="MB - Loss to follow up case rate" value="[ MB - Loss to follow up case rate ]" /></td>
+		</tr>
+		<!--- <tr-->
+		<tr>
+			<td class="tooltip" colspan="3"><strong><span data-translate="text62">New PB cases who started treatment in</span> <span id="oneYearGap">&nbsp;</span> </strong> <span class="tooltiptext" data-translate="tooltip28">Number of PB cases registered for MDT in  <span id="tooTip1NextYear"></span></span></td>
+			<td colspan="3" style="text-align: center;"><input id="PFNL3BPu3A6-HllvX50cXC0-val" name="entryfield" title="Baseline - PB cases on treatment (1 yr before)" value="[ Baseline - PB cases on treatment (1 yr before) ]" /></td>
+		</tr>
+		<tr>
+			<td class="tooltip" colspan="2"><strong><span data-translate="text63">Of them, how many completed treatment within 9 months ?</span> </strong> <span class="tooltiptext" data-translate="tooltip29">Of them number of cases completed PB MDT in 6-9 monhts</span></td>
+			<td colspan="1" rowspan="1" style="text-align: center;"><input id="t5AmFhGyKw9-HllvX50cXC0-val" name="entryfield" title="PB Cases - Treatment Completed within 9 Months" value="[ PB Cases - Treatment Completed within 9 Months ]" /></td>
+			<td class="tooltip" colspan="2" rowspan="1" style="text-align: center;"><strong><span data-translate="text64">PB treatment completion rate (%)</span> </strong> <span class="tooltiptext" data-translate="tooltip30">Proportion of PB patients completed treatment with in 6-9 months from start of treatment</span></td>
+			<td colspan="1" rowspan="1" style="text-align: center;"><input id="indicatorPQCJ1jNYVMU" indicatorid="PQCJ1jNYVMU" name="indicator" readonly="readonly" title="PB cure rate" value="[ PB cure rate ]" /></td>
+		</tr>
+		<tr>
+			<td class="tooltip" colspan="2"><strong><span data-translate="text65">Of them, how many were &#39;lost to follow-up&#39; ?</span> </strong> <span class="tooltiptext" data-translate="tooltip31">Of them number of MB cases which were lost to follow-up</span></td>
+			<td colspan="1" rowspan="1" style="text-align: center;"><input id="IW3BXD1xO0E-HllvX50cXC0-val" name="entryfield" title="PB - lost to follow-up - 9 months " value="[ PB - lost to follow-up - 9 months  ]" /></td>
+			<td colspan="2" rowspan="1" style="text-align: center;"><strong><span data-translate="text66">lost to follow up rate &nbsp;</span> </strong></td>
+			<td colspan="1" rowspan="1" style="text-align: center;"><input id="indicatorjAPR6lkkBBH" indicatorid="jAPR6lkkBBH" name="indicator" readonly="readonly" title="PB - Loss to follow up case rate" value="[ PB - Loss to follow up case rate ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="6" data-translate="text67" style="background-color: #dce6f1; text-align: center;">
+			<p><strong>&nbsp;Drug resistance surveillance&nbsp;</strong></p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" style="background-color: #dce6f1;">&nbsp;</td>
+			<td colspan="3" data-translate="text68" style="background-color: #dce6f1; text-align:center">
+			<p><strong>Number of patients with resistance strains to one drug</strong></p>
+			</td>
+			<td class="tooltip" colspan="1" rowspan="2" style="background-color: #dce6f1;">
+			<p><strong><span data-translate="text69">Number of patients with resistant strains to 2 or more drugs</span> </strong></p>
+			<span class="tooltiptext" data-translate="tooltip32">Of them number of cases with strains showing resistance to two or more drugs, i.e., Rifampicin, Dapsone, Oflaxicin </span></td>
+		</tr>
+		<tr>
+			<td colspan="1" style="background-color: #dce6f1;">&nbsp;</td>
+			<td class="tooltip" colspan="1" style="background-color: rgb(220, 230, 241); text-align: center;">&nbsp; &nbsp; &nbsp; &nbsp; Number of patients&nbsp;<strong><span data-translate="text70">tested&nbsp;</span> </strong> <span class="tooltiptext" data-translate="tooltip33">Number of new cases teseted for Anti Microbial Resistance during the year/ Number of Relaspse/ Re-treatment cases tested for Anti-Microbial Resistance during the year</span></td>
+			<td class="tooltip" colspan="1" style="background-color: #dce6f1;">&nbsp; &nbsp; &nbsp; &nbsp; <strong> <span data-translate="text71">&nbsp; &nbsp; Rifampicin</span> </strong> <span class="tooltiptext" data-translate="tooltip34">Of them number of cases with strains showing resistantance to Rifampicin</span></td>
+			<td class="tooltip" colspan="1" style="background-color: #dce6f1;">
+			<p>&nbsp; &nbsp; <strong> &nbsp; <span data-translate="text72">Dapsone</span> </strong></p>
+			<span class="tooltiptext" data-translate="tooltip35">Of them number of cases with strains showing resistant to Dapsone</span></td>
+			<td class="tooltip" style="background-color: #dce6f1;">&nbsp; &nbsp; &nbsp; <strong> <span data-translate="text73">Ofloxacin </span> </strong> <span class="tooltiptext" data-translate="tooltip36">Of them number of cases with strains showing resistance to Ofloxacin</span></td>
+		</tr>
+		<tr>
+			<td colspan="1" data-translate="text76"><strong>Relapse/other retreatment cases</strong></td>
+			<td><input id="JK1VCsNhg6x-HllvX50cXC0-val" name="entryfield" title="Retreatment Cases Tested for Drug Resistance" value="[ Retreatment Cases Tested for Drug Resistance ]" /></td>
+			<td><input id="sgdAybfDzTl-oSHl2cUvHmk-val" name="entryfield" title="Retreatment cases resistant to drug RIF mono" value="[ Retreatment cases resistant to drug RIF mono ]" /></td>
+			<td colspan="1"><input id="sgdAybfDzTl-qqJwrOzkzcz-val" name="entryfield" title="Retreatment cases resistant to drug DDS mono" value="[ Retreatment cases resistant to drug DDS mono ]" /></td>
+			<td><input id="sgdAybfDzTl-G0EY8ZnkmVI-val" name="entryfield" title="Retreatment cases resistant to drug OFX mono" value="[ Retreatment cases resistant to drug OFX mono ]" /></td>
+			<td colspan="1"><input id="sgdAybfDzTl-Vi7NufwLzKs-val" name="entryfield" title="Retreatment cases resistant to drug Two or more" value="[ Retreatment cases resistant to drug Two or more ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="1" data-translate="text76"><strong>New cases&nbsp;</strong></td>
+			<td><input id="MJGjCnCK8qJ-HllvX50cXC0-val" name="entryfield" title="New cases tested for drug resistance" value="[ New cases tested for drug resistance ]" /></td>
+			<td><input id="CAwisvSGkaj-oSHl2cUvHmk-val" name="entryfield" title="New cases resistant to drug RIF mono" value="[ New cases resistant to drug RIF mono ]" /></td>
+			<td colspan="1"><input id="CAwisvSGkaj-qqJwrOzkzcz-val" name="entryfield" title="New cases resistant to drug DDS mono" value="[ New cases resistant to drug DDS mono ]" /></td>
+			<td><input id="CAwisvSGkaj-G0EY8ZnkmVI-val" name="entryfield" title="New cases resistant to drug OFX mono" value="[ New cases resistant to drug OFX mono ]" /></td>
+			<td colspan="1"><input id="CAwisvSGkaj-Vi7NufwLzKs-val" name="entryfield" title="New cases resistant to drug Two or more" value="[ New cases resistant to drug Two or more ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="6" style="text-align: left;font-weight:bold;color:blue">
+			<p class="instructions"><span data-translate="comment1">Submit data : Click on the &#39;Complete button&#39; to submit the data. This will only be allowed if all the mandatory data fields are filled and validated.</span><br />
+			<span data-translate="comment2">Edit data : Click on the &#39;Incomplete button&#39; to edit the data once submitted.</span><br />
+			<span data-translate="comment3">Print form : Click on the &#39;Print form&#39; button to download the filled data entry form.</span><br />
+			<span data-translate="comment4">Print blank form : Click on the &#39;Print blank form&#39; button to download the blank data entry form.</span></p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="6"><button class="instructions" onclick="downloadBlankExcel()"><span data-translate="button1">Download Blank Excel Form</span></button><button class="instructions" id="printButton" onclick="window.print()" style="width:120px; margin-bottom: 3px; margin-left:20px;" value="Print form"><span data-translate="button2">Print form</span></button></td>
+		</tr>
+	</tbody>
+</table>
+<style type="text/css">/* printing */ 	@media print { 		#printing { 			margin: 0%; 		} 		.instructions { 			display: none; 		} 		#infoDiv { 			display: none !important; 		} 		#completenessDiv { 			display: none !important; 		} 		#completedByDiv { 			display: none !important; 		} 		.confirm-dialog-content { 			display: none !important; 		} 	}
+</style>

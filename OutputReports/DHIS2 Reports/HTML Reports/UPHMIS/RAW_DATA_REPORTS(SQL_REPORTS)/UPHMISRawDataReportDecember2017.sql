@@ -21,7 +21,10 @@ from
    Financial_Year , state , div as Division, dis as District,dishmiscode as District_HMIS_Code, block, blockhmiscode as Block_HMIS_Code, facility,
 facilityhmiscode as Facility_HMIS_Code,   organisationunitid, NIN, st as Category, tp as Facility_Type, loc as Location,
    
-   array_to_string(array_agg(de803), '') as "v01", array_to_string(array_agg(de804), '') as "v02", array_to_string(array_agg(de805), '') as "v03", array_to_string(array_agg(de806), '') as "v04",
+   array_to_string(array_agg(de803), '') as "v01",
+   array_to_string(array_agg(de804), '') as "v02",
+   array_to_string(array_agg(de805), '') as "v03", 
+   array_to_string(array_agg(de806), '') as "v04", 
    
     array_to_string(array_agg(v1), '') as "v1",
 array_to_string(array_agg(v2), '') as "v2",
@@ -935,7 +938,16 @@ array_to_string(array_agg(v313), '') as "v313",
 		array_to_string(array_agg(a596), '') as "a596",
 		array_to_string(array_agg(a597), '') as "a597",
 		array_to_string(array_agg(a598), '') as "a598",
-		array_to_string(array_agg(a599), '') as "a599"
+		array_to_string(array_agg(a599), '') as "a599",
+		array_to_string(array_agg(a600), '') as "a600",
+		array_to_string(array_agg(a601), '') as "a601",
+		array_to_string(array_agg(a602), '') as "a602",
+		array_to_string(array_agg(a603), '') as "a603",
+		array_to_string(array_agg(a604), '') as "a604",
+		array_to_string(array_agg(a605), '') as "a605",
+		array_to_string(array_agg(a606), '') as "a606",
+		array_to_string(array_agg(a607), '') as "a607",
+		array_to_string(array_agg(a608), '') as "a608"
 
 
 from
@@ -956,35 +968,11 @@ from
          st,
          loc,
 		 
-		  case
-            when
-               dataelementid = 32185 
-            then
-               sag2.value 
-         end
-         de803, 
-         case
-            when
-               dataelementid = 32184 
-            then
-               sag2.value 
-         end
-         de804, 
-         case
-            when
-               dataelementid = 32187 
-            then
-               sag2.value 
-         end
-         de805, 
-         case
-            when
-               dataelementid = 9083 
-            then
-               sag2.value 
-         end
-         de806, 
-		 
+		 case when dataelementid = 32185 then sag2.value end de803, 
+        		case when dataelementid = 32184 then sag2.value end de804, 
+        		case  when dataelementid = 32187 then sag2.value end de805, 
+        		case  when dataelementid = 9083 then sag2.value end de806, 
+        
 		 		case when dataelementid = 807 and categoryoptioncomboid = 15 then sag2.value end v1,
 				case when dataelementid = 808 and categoryoptioncomboid = 15 then sag2.value end v2,
 				case when dataelementid = 811 and categoryoptioncomboid = 15 then sag2.value end v3,
@@ -1299,7 +1287,8 @@ from
 				case when dataelementid = 8962 and categoryoptioncomboid = 15 then sag2.value end v312,
 				case when dataelementid = 7272535 and categoryoptioncomboid = 15 then sag2.value end v313,
 
-						 case when dataelementid = 1630944 and categoryoptioncomboid =  15 then sag2.value end a1,
+
+				case when dataelementid = 1630944 and categoryoptioncomboid =  15 then sag2.value end a1,
 				case when dataelementid = 1631316 and categoryoptioncomboid =  1625509 then sag2.value end a2,
 				case when dataelementid = 1631316 and categoryoptioncomboid =  1625510 then sag2.value end a3,
 				case when dataelementid = 1631317 and categoryoptioncomboid =  1625509 then sag2.value end a4,
@@ -1445,7 +1434,7 @@ from
 				case when dataelementid = 1630971 and categoryoptioncomboid =  15 then sag2.value end a144,
 				case when dataelementid = 1630972 and categoryoptioncomboid =  15 then sag2.value end a145,
 				case when dataelementid = 1630995 and categoryoptioncomboid =  15 then sag2.value end a146,
-				case when dataelementid = 1630995 and categoryoptioncomboid =  15 then sag2.value end a147,
+				case when dataelementid = 1631517 and categoryoptioncomboid =  15 then sag2.value end a147,
 				case when dataelementid = 8975 and categoryoptioncomboid =  15 then sag2.value end a148,
 				case when dataelementid = 8976 and categoryoptioncomboid =  15 then sag2.value end a149,
 				case when dataelementid = 1630864 and categoryoptioncomboid =  15 then sag2.value end a150,
@@ -1749,7 +1738,7 @@ from
 				case when dataelementid = 1630884 and categoryoptioncomboid =  15 then sag2.value end a448,
 				case when dataelementid = 1630885 and categoryoptioncomboid =  15 then sag2.value end a449,
 				case when dataelementid = 9487 and categoryoptioncomboid =  15 then sag2.value end a450,
-				case when dataelementid = 9096 and categoryoptioncomboid =  15 then sag2.value end a451,
+				case when dataelementid = 1630774 and categoryoptioncomboid =  1625977 then sag2.value end a451,
 				case when dataelementid = 1630766 and categoryoptioncomboid =  1625977 then sag2.value end a452,
 				case when dataelementid = 1630769 and categoryoptioncomboid =  1625977 then sag2.value end a453,
 				case when dataelementid = 1630770 and categoryoptioncomboid =  1625977 then sag2.value end a454,
@@ -1897,7 +1886,16 @@ from
 				case when dataelementid = 1634022 and categoryoptioncomboid =  1634018 then sag2.value end a596,
 				case when dataelementid = 1634022 and categoryoptioncomboid =  1634021 then sag2.value end a597,
 				case when dataelementid = 1631023 and categoryoptioncomboid =  15 then sag2.value end a598,
-				case when dataelementid = 9468 and categoryoptioncomboid =  15 then sag2.value end a599
+				case when dataelementid = 9468 and categoryoptioncomboid =  15 then sag2.value end a599,
+				case when dataelementid = 8943 and categoryoptioncomboid = 1625509 then sag2.value end a600,
+				case when dataelementid = 8943 and categoryoptioncomboid = 1625510 then sag2.value end a601,
+				case when dataelementid = 1630968 and categoryoptioncomboid = 15 then sag2.value end a602,
+				case when dataelementid = 1630969 and categoryoptioncomboid = 15 then sag2.value end a603,
+				case when dataelementid = 9455 and categoryoptioncomboid = 15 then sag2.value end a604,
+				case when dataelementid = 1631001 and categoryoptioncomboid = 15 then sag2.value end a605,
+				case when dataelementid = 12782114 and categoryoptioncomboid = 15 then sag2.value end a606,
+				case when dataelementid = 9458 and categoryoptioncomboid = 15 then sag2.value end a607,
+				case when dataelementid = 1630936 and categoryoptioncomboid = 15 then sag2.value end a608
 
 
 
@@ -2024,4 +2022,4 @@ from
 group by
    state , div, dis,dishmiscode, block, blockhmiscode, facility, facilityhmiscode,organisationunitid, NIN, tp, st, loc
 order by
-   state , div, dis, block, facility) TO '/DATA/DHIS/Apps/dhis/tomcat/dhis_home/RDreport/UPHMISRawDataReportDecember17.csv' (format CSV, HEADER);
+   state , div, dis, block, facility) TO '/DATA/DHIS/Apps/dhis/tomcat/dhis_home/RDreport/script/sql/Gen/UPHMISRawDataReportDecember17.csv' (format CSV, HEADER);

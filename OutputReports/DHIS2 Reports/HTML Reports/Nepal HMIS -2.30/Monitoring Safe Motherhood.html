@@ -1,0 +1,2015 @@
+<script type="text/javascript">
+	var directDownload=true;
+	var periods = dhis2.report.periods;
+	var period = periods[0];
+	
+	var orgUnit = dhis2.report.organisationUnit;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+				var rOrder = orgUnitChildrens.map(a=>a.id);
+	
+	var ArrStringDEs = ["C6ubEqEew8X;kSnqP4GPOsQ","uchRCkTWX64;AYPkr75uwtk","uchRCkTWX64;AYPkr75uwtk;C6ubEqEew8X","uchRCkTWX64;T9SHzXzpwnJ;GmSYhnEFEPr","WyIabPquKV4;CddyVd7FKmr;uchRCkTWX64","T9SHzXzpwnJ;WyIabPquKV4;T9SHzXzpwnJ;GmSYhnEFEPr;WyIabPquKV4;CddyVd7FKmr","uchRCkTWX64;f4ueiBTKF1T;S4CFTXyEFVc;JLKFv7K2i7Y;v3zKVR5wJt3;PELChUNfW2C;LIo3j809JrK;ueBJTsv0PXr;wsncKYDcmqr;Dior21jcQCe;nwQoDUhFR1z;PGNd6jcxJX4;kV3JhKJWMR8;dHet49ySm06;XAzAbTRbJve","b8jGBrMfBbP;uchRCkTWX64;AYPkr75uwtk","KsMJg5sdGOS;KkSEy2pfgCD;wxIeWrnnZxe;ymw1agzYyF3"];
+	var stringDEs = "";
+	var arrayDEs = stringDEs.split(";");
+	var stringCOCs = "Dj0rmsKZiLJ;xS4ElXqiXoA;XsYqOrbvA7e;FxNqmZfHgEO;m7XVRi1qT1J;vAdaNYgYRX3;EJv9IPWeCTb;gsOm9pEBion;fYKzBP3njcE;zJQ0xbEoQJI;GyhEtL13JfA;fKYuaCH0OuA";
+	var arrayCOCs = stringCOCs.split(";");
+
+	var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;mtNeiqIynwj;kGArzRsYYrO";
+	var url = window.location.href;
+	var params = url.split('=');
+  var gotOr=params[2];
+				var gotPeriod = gotOr.substring(0, 4); 
+				var gotOrg=params[3];
+	////stringOrgGroups+=";"+gotOrg;
+	var arrOrgGroups = stringOrgGroups.split(";");
+	var uidGroupSet = "BXJjJYo3MjI";
+	var stt=0; 
+	var load=1;
+	var tableIDs=["datavalue1","datavalue2","datavalue3","datavalue4","datavalue5","datavalue6","datavalue7","datavalue8","datavalue9"];
+	var iteration = -1;
+	var rep=[false,false,false,false,false,false,false,false,false];
+	var disTotal=[0,0,0,0,0,0,0,0,0,0,0,0,0];
+	var strMonths=["Shrawan","Bhadra","Ashwin","Kartik","Mangsir","Poush","Magh","Falgun","Chaitra","Baishakh","Jestha","Ashadh"];
+	var jsonGroup, jsonNepal, jsonDistricts;
+	//*******************************************************************************************************************************
+	//*******************************************************************************************************************************
+	
+	var rtype=12;
+	jQuery( document ).ready( function(){
+		console.log(periods);
+		console.log(orgUnit);	
+		
+		$(".tab_content").hide();
+		$(".tab_content:first").show(); 
+		
+		//alert(rtype);
+		if(rtype>1)
+			//generateFourMonths();
+		generateAllMonths();
+		getJson();
+		loadall(0);
+		
+			$("ul.tabs li").click(function() {
+			$("ul.tabs li").removeClass("active");
+			$(this).addClass("active");
+			$(".tab_content").hide();
+			var activeTab = $(this).attr("rel"); 
+			$("#"+activeTab).fadeIn(); 
+			}); 
+		
+	});
+	
+				function hideLoad()
+				{
+					document.getElementById("cover").style.display="none";
+					document.getElementById("loads").style.display="none";
+					//document.getElementById("loading").style.display="none";
+					document.getElementsByTagName("body")[0].style.overflow="scroll";
+				}
+
+//get period *************************************************************
+		var fourMonths=[];
+		var engPeriods=[];
+		function getPeriod()
+		{
+			if(rtype>1)
+			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[12]);
+			
+			else			
+			return getPeriodTitle(period);
+		}
+
+		function generateFourMonths()
+		{
+			var n=12;
+			var year = period.substring(0,4);
+			var month = period.substring(4,6);
+			strMonths[0]=getPeriodTitle(month);			
+			fourMonths[0]=period;
+			engPeriods[0]=getEnglishPeriod(fourMonths[0]);
+			period+=";";
+			
+			//alert("n"+n);
+			for(var y=1; y<n; y++)
+			{
+				if(month<12)
+				{
+					month++;
+				}
+				else
+				{
+					month=1;
+					year++;
+				}
+				if(month<10)
+				month="0"+month;
+				strMonths[y]=getPeriodTitle(month);
+				fourMonths[y]=""+year+month;
+				engPeriods[y]=getEnglishPeriod(fourMonths[y]);
+				period+=fourMonths[y]+";";
+			}
+			
+		}
+		
+						function generateAllMonths()
+		{
+			var n = 12;
+			gotPeriod = gotPeriod.substring(0,4) + '04';
+			var year = gotPeriod.substring(0,4);
+			var month = '04';
+			fourMonths[0]=gotPeriod;
+			gotPeriod+=";";
+			for(var y=1; y<n; y++)
+			{
+			
+			if(month<12)
+				{
+					month++;
+				}
+				else
+				{
+					month=1;
+					year++;
+				}
+			if(month<10)
+			{
+			month="0"+month;
+			}
+				fourMonths[y]=year+""+month;
+				gotPeriod+=fourMonths[y]+";";
+				}
+			
+			
+		}
+		
+		function getEnglishPeriod(cprd)
+		{
+			//alert(cprd);
+			var n=12;
+			var year = cprd.substring(0,4);
+			var month = cprd.substring(4,6);
+			
+			year -= 57;
+			month=parseInt(month);
+			//alert(month);
+			if(month>9)
+			{
+				month += 3;	
+				month %= 12;
+				year++;
+			}
+			else
+			{
+				month += 3;
+			}
+				if(month<10)
+				month="0"+month;
+				//alert((""+year)+month);
+				return((""+year)+month);
+		}
+		//207107->2071 Kartik 
+		function getPeriodTitle(month)
+		{		
+			if(month=="01" || month=="1")
+				strMonth="Baishakh";
+			else if(month=="02" || month=="2")
+				strMonth="Jestha";
+			else if(month=="03" || month=="3")
+				strMonth="Ashadh";
+			else if(month=="04" || month=="4")
+				strMonth="Shrawan";
+			else if(month=="05" || month=="5")
+				strMonth="Bhadra";
+			else if(month=="06" || month=="6")
+				strMonth="Ashwin";
+			else if(month=="07" || month=="7")
+				strMonth="Kartik";
+			else if(month=="08" || month=="8")
+				strMonth="Mangsir";
+			else if(month=="09" || month=="9")
+				strMonth="Poush";
+			else if(month=="10")
+				strMonth="Magh";
+			else if(month=="11")
+				strMonth="Falgun";
+			else if(month=="12")
+				strMonth="Chaitra";
+			
+			return strMonth;
+		}
+//************************************************************************
+
+
+		function loadall(t)
+		{
+			load=1;
+			stt=0;
+			
+			iteration=t;
+			if(!rep[t])
+			{				
+				currentTableID=tableIDs[iteration];	
+				rep[t]=true;
+			}								
+		}
+
+//*********************************************************************************
+//********************************************************************************
+		function getJson()
+		{
+			for(var c=0; c<ArrStringDEs.length;c++)
+			stringDEs=stringDEs+ArrStringDEs[c]+";";							
+			arrayDEs=stringDEs.split(";");
+			getAllDistricts(0);
+		}
+
+		var i=0;
+		function getAllDistricts(d)
+		{
+			//getting json for regions' districts, 5 means 5 regions, namely central, western etc
+				if(orgUnitChildrens.length!=0)
+				{
+					if(d<orgUnitChildrens.length)
+					{
+						if(0<orgUnitChildrens.length)
+						{					
+							if(orgUnit.id=="cCTQiGkKcTk")
+							{
+							//	var rOrder=["fNWuOzDCRSZ","SgKEcvFdUDb","pbVS1HW9NrY","TyDBQRJzkBw","z5ZOAH5rBFu"];
+								var orguid=rOrder[d];
+							}
+							else
+							{
+								var orguid=orgUnitChildrens[d].id;
+							}
+							
+							//alert(orguid);
+							$.get("../api/organisationUnits/"+orguid+".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents",function(json)
+							{					
+								stringOrgChild(json);
+								if(i==orgUnitChildrens.length-1)
+								{
+									console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&dimension=pe:"+gotPeriod);
+									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&dimension=pe:"+gotPeriod,function(json){
+										
+										jsonDistricts=json;
+										printAll();
+										hideLoad();
+									});
+								}
+								i++;
+								
+								if(i<orgUnitChildrens.length)
+									getAllDistricts(i);								
+							});
+						}								
+					}
+				}
+		}
+//**************************************************************************************************************
+//**************************************************************************************************************
+	function printAll()
+	{
+		for(var c=0; c<9;c++)
+		{
+			iteration=c;
+			currentTableID=tableIDs[iteration];	
+			printChildren(jsonDistricts,dCodes);
+		}
+	}
+//**********************************************************************************
+//*************************storeChildren*****************************************
+		var dIDs="";
+		var	dCodes="";
+		var s=0;
+		var isFirst=true;
+		
+		function storeChildren(disId,disCode)
+		{			
+			if(isFirst)
+			{
+				dIDs=disId+";";
+				dCodes=disCode+";";
+				isFirst=false;
+			}
+			else
+			{
+				dIDs=dIDs+disId+";";
+				dCodes=dCodes+disCode+";";
+			}
+			s++;
+			
+			//alert(dCodes);
+		}
+
+///********************************************************************************
+
+//***************************sorting***********************************
+			var ChildCount=0;
+			var childrens=[];
+			var allCodes=[];
+			var regionsLoaded=0;
+
+function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+	
+		function stringOrgChild(json)
+		{
+				var stringOrg = "";
+				var stringCode = "";
+				
+				ChildCount=0;
+				childrens=[];
+				
+				json.children.forEach(function(child)
+				{
+					//console.log(child);	
+					var childID=child.id;
+					var childCode=child.code;
+					childrens.push([childID,childCode]);
+					childrens.sort(arraySorting);
+					ChildCount++;
+				});
+				
+				sortChildren();
+				//alert(ChildCount);
+				
+				for(var f=0; f<ChildCount; f++)
+				{
+					var childID=childrens[f][0];
+					var childCode=childrens[f][1];
+					stringOrg+=childID+";";
+					stringCode+=childCode+";";					
+				}
+				
+					stringOrg+=json.id;
+					stringCode+="Region";
+				storeChildren(stringOrg,stringCode);
+		}
+
+
+		function sortChildren()
+		{
+			for(var u=0;u<ChildCount;u++)
+			{
+				for(var k=0; k<ChildCount-1; k++)
+				{
+					if(parseInt(childrens[k][1])>parseInt(childrens[k+1][1]))
+					{
+						var tempID=childrens[k][0];
+						var tempCode=childrens[k][1];
+						
+						childrens[k][1]=childrens[k+1][1];
+						childrens[k][0]=childrens[k+1][0];
+						childrens[k+1][1]=tempCode;
+						childrens[k+1][0]=tempID;
+					}
+				}
+			}
+		}
+//******************************************************************		
+</script>
+
+	<style>
+		.ylw
+		{
+			background:#ffff99;
+		}
+		
+		.gray
+		{
+			background:#ccc;
+		}
+	</style>
+<script>
+var ct=0;
+	var targetPopulation = []; //array
+	var targetPopulation1 = [];
+	var targetPopulation2 = [];
+function printHeader(currentIteration,numOfMonths)
+{
+	var targetPopulation = []; //array
+	var targetPopulation1 = [];
+	var targetPopulation2 = [];
+	if(currentIteration==0)
+	{
+		//grand title
+		var totalCols = 3 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+" style='font-weight:bold;padding:5px;font-size:15px;' align='center'>SAFE MOTHERHOOD: Antenatal Care First Visit by Adolescent</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">NUMBER OF FIRST (New) ANTENATAL VISITS MADE BY <20 YEARS PREGNANT WOMEN BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Propotion of </td>";		
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'></td>";
+			htmRep+="<td align='center'>visit by < 20 yr.</td>";
+		htmRep+="</tr>";
+	}
+	else if(currentIteration==1)
+	{
+		//grand title
+		var totalCols = 5 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+"  style='font-weight:bold;padding:5px;font-size:15px;' align='center'>SAFE MOTHERHOOD: Antenatal Care First Visit by All</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Target</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Monthly</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">NUMBER OF FIRST (New) ANTENATAL VISITS MADE BY BOTH <20 AND >20 YEARS PREGNANT WOMEN BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>ANC</td>";		
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			htmRep+="<td align='center'>population</td>";
+			htmRep+="<td align='center'>targert pop.</td>";
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'></td>";
+			htmRep+="<td align='center'>Coverage</td>";
+		htmRep+="</tr>";
+	}
+	else if(currentIteration==2)
+	{
+		//grand title
+		var totalCols = 4 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+"  style='font-weight:bold;padding:5px;font-size:15px;' align='center'>SAFE MOTHERHOOD: Antenatal Care 4 Visits</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Target</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">NUMBER OF PREGNANT WOMEN HAVING ANC 4 VISITS BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Proportion</td>";		
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			htmRep+="<td align='center'>population</td>";
+			
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'></td>";
+			htmRep+="<td align='center'>4th among 1st</td>";
+		htmRep+="</tr>";
+	}
+	
+	else if(currentIteration==3)
+	{
+		//grand title
+		var totalCols = 4 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+"  style='font-weight:bold;padding:5px;font-size:15px;' align='center'>SAFE MOTHERHOOD: Deliveries Conducted by Skill Birth Attendant (Doctor, Nurse & ANM) at Health Institution and Home</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Annual</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">NUMBER OF PREGNANT WOMEN HAVING ANC 4 VISITS BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";
+			htmRep+="<td align='center'>% of deliveries</td>";		
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			htmRep+="<td align='center'>target pop</td>";
+			
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'></td>";
+			htmRep+="<td align='center'>'conducted by SBA**</td>";
+		htmRep+="</tr>";
+	}
+	
+	else if(currentIteration==4)
+	{
+		//grand title
+		var totalCols = 4 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+"  style='font-weight:bold;padding:5px;font-size:15px;' align='center'>SAFE MOTHERHOOD: Deliveries Conducted by Health Workers (Excluding SBA) at Health Institution and Home</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Annual</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">ACHIEVEMENT BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>% of deliveries</td>";		
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			htmRep+="<td align='center'>target pop</td>";
+			
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'></td>";
+			htmRep+="<td align='center'>''conducted by HW**</td>";
+		htmRep+="</tr>";
+	}
+	
+	else if(currentIteration==5)
+	{
+		//grand title
+		var totalCols = 3 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+"  style='font-weight:bold;padding:5px;font-size:15px;' align='center'>'SAFE MOTHERHOOD:  Institution Delivery</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">ACHIEVEMENT BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Proportion of</td>";		
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'></td>";
+			htmRep+="<td align='center'>Delivery at B/C EOC**</td>";
+		htmRep+="</tr>";
+	}
+	
+	else if(currentIteration==6)
+	{
+		//grand title
+		var totalCols = 4 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+"  style='font-weight:bold;padding:5px;font-size:15px;' align='center'>'SAFE MOTHERHOOD:  Number of mothers treated for Obstetric Complication from B/C EOC centers</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Expcted no. of obs. Comp.#</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">ACHIEVEMENT BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>'% Met need of </td>";		
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			htmRep+="<td align='center'></td>";
+			
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'></td>";
+			htmRep+="<td align='center'> obstractics Complication **</td>";
+		htmRep+="</tr>";
+	}
+	
+	else if(currentIteration==7)//------------------------------------------------------------------------------------------------------------
+	{
+		//grand title
+		var totalCols = 5 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+"  style='font-weight:bold;padding:5px;font-size:15px;' align='center'>SAFE MOTHERHOOD: Postnatal Care</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Annual</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Monthly</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">NO. OF FIRST POSTNATAL CARE NEW VISITS BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>'% of 1st PNC as of</td>";		
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			htmRep+="<td align='center'>target pop</td>";
+			htmRep+="<td align='center'>target pop</td>";
+			
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'></td>";
+			htmRep+="<td align='center'> Expected Pregnancy </td>";
+		htmRep+="</tr>";
+	}
+	
+	else if(currentIteration==8)//------------------------------------------------------------------------------------------------------------
+	{
+		//grand title
+		var totalCols = 2 + parseInt(numOfMonths);
+		htmRep="<tr><td colspan="+totalCols+"  style='font-weight:bold;padding:5px;font-size:15px;' align='center'>SAFE MOTHERHOOD: Number of Safe Abortion Cases (CAC)</td></tr>";
+		
+		//first row of heading
+		htmRep+="<tr style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>Name of</td>";
+			htmRep+="<td align='center' colspan="+numOfMonths+">ACHIEVEMENT BY MONTH</td>";
+			htmRep+="<td align='center'style='border-bottom-color:#ccc'>TOTAL</td>";	
+		htmRep+="</tr>";
+	
+		//second row of heading
+		htmRep+="<tr align='center' style='background:#ccc; font-weight:bold; padding:4px;'>";
+			htmRep+="<td align='center'  style='height:25px;'>Districts</td>";
+			htmRep+="<td align='center'></td>";
+			
+			for(var u=0; u<numOfMonths; u++)
+			htmRep+="<td align='center'>"+strMonths[u] + " "+fourMonths[u].substring(0,4)+"</td>";
+			
+			htmRep+="<td align='center'>Total</td>";	
+		htmRep+="</tr>";
+	}
+	
+	var tabl=tableIDs[currentIteration];
+	//alert(tabl+htmRep);
+	$("#"+tabl).append(htmRep);
+}
+
+var storeJson;
+
+function printChildren(json,disCodes)
+{
+		storeJson=json;
+		var htmlReport="";
+		var arrayCodes=disCodes.split(";");
+		printHeader(iteration,12);
+		
+		
+		
+		//alert(arrayCodes.length);
+		if(iteration==0)
+		{
+			var i=0;
+			json.metaData.dimensions.ou.forEach(function(child){
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+			
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			var annualTotal=0;
+			for(var r=0; r<12; r++)
+			{
+				var x=getValueForCategoryOptionCombo(json, 'C6ubEqEew8X',child, 'kdsirVNKdhm',fourMonths[r]);
+				htmlReport+="<td align='center'>"+x+"</td>";//----------------------------------------------------------------------------------------//
+				disTotal[r]=parseInt(disTotal[r])+x;
+				annualTotal+=x;
+			}
+			
+				grandTotal+=annualTotal;
+				grandTotal/=2;
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+				var y = getValueForCategoryOptionCombo(json, 'C6ubEqEew8X',child, 'kdsirVNKdhm',fourMonths[r]);
+					y += getValueForCategoryOptionCombo(json, 'kSnqP4GPOsQ',child, 'kdsirVNKdhm',fourMonths[r]);
+					
+					var t=annualTotal/y;
+				htmlReport += "<td align='center'>"+t.toFixed(2)+"</td>";
+				htmlReport+="</tr>";	
+			});		
+		}
+		else if(iteration==1)
+		{
+			var i=0;
+			json.metaData.dimensions.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			
+			var annualTargetPop = getValueForTargets(json, 'uchRCkTWX64',child, 'kdsirVNKdhm');
+			htmlReport+="<td align='center'>"+annualTargetPop+"</td>";
+			htmlReport+="<td align='center'></td>";
+			var annualTotal=0;
+			for(var r=0; r<12; r++)
+			{
+				var x=getValueForCategoryOptionCombo(json, 'AYPkr75uwtk',child, 'kdsirVNKdhm',fourMonths[r]);
+				htmlReport+="<td align='center'>"+x+"</td>";
+				disTotal[r]=disTotal[r]+x;
+				annualTotal+=x;
+			}
+			
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+				htmlReport+="<td align='center'>"+(annualTotal/annualTargetPop).toFixed(2)+"</td>";
+				htmlReport+="</tr>";
+			});		
+		}
+		else if(iteration==2)
+		{
+			var i=0;
+			json.metaData.dimensions.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			var annualTargetPop = getValueForCategoryOptionCombo(json, 'uchRCkTWX64',child, 'kdsirVNKdhm',fourMonths[r]);
+			htmlReport+="<td align='center'>"+annualTargetPop+"</td>";
+			var annualTotal=0;
+			var totalFirstVisits = 0;
+			
+			for(var r=0; r<12; r++)
+			{
+				var x=getValueForTargets(json, 'AYPkr75uwtk',child, 'kdsirVNKdhm');
+				htmlReport+="<td align='center'>"+x+"</td>";
+				disTotal[r]=disTotal[r]+x;
+				annualTotal+=x;
+			}
+			
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+				
+				for(var r=0; r<12; r++)
+			{
+				var x = getValueForCategoryOptionCombo(json, 'C6ubEqEew8X',child, 'kdsirVNKdhm',fourMonths[r]);
+		//----------------------------------------------------------------------------------------//
+				disTotal[r]=parseInt(disTotal[r])+x;
+				totalFirstVisits+=x;
+			}
+				htmlReport+="<td align='center'>"+(annualTotal/totalFirstVisits).toFixed(2)+"</td>";
+			});		
+				htmlReport+="</tr>";	
+		}
+		
+		else if(iteration==3)
+		{
+			var i=0;
+			json.metaData.dimensions.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			var annualTargetPop = getValueForTargets(json, 'uchRCkTWX64',child, 'kdsirVNKdhm');
+			targetPopulation.push(annualTargetPop);
+			htmlReport+="<td align='center'>"+annualTargetPop+"</td>";
+			var annualTotal=0;
+			
+			for(var r=0; r<12; r++)
+			{
+				var x=getValueForCategoryOptionCombo(json, 'T9SHzXzpwnJ',child, 'kdsirVNKdhm',fourMonths[r]) + getValueForCategoryOptionCombo(json, 'GmSYhnEFEPr',child, 'kdsirVNKdhm',fourMonths[r]) ;
+				htmlReport+="<td align='center'>"+x+"</td>";
+				disTotal[r]=disTotal[r]+x;
+				annualTotal+=x;
+			}
+			
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+				
+				htmlReport+="<td align='center'>"+((annualTotal/annualTargetPop)*100 ).toFixed(2)+"</td>";
+			});		
+				htmlReport+="</tr>";	
+		}
+		
+		else if(iteration==4)
+		{
+			var i=0;
+			json.metaData.dimensions.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			var annualTargetPop = getValueForTargets(json, 'uchRCkTWX64',child, 'kdsirVNKdhm');
+			targetPopulation1.push(annualTargetPop);
+			htmlReport+="<td align='center'>"+annualTargetPop+"</td>";
+			var annualTotal=0;
+			
+			for(var r=0; r<12; r++)
+			{
+				var x=getValueForCategoryOptionCombo(json, 'WyIabPquKV4',child, 'kdsirVNKdhm',fourMonths[r]) + getValueForCategoryOptionCombo(json,'CddyVd7FKmr',child, 'kdsirVNKdhm',fourMonths[r]) ;
+				htmlReport+="<td align='center'>"+x+"</td>";
+				disTotal[r]=disTotal[r]+x;
+				annualTotal+=x;
+			}
+			
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+				
+				htmlReport+="<td align='center'>"+((annualTotal/annualTargetPop)*100).toFixed(2) +"</td>";
+			});		
+				htmlReport+="</tr>";	
+		}
+		
+		
+		else if(iteration==5)
+		{
+			var i=0;
+			json.metaData.dimensions.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			var annualTotal=0;
+			
+			for(var r=0; r<12; r++)
+			{
+				var x=getValueForCategoryOptionCombo(json, 'T9SHzXzpwnJ',child, 'kdsirVNKdhm',fourMonths[r]) + getValueForCategoryOptionCombo(json,'WyIabPquKV4',child, 'kdsirVNKdhm',fourMonths[r]);
+				var totalSBA = getValueForCategoryOptionCombo(json, 'T9SHzXzpwnJ',child, 'kdsirVNKdhm',fourMonths[r]) + getValueForCategoryOptionCombo(json,'GmSYhnEFEPr',child, 'kdsirVNKdhm',fourMonths[r]);
+				var totalNonSBA = getValueForCategoryOptionCombo(json, 'WyIabPquKV4',child, 'kdsirVNKdhm',fourMonths[r]) + getValueForCategoryOptionCombo(json,'CddyVd7FKmr',child, 'kdsirVNKdhm',fourMonths[r]) 
+				htmlReport+="<td align='center'>"+x+"</td>";
+				disTotal[r]=disTotal[r]+x;
+				annualTotal+=x;
+			}
+			
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+				var y = totalSBA + totalNonSBA;
+				htmlReport+="<td align='center'>"+((annualTotal/y)*100).toFixed(2) +"</td>";
+			});		
+				htmlReport+="</tr>";	
+		}
+		
+		
+		else if(iteration==6)
+		{
+			var i=0;
+			json.metaData.dimensions.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			
+			var t = getValueForTargets(json, 'uchRCkTWX64',child, 'kdsirVNKdhm')* 0.15;
+			htmlReport+="<td align='center' >"+t+"</td>";
+			var annualTotal=0;
+			
+			for(var r=0; r<12; r++)
+			{
+				var x  = getValueForCategoryOptionCombo(json, 'f4ueiBTKF1T',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'S4CFTXyEFVc',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'JLKFv7K2i7Y',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'v3zKVR5wJt3',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'PELChUNfW2C',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'LIo3j809JrK',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'ueBJTsv0PXr',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'wsncKYDcmqr',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'Dior21jcQCe',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'nwQoDUhFR1z',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'PGNd6jcxJX4',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'kV3JhKJWMR8',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'dHet49ySm06',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json,'XAzAbTRbJve',child, 'kdsirVNKdhm',fourMonths[r]);
+				/*var totalSBA = getValueForCategoryOptionCombo(json, 'T9SHzXzpwnJ',child, 'kdsirVNKdhm',fourMonths[r]) + getValueForCategoryOptionCombo(json,'GmSYhnEFEPr',child, 'kdsirVNKdhm',fourMonths[r]);
+				var totalNonSBA = getValueForCategoryOptionCombo(json, 'WyIabPquKV4',child, 'kdsirVNKdhm',fourMonths[r]) + getValueForCategoryOptionCombo(json,'CddyVd7FKmr',child, 'kdsirVNKdhm',fourMonths[r]) 
+				*/
+				htmlReport+="<td align='center'>"+x+"</td>";
+				disTotal[r]=disTotal[r]+x;
+				annualTotal+=x;
+			}
+			
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+				htmlReport+="<td align='center'>"+((annualTotal/t)*100).toFixed(2) +"</td>";
+			});		
+				htmlReport+="</tr>";	
+		}
+		
+		else if(iteration==7)
+		{
+			var i=0;
+		json.metaData.dimensions.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			
+			var annualTargetPop = getValueForTargets(json, 'uchRCkTWX64',child, 'kdsirVNKdhm');
+			
+			targetPopulation2.push(annualTargetPop);
+			
+			htmlReport+="<td align='center' >"+annualTargetPop+"</td>";
+			htmlReport+="<td align='center' ></td>";
+			
+			var annualTotal=0;
+			var totalFirstVisits =0;
+			for(var r=0; r<12; r++)
+			{
+				var x  = getValueForCategoryOptionCombo(json, 'b8jGBrMfBbP',child, 'kdsirVNKdhm',fourMonths[r]);
+				totalFirstVisits = getValueForCategoryOptionCombo(json, 'AYPkr75uwtk',child, 'kdsirVNKdhm',fourMonths[r]);
+				htmlReport+="<td align='center'>"+x+"</td>";
+				disTotal[r]=disTotal[r]+x;
+				annualTotal+=x;
+			}
+			
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+				htmlReport+="<td align='center'>"+((totalFirstVisits/annualTargetPop)*100).toFixed(2) +"</td>";
+			});		
+				htmlReport+="</tr>";	
+		}
+		
+		else if(iteration==8)
+		{
+			var i=0;
+			json.metaData.dimensions.ou.forEach(function(child){
+			
+			if(arrayCodes[i]!='undefined')
+				var dcode=arrayCodes[i];
+			else
+				var dcode="*";
+							
+			if(arrayCodes[i]=="Region"){
+				htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'>";
+			}
+			else
+			{
+				htmlReport+="<tr>";
+			}
+			htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+			i++;
+			
+			
+			var annualTotal=0;
+		
+			for(var r=0; r<12; r++)
+			{
+				var x  = getValueForCategoryOptionCombo(json, 'KsMJg5sdGOS',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json, 'KkSEy2pfgCD',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json, 'wxIeWrnnZxe',child, 'kdsirVNKdhm',fourMonths[r]);
+					x += getValueForCategoryOptionCombo(json, 'ymw1agzYyF3',child, 'kdsirVNKdhm',fourMonths[r]);
+				
+				htmlReport+="<td align='center'>"+x+"</td>";
+				disTotal[r]=disTotal[r]+x;
+				annualTotal+=x;
+			}
+			
+				htmlReport+="<td align='center'>"+annualTotal+"</td>";
+			});		
+				htmlReport+="</tr>";	
+		}
+		
+		$("#"+currentTableID).append(htmlReport);
+		
+		printFooter(iteration,12);
+}
+
+var grandTotal = 0;
+
+function printFooter(currentIteration,numOfMonths)
+{
+	var htmlReport="";
+	if(currentIteration==0)
+	{
+		// first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='1'> District Total </td>";
+			//special cell : total of everything
+			htmlReport+="<td align='center'></td>";
+			
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center'>"+disTotal[r]/2+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+		htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+			
+			var cum = 0;
+			for(var r=0; r<12; r++)
+			{
+				cum += disTotal[r]/2;
+				htmlReport+="<td align='center'>"+cum+"</td>";
+			}
+					
+		htmlReport+="<td bgcolor='000' colspan='1'></td>";
+		htmlReport+="</tr>";
+		
+		//third row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+		htmlReport+="<td colspan='2'>'Proportion of 1st New ANC Visits made by <20 Year** </td>";
+			
+			var per = 0;
+			var totalANC=0;
+			
+			storeJson.metaData.dimensions.ou.forEach(function(child)
+			{
+				totalANC += getValueForTargets(storeJson, 'C6ubEqEew8X',child, 'kdsirVNKdhm') + getValueForTargets(storeJson, 'kSnqP4GPOsQ',child, 'kdsirVNKdhm');
+			
+			});
+			for(var r=0; r<12; r++)
+			{
+				
+				per = ((disTotal[r]/2)/totalANC)*100;
+				htmlReport+="<td align='center'>"+per.toFixed(2)+"</td>";
+			}
+					
+		htmlReport+="<td bgcolor='000' colspan='1'></td>";
+		htmlReport+="</tr>";
+	}
+	else if(currentIteration==1)
+	{
+		//first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> District Total </td>";
+			
+			//special cell : total of everything
+			htmlReport+="<td align='center'></td>";
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center'>"+disTotal[r]/2+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td></td>";
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+			htmlReport+="<td align='center'></td>";
+				
+				var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+cum+"</td>";
+				}
+						
+			htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+		
+		//third row of footer
+		
+			//total of everything
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+		htmlReport+="<td colspan='2'> 'Cummulative ANC Service Coverage </td>";
+		htmlReport+="<td align='center'></td>";
+			
+			var targetPop =0;
+			
+			storeJson.metaData.dimensions.ou.forEach(function(child)
+			{
+				targetPop += getValueForTargets(storeJson, 'uchRCkTWX64',child, 'kdsirVNKdhm');
+			});
+			
+			var per = 0;
+			var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+((cum/targetPop)*100).toFixed(2)+"</td>";
+				}
+					
+		htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+	}
+	else if(currentIteration==2)
+	{
+		//first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='1'> District Total </td>";
+			
+			//special cell : total of everything
+			htmlReport+="<td align='center'> </td>";
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center' >"+(disTotal[r]/2)+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td></td>";
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+				
+				var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+cum+"</td>";
+				}
+						
+			htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+		
+		//third row of footer
+		
+		//total of everything
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+		htmlReport+="<td colspan='2'>Prop. of Preg.mothers having 4th visits among first visit by month</td>";
+			
+			var per = 0;
+			var disTotal1 = [];
+			
+			for(var r=0; r<12; r++)
+			{
+				var x=0;
+				storeJson.metaData.dimensions.ou.forEach(function(child){
+				x = getValueForCategoryOptionCombo(storeJson, 'C6ubEqEew8X',child, 'kdsirVNKdhm', engPeriods[r]) + getValueForTargets(storeJson, 'kSnqP4GPOsQ',child, 'kdsirVNKdhm', engPeriods[r]);
+				});
+				disTotal1[r]=disTotal1[r]+x;
+			}
+			
+			for(var r=0; r<12; r++)
+			{
+				per = (disTotal[r]/2)/(disTotal1[r]/2);
+				htmlReport+="<td align='center'>"+per.toFixed(2)+"</td>";
+			}
+					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+	}
+	
+	else if(currentIteration==3)
+	{
+		//first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> District Total </td>";
+			
+			//special cell : total of everything
+			htmlReport+="<td align='center'></td>";
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center'>"+disTotal[r]/2+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td></td>";
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+				
+				var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+cum+"</td>";
+				}
+						
+			htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+		
+		//third row of footer
+		
+		//total of everything
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+		htmlReport+="<td colspan='2'>'% of Deliveries Conducted by SBA by Month**</td>";
+			
+			var per = 0;
+						
+			for(var r=0; r<12; r++)
+			{
+				per = ((disTotal[r]/2)/targetPopulation[r])*100;
+				htmlReport+="<td align='center'>"+per.toFixed(2)+"</td>";
+			}
+					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+	}
+	
+	else if(currentIteration==4)
+	{
+		//first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='1'> District Total </td>";
+			
+			//special cell : total of everything
+			htmlReport+="<td align='center'></td>";
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center'>"+disTotal[r]/2+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td></td>";
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+				
+				var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+cum+"</td>";
+				}
+						
+			htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+		
+		//third row of footer
+		
+		//total of everything
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+		htmlReport+="<td colspan='2'>'% of Deliveries Conducted by HW by Month**</td>";
+			
+			var per = 0;
+						
+			for(var r=0; r<12; r++)
+			{
+				per = ((disTotal[r]/2)/targetPopulation1[r])*100;
+				htmlReport+="<td align='center'>"+per.toFixed(2)+"</td>";
+			}
+					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+	}
+	
+	else if(currentIteration==5)
+	{
+		//first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> District Total </td>";
+			
+			//special cell : total of everything
+			htmlReport+="<td align='center'></td>";
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center'>"+disTotal[r]/2+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td></td>";
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+				
+				var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+cum.toFixed(2)+"</td>";
+				}
+						
+			htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+		
+	}
+	
+	else if(currentIteration==6)
+	{
+		//first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='1'> District Total </td>";
+			
+			//special cell : total of everything
+			htmlReport+="<td align='center'></td>";
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center'>"+disTotal[r]/2+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td></td>";
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+				
+				var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+cum.toFixed(2)+"</td>";
+				}
+						
+			htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+		
+	}
+	
+	else if(currentIteration==7)
+	{
+		//first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> District Total </td>";
+			
+			//special cell : total of everything
+			htmlReport+="<td align='center'></td>";
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center'>"+disTotal[r]/2+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td></td>";
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+				
+				var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+cum+"</td>";
+				}
+						
+			htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+		
+		//third row of footer
+		
+		//total of everything
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+		htmlReport+="<td colspan='2'>'% of 1st PNC as of Expected Pregnancies by Month</td>";
+			
+			var per = 0;
+						
+			for(var r=0; r<12; r++)
+			{
+				per = ((disTotal[r]/2)/targetPopulation2[r])*100;
+				htmlReport+="<td align='center'>"+per.toFixed(2)+"</td>";
+			}
+					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+	}
+	
+	else if(currentIteration==8)
+	{
+		//first row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='1'> District Total </td>";
+			
+			//special cell : total of everything
+			htmlReport+="<td align='center'></td>";
+			
+			//district total printing
+			for(var r=0; r<numOfMonths; r++)
+			{					
+				htmlReport+="<td align='center'>"+disTotal[r]/2+"</td>";
+			}
+			
+			//other totals
+			htmlReport+="<td align='center'>"+grandTotal+"</td>";
+			htmlReport+="<td></td>";
+		htmlReport+="</tr>";
+		
+		//second row of footer
+		htmlReport+="<tr style='font-weight:bold; background:#eee'>";
+			htmlReport+="<td colspan='2'> Cumulative Achievement by Month </td>";
+				
+				var cum = 0;
+				for(var r=0; r<12; r++)
+				{
+					cum += disTotal[r]/2;
+					htmlReport+="<td align='center'>"+cum.toFixed(2)+"</td>";
+				}
+						
+			htmlReport+="<td bgcolor='000' colspan='2'></td>";
+		htmlReport+="</tr>";
+		
+	}
+	
+	$("#"+currentTableID).append(htmlReport);
+		 if(directDownload == true && currentIteration == 8)
+		tablesToExcel(['datavalue1','datavalue2','datavalue3','datavalue4','datavalue5','datavalue6','datavalue7','datavalue8','datavalue9'], ['SMH 1','SMH 2','SMH 3','SMH 4','SMH 5','SMH 6','SMH 7','SMH 8','SMH 9'], 'Monitoring Safe Motherhood.xls'); 
+}
+
+//******************************************************************				
+				
+		function getValueSum(json,de,orgGroup){
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][1] == orgGroup && json.rows[i][2]!= null)
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+		
+		function getValueForTargets( json, de, orgUnit, coc)
+		{
+			var result=0;
+			//console.log(json);
+			for (var i=0; i < json.rows.length; i++){
+				
+				if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][4] != null)
+				{
+					result+=parseInt(json.rows[i][4]);
+				}
+			}
+			return result;
+		}
+		
+		function getValueForCategoryOptionCombo( json, de, orgUnit, coc, pe)
+		{
+			var result=0;
+			//console.log(json);
+			for (var i=0; i < json.rows.length; i++){
+				
+				if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][4] != null && json.rows[i][3] == pe)
+				{
+					result+=parseInt(json.rows[i][4]);
+				}
+			}
+			return result;
+		}
+
+		function getValueTotal(json,de){
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][2]!= null)
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+</script>
+
+
+
+		<!-- download script ------------------------------------------------------
+		--------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------- -->
+<script type="text/javascript">
+	function convert(dataURI) 
+	{
+		  // convert base64 to raw binary data held in a string
+		  // doesn't handle URLEncoded DataURIs
+		  var byteString;
+		  if (dataURI.split(',')[0].indexOf('base64') >= 0)
+			  byteString = atob(dataURI.split(',')[1]);
+		  else
+			  byteString = unescape(dataURI.split(',')[1]);
+		  // separate out the mime component
+		  var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+		  // write the bytes of the string to an ArrayBuffer
+		  var ab = new ArrayBuffer(byteString.length);
+		  var ia = new Uint8Array(ab);
+		  for (var i = 0; i < byteString.length; i++) {
+			  ia[i] = byteString.charCodeAt(i);
+		  }
+
+		  // write the ArrayBuffer to a blob, and you're done
+		  return new Blob([ab],{type: mimeString});
+	}
+	
+	 var tablesToExcel = (function() {
+    var uri = 'data:application/vnd.ms-excel;base64,'
+    , tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+      + '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>ThaiND</Author><Created>{created}</Created></DocumentProperties>'
+	  +'<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:Size="8"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s26"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s23"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="0"/></Borders><Font ss:Bold="1"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s24"><Alignment ss:Horizontal="Left" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s28"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s29"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style></Styles>'
+      + '{worksheets}</Workbook>'
+    , tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/>{rows}</Table></Worksheet>'
+	, tmplCellXML = '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>'
+    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+	
+    return function(tables, wsnames, wbname) {
+		var ctx = "";
+		var workbookXML = "";
+		var worksheetsXML = "";
+		var rowsXML = "";
+		 console.log(tables);
+		for (var i = 0; i < tables.length; i++) 
+		{
+		
+			if (!tables[i].nodeType) 
+			tables[i] = document.getElementById(tables[i]);
+		
+			for (var j = 0; j < tables[i].rows.length; j++) 
+			{
+				rowsXML += '<Row>'
+				for (var k = 0; k < tables[i].rows[j].cells.length; k++) 
+				{
+					
+					var cols=tables[i].rows[j].cells[k].getAttribute("colspan");
+					var rws=tables[i].rows[j].cells[k].getAttribute("rowspan");
+					var styl=tables[i].rows[j].cells[k].getAttribute("bgcolor");
+					var styl2=tables[i].rows[j].getAttribute("bgcolor");
+					var cls=tables[i].rows[j].cells[k].getAttribute("class");
+					var algn=tables[i].rows[j].cells[k].getAttribute("align");
+					var cls2=tables[i].rows[j].getAttribute("class");
+					
+						var dataType = 'String';
+						var dataValue = tables[i].rows[j].cells[k].innerHTML;
+						var typeD="";
+						var parsed=parseInt(dataValue);
+						
+						if (parsed==dataValue)
+						{
+							typeD="Number";
+						}
+						else
+						{
+							typeD="String";
+						}
+					var n;
+						if(cls)
+						{
+							n=cls.indexOf("value"); 
+						}		
+						
+					if(cls=="all2" || n>=0)
+					{
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:"s23",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid: "s23",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else if(cls2=="ylw")
+					{
+						if(k==1&&j>3)
+						var cl="s22";
+						else
+						var cl="s26";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else if(cls2=="gray")
+					{
+						if(k==1&&j>3)
+						var cl="s28";
+						else
+						var cl="s29";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					else if(styl2)
+					{
+						if(k==1&&j>3)
+						var cl="s22";
+						else
+						var cl="s26";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					
+					else if(styl)
+					{
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:"s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+							ctx = {data: dataValue, mrg: 0, sid: "s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else
+					{
+						if(cols)
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"Default",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+
+						else
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: 0, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: 0, sid: "Default",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+					
+					}
+					
+				}
+				  rowsXML += '</Row>'
+			}
+			ctx = {rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i};
+			worksheetsXML += format(tmplWorksheetXML, ctx);
+			rowsXML = "";
+      }
+
+		ctx = {created: (new Date()).getTime(), worksheets: worksheetsXML};
+		workbookXML = format(tmplWorkbookXML, ctx);
+
+		console.log(workbookXML);
+
+		var blobUrl = URL.createObjectURL(convert(uri + base64(workbookXML)));
+		var link = document.createElement("A");
+		link.href = blobUrl;
+		//link.href = uri + base64(workbookXML);
+		link.download = wbname || 'Workbook.xls';
+		link.target = '_blank';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+    }
+  })();
+</script>
+<script type="text/javascript">
+$(document).ready(function () {
+   $("input[value=Back]").closest('div').hide();
+});
+</script>
+
+	<style type="text/css">
+			body
+			{
+				overflow:none;
+			}
+			ul.tabs {
+				margin: 0;
+				padding: 0;
+				float: left;
+				list-style: none;
+				height: 32px;
+				border-bottom: 1px solid #999999;
+				border-left: 1px solid #999999;
+				width: 100%;
+			}
+			ul.tabs li {
+				float: left;
+				margin: 0;
+				cursor: pointer;
+				padding: 0px 21px ;
+				height: 31px;
+				line-height: 31px;
+				border: 1px solid #999999;
+				border-left: none;
+				font-weight: bold;
+				background: #EEEEEE;
+				overflow: hidden;
+				position: relative;
+			}
+			ul.tabs li:hover {
+				background: #CCCCCC;
+			}	
+			ul.tabs li.active{
+				background: #FFFFFF;
+				border-bottom: 1px solid #FFFFFF;
+			}
+			.tab_container {
+				clear: both;
+				float: left; 
+				width: 100%;
+				background: #FFFFFF;
+			}
+			.tab_content {
+				padding: 0;
+				font-size: 1.2em;
+				display: none;
+			}
+			#container {
+				width: 100%;
+				margin: 0 auto;	
+			}
+			
+			.vtext{
+				min-width:40px;
+			}
+			
+			.borders{
+				border-bottom-color:#999999;
+			}
+			
+			.rightborder{
+				border-right-color:#999999;	
+			}
+			
+			.all{
+				font-weight:bolder;
+				padding:4px 5px;
+			}
+			
+			.all td
+			{
+				padding:3px 5px;
+			}
+			.all2{
+				font-weight:bolder;
+				padding:4px 5px;
+				background:#fff;
+				border:0;
+			}
+			
+			td{
+				min-width:70px;
+			}
+			td{	min-width:75px;	} #cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #cccccc; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+		</style> 
+		<div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
+		<div id="cover" > </div>
+		<!--<input type="button" value="Download all" style="width:140px;" onclick="tablesToExcel(['datavalue1','datavalue2','datavalue3'], ['FCHV 1','FCHV 2','FCHV 3'], 'FCHV.xls')" id="dwnAll"/>-->
+		<input type="button" value="Reports Home" style="width:140px;" onclick='window.open("http://hospdev.hispindia.org/nepal/dhis-web-reporting/generateHtmlReport.action?uid=w5OoDiXc2aj&", "_self")'/>
+		</br></br>
+		
+		
+		<div id="container">
+
+  <ul class="tabs"> 
+        <li class="active" rel="tab1"> SMH 1</li>
+        <li rel="tab2"> SMH 2</li>
+        <li rel="tab3"> SMH 3</li>
+		<li rel="tab2"> SMH 4</li>
+        <li rel="tab3"> SMH 5</li>
+		<li rel="tab2"> SMH 6</li>
+        <li rel="tab3"> SMH 7</li>
+		<li rel="tab2"> SMH 8</li>
+        <li rel="tab3"> SMH 9</li>
+    </ul>
+
+<div class="tab_container"> 
+
+     <div id="tab1" class="tab_content"> 
+ 
+         <p>
+		 
+		 <!-- report 1 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue1" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+				
+			</table>
+			
+         </p>
+
+     </div><!-- #tab1 -->
+	 
+     <div id="tab2" class="tab_content"> 
+
+       <p>
+	   
+	   	<!-- report 2 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue2" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+				
+			</table>  
+       </p>
+
+     </div><!-- #tab2 -->
+     <div id="tab3" class="tab_content"> 
+
+       <p>
+	   			<!-- report 3 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue3" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+			
+				
+			</table> 
+	   
+       </p>
+     </div><!-- #tab3 -->
+	 <div id="tab4" class="tab_content"> 
+ 
+         <p>
+		 
+		 <!-- report 4 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue4" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+				
+			</table>
+			
+         </p>
+
+     </div><!-- #tab4 -->
+	 
+     <div id="tab5" class="tab_content"> 
+
+       <p>
+	   
+	   	<!-- report 5 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue5" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+				
+			</table>  
+       </p>
+
+     </div><!-- #tab5 -->
+     <div id="tab6" class="tab_content"> 
+
+       <p>
+	   			<!-- report 6 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue6" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+			
+				
+			</table> 
+	   
+       </p>
+     </div><!-- #tab6 -->
+	    <div id="tab7" class="tab_content"> 
+ 
+         <p>
+		 
+		 <!-- report 7 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue7" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+				
+			</table>
+			
+         </p>
+
+     </div><!-- #tab7 -->
+	 
+     <div id="tab8" class="tab_content"> 
+
+       <p>
+	   
+	   	<!-- report 8 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue8" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+				
+			</table>  
+       </p>
+
+     </div><!-- #tab8 -->
+	 
+	 <div id="tab9" class="tab_content"> 
+
+       <p>
+	   
+	   	<!-- report 9 ------------------------------------------------------------------------------------------>
+			
+			<table id="datavalue9" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+				
+			</table>  
+       </p>
+
+     </div><!-- #tab9 -->
+    
+     
+ </div> <!-- .tab_container --> 
+
+</div> <!-- #container -->
