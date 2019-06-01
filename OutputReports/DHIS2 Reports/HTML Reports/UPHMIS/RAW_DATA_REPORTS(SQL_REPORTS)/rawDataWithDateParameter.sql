@@ -994,6 +994,8 @@ from
 				case when dataelementid = 7150694 and categoryoptioncomboid = 15 then sag2.value end v18,
 				case when dataelementid = 7268918 and categoryoptioncomboid = 15 then sag2.value end v19,
 				case when dataelementid = 7150793 and categoryoptioncomboid = 15 then sag2.value end v20,
+	   			case when dataelementid = 000 and categoryoptioncomboid = 00 then sag2.value end v21,
+	  			 case when dataelementid = 000 and categoryoptioncomboid = 00 then sag2.value end v22,
 				case when dataelementid = 7152869 and categoryoptioncomboid = 15 then sag2.value end v23,
 				case when dataelementid = 7152694 and categoryoptioncomboid = 15 then sag2.value end v24,
 				case when dataelementid = 7153044 and categoryoptioncomboid = 15 then sag2.value end v25,
