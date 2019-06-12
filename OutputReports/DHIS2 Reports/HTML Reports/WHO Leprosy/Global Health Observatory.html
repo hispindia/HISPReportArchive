@@ -99,11 +99,11 @@
 <div align="center">
     <label>
         <strong>Start Year : </strong>
-        <input type="number" id="startDate" min="2012" step="1" value="2012">
+        <input type="number" id="startDate" min="1990" step="1" value="2012">
     </label>
     <label>
         <strong>End Year : </strong>
-        <input type="number" id="endDate" min="2012" step="1" value="2017">
+        <input type="number" id="endDate" min="1990" step="1" value="2017">
     </label>
     <button id="tap" onclick="submitData()">Run</button>   
 
@@ -126,7 +126,7 @@
     document.getElementById("startDate").max = date.getFullYear();
     document.getElementById("endDate").max = date.getFullYear();
     function submitData() {
-        if(document.getElementById("startDate").value > document.getElementById("endDate").value) return alert("Please Select dates Correctly!");   
+        if(parseInt(document.getElementById("startDate").value) > parseInt(document.getElementById("endDate").value)) return alert("Please Select dates Correctly!");   
         else { 
             $('#loader').show();
             setTimeout(function () {
@@ -158,7 +158,9 @@
     var startDate = parseInt(document.getElementById("startDate").value);
     var endDate = parseInt(document.getElementById("endDate").value); 
     var colspanValueHeading = namesOfIndicator.length * ((endDate - startDate) + 1);
-  
+    var totalValues = [], globalTotalValues = [],globalPopulationCount = [];
+    var checkCount = 0,count = 0, counter = 0, dateCounter = 0;
+
     var dates = function (){
                     var arr = [];
                     var noOfDays = endDate - startDate;
@@ -173,6 +175,18 @@
                 } 
     var joinDates = dates().join(";");
 
+    for(var i = 0; i < colspanValueHeading; i++) {
+                    if(i % (dates().length) == 0) {
+                        counter++;
+                        dateCounter = 0;
+                    } else {
+                        dateCounter++;
+                    }
+                    totalValues["value" + counter + "_" + dates()[dateCounter]] = 0;
+                    globalTotalValues["value" + counter + "_" + dates()[dateCounter]] = 0;
+                }
+    counter = 0, dateCounter = 0;
+    dates().forEach( val => globalPopulationCount[val] = 0 );
     var printHeading = '<tr style=" font-weight:400; text-align:center;">\
                         <td rowspan="3" colspan="2" style="border:1px solid black;background:#ADD8E6;">Region and country</td>\
                         <td style="border:1px solid black;background:#ADD8E6;" colspan="' + colspanValueHeading + '">Global Health Observatory</td>\
@@ -261,6 +275,62 @@
                 }
             });
         })
+        tabledata += '<tr>';
+        tabledata += '<td colspan="2" style="font:bold; border:1px solid black; background-color:#eaeaea"">Global Total</td>';
+
+                for(var i = 0; i < colspanValueHeading; i++) {
+                    if(i % (dates().length) == 0) {
+                        counter++;
+                        dateCounter = 0;
+                    } else {
+                        dateCounter++;
+                    } 
+
+                    let val = globalTotalValues["value" + counter + "_" + dates()[dateCounter]];  
+                    let population = parseInt(globalPopulationCount[dates()[dateCounter]].toString().substring(0,7));                
+                    switch(counter) {
+                        case 2:
+                        val = (globalTotalValues["value" + 1 + "_" + dates()[dateCounter]]/population)*100;                        
+                        break;
+
+                        case 4:
+                        val = (globalTotalValues["value" + 3 + "_" + dates()[dateCounter]]/population)*10;
+                        break;
+                        
+                        case 6:
+                        val = (globalTotalValues["value" + 5 + "_" + dates()[dateCounter]]/globalTotalValues["value" + 1 + "_" + dates()[dateCounter]])*100;
+                        break;
+
+                        case 7:
+                        val = (globalTotalValues["value" + 5 + "_" + dates()[dateCounter]]/population)*1000;
+                        break;
+
+                        case 10:
+                        val = (globalTotalValues["value" + 9 + "_" + dates()[dateCounter]]/globalTotalValues["value" + 1 + "_" + dates()[dateCounter]])*100;
+                        break;
+
+                        case 12:
+                        val = (globalTotalValues["value" + 11 + "_" + dates()[dateCounter]]/globalTotalValues["value" + 1 + "_" + dates()[dateCounter]])*100;
+                        break;
+                    }
+                    let checkedVal = Number.isInteger(val)? val: val.toFixed(2);
+                    if( checkedVal == "NaN"  || checkedVal == "Infinity") {
+                        checkedVal = 0
+                    }
+                    tabledata += '<td style="font:bold; border:1px solid black; background-color:#eaeaea">' + checkedVal  + '</td>'
+                    if(i== colspanValueHeading-1) {
+                        globalTotalValues["value" + 1 + "_" + dates()[dateCounter]] = 0;
+                        globalTotalValues["value" + 3 + "_" + dates()[dateCounter]] = 0;
+                        globalTotalValues["value" + 5 + "_" + dates()[dateCounter]] = 0;
+                        globalTotalValues["value" + 9 + "_" + dates()[dateCounter]] = 0;
+                        globalTotalValues["value" + 11 + "_" + dates()[dateCounter]] = 0;
+                    } 
+                    else if(counter != 1 && counter != 3 && counter != 5 &&  counter != 9 &&  counter != 11) {                        
+                        globalTotalValues["value" + counter + "_" + dates()[dateCounter]] = 0;
+                    }
+                }
+
+         tabledata += '</tr>';
         document.getElementById("tableBody").innerHTML = tabledata;
         $('#loader').hide();
         document.getElementById("printing").style.display = "block";
@@ -274,10 +344,21 @@
         tabledata += '<tr>';
         tabledata += ('<td colspan="' + (colspanValueHeading + 2) + '" align="left" style="border:1px solid black; background-color:#DCDCDC">' + ouidRegion + "</td>");
         tabledata += "</tr>";
+        
+        //assigning and adding all the population of particular year
+        let populationCount = [];
+        dates().forEach( val => populationCount[val]  =  0);
+        res4.rows.filter((val,index)=> { 
+                if(val[0] == 'd1d6EWQZJGB') {           
+                    populationCount[val[1]] += parseInt(scientificToDecimal(val[3]));
+                    globalPopulationCount[val[1]] += parseInt(scientificToDecimal(val[3]));  
+                }
+            });
 
         for(let keys in orgUnitLevel3Children[ouidRegion]) { 
-
             let newdata=res4.rows.filter((val,i)=>(keys.split("-")[1]==val[2]));
+            
+            
             let ouidName, ouidCode;
 
             ouidName=orgUnitLevel3Children[ouidRegion][keys].name;
@@ -287,7 +368,7 @@
             }
 
     var value = [];
-    var checkCount = 0,count = 0, counter = 0, dateCounter = 0, storeCount = 0,check = false;
+    var storeCount = 0,check = false;
     var id = ['liZaznYiWwp', 'ElAjdwOrjMq', 'LL3PpzJHqJZ', 'sAXV6Hnve4i', 
               'tzGljEoaVdT', 'j62SFyBOrSN', 'v1Fr4On014j', 'uiiSia2NAnz',
               'TBTHguhWty1', 'C6xcdI95huJ', 'mNPlDlzmwru', 'KrvcvcTLqIh'];
@@ -300,7 +381,7 @@
                 dateCounter++;
             }
             if(counter == 1 || counter == 3 || counter == 5 || counter == 8 || counter == 9 || counter == 11) {
-                if(dates()[dateCounter] >= 2017) {
+                if(dates()[dateCounter] >= 2016) {
                     let id = [  'evXyDr6c7eu', 'gVmFx873rdZ', 'IQgrP2W9gTV', 'bLR7YvL1f5O', 
                                 'mdupOTsRJ58', 'lzbsUQJvvJB', 'xl4EXfRMBrK.Te9RyzefSAz', 'xl4EXfRMBrK.ZZFiCRpT37i', 
                                 'xl4EXfRMBrK.sdMU6tpPki6', 'xl4EXfRMBrK.ZZFiCRpT37i', 'MiHLzmsVFPf', 'ubgNtdy3h9H', 
@@ -308,7 +389,7 @@
  
                     if(counter != 8 && counter != 11){
                         dates()[dateCounter] == dates()[0]?check=false:check=true;
-                        if(dates()[dateCounter] > 2017 && check) count = storeCount - 3;
+                        if(dates()[dateCounter] > 2016 && check) count = storeCount - 3;
                         var val1 = isNaN(parseInt(datavalue(newdata, id[count], dates()[dateCounter]))) ? '' : parseInt(datavalue(newdata, id[count], dates()[dateCounter]));count++;
                         var val2 = isNaN(parseInt(datavalue(newdata, id[count], dates()[dateCounter]))) ? '' : parseInt(datavalue(newdata, id[count], dates()[dateCounter]));count++;
                         var val3 = isNaN(parseInt(datavalue(newdata, id[count], dates()[dateCounter]))) ? '' : parseInt(datavalue(newdata, id[count], dates()[dateCounter]));count++;
@@ -323,7 +404,7 @@
                         }
                     } 
                     else if(counter== 8 || counter == 11 ){
-                        if(dates()[dateCounter] > 2017 && !check) count = storeCount - 1;
+                        if(dates()[dateCounter] > 2016 && !check) count = storeCount - 1;
                         value["value" + counter + "_" + dates()[dateCounter]] = isNaN(parseInt(datavalue(newdata, id[count], dates()[dateCounter]))) ? '' : parseInt(datavalue(newdata, id[count],  dates()[dateCounter]));count++;
                         check = false;
                     } 
@@ -331,7 +412,8 @@
                         value["value" + counter + "_" + dates()[dateCounter]] = valueCheck(val1, val2, val3);
                     }
                     storeCount = count;
-                } else {
+                } 
+                else {
                     value["value" + counter + "_"+ dates()[dateCounter]] = isNaN(parseInt(datavalue(newdata, id[counter-1], dates()[dateCounter]))) ? '' : parseInt(datavalue(newdata, id[counter-1], dates()[dateCounter]));;
                 }
             } else {
@@ -346,6 +428,7 @@
                     value["value" + counter + "_" + dates()[dateCounter]]  = '';
                 }
             }
+            
         }
             checkCount = 0,count = 0, counter = 0, dateCounter = 0;
             tabledata += '<tr>';
@@ -358,15 +441,73 @@
                 } else {
                     dateCounter++;
                 }
+                totalValues["value" + counter + "_" + dates()[dateCounter]]  += Number(value["value" + counter + "_" + dates()[dateCounter]]); 
                 tabledata += '<td>' + value["value" + counter + "_" + dates()[dateCounter]]  + '</td>'
             }
 
             tabledata += '</tr>';
-            // }
-           
-            
+            counter = 0, dateCounter = 0;
         };
-    
+        
+        tabledata += '<tr>';
+        tabledata += '<td colspan="2" style="font:bold; border:1px solid black; background-color:#eaeaea">Total</td>';
+
+            for(var i = 0; i < colspanValueHeading; i++) {
+                    if(i % (dates().length) == 0) {
+                        counter++;
+                        dateCounter = 0;
+                    } else {
+                        dateCounter++;
+                    }
+                    let val = totalValues["value" + counter + "_" + dates()[dateCounter]];  
+                    let population = parseInt(populationCount[dates()[dateCounter]].toString().substring(0,7));                
+                    switch(counter) {
+                        case 2:
+                        val = (totalValues["value" + 1 + "_" + dates()[dateCounter]]/population)*100;                        
+                        break;
+
+                        case 4:
+                        val = (totalValues["value" + 3 + "_" + dates()[dateCounter]]/population)*10;
+                        break;
+                        
+                        case 6:
+                        val = (totalValues["value" + 5 + "_" + dates()[dateCounter]]/totalValues["value" + 1 + "_" + dates()[dateCounter]])*100;
+                        break;
+
+                        case 7:
+                        val = (totalValues["value" + 5 + "_" + dates()[dateCounter]]/population)*1000;
+                        break;
+
+                        case 10:
+                        val = (totalValues["value" + 9 + "_" + dates()[dateCounter]]/totalValues["value" + 1 + "_" + dates()[dateCounter]])*100;
+                        break;
+
+                        case 12:
+                        val = (totalValues["value" + 11 + "_" + dates()[dateCounter]]/totalValues["value" + 1 + "_" + dates()[dateCounter]])*100;
+                        break;
+                    }
+                    let checkedVal = Number.isInteger(val)? val: val.toFixed(2);
+                    if(checkedVal == "NaN"  || checkedVal == "Infinity") {
+                        checkedVal = 0
+                    }
+                    globalTotalValues["value" + counter + "_" + dates()[dateCounter]]  += totalValues["value" + counter + "_" + dates()[dateCounter]]; 
+                    
+                    tabledata += '<td style="font:bold; border:1px solid black; background-color:#eaeaea">' + checkedVal  + '</td>'
+                    if(i== colspanValueHeading-1) {
+                        totalValues["value" + 1 + "_" + dates()[dateCounter]] = 0;
+                        totalValues["value" + 3 + "_" + dates()[dateCounter]] = 0;
+                        totalValues["value" + 5 + "_" + dates()[dateCounter]] = 0;
+                        totalValues["value" + 9 + "_" + dates()[dateCounter]] = 0;
+                        totalValues["value" + 11 + "_" + dates()[dateCounter]] = 0;
+                    } 
+                    else if(counter != 1 && counter != 3 && counter != 5 &&  counter != 9 &&  counter != 11) {  
+                        totalValues["value" + counter + "_" + dates()[dateCounter]] = 0;
+                    }
+                   
+                }
+                tabledata += '</tr>';
+                counter = 0, dateCounter = 0;
+        
     }   
         function datavalue(dataJSON, id, period) {
             var value1 = '';
@@ -385,7 +526,7 @@
 
 
     function valueCheck(...theArgs) {
-        console.log(theArgs);
+      
         var sum = 0;
         var value = '';
         for (var x = 0; x < theArgs.length; x++) {
