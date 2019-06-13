@@ -1,0 +1,336 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+crossorigin="anonymous">
+
+
+<style>
+        table {
+            border-collapse: collapse;
+        }
+
+        thead>tr>td {
+        font-weight: bold;
+        }
+        tbody>tr>td {
+        font-weight: bold;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button {  
+        opacity: 1;
+        }
+
+        /* Center the loader  */
+        #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+        }
+        
+        @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+        }
+        
+        @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+        }
+        /* Add animation to "page content" */
+        
+        .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+        }
+        
+        @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+        }
+        
+        @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+        }
+        
+        #printing {
+        
+        text-align: center;
+        }
+    </style>
+        
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span
+    class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', 'PHACO Utilization Report', 'PHACO Utilization Report.xls')"><span
+    class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+    <div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table  border="1"   id="dataTable"   class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
+            <thead id="tableHead" >
+                <tr style="font-weight:400; text-align:center;">
+                    <td colspan="5" style="border:1px solid black;background:#ADD8E6;">National Programme for control of Blindness and Visual Impairment (NPCB & VI)</td>
+                </tr>
+                <tr style="font-weight:400; text-align:center;">
+                    <td colspan="5" style="border:1px solid black;background:#ADD8E6;">Report of PHACO Utilization</td>
+                </tr>
+                </tr>
+                <tr style="font-weight:400; text-align:center;">
+                    <td colspan="5" style="border:1px solid black;background:#ADD8E6;"><span id="month"></span></td>
+                </tr>
+                <tr style="font-weight:400; text-align:center;">
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Sno</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Facility Name</td>
+                    <td colspan="3" style="border:1px solid black;background:#ADD8E6;">Utilization of PHACO</td>
+                </tr>
+                <tr style="font-weight:400; text-align:center;">
+                    <td style="border:1px solid black;background:#ADD8E6;">During the month</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">Upto the month</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">Average</td>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        var selectedDate = dhis2.report.periods[0];
+        var selectedOrgUnit = [dhis2.report.organisationUnit];  
+        var orgUnitChildrenGroupSet = [];
+        var orgUnit = dhis2.report.organisationUnitChildren;
+        var organisationUnitChildren = orgUnit.sort((a,b)=> a.name.localeCompare(b.name));
+        var level = dhis2.report.organisationUnitHierarchy.length;
+        var boolCheck2 = true, boolCheck3 = true, boolCheck4 = true;
+
+        var selectedChildren = [{
+            id: "yBeFECoZ6Qt",
+            name: "GMC Amritsar",
+            parentName:"Amritsar"
+        },{
+            id: "F3wRYWNQUCO",
+            name: "GMC Faridkot",
+            parentName:"Faridkot"
+        },{
+            id: "HT5WcKZcfXE",
+            name: "GMC Patiala",
+            parentName:"Patiala"
+        }];
+                   
+        let newData = [];
+        var printTableBody ='';
+        var printValue = [],globalTotal = [];
+        for(var i = 0; i < 5; i++) {
+            printValue["value"+i] = 0;
+            globalTotal["value"+i] = 0;
+        }
+        
+        var year = parseInt(selectedDate.slice(0,4));
+        var month = parseInt(selectedDate.slice(4,6));
+        document.getElementById("month").innerHTML = months[month-1] + " - " + year;
+    
+        
+        let getYear = function (givenMonth) {
+        let arr = [],j=0;
+
+            //we take 4 because year start from april in this case
+            if(givenMonth==4) { 
+                arr[j] = `${year}0${month}`;
+                return arr;
+            }
+            if(givenMonth>4) {
+                for(let i= 4 ; i <= givenMonth; i++) {
+                   
+                    let str = i >= 10 ? i : "0" + i
+                    arr[j] = `${year}${str}`;
+                    j++;
+                }
+            } else {
+                for(let i= 4 ; i <= 12; i++) {
+                    let str = i >= 10 ? i : "0" + i
+                    arr[j] = `${year-1}${str}`;
+                    j++;
+                }
+                for(let k =1; k <= givenMonth; k++) {
+                    let str = "0"+k;
+                    arr[j] = `${year}${str}`;
+                    j++;
+                }
+
+            }
+            return arr;
+        }
+        var noOfMonth = getYear(month);
+        var totalYear = (getYear(month).length == 1) ? getYear(month)[0] : getYear(month).join(";");
+        
+                if(level == 2) {
+                    organisationUnitChildren = organisationUnitChildren.concat(selectedChildren)
+                    runAPI(selectedOrgUnit);
+                }
+                else if(level == 3) {
+                    let optOrgUnit = [];
+
+                    if(selectedOrgUnit[0].name == "Amritsar") {
+                        optOrgUnit = [selectedChildren[0]];
+                    }
+                    else if(selectedOrgUnit[0].name == "Faridkot") {
+                        optOrgUnit = [selectedChildren[1]];
+                    }
+                    else if(selectedOrgUnit[0].name == "Patiala") {
+                        optOrgUnit = [selectedChildren[2]];
+                    } 
+                    
+                    organisationUnitChildren = selectedOrgUnit.concat(optOrgUnit)
+                    runAPI(selectedOrgUnit);
+                    
+                }
+     
+                        
+                function runAPI(organisationUnit) {
+                  
+                    //Getting new ids of the orgUnit that is generated through the orgUnit set
+                    $.ajax({
+                                    type: "GET",
+                                    async: false,
+                                    url: "../api/organisationUnitGroupSets/yTdbcMPm3SQ.json?fields=id,name,organisationUnitGroups[id,name]",
+                                    data: JSON,
+                                    success: function (data, status) {
+                                            data.organisationUnitGroups.forEach( child => {
+                                                orgUnitChildrenGroupSet[child.name] = child.id;
+                                            })
+                                    }
+                            });
+                    
+                    //Getting values from the selected region
+                        $.ajax({
+                                    type: "GET",
+                                    async: false,
+                                    url: "../api/29/analytics.json?dimension=pe:" + totalYear + "&&dimension=dx:HtE9GRAbOcP&dimension=ou:" + organisationUnit[0].id + "&dimension=yTdbcMPm3SQ:ovni5bFtd3P;aLNZnLWXIZb;XaGkNcD023F;buF4OEy8cSD;kdCxLucy5Jx;zXOOKupcDLu;RMw5NksZi1K;Iw0rx4uZwIT;BzbZBigJD29;qRToFseJsem;ZTZgvIdkMmF;K2hjw7Q5am8;tHrw5BAJXHA;CanG6cwcrPQ;AStFfVE0qzM;J2uGvRdnYcQ;YZEMOsNxtXc;WjQAqzYqwfN;IPNB2Lr8vAL;JkYwsLYHq10;U9c2gzlFoqA;wakk0z0lsXN;IjQDuxxAyuL;k2yqYp2F4SE;cdK2MIrOY5H&displayProperty=NAME",
+                                    data: JSON,
+                                    success: function (data, status) {
+                                            showData(data);
+                                    }
+                            });
+                    
+                    
+                
+                }  
+
+            function showData(data) {     
+                organisationUnitChildren.forEach( (element,index) => {
+                    printValue["value" + 0] = parseInt(index+1);
+                    printValue["value" + 1] = element.name;
+                    element.id = orgUnitChildrenGroupSet[element.name];
+                    data.rows.forEach( child => {
+                        if(element.id ==  child["3"]) {
+                            if(child["0"] == "HtE9GRAbOcP" ) {                                
+                                    if (child["1"] == selectedDate) {
+                                        printValue["value" + 2] = parseInt(child["4"]);
+                                        boolCheck2 = false;
+                                    } 
+                                for(i = 0 ; i < noOfMonth.length; i++) {
+                                    if(child["1"] == noOfMonth[i])  {
+                                        printValue["value" + 3] += parseInt(child["4"]);
+                                        boolCheck3 = false;
+                                    }
+                                }   
+                            }
+                        }
+                    })
+                    if(!boolCheck3) {
+                        printValue["value" + 4] = printValue["value" + 3] / noOfMonth.length;      
+                        printValue["value" + 4] =  printValue["value" + 4].toFixed(2)                
+                    } else {
+                        printValue["value" + 4] = "";
+                    }
+                        if(Number.isNaN(printValue["value" + 4]) ) printValue["value" + 4] = "";
+                        if(boolCheck2) printValue["value" + 2] = "";
+                        if(boolCheck3) printValue["value" + 3] = "";
+                        
+                        boolCheck2 = true; boolCheck3 = true; boolCheck4 = true; 
+        
+                        printTableBody += '<tr style="font-weight:800; text-align:center;">'
+                        for(let i=0; i<5;i++) {
+                            printTableBody += '<td>' + printValue["value"+i] + '</td>' 
+                            globalTotal["value" + i] += Number(printValue["value" + i] );
+                            printValue["value"+i] = 0;              
+                        }
+                        printTableBody += '</tr>';
+
+                })
+                printTableBody +=  '<tr><td colspan="2" style="border:1px solid black; background:#DCDCDC;">Total</td>'
+                        for(let i=2; i<5;i++) {
+                            printTableBody += '<td style="border:1px solid black; background:#DCDCDC;">' + globalTotal["value"+i] + '</td>'              
+                        }
+                        printTableBody += '</tr>';
+
+            }
+            
+            document.getElementById('tableBody').innerHTML = printTableBody;
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("printing").style.display = "block"; 
+
+        var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+           return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })() 
+</script>
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
