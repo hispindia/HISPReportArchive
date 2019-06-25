@@ -1,0 +1,568 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+crossorigin="anonymous">
+
+
+<style>
+        table {
+            border-collapse: collapse;
+        }
+
+        thead>tr>td {
+        font-weight: bold;
+        }
+        tbody>tr>td {
+        font-weight: bold;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button {  
+        opacity: 1;
+        }
+
+        /* Center the loader  */
+        #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+        }
+        
+        @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+        }
+        
+        @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+        }
+        /* Add animation to "page content" */
+        
+        .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+        }
+        
+        @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+        }
+        
+        @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+        }
+        
+        #printing {
+        
+        text-align: center;
+        }
+    </style>
+        
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span
+    class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', 'WIFS Monthly Report', 'WIFS_Monthly_Report.xls')"><span
+    class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+    <div align="center">
+        <label>
+            <strong>Start Year : </strong>
+            <input type="number" id="startDate" min="1990" step="1" value="2018">
+        </label>
+        <select id="startMonth">
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">Sepetember</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+        <label>
+            <strong>  End Year : </strong>
+            <input type="number" id="endDate" min="1990" step="1" value="2019">
+        </label>
+        <select id="endMonth">
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">Sepetember</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+        <button id="tap" onclick="submitData()">Run</button>   
+    
+    </div>
+
+    <div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table  border="1"   id="dataTable"   class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
+           <tbody id="tableBody">
+
+           </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    var selectedOrgUnit = dhis2.report.organisationUnit;  
+    var orgUnitChildrenGroupSet = [];
+    var level = dhis2.report.organisationUnitHierarchy.length;
+    var orgUnitPopulation = [];
+    var levelName = '';
+    var startDate, endDate, startMonthVal, endMonthVal;
+
+    if(level > 5 ) { 
+        alert("Data is present upto block level!");
+        window.history.back();
+    } 
+    if(level == 2) levelName = "State"
+    else if(level == 3) levelName = "Dvision"
+    else if(level == 4) levelName = "District"
+    else levelName = "Block"
+
+    var elementId = ["iqjxFkAwdIV.P6SXEnAml5B", "iqjxFkAwdIV.FH243iYVdwZ", "FHuJMgUndrw.P6SXEnAml5B", "FHuJMgUndrw.FH243iYVdwZ", "P8XdqhuKXTp.P6SXEnAml5B", "P8XdqhuKXTp.FH243iYVdwZ", "NeHWM88mdzP.P6SXEnAml5B",
+            "eLbgF7u0A6Z.P6SXEnAml5B", "eLbgF7u0A6Z.FH243iYVdwZ", "LkzLRQa0NPU.P6SXEnAml5B", "skVXZ7pGQ4s.P6SXEnAml5B", "skVXZ7pGQ4s.FH243iYVdwZ", "hs49bSZSIB8.P6SXEnAml5B", "hs49bSZSIB8.FH243iYVdwZ",
+            "bSjPx02E503.P6SXEnAml5B", "I2yO9CbwEAG.P6SXEnAml5B", "w1TT4KEKSv0.P6SXEnAml5B", "I2yO9CbwEAG.FH243iYVdwZ", "w1TT4KEKSv0.FH243iYVdwZ", "gCxPWCrYQt9.P6SXEnAml5B", "BOuFmTcRfC9.P6SXEnAml5B", 
+            "gCxPWCrYQt9.FH243iYVdwZ", "BOuFmTcRfC9.FH243iYVdwZ", "fxtEl24yYkl.P6SXEnAml5B", "fxtEl24yYkl.FH243iYVdwZ", "orKb5hSKLHM.P6SXEnAml5B", "orKb5hSKLHM.FH243iYVdwZ", "akrMULkZKo0.P6SXEnAml5B", 
+            "akrMULkZKo0.FH243iYVdwZ", "U2aAuAzV8kV.P6SXEnAml5B", "U2aAuAzV8kV.FH243iYVdwZ", "hxmIx4y7Ajk.EXM5JXiHQ1b", "pKKZUlfMIXs.EXM5JXiHQ1b", "xh3EMuqL6EC.EXM5JXiHQ1b", "DGZIQEzJvWH.EXM5JXiHQ1b",
+            "yn4mNvJb0k9.EXM5JXiHQ1b", "hxmIx4y7Ajk.FLOyb60ZYpf", "pKKZUlfMIXs.FLOyb60ZYpf", "xh3EMuqL6EC.FLOyb60ZYpf", "DGZIQEzJvWH.FLOyb60ZYpf", "yn4mNvJb0k9.FLOyb60ZYpf", "hxmIx4y7Ajk.w0aT2V846eU", 
+            "pKKZUlfMIXs.w0aT2V846eU", "xh3EMuqL6EC.w0aT2V846eU", "DGZIQEzJvWH.w0aT2V846eU", "yn4mNvJb0k9.w0aT2V846eU"];
+
+
+    var date = new Date();
+    document.getElementById("startDate").max = date.getFullYear();
+    document.getElementById("endDate").max = date.getFullYear();
+    document.getElementById("endMonth").selectedIndex = date.getMonth();
+   
+
+    function submitData() {
+        
+        document.getElementById('tableBody').style.display = "none"; 
+        //Getting value of start date and end date
+        startDate = parseInt(document.getElementById("startDate").value);
+        endDate = parseInt(document.getElementById("endDate").value); 
+
+        //Getting value of start month from select tag
+        startMonthVal = document.getElementById("startMonth").selectedIndex + 1;
+    
+
+        //Getting value of end month from select tag
+        endMonthVal = document.getElementById("endMonth").selectedIndex + 1;
+
+        if(startDate > endDate) return alert("Please Select Year Correctly!");   
+        else if(parseInt(startMonthVal) > parseInt(endMonthVal)) return alert("Please Select Months Correctly!");   
+        else { 
+            $('#loader').show();
+            setTimeout(function () {
+                runAPI();
+            }, 1000);
+        }
+
+    }
+    function runAPI() {
+        
+        //Getting total periods using date and month
+        var periods = function() {
+            var value='';
+            var noOfLength = endDate - startDate;
+            //for Single year
+            if(noOfLength == 0) {
+                for(let j = startMonthVal; j <= endMonthVal; j++) {
+                    j < 10 ? value += startDate + '0' + j +';' : value += startDate + '' + j +';';
+                }
+            } else { //for multiple year
+                for(var i = 0; i<= noOfLength; i++) {
+                    if(i == 0) {
+                        for(let j = startMonthVal; j <= 12; j++) {
+                            j < 10 ? value += startDate + '0' + j +';' : value += startDate + '' + j +';';
+                        }
+                    }
+                    else if(i== noOfLength) {
+
+                        for(let j = 1; j <= endMonthVal; j++) {
+                                j < 10 ? value += endDate + '0' + j +';' :  value += endDate + '' + j +';' 
+                            }
+                    } else {
+                        startDate += 1
+                        for(let j = 1; j <= 12; j++) {                            
+                                j < 10 ? value +=  startDate+ '0' + j +';' :  value += endDate + '' + j +';' 
+                            }
+                    }
+                    
+                }
+            }
+            return value;
+        }
+        startMonthVal = document.getElementById("startMonth").selectedIndex + 1;
+        //Getting values from the selected region
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: '../api/26/analytics.json?dimension=dx:iqjxFkAwdIV.P6SXEnAml5B;iqjxFkAwdIV.FH243iYVdwZ;FHuJMgUndrw.P6SXEnAml5B;FHuJMgUndrw.FH243iYVdwZ;P8XdqhuKXTp.P6SXEnAml5B;P8XdqhuKXTp.FH243iYVdwZ;NeHWM88mdzP.P6SXEnAml5B;eLbgF7u0A6Z.P6SXEnAml5B;eLbgF7u0A6Z.FH243iYVdwZ;LkzLRQa0NPU.P6SXEnAml5B;skVXZ7pGQ4s.P6SXEnAml5B;skVXZ7pGQ4s.FH243iYVdwZ;hs49bSZSIB8.P6SXEnAml5B;hs49bSZSIB8.FH243iYVdwZ;bSjPx02E503.P6SXEnAml5B;I2yO9CbwEAG.P6SXEnAml5B;w1TT4KEKSv0.P6SXEnAml5B;gCxPWCrYQt9.P6SXEnAml5B;BOuFmTcRfC9.P6SXEnAml5B;I2yO9CbwEAG.FH243iYVdwZ;w1TT4KEKSv0.FH243iYVdwZ;gCxPWCrYQt9.FH243iYVdwZ;BOuFmTcRfC9.FH243iYVdwZ;fxtEl24yYkl.P6SXEnAml5B;fxtEl24yYkl.FH243iYVdwZ;orKb5hSKLHM.P6SXEnAml5B;orKb5hSKLHM.FH243iYVdwZ;akrMULkZKo0.P6SXEnAml5B;akrMULkZKo0.FH243iYVdwZ;U2aAuAzV8kV.P6SXEnAml5B;U2aAuAzV8kV.FH243iYVdwZ;hxmIx4y7Ajk.EXM5JXiHQ1b;hxmIx4y7Ajk.FLOyb60ZYpf;hxmIx4y7Ajk.w0aT2V846eU;pKKZUlfMIXs.EXM5JXiHQ1b;pKKZUlfMIXs.FLOyb60ZYpf;pKKZUlfMIXs.w0aT2V846eU;xh3EMuqL6EC.EXM5JXiHQ1b;xh3EMuqL6EC.FLOyb60ZYpf;xh3EMuqL6EC.w0aT2V846eU;DGZIQEzJvWH.EXM5JXiHQ1b;DGZIQEzJvWH.FLOyb60ZYpf;DGZIQEzJvWH.w0aT2V846eU;yn4mNvJb0k9.EXM5JXiHQ1b;yn4mNvJb0k9.FLOyb60ZYpf;yn4mNvJb0k9.w0aT2V846eU&dimension=pe:' + periods() + '&filter=ou:' + selectedOrgUnit.id + '&displayProperty=NAME&paging=false',
+            data: JSON,
+            success: function (data, status) {
+                showData(data);
+            }
+        });
+    }               
+
+    function showData(data) {  
+        var printTableBody = ''
+        var printValue = [];
+        
+        for(var i = 1; i <= 32; i++) {
+            printValue["value"+i] = 0;
+        }
+            for(var i = 0; i < elementId.length; i++) {
+                printValue[elementId[i]] = 0;
+                 data.rows.forEach( child => {
+                    if(child[0] == elementId[i]) {
+                        printValue[elementId[i]] += parseInt(child[2]);
+                    }
+                })
+            }       
+            printValue["value"+ 1] = printValue["P8XdqhuKXTp.P6SXEnAml5B"] + printValue["P8XdqhuKXTp.FH243iYVdwZ"];
+            printValue["value"+ 2] = printValue["NeHWM88mdzP.P6SXEnAml5B"];
+            printValue["value"+ 3] = printValue["P8XdqhuKXTp.P6SXEnAml5B"] + printValue["NeHWM88mdzP.P6SXEnAml5B"];
+            printValue["value"+ 4] = printValue["P8XdqhuKXTp.FH243iYVdwZ"];
+            printValue["value"+ 5] = printValue["value" + 1] + printValue["value" + 2];
+            printValue["value"+ 6] = printValue["eLbgF7u0A6Z.P6SXEnAml5B"] + printValue["eLbgF7u0A6Z.FH243iYVdwZ"];
+            printValue["value"+ 7] = printValue["LkzLRQa0NPU.P6SXEnAml5B"];
+            printValue["value"+ 8] = printValue["eLbgF7u0A6Z.P6SXEnAml5B"] + printValue["LkzLRQa0NPU.P6SXEnAml5B"];
+            printValue["value"+ 9] = printValue["eLbgF7u0A6Z.FH243iYVdwZ"];
+            printValue["value"+ 10] = printValue["value" + 6] + printValue["value" + 7];
+            printValue["value"+ 11] = ((printValue["value"+ 8] / printValue["value"+ 3])*100).toFixed(2) ;
+            if(printValue["value"+ 11] == "NaN") printValue["value"+ 11] = "";
+            printValue["value"+ 12] = ((printValue["value"+ 9] / printValue["value"+ 4])*100).toFixed(2);
+            if(printValue["value"+ 12] == "NaN") printValue["value"+ 12] = "";
+            printValue["value"+ 13] = ((printValue["value"+ 10] / printValue["value"+ 5])*100).toFixed(2);
+            printValue["value"+ 14] = printValue["skVXZ7pGQ4s.P6SXEnAml5B"] + printValue["skVXZ7pGQ4s.FH243iYVdwZ"];
+            printValue["value"+ 15] = printValue["hs49bSZSIB8.P6SXEnAml5B"] + printValue["hs49bSZSIB8.FH243iYVdwZ"];
+            printValue["value"+ 16] = printValue["bSjPx02E503.P6SXEnAml5B"];
+            printValue["value"+ 17] = printValue["hs49bSZSIB8.P6SXEnAml5B"] + printValue["bSjPx02E503.P6SXEnAml5B"];
+            printValue["value"+ 18] = printValue["hs49bSZSIB8.FH243iYVdwZ"];
+            printValue["value"+ 19] = printValue["value"+ 15]  + printValue["value"+ 16] ;
+            printValue["value"+ 20] = ((printValue["value"+ 17] / printValue["value"+ 3])*100).toFixed(2) ;
+            if(printValue["value"+ 20] == "NaN") printValue["value"+ 20] = "";
+            printValue["value"+ 21] = ((printValue["value"+ 18] / printValue["value"+ 4])*100).toFixed(2);
+            if(printValue["value"+ 21] == "NaN") printValue["value"+ 21] = "";
+            printValue["value"+ 22] = ((printValue["value"+ 19] / printValue["value"+ 5])*100).toFixed(2);
+            if(printValue["value"+ 22] == "NaN") printValue["value"+ 22] = "";
+            printValue["value"+ 23] = printValue["I2yO9CbwEAG.P6SXEnAml5B"] + printValue["w1TT4KEKSv0.P6SXEnAml5B"];
+            printValue["value"+ 24] = printValue["I2yO9CbwEAG.FH243iYVdwZ"] + printValue["w1TT4KEKSv0.FH243iYVdwZ"];
+            printValue["value"+ 25] = printValue["value"+ 23] + printValue["value"+ 24];
+            printValue["value"+ 26] = printValue["gCxPWCrYQt9.P6SXEnAml5B"] + printValue["BOuFmTcRfC9.P6SXEnAml5B"];
+            printValue["value"+ 27] = printValue["gCxPWCrYQt9.FH243iYVdwZ"] + printValue["BOuFmTcRfC9.FH243iYVdwZ"];
+            printValue["value"+ 28] = printValue["value"+ 26] + printValue["value"+ 27];
+            printValue["value"+ 29] = printValue["fxtEl24yYkl.P6SXEnAml5B"] + printValue["fxtEl24yYkl.FH243iYVdwZ"];
+            printValue["value"+ 30] = printValue["orKb5hSKLHM.P6SXEnAml5B"] + printValue["orKb5hSKLHM.FH243iYVdwZ"];
+            printValue["value"+ 31] = printValue["akrMULkZKo0.P6SXEnAml5B"] + printValue["akrMULkZKo0.FH243iYVdwZ"];
+            printValue["value"+ 32] = printValue["U2aAuAzV8kV.P6SXEnAml5B"] + printValue["U2aAuAzV8kV.FH243iYVdwZ"];
+            
+
+            printTableBody += '<tr style="font-weight:800">\
+                                <td colspan="9" style="border:1px solid black;background:#ADD8E6;">Weekly Iron Folic Supplementation Program-' + levelName + ' Level Consolidated Report</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="6" style="border:1px solid black;background:#ADD8E6;">' + selectedOrgUnit.name + '</td>\
+                                <td colspan="3" style="border:1px solid black;background:#ADD8E6;">' + months[startMonthVal-1] + "-" + startDate + " to " + months[endMonthVal-1] + "-" + endDate  + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;"></td>\
+                                <td colspan="4" style="border:1px solid black;background:#ADD8E6; text-align: center">Schools</td>\
+                                <td colspan="3" style="border:1px solid black;background:#ADD8E6; text-align: center">Anganwadi Center</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">No. of 6th-12th class schools in Block :- Government/Government Aided/Residential/ Coorporation and No. of ICDS projects in Block </td>\
+                                <td colspan="4" style="text-align: center">' + printValue["iqjxFkAwdIV.P6SXEnAml5B"] + '</td>\
+                                <td colspan="3" style="text-align: center">' + printValue["iqjxFkAwdIV.FH243iYVdwZ"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Total number of 6th-12th class schools and total number of AWCs submitted report in the reporting month </td>\
+                                <td colspan="4" style="text-align: center">' + printValue["FHuJMgUndrw.P6SXEnAml5B"] + '</td>\
+                                <td colspan="3" style="text-align: center">' + printValue["FHuJMgUndrw.FH243iYVdwZ"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="text-align: left; border:1px solid black;background:#ADD8E6;">1- WIFS Supplementation Status</td>\
+                                <td colspan="3" style="border:1px solid black;background:#ADD8E6; text-align:center;">In-school</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align:center;">In-Awc</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align: center">Total</td>\
+                            </tr>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td rowspan="3" style="border:1px solid black;background:#ADD8E6;">Target population</td>\
+                                <td style="border:1px solid black;background:#ADD8E6;">Adolescent Girls</td>\
+                                <td colspan="3" style="text-align: center">' + printValue["P8XdqhuKXTp.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["P8XdqhuKXTp.FH243iYVdwZ"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 1] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="border:1px solid black;background:#ADD8E6;">Adolescent Boys </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["NeHWM88mdzP.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;"></td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 2] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="border:1px solid black;background:#ADD8E6;">Total </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["value" + 3] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 4] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 5] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Adolescent Girls consumed  4  IFA tablets in the reporting month </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["eLbgF7u0A6Z.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["eLbgF7u0A6Z.FH243iYVdwZ"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + (printValue["value" + 6] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Adolescent Boys consumed  4  IFA tablets in the reporting month </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["LkzLRQa0NPU.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;"></td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 7] + '</td>\
+                            </tr>\
+                             <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Total adolescents  consumed  4  IFA tablets in the reporting month </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["value" + 8] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 9] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 10] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Percentage Coverage </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["value" + 11] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 12] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 13] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Total number of teachers/AWW/other staff consumed IFA tablets: </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["skVXZ7pGQ4s.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["skVXZ7pGQ4s.FH243iYVdwZ"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 14] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="text-align: left; border:1px solid black;background:#ADD8E6;">2. Albendazole Coverage (February/August) </td>\
+                                <td colspan="3" style="border:1px solid black;background:#ADD8E6; text-align:center;">In-school</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align:center;">In-Awc</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align: center">Total</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Adolescent Girls consumed Albendazole tablets </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["hs49bSZSIB8.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["hs49bSZSIB8.FH243iYVdwZ"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 15] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Adolescent Boys consumed Albendazole tablets  </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["bSjPx02E503.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;"></td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 16] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Total adolescents consumed Albendazole tablets </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["value" + 17] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 18] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 19] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Percentage Coverage</td>\
+                                <td colspan="3" style="text-align: center">' + printValue["value" + 20] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 21] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 22] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" rowspan="2" style="text-align: left; border:1px solid black;background:#ADD8E6;">3- Total adolescents with moderate/severe anaemia </td>\
+                                <td colspan="3" style="border:1px solid black;background:#ADD8E6; text-align:center;">In-school</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align: center">AWC</td>\
+                                <td style="border:1px solid black;background:#ADD8E6; text-align: center">Total</td>\
+                                <td rowspan="2" style="border:1px solid black;background:#ADD8E6; text-align: center">Grand Total</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="border:1px solid black;background:#ADD8E6; text-align: center">Girls</td>\
+                                <td style="border:1px solid black;background:#ADD8E6; text-align: center">Boys</td>\
+                                <td style="border:1px solid black;background:#ADD8E6; text-align: center">Total</td>\
+                                <td style="border:1px solid black;background:#ADD8E6; text-align: center">Girls</td>\
+                                <td style="border:1px solid black;background:#ADD8E6; text-align: center">Boys</td>\
+                                <td style="border:1px solid black;background:#ADD8E6; text-align: center">Total</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Identified</td>\
+                                <td style="text-align: center">' + printValue["I2yO9CbwEAG.P6SXEnAml5B"] + '</td>\
+                                <td style="text-align: center">' + printValue["w1TT4KEKSv0.P6SXEnAml5B"] + '</td>\
+                                <td style="text-align: center">' + printValue["value" + 23] + '</td>\
+                                <td style="text-align: center">' + printValue["I2yO9CbwEAG.FH243iYVdwZ"] + '</td>\
+                                <td style="text-align: center">' + printValue["w1TT4KEKSv0.FH243iYVdwZ"] + '</td>\
+                                <td style="text-align: center">' + printValue["value" + 24] + '</td>\
+                                <td style="text-align: center">' + printValue["value" + 25] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Referred</td>\
+                                <td style="text-align: center">' + printValue["gCxPWCrYQt9.P6SXEnAml5B"] + '</td>\
+                                <td style="text-align: center">' + printValue["BOuFmTcRfC9.P6SXEnAml5B"] + '</td>\
+                                <td style="text-align: center">' + printValue["value" + 26] + '</td>\
+                                <td style="text-align: center">' + printValue["gCxPWCrYQt9.FH243iYVdwZ"] + '</td>\
+                                <td style="text-align: center">' + printValue["BOuFmTcRfC9.FH243iYVdwZ"] + '</td>\
+                                <td style="text-align: center">' + printValue["value" + 27] + '</td>\
+                                <td style="text-align: center">' + printValue["value" + 28] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2"  style="text-align: left; border:1px solid black;background:#ADD8E6;">4- Nutrition Health Education Session </td>\
+                                <td colspan="3" style="border:1px solid black;background:#ADD8E6; text-align:center;">In-school</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align: center">AWC</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align: center">Total</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Total number of nutrition and health session planned in the reporting month</td>\
+                                <td colspan="3" style="text-align: center">' + printValue["fxtEl24yYkl.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["fxtEl24yYkl.FH243iYVdwZ"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 29] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Total number of nutrition and health session concuted in the reporting month</td>\
+                                <td colspan="3" style="text-align: center">' + printValue["orKb5hSKLHM.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["orKb5hSKLHM.FH243iYVdwZ"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 30] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2"  style="text-align: left; border:1px solid black;background:#ADD8E6;">5. Side effects/adverse reactions  </td>\
+                                <td colspan="3" style="border:1px solid black;background:#ADD8E6; text-align:center;">In-school</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align: center">AWC</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6; text-align: center">Total</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Number of adolescents reported adverse effects after consuming blue IFA tablet</td>\
+                                <td colspan="3" style="text-align: center">' + printValue["akrMULkZKo0.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["akrMULkZKo0.FH243iYVdwZ"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 31] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Number of adolescents referred to health center for Management  of adverse effects </td>\
+                                <td colspan="3" style="text-align: center">' + printValue["U2aAuAzV8kV.P6SXEnAml5B"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["U2aAuAzV8kV.FH243iYVdwZ"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["value" + 32] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align: left; border:1px solid black;background:#ADD8E6;">6. Stock details</td>\
+                                <td style="border:1px solid black;background:#ADD8E6;">Opening stock for the month</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Quantity received by block in the reporting month (if any)</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Number of tablets consumed in the reporting month</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Number of expired tablets available in the Stock (if any)</td>\
+                                <td style="border:1px solid black;background:#ADD8E6;">Number of tablets indented in the reporting month (if any)</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="border:1px solid black;background:#ADD8E6;">Block Drug Store</td>\
+                                <td style="text-align: center">' + printValue["hxmIx4y7Ajk.EXM5JXiHQ1b"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["pKKZUlfMIXs.EXM5JXiHQ1b"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["xh3EMuqL6EC.EXM5JXiHQ1b"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["DGZIQEzJvWH.EXM5JXiHQ1b"] + '</td>\
+                                <td style="text-align: center">' + printValue["yn4mNvJb0k9.EXM5JXiHQ1b"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="border:1px solid black;background:#ADD8E6;">CDPO Office</td>\
+                                <td style="text-align: center">' + printValue["hxmIx4y7Ajk.FLOyb60ZYpf"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["pKKZUlfMIXs.FLOyb60ZYpf"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["xh3EMuqL6EC.FLOyb60ZYpf"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["DGZIQEzJvWH.FLOyb60ZYpf"] + '</td>\
+                                <td style="text-align: center">' + printValue["yn4mNvJb0k9.FLOyb60ZYpf"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="border:1px solid black;background:#ADD8E6;">BEO Office</td>\
+                                <td style="text-align: center">' + printValue["hxmIx4y7Ajk.w0aT2V846eU"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["pKKZUlfMIXs.w0aT2V846eU"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["xh3EMuqL6EC.w0aT2V846eU"] + '</td>\
+                                <td colspan="2" style="text-align: center">' + printValue["DGZIQEzJvWH.w0aT2V846eU"] + '</td>\
+                                <td style="text-align: center">' + printValue["yn4mNvJb0k9.w0aT2V846eU"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td colspan="5" style="text-align: left; border:1px solid black;background:#ADD8E6;">Signature of Medical Officer Incharge (MOIC):</td>\
+                                <td colspan="4" style="text-align: left; border:1px solid black;background:#ADD8E6;">Date:- </td>\
+                            </tr>')
+
+                            document.getElementById('tableBody').innerHTML = printTableBody;
+                            
+                            document.getElementById('tableBody').style.display = "block";
+                            document.getElementById("loader").style.display = "none";
+                            document.getElementById("printing").style.display = "block"; 
+            }
+            
+
+        var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+           return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })() 
+</script>
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
+    
+
+
+
