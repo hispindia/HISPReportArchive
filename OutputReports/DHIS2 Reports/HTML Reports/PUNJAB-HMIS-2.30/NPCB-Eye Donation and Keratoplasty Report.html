@@ -107,28 +107,27 @@ crossorigin="anonymous">
         <table  border="1"   id="dataTable"   class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
             <thead id="tableHead" >
                 <tr style="font-weight:400; text-align:center;">
-                    <td colspan="8" style="border:1px solid black;background:#ADD8E6;">National Programme for control of Blindness and Visual Impairment (NPCB & VI)</td>
+                    <td colspan="7" style="border:1px solid black;background:#ADD8E6;">National Programme for control of Blindness and Visual Impairment (NPCB & VI)</td>
                 </tr>
                 <tr style="font-weight:400; text-align:center;">
-                    <td colspan="8" style="border:1px solid black;background:#ADD8E6;">Cornea Collection and Keratoplasty</td>
+                    <td colspan="7" style="border:1px solid black;background:#ADD8E6;">Cornea Collection and Keratoplasty</td>
                 </tr>
                 </tr>
                 <tr style="font-weight:400; text-align:center;">
-                    <td colspan="8" style="border:1px solid black;background:#ADD8E6;"><span id="month"></span></td>
+                    <td colspan="7" style="border:1px solid black;background:#ADD8E6;"><span id="month"></span></td>
                 </tr>
                 <tr style="font-weight:400; text-align:center;">
                     <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Sno</td>
                     <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Facility Name</td>
-                    <td colspan="3" style="border:1px solid black;background:#ADD8E6;">Eye Donation</td>
-                    <td colspan="3" style="border:1px solid black;background:#ADD8E6;">Keratoplasty</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Target</td>
+                    <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Eye Donation</td>
+                    <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Keratoplasty</td>
                 </tr>
                 <tr style="font-weight:400; text-align:center;">
                     <td style="border:1px solid black;background:#ADD8E6;">During the month</td>
                     <td style="border:1px solid black;background:#ADD8E6;">Upto the month</td>
-                    <td style="border:1px solid black;background:#ADD8E6;">Average</td>
                     <td style="border:1px solid black;background:#ADD8E6;">During the month</td>
                     <td style="border:1px solid black;background:#ADD8E6;">Upto the month</td>
-                    <td style="border:1px solid black;background:#ADD8E6;">Average</td>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -143,6 +142,7 @@ crossorigin="anonymous">
         var orgUnit = dhis2.report.organisationUnitChildren;
         var organisationUnitChildren = orgUnit.sort((a,b)=> a.name.localeCompare(b.name));
         var level = dhis2.report.organisationUnitHierarchy.length;
+        var orgUnitPopulation = [];
         var boolCheck2 = true, boolCheck3 = true, boolCheck4 = true, boolCheck5 = true, boolCheck6 = true, boolCheck7 = true, boolCheck8 = true;
 
         var selectedChildren = [{
@@ -162,7 +162,7 @@ crossorigin="anonymous">
         let newData = [];
         var printTableBody ='';
         var printValue = [],globalTotal = [];
-        for(var i = 0; i < 8; i++) {
+        for(var i = 0; i < 7; i++) {
             printValue["value"+i] = 0;
             globalTotal["value"+i] = 0;
         }
@@ -207,7 +207,7 @@ crossorigin="anonymous">
         
                 if(level == 2) {
                     organisationUnitChildren = organisationUnitChildren.concat(selectedChildren)
-                    runAPI(selectedOrgUnit);
+                    runAPI(selectedOrgUnit, organisationUnitChildren);
                 }
                 else if(level == 3) {
                     let optOrgUnit = [];
@@ -223,12 +223,31 @@ crossorigin="anonymous">
                     } 
                     
                     organisationUnitChildren = selectedOrgUnit.concat(optOrgUnit)
-                    runAPI(selectedOrgUnit);
+                    runAPI(selectedOrgUnit, organisationUnitChildren);
                     
                 }
      
                         
-                function runAPI(organisationUnit) {
+                function runAPI(organisationUnit, children) {
+                        //Finding from the datasetof of the item having TARGET in the table
+                        children.forEach(child => {  
+                        orgUnitPopulation[child.name] = '';
+                            $.ajax({
+                                        type: "GET",
+                                        async: false,
+                                        url: "../api/dataValueSets.json?dataSet=AapI1dFOAnj&orgUnit= " + child.id + " &period=" + ( month >= 4 ? year : year-1) + "April",
+                                        data: JSON,            
+                                        success: function (data, status) {
+                                            if(data.hasOwnProperty("dataValues")) {                            
+                                                data.dataValues.forEach( element => {
+                                                    if(element.dataElement == "LQM2DZ1bhVh") {
+                                                        orgUnitPopulation[child.name] = element.value;
+                                                    }
+                                                })
+                                            }
+                                        }
+                                    })
+                            }); 
                   
                     //Getting new ids of the orgUnit that is generated through the orgUnit set
                     $.ajax({
@@ -262,18 +281,19 @@ crossorigin="anonymous">
                 organisationUnitChildren.forEach( (element,index) => {
                     printValue["value" + 0] = parseInt(index+1);
                     printValue["value" + 1] = element.name;
+                    printValue["value" + 2] = orgUnitPopulation[element.name];
                     element.id = orgUnitChildrenGroupSet[element.name];
                     data.rows.forEach( child => {
                         if(element.id ==  child["3"]) {
                             if(child["0"] == "UD4Qwr5xAiw" ) {                                
                                     if (child["1"] == selectedDate) {
-                                        printValue["value" + 2] = parseInt(child["4"]);
-                                        boolCheck2 = false;
+                                        printValue["value" + 3] = parseInt(child["4"]);
+                                        boolCheck3 = false;
                                     } 
                                 for(i = 0 ; i < noOfMonth.length; i++) {
                                     if(child["1"] == noOfMonth[i])  {
-                                        printValue["value" + 3] += parseInt(child["4"]);
-                                        boolCheck3 = false;
+                                        printValue["value" + 4] += parseInt(child["4"]);
+                                        boolCheck4 = false;
                                     }
                                 }   
                             }
@@ -291,29 +311,15 @@ crossorigin="anonymous">
                             }
                         }
                     })
-                    if(!boolCheck3) {
-                        printValue["value" + 4] = printValue["value" + 3] / noOfMonth.length;      
-                        printValue["value" + 4] =  printValue["value" + 4].toFixed(2)                
-                    } else {
-                        printValue["value" + 4] = "";
-                    }
-                    if(!boolCheck6) {
-                        printValue["value" + 7] = printValue["value" + 6] / noOfMonth.length;    
-                        printValue["value" + 7] = printValue["value" + 7].toFixed(2)                    
-                    } else {
-                        printValue["value" + 7] = "";
-                    }
-                        if(Number.isNaN(printValue["value" + 4]) ) printValue["value" + 4] = "";
-                        if(Number.isNaN(printValue["value" + 7])) printValue["value" + 7] = "";
-                        if(boolCheck2) printValue["value" + 2] = "";
                         if(boolCheck3) printValue["value" + 3] = "";
+                        if(boolCheck4) printValue["value" + 4] = "";
                         if(boolCheck5) printValue["value" + 5] = "";
                         if(boolCheck6) printValue["value" + 6] = "";
                         
                         boolCheck2 = true; boolCheck3 = true; boolCheck4 = true; boolCheck5 = true; boolCheck6 = true; boolCheck7 = true;
         
                         printTableBody += '<tr style="font-weight:800; text-align:center;">'
-                        for(let i=0; i<8;i++) {
+                        for(let i=0; i<7;i++) {
                             printTableBody += '<td>' + printValue["value"+i] + '</td>' 
                             globalTotal["value" + i] += Number(printValue["value" + i] );
                             printValue["value"+i] = 0;              
@@ -322,7 +328,7 @@ crossorigin="anonymous">
 
                 })
                 printTableBody +=  '<tr><td colspan="2" style="border:1px solid black; background:#DCDCDC;">Total</td>'
-                        for(let i=2; i<8;i++) {
+                        for(let i=2; i<7;i++) {
                             printTableBody += '<td style="border:1px solid black; background:#DCDCDC;">' + globalTotal["value"+i] + '</td>'              
                         }
                         printTableBody += '</tr>';

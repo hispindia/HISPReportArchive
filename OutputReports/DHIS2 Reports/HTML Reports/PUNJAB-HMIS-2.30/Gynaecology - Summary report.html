@@ -159,6 +159,8 @@ crossorigin="anonymous">
         var selectedOrgUnit = dhis2.report.organisationUnit;  
         var orgUnit = dhis2.report.organisationUnitChildren;
         var organisationUnitChildren = orgUnit.sort((a,b)=> a.name.localeCompare(b.name));
+        var level = dhis2.report.organisationUnitHierarchy.length;
+        var deliveriesDataSet = 0;
 
         var year = parseInt(selectedDate.slice(0,4));
         var month = parseInt(selectedDate.slice(4,6));
@@ -206,7 +208,8 @@ crossorigin="anonymous">
             });
             var currentYear =(thisYear[0]=="") ? selectedDate : thisYear;
             var correspondingPrevYear = getYear(month).map( child => child.split("-").join(""))
-            var totalYear = correspondingPrevYear.concat(currentYear).join(";")
+            var totalYear = correspondingPrevYear.concat(currentYear).join(";");
+            var DeliveriescorrespondingPrevYear = correspondingPrevYear.join(";")
             
         for(var i = 0; i < 10; i++) {
             document.getElementsByClassName("month")[i].innerHTML = months[month-1] +"-"+ year;
@@ -216,10 +219,19 @@ crossorigin="anonymous">
             document.getElementsByClassName("lastMonth")[i].innerHTML = month-2 == 2 ? "April -"+ year : (months[(month-2 == -1) ? 11: month-2] +"-"+ year);
             document.getElementsByClassName("currentMonth")[i].innerHTML = `Upto ${months[month-1]}-${year-1}`;
         }
+        $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "../api/29/analytics.json?dimension=dx:mj8jBGG8R3F&dimension=pe:" + DeliveriescorrespondingPrevYear + "&filter=ou:" + selectedOrgUnit.id + "&displayProperty=NAME&outputIdScheme=UID&paging=false",
+                    data: JSON,
+                    success: function (data, status) {
+                        data.rows.forEach(child=>  deliveriesDataSet += Number(child[2]))
+                    }
+            });
          $.ajax({
                     type: "GET",
                     async: false,
-                    url: "../api/29/analytics.json?dimension=dx:mIeQV1vKl03&dimension=IE5c49tpu23:KYUgRXlBkkt;osS36zuoUei;Kn6u8kZPK51;WRdcX6VM62R&dimension=pe:" + totalYear + "&dimension=ou:" + selectedOrgUnit.id + ";LEVEL-3&displayProperty=NAME",
+                    url: "../api/29/analytics.json?dimension=dx:mIeQV1vKl03&dimension=IE5c49tpu23:KYUgRXlBkkt;osS36zuoUei;Kn6u8kZPK51;WRdcX6VM62R&dimension=pe:" + totalYear + "&dimension=ou:" + selectedOrgUnit.id + ";LEVEL-" + (level+1) + "&displayProperty=NAME",
                     data: JSON,
                     success: function (data, status) {
                             showData(data);
@@ -300,24 +312,36 @@ crossorigin="anonymous">
                 
 
             });
+            
+                printValue["value" + 5] = printValue["value" + 5] + deliveriesDataSet;
+                printValue["value" + 10] = printValue["value" + 10] + deliveriesDataSet;
+                printValue["value" + 15] = printValue["value" + 15] + deliveriesDataSet;
+                printValue["value" + 20] = printValue["value" + 20] + deliveriesDataSet;
                 printValue["value" + 4] = printValue["value" + 2] + printValue["value" + 3];
                 printValue["value" + 6 ] = ((printValue["value" + 4] - printValue["value" + 5])/printValue["value"+5])*100;
-                if(Number.isNaN(printValue["value" + 6])) printValue["value" + 6] = 0;
+                if(Number.isNaN(printValue["value" + 6]) || printValue["value" + 6] == "infinity") printValue["value" + 6] = 0;
+                else printValue["value" + 6 ] = printValue["value" + 6 ].toFixed(2);
                 printValue["value" + 9] = printValue["value" + 7] + printValue["value" + 8];
                 printValue["value" + 11] = ((printValue["value" + 9] - printValue["value" + 10])/printValue["value"+10])*100;
-                if(Number.isNaN(printValue["value" + 11])) printValue["value" + 11] = 0;
+                if(Number.isNaN(printValue["value" + 11]) || printValue["value" + 11] == "infinity") printValue["value" + 11] = 0;
+                else printValue["value" + 11 ] = printValue["value" + 11].toFixed(2);
                 printValue["value" + 14] = printValue["value" + 12] + printValue["value" + 13];
                 printValue["value" + 16] = ((printValue["value" + 14] - printValue["value" + 15])/printValue["value"+15])*100; 
-                if(Number.isNaN(printValue["value" + 16])) printValue["value" + 16] = 0;                                            
+                if(Number.isNaN(printValue["value" + 16]) || printValue["value" + 16] == "infinity") printValue["value" + 16] = 0;
+                else printValue["value" + 16 ] = printValue["value" + 16 ].toFixed(2);                                            
                 printValue["value" + 19] = printValue["value" + 17] + printValue["value" + 18];
                 printValue["value" + 21] = ((printValue["value" + 19] - printValue["value" + 20])/printValue["value"+20])*100;
-                if(Number.isNaN(printValue["value" + 21])) printValue["value" + 21] = 0;
+                if(Number.isNaN(printValue["value" + 21]) || printValue["value" + 21] == Infinity) printValue["value" + 21] = 0;
+                else printValue["value" + 21] = printValue["value" + 21].toFixed(2);
 
                 printValue["value"+22] = printValue["value"+2]+printValue["value"+7]+printValue["value"+12]+printValue["value"+17];
                 printValue["value"+23] = printValue["value"+3]+printValue["value"+8]+printValue["value"+13]+printValue["value"+18];
                 printValue["value"+24] = printValue["value"+4]+printValue["value"+9]+printValue["value"+14]+printValue["value"+19];
                 printValue["value"+25] = printValue["value"+5]+printValue["value"+10]+printValue["value"+15]+printValue["value"+20];
                 printValue["value"+26] = printValue["value"+6]+printValue["value"+11]+printValue["value"+16]+printValue["value"+21];
+                printValue["value" + 26] = ((printValue["value" + 24] - printValue["value" + 25])/printValue["value"+25])*100;
+                if(Number.isNaN(printValue["value" + 26]) || printValue["value" + 26] == Infinity) printValue["value" + 26] = 0;
+                else printValue["value" + 26] = printValue["value" + 26].toFixed(2);
                 
                 printTableBody += '<tr style="font-weight:800; text-align:center;">'
                 for(let i=0; i<27;i++) {
@@ -327,6 +351,26 @@ crossorigin="anonymous">
                 }
                 printTableBody += '</tr>';     
             });
+                globalTotal["value" + 6 ] = ((globalTotal["value" + 4] - globalTotal["value" + 5])/globalTotal["value"+5])*100;
+                if(Number.isNaN(globalTotal["value" + 6]) || globalTotal["value" + 6] == "infinity") globalTotal["value" + 6] = 0;
+                else globalTotal["value" + 6 ] = globalTotal["value" + 6 ].toFixed(2);
+                
+                globalTotal["value" + 11] = ((globalTotal["value" + 9] - globalTotal["value" + 10])/globalTotal["value"+10])*100;
+                if(Number.isNaN(globalTotal["value" + 11]) || globalTotal["value" + 11] == "infinity") globalTotal["value" + 11] = 0;
+                else globalTotal["value" + 11 ] = globalTotal["value" + 11].toFixed(2);
+
+                 globalTotal["value" + 16] = ((globalTotal["value" + 14] - globalTotal["value" + 15])/globalTotal["value"+15])*100; 
+                if(Number.isNaN(globalTotal["value" + 16]) || globalTotal["value" + 16] == "infinity") globalTotal["value" + 16] = 0;
+                else globalTotal["value" + 16 ] = globalTotal["value" + 16 ].toFixed(2);                                            
+               
+                globalTotal["value" + 21] = ((globalTotal["value" + 19] - globalTotal["value" + 20])/globalTotal["value"+20])*100;
+                if(Number.isNaN(globalTotal["value" + 21]) || globalTotal["value" + 21] == Infinity) globalTotal["value" + 21] = 0;
+                else globalTotal["value" + 21] = globalTotal["value" + 21].toFixed(2);
+
+               globalTotal["value" + 26] = ((globalTotal["value" + 24] - globalTotal["value" + 25])/globalTotal["value"+25])*100;
+                if(Number.isNaN(globalTotal["value" + 26]) || globalTotal["value" + 26] == Infinity) globalTotal["value" + 26] = 0;
+                else globalTotal["value" + 26] = globalTotal["value" + 26].toFixed(2);
+                
             printTableBody += '<tr><td colspan="2" style="border:1px solid black;background:#DCDCDC;">Total</td>';
                                 for(var i = 2; i < 27; i++) {
                                     printTableBody += '<td style="border:1px solid black;background:#DCDCDC;">'+ globalTotal["value" + i] +'</td>';

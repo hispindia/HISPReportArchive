@@ -107,37 +107,35 @@ crossorigin="anonymous">
         <table  border="1"   id="dataTable"   class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
             <thead id="tableHead" >
                 <tr style="font-weight:400; text-align:center;">
-                    <td colspan="16" style="border:1px solid black;background:#ADD8E6;">National Programme for control of Blindness and Visual Impairment (NPCB & VI)</td>
+                    <td colspan="13" style="border:1px solid black;background:#ADD8E6;">National Programme for control of Blindness and Visual Impairment (NPCB & VI)</td>
                 </tr>
                 <tr style="font-weight:400; text-align:center;">
-                    <td colspan="16" style="border:1px solid black;background:#ADD8E6;">SCHOOL EYE SCREENING</td>
+                    <td colspan="13" style="border:1px solid black;background:#ADD8E6;">SCHOOL EYE SCREENING</td>
                 </tr>
                 </tr>
                 <tr style="font-weight:400; text-align:center;">
-                    <td colspan="16" style="border:1px solid black;background:#ADD8E6;"><span id="month"></span></td>
+                    <td colspan="13" style="border:1px solid black;background:#ADD8E6;"><span id="month"></span></td>
                 </tr>
                 <tr style="font-weight:400; text-align:center;">
                     <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Sno</td>
                     <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Facility Name</td>
-                   <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Students in the district</td> 
-                    <td colspan="3" style="border:1px solid black;background:#ADD8E6;">Children Screened Achievement</td>
-                    <td colspan="3" style="border:1px solid black;background:#ADD8E6;">Detected with Refractive Errors Achievement</td>
-                    <td colspan="3" style="border:1px solid black;background:#ADD8E6;">Provided Free Glasses</td>
-                    <td colspan="3" style="border:1px solid black;background:#ADD8E6;">Distribution of free spectacles to old persons suffering from presbyopia Errors Achievement</td>
+                    <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Children Screened Achievement</td>
+                    <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Detected with Refractive Errors Achievement</td>
+                    <td colspan="5" style="border:1px solid black;background:#ADD8E6;">Provided Free Glasses to School Children</td>
+                    <td colspan="2" style="border:1px solid black;background:#ADD8E6;">Distribution of free spectacles to old persons suffering from presbyopia</td>
                 </tr>
                 <tr style="font-weight:400; text-align:center;">
                     <td style="border:1px solid black;background:#ADD8E6;">During the month</td>
                     <td style="border:1px solid black;background:#ADD8E6;">Upto the month</td>
-                    <td style="border:1px solid black;background:#ADD8E6;">Average</td>
                     <td style="border:1px solid black;background:#ADD8E6;">During the month</td>
                     <td style="border:1px solid black;background:#ADD8E6;">Upto the month</td>
-                    <td style="border:1px solid black;background:#ADD8E6;">Average</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">Annual Target</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">Proportionate Target</td>
                     <td style="border:1px solid black;background:#ADD8E6;">During the month</td>
                     <td style="border:1px solid black;background:#ADD8E6;">Upto the month</td>
-                    <td style="border:1px solid black;background:#ADD8E6;">Average</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">Percentage as per proportionate target</td>
                     <td style="border:1px solid black;background:#ADD8E6;">During the month</td>
                     <td style="border:1px solid black;background:#ADD8E6;">Upto the month</td>
-                    <td style="border:1px solid black;background:#ADD8E6;">Average</td>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -152,6 +150,7 @@ crossorigin="anonymous">
         var orgUnit = dhis2.report.organisationUnitChildren;
         var organisationUnitChildren = orgUnit.sort((a,b)=> a.name.localeCompare(b.name));
         var level = dhis2.report.organisationUnitHierarchy.length;
+        var orgUnitPopulation = [];
         var boolCheck2 = true, boolCheck3 = true, boolCheck4 = true, boolCheck5 = true, boolCheck6 = true, boolCheck7 = true, boolCheck8 = true,  boolCheck9 = true, boolCheck10 = true, boolCheck11 = true, boolCheck12 = true, boolCheck13 = true, boolCheck14 = true;
 
         var selectedChildren = [{
@@ -171,7 +170,7 @@ crossorigin="anonymous">
         let newData = [];
         var printTableBody ='';
         var printValue = [],globalTotal = [];
-        for(var i = 1; i < 16; i++) {
+        for(var i = 1; i < 14; i++) {
             printValue["value"+i] = 0;
             globalTotal["value"+i] = 0;
         }
@@ -216,7 +215,7 @@ crossorigin="anonymous">
         
                 if(level == 2) {
                     organisationUnitChildren = organisationUnitChildren.concat(selectedChildren)
-                    runAPI(selectedOrgUnit);
+                    runAPI(selectedOrgUnit, organisationUnitChildren);
                 }
                 else if(level == 3) {
                     let optOrgUnit = [];
@@ -232,12 +231,31 @@ crossorigin="anonymous">
                     } 
                     
                     organisationUnitChildren = selectedOrgUnit.concat(optOrgUnit)
-                    runAPI(selectedOrgUnit);
+                    runAPI(selectedOrgUnit, organisationUnitChildren);
                     
                 }
      
                         
-                function runAPI(organisationUnit) {
+                function runAPI(organisationUnit, children) {
+                                 //Finding from the datasetof of the item having TARGET in the table
+                                 children.forEach(child => {  
+                            orgUnitPopulation[child.name] = '';
+                            $.ajax({
+                                        type: "GET",
+                                        async: false,
+                                        url: "../api/dataValueSets.json?dataSet=AapI1dFOAnj&orgUnit= " + child.id + " &period=" + ( month >= 4 ? year : year-1) + "April",
+                                        data: JSON,            
+                                        success: function (data, status) {
+                                            if(data.hasOwnProperty("dataValues")) {                            
+                                                data.dataValues.forEach( element => {
+                                                    if(element.dataElement == "b1Fla891dU4") {
+                                                        orgUnitPopulation[child.name] = element.value;
+                                                    }
+                                                })
+                                            }
+                                        }
+                            })
+                    }); 
                   
                     //Getting new ids of the orgUnit that is generated through the orgUnit set
                     $.ajax({
@@ -256,7 +274,7 @@ crossorigin="anonymous">
                         $.ajax({
                                     type: "GET",
                                     async: false,
-                                    url: "../api/29/analytics.json?dimension=pe:" + totalYear + "&&dimension=dx:jF8EyzWf9Xm;VWoGH4ljTcb;AQzS6YBbCLj;apCcNrVhpUP;DiPMlc4xqYi&dimension=ou:" + organisationUnit[0].id + "&dimension=yTdbcMPm3SQ:ovni5bFtd3P;aLNZnLWXIZb;XaGkNcD023F;buF4OEy8cSD;kdCxLucy5Jx;zXOOKupcDLu;RMw5NksZi1K;Iw0rx4uZwIT;BzbZBigJD29;qRToFseJsem;ZTZgvIdkMmF;K2hjw7Q5am8;tHrw5BAJXHA;CanG6cwcrPQ;AStFfVE0qzM;J2uGvRdnYcQ;YZEMOsNxtXc;WjQAqzYqwfN;IPNB2Lr8vAL;JkYwsLYHq10;U9c2gzlFoqA;wakk0z0lsXN;IjQDuxxAyuL;k2yqYp2F4SE;cdK2MIrOY5H&displayProperty=NAME",
+                                    url: "../api/29/analytics.json?dimension=pe:" + totalYear + "&&dimension=dx:VWoGH4ljTcb;AQzS6YBbCLj;apCcNrVhpUP;DiPMlc4xqYi&dimension=ou:" + organisationUnit[0].id + "&dimension=yTdbcMPm3SQ:ovni5bFtd3P;aLNZnLWXIZb;XaGkNcD023F;buF4OEy8cSD;kdCxLucy5Jx;zXOOKupcDLu;RMw5NksZi1K;Iw0rx4uZwIT;BzbZBigJD29;qRToFseJsem;ZTZgvIdkMmF;K2hjw7Q5am8;tHrw5BAJXHA;CanG6cwcrPQ;AStFfVE0qzM;J2uGvRdnYcQ;YZEMOsNxtXc;WjQAqzYqwfN;IPNB2Lr8vAL;JkYwsLYHq10;U9c2gzlFoqA;wakk0z0lsXN;IjQDuxxAyuL;k2yqYp2F4SE;cdK2MIrOY5H&displayProperty=NAME",
                                     data: JSON,
                                     success: function (data, status) {
                                             showData(data);
@@ -271,108 +289,87 @@ crossorigin="anonymous">
                 organisationUnitChildren.forEach( (element,index) => {
                     printValue["value" + 1] = parseInt(index+1);
                     printValue["value" + 2] = element.name;
+                    printValue["value" + 7] = orgUnitPopulation[element.name];
                     element.id = orgUnitChildrenGroupSet[element.name];
                     data.rows.forEach( child => {
                         if(element.id ==  child["3"]) {
                            
-                            if(child["0"] == "jF8EyzWf9Xm" ) {                                
+                            if(child["0"] == "VWoGH4ljTcb" ) {                                
                                     if (child["1"] == selectedDate) {
                                         printValue["value" + 3] = parseInt(child["4"]);
                                         boolCheck3 = false;
                                     } 
-                            }
-                            if(child["0"] == "VWoGH4ljTcb" ) {                                
-                                    if (child["1"] == selectedDate) {
-                                        printValue["value" + 4] = parseInt(child["4"]);
-                                        boolCheck4 = false;
-                                    } 
                                 for(i = 0 ; i < noOfMonth.length; i++) {
                                     if(child["1"] == noOfMonth[i])  {
-                                        printValue["value" + 5] += parseInt(child["4"]);
-                                        boolCheck5 = false;
+                                        printValue["value" + 4] += parseInt(child["4"]);
+                                        boolCheck4 = false;
                                     }
                                 }   
                             }
                             if(child["0"] == "AQzS6YBbCLj" ) {                                
                                     if (child["1"] == selectedDate) {
-                                        printValue["value" + 7] = parseInt(child["4"]); 
-                                        boolCheck7 = false; 
+                                        printValue["value" + 5] = parseInt(child["4"]); 
+                                        boolCheck5 = false;
                                     } 
                                 for(i = 0 ; i < noOfMonth.length; i++) {
                                     if(child["1"] == noOfMonth[i]) {
-                                        printValue["value" + 8] += parseInt(child["4"]);
-                                        boolCheck8 = false;
+                                        printValue["value" + 6] += parseInt(child["4"]);
+                                        boolCheck6 = false;
                                     } 
                                 }  
                             }
                             if(child["0"] == "apCcNrVhpUP" ) {                                
                                     if (child["1"] == selectedDate) {
-                                        printValue["value" + 10] = parseInt(child["4"]); 
-                                        boolCheck10 = false; 
+                                        printValue["value" + 9] = parseInt(child["4"]);
+                                        boolCheck9 = false; 
                                     } 
                                 for(i = 0 ; i < noOfMonth.length; i++) {
                                     if(child["1"] == noOfMonth[i]) {
-                                        printValue["value" + 11] += parseInt(child["4"]);
-                                        boolCheck11 = false;
+                                        printValue["value" + 10] += parseInt(child["4"]);
+                                        boolCheck10 = false;
                                     } 
                                 }  
                             }
                             if(child["0"] == "DiPMlc4xqYi" ) {                                
                                     if (child["1"] == selectedDate) {
-                                        printValue["value" + 13] = parseInt(child["4"]); 
-                                        boolCheck13 = false; 
+                                        printValue["value" + 12] = parseInt(child["4"]); 
+                                        boolCheck12 = false;
                                     } 
                                 for(i = 0 ; i < noOfMonth.length; i++) {
                                     if(child["1"] == noOfMonth[i]) {
-                                        printValue["value" + 14] += parseInt(child["4"]);
-                                        boolCheck14 = false;
+                                        printValue["value" + 13] += parseInt(child["4"]);
+                                        boolCheck13 = false;
                                     } 
                                 }  
                             }
                         }
                     })
-                    if(!boolCheck5) {
-                        printValue["value" + 6] = printValue["value" + 5] / noOfMonth.length;      
-                        printValue["value" + 6] =  printValue["value" + 6].toFixed(2)                
+                    if(printValue["value" + 7]) {
+                        printValue["value" + 8] = parseInt((Number(printValue["value" + 7]) / 12) * noOfMonth.length); 
                     } else {
-                        printValue["value" + 6] = "";
+                        printValue["value" + 8] = "";
                     }
-                    if(!boolCheck8) {
-                        printValue["value" + 9] = printValue["value" + 8] / noOfMonth.length;    
-                        printValue["value" + 9] = printValue["value" + 9].toFixed(2)                    
+                    if(!boolCheck10) {
+                        printValue["value" + 11] = (printValue["value" + 10] / printValue["value" + 8]) * 100;    
+                        printValue["value" + 11] = printValue["value" + 11].toFixed(2)                   
                     } else {
-                        printValue["value" + 9] = "";
+                        printValue["value" + 11] = "";
                     }
-                    if(!boolCheck11) {
-                        printValue["value" + 12] = printValue["value" + 11] / noOfMonth.length;    
-                        printValue["value" + 12] = printValue["value" + 12].toFixed(2)                    
-                    } else {
-                        printValue["value" + 12] = "";
-                    }
-                    if(!boolCheck14) {
-                        printValue["value" + 15] = printValue["value" + 14] / noOfMonth.length;    
-                        printValue["value" + 15] = printValue["value" + 15].toFixed(2)                    
-                    } else {
-                        printValue["value" + 15] = "";
-                    }
-                        if(Number.isNaN(printValue["value" + 6]) ) printValue["value" + 6] = "";
-                        if(Number.isNaN(printValue["value" + 9])) printValue["value" + 9] = "";
-                        if(Number.isNaN(printValue["value" + 12])) printValue["value" + 12] = "";
-                        if(Number.isNaN(printValue["value" + 15])) printValue["value" + 15] = "";
+                        if(!printValue["value" + 8]) printValue["value" + 8] = "";
+                        if(!printValue["value" + 11]) printValue["value" + 11] = "";
                         if(boolCheck3) printValue["value" + 3] = "";
                         if(boolCheck4) printValue["value" + 4] = "";
                         if(boolCheck5) printValue["value" + 5] = "";
-                        if(boolCheck7) printValue["value" + 7] = "";
-                        if(boolCheck8) printValue["value" + 8] = "";
+                        if(boolCheck6) printValue["value" + 6] = "";
+                        if(boolCheck9) printValue["value" + 9] = "";
                         if(boolCheck10) printValue["value" + 10] = "";
-                        if(boolCheck11) printValue["value" + 11] = "";
+                        if(boolCheck12) printValue["value" + 12] = "";
                         if(boolCheck13) printValue["value" + 13] = "";
-                        if(boolCheck14) printValue["value" + 14] = "";
                         
                         boolCheck2 = true, boolCheck3 = true, boolCheck4 = true, boolCheck5 = true, boolCheck6 = true, boolCheck7 = true, boolCheck8 = true,  boolCheck9 = true, boolCheck10 = true, boolCheck11 = true, boolCheck12 = true, boolCheck13 = true, boolCheck14 = true;
         
                         printTableBody += '<tr style="font-weight:800; text-align:center;">'
-                        for(let i=1; i<16;i++) {
+                        for(let i=1; i<14;i++) {
                             printTableBody += '<td>' + printValue["value"+i] + '</td>' 
                             globalTotal["value" + i] += Number(printValue["value" + i] );
                             printValue["value"+i] = 0;              
@@ -381,7 +378,9 @@ crossorigin="anonymous">
 
                 })
                 printTableBody +=  '<tr><td colspan="2" style="border:1px solid black; background:#DCDCDC;">Total</td>'
-                        for(let i=3; i<16;i++) {
+                    globalTotal["value" + 11] = ((globalTotal["value" + 10] / globalTotal["value" + 8]) * 100).toFixed(2);
+                    if(!globalTotal["value" + 11]) globalTotal["value" + 11] = 0;
+                        for(let i=3; i<14;i++) {
                             printTableBody += '<td style="border:1px solid black; background:#DCDCDC;">' + globalTotal["value"+i] + '</td>'              
                         }
                         printTableBody += '</tr>';
