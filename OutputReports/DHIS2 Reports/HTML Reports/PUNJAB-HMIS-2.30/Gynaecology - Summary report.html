@@ -160,8 +160,8 @@ crossorigin="anonymous">
         var orgUnit = dhis2.report.organisationUnitChildren;
         var organisationUnitChildren = orgUnit.sort((a,b)=> a.name.localeCompare(b.name));
         var level = dhis2.report.organisationUnitHierarchy.length;
-        var deliveriesDataSet = 0;
-
+        var DHdeliveriesDataSet = [],  SDHdeliveriesDataSet = [],  CHCdeliveriesDataSet = [],  PHCdeliveriesDataSet = [];
+        let childrenId = organisationUnitChildren.map(child => child.id).join(";")
         var year = parseInt(selectedDate.slice(0,4));
         var month = parseInt(selectedDate.slice(4,6));
         
@@ -222,11 +222,47 @@ crossorigin="anonymous">
         $.ajax({
                     type: "GET",
                     async: false,
-                    url: "../api/29/analytics.json?dimension=dx:mj8jBGG8R3F&dimension=pe:" + DeliveriescorrespondingPrevYear + "&filter=ou:" + selectedOrgUnit.id + "&displayProperty=NAME&outputIdScheme=UID&paging=false",
+                    url: "../api/29/analytics.json?dimension=dx:mj8jBGG8R3F&dimension=IE5c49tpu23:Kn6u8kZPK51;KYUgRXlBkkt;WRdcX6VM62R;osS36zuoUei&dimension=ou:" + childrenId + "&filter=pe:" + DeliveriescorrespondingPrevYear + "&displayProperty=NAME&paging=false",
                     data: JSON,
                     success: function (data, status) {
-                        data.rows.forEach(child=>  deliveriesDataSet += Number(child[2]))
-                    }
+                    
+                    data.rows.forEach(child =>  {    
+                        //DH
+                        if(child["1"] == "KYUgRXlBkkt" ) {
+                            
+                            if(!DHdeliveriesDataSet[child["2"]]) {          
+                                    DHdeliveriesDataSet[child["2"]] = Number(child["3"]);                                
+                            }
+                        }
+                        //SDH
+                        if(child["1"] == "osS36zuoUei" ) {
+                            
+                            if(!SDHdeliveriesDataSet[child["1"]]) {
+                                    SDHdeliveriesDataSet[child["2"]] = Number(child["3"]);                                
+                            }
+
+                        }
+                        
+                        //CHC 
+                        if(child["1"] == "Kn6u8kZPK51" ) {
+                            if(!CHCdeliveriesDataSet[child["1"]]) {
+                                    CHCdeliveriesDataSet[child["2"]] = Number(child["3"]);                                
+                            }
+
+                        }
+                        
+                        //PHC
+                        if(child["1"] == "WRdcX6VM62R" ) {
+                            
+                            if(!PHCdeliveriesDataSet[child["1"]]) {
+                                    PHCdeliveriesDataSet[child["2"]] = Number(child["3"]);                                
+                            }
+
+                        }
+                    })
+
+                            
+                }
             });
          $.ajax({
                     type: "GET",
@@ -310,24 +346,33 @@ crossorigin="anonymous">
 
                 }
                 
-
             });
+                if(DHdeliveriesDataSet[element.id]) {
+                    printValue["value" + 5] = printValue["value" + 5] + DHdeliveriesDataSet[element.id];
+                }
+                if(SDHdeliveriesDataSet[element.id]) {
+                    printValue["value" + 10] = printValue["value" + 10] + SDHdeliveriesDataSet[element.id];
+                }
+                
+                if(CHCdeliveriesDataSet[element.id]) {
+                    printValue["value" + 15] = printValue["value" + 15] + CHCdeliveriesDataSet[element.id];                
+                }
+                
+                if(PHCdeliveriesDataSet[element.id]) {
+                    printValue["value" + 20] = printValue["value" + 20] + PHCdeliveriesDataSet[element.id];                
+                }
             
-                printValue["value" + 5] = printValue["value" + 5] + deliveriesDataSet;
-                printValue["value" + 10] = printValue["value" + 10] + deliveriesDataSet;
-                printValue["value" + 15] = printValue["value" + 15] + deliveriesDataSet;
-                printValue["value" + 20] = printValue["value" + 20] + deliveriesDataSet;
                 printValue["value" + 4] = printValue["value" + 2] + printValue["value" + 3];
                 printValue["value" + 6 ] = ((printValue["value" + 4] - printValue["value" + 5])/printValue["value"+5])*100;
-                if(Number.isNaN(printValue["value" + 6]) || printValue["value" + 6] == "infinity") printValue["value" + 6] = 0;
+                if(Number.isNaN(printValue["value" + 6]) || printValue["value" + 6] == Infinity) printValue["value" + 6] = 0;
                 else printValue["value" + 6 ] = printValue["value" + 6 ].toFixed(2);
                 printValue["value" + 9] = printValue["value" + 7] + printValue["value" + 8];
                 printValue["value" + 11] = ((printValue["value" + 9] - printValue["value" + 10])/printValue["value"+10])*100;
-                if(Number.isNaN(printValue["value" + 11]) || printValue["value" + 11] == "infinity") printValue["value" + 11] = 0;
+                if(Number.isNaN(printValue["value" + 11]) || printValue["value" + 11] == Infinity) printValue["value" + 11] = 0;
                 else printValue["value" + 11 ] = printValue["value" + 11].toFixed(2);
                 printValue["value" + 14] = printValue["value" + 12] + printValue["value" + 13];
                 printValue["value" + 16] = ((printValue["value" + 14] - printValue["value" + 15])/printValue["value"+15])*100; 
-                if(Number.isNaN(printValue["value" + 16]) || printValue["value" + 16] == "infinity") printValue["value" + 16] = 0;
+                if(Number.isNaN(printValue["value" + 16]) || printValue["value" + 16] == Infinity) printValue["value" + 16] = 0;
                 else printValue["value" + 16 ] = printValue["value" + 16 ].toFixed(2);                                            
                 printValue["value" + 19] = printValue["value" + 17] + printValue["value" + 18];
                 printValue["value" + 21] = ((printValue["value" + 19] - printValue["value" + 20])/printValue["value"+20])*100;
@@ -352,15 +397,15 @@ crossorigin="anonymous">
                 printTableBody += '</tr>';     
             });
                 globalTotal["value" + 6 ] = ((globalTotal["value" + 4] - globalTotal["value" + 5])/globalTotal["value"+5])*100;
-                if(Number.isNaN(globalTotal["value" + 6]) || globalTotal["value" + 6] == "infinity") globalTotal["value" + 6] = 0;
+                if(Number.isNaN(globalTotal["value" + 6]) || globalTotal["value" + 6] == Infinity) globalTotal["value" + 6] = 0;
                 else globalTotal["value" + 6 ] = globalTotal["value" + 6 ].toFixed(2);
                 
                 globalTotal["value" + 11] = ((globalTotal["value" + 9] - globalTotal["value" + 10])/globalTotal["value"+10])*100;
-                if(Number.isNaN(globalTotal["value" + 11]) || globalTotal["value" + 11] == "infinity") globalTotal["value" + 11] = 0;
+                if(Number.isNaN(globalTotal["value" + 11]) || globalTotal["value" + 11] == Infinity) globalTotal["value" + 11] = 0;
                 else globalTotal["value" + 11 ] = globalTotal["value" + 11].toFixed(2);
 
                  globalTotal["value" + 16] = ((globalTotal["value" + 14] - globalTotal["value" + 15])/globalTotal["value"+15])*100; 
-                if(Number.isNaN(globalTotal["value" + 16]) || globalTotal["value" + 16] == "infinity") globalTotal["value" + 16] = 0;
+                if(Number.isNaN(globalTotal["value" + 16]) || globalTotal["value" + 16] == Infinity) globalTotal["value" + 16] = 0;
                 else globalTotal["value" + 16 ] = globalTotal["value" + 16 ].toFixed(2);                                            
                
                 globalTotal["value" + 21] = ((globalTotal["value" + 19] - globalTotal["value" + 20])/globalTotal["value"+20])*100;
