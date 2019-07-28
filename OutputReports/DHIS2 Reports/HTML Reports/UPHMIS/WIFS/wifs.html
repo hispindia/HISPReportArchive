@@ -87,8 +87,7 @@
   }
 
   function extractMetaData(wb){
-      
-    
+         
       var sheet = wb.sheet(0);
       var metadata = sheet._rows.reduce(function(list,obj,index){
 
@@ -99,7 +98,8 @@
           }
           return list;
       },[]);
-debugger
+
+      return metadata;
       
       function assembleHeaderInfo(row1,index){
           const FIRST_DELIMITER = "#";
@@ -143,13 +143,51 @@ debugger
       }
 
   }
+
+  function fetchData(metadata,callback){
+      debugger
+      var orgUnit = dhis2.report.organisationUnit; // An object      
+      var ouid = orgUnit.id;
+
+      var periods = dhis2.report.periods; // An array with period identifiers
+      var period = periods[0];
+      
+      var dx = getDe(metadata);
+      //const baseURL = "https://uphmis.in/uphmis";
+      
+      const baseURL = "..";
+      $.ajax({
+          async: false,
+          url: baseURL+"/api/analytics.json?dimension="+dx+"&dimension=pe:" + period + "&dimension=ou:" + ouid + "",
+          success: function (data) {
+              callback(data);
+          }
+      });
+
+      function getDe(list){
+          return list.reduce(function(str,obj){
+
+              if (obj.domain == "de"){
+                  str = str + obj.field+"."+obj.args+";";
+              }
+              return str;
+          },"dx:");
+      }
+  }
+
+  function populateExcel(data){
+      var dxMap = 
+      debugger
+  }
   
   jQuery( document ).ready( function() {
       // Put javascript to be executed after page is loaded here
       XlsxPopulate.fromDataAsync(EXCEL_TEMPLATE,{base64:true}).then(function(wb){
           cleanWB(wb)
-          extractMetaData(wb);
-          debugger
+          var metadata = extractMetaData(wb);
+          fetchData(metadata,function(data){
+              populateExcel(data)
+          });
       });          
   })
 
@@ -167,7 +205,7 @@ debugger
 
 </div>
 
-<!-- Remove all content after this line after reading it -->
+<!-- Remove all content after this line after reading it 
 
 <h3>This is a template for HTML/javascript based reports</h3>
 
@@ -224,3 +262,4 @@ debugger
   DHIS 2 Web API documentation can be found  
   <a href="http://dhis2.org/doc/snapshot/en/user/html/ch23.html">here</a>.
 </p>
+-->
