@@ -1,0 +1,884 @@
+
+<!-- <script type="text/javascript" src="javascript/DownloadAsExcel.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.js"></script>
+<script>
+    var url = "";
+    var pe1 = "";
+    var pe = 0;
+    var ou1 = "";
+    var ou = "";
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selectedOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+    var tableDX = [];
+    var totalDX = [];
+    var deUIDs = "";
+    var orgUnitChildrenUIds = "";
+    var orgUnitChildrenArray = [];
+    var no_of_orgUnitChildren = 0;
+    var periodsStr = "";
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2];
+    var periodstr = gotPeriod.substr(0, 4);
+    var periodstr1 = parseInt(periodstr) + 1;
+    var periodstr5 = parseInt(periodstr) + 2;
+    var periodstr4 = parseInt(periodstr) + 2;
+    var periodstr2 = periodstr1.toString();
+    var periodstr21 = parseInt(periodstr2);
+    var periodstr3 = periodstr2 + ";" + periodstr;
+    var trIDsArray = [];
+    var deUIDsArray = [];
+    var deUIDsStr = "";
+    var dataJSON;
+    var periodArray = [];
+    var urlParams = url.split('&');
+    var sdParam = "";
+    var edParam = "";
+    // jsonObj
+    // jsonObj
+    var dataJsonObj;
+    var dataoutput;
+
+    var showTable = "dataTable";
+    var showRow = "r1";
+
+    $.each(orgUnitChildren, function (i) {
+        orgUnitChildrenArray.push([orgUnitChildren[i].id, orgUnitChildren[i].name]);
+        no_of_orgUnitChildren++;
+    });
+    orgUnitChildrenArray.sort(arraySorting);
+
+    $(document).ready(function () {
+
+        url = window.location.href;
+        pe1 = url.split("&")[1];
+        pe = pe1.split("=")[1];
+        ou1 = url.split("&")[2];
+        ou = ou1.split("=")[1];
+        document.getElementById("anotherYear").innerHTML = pe;
+        $('#btnBack').hide();
+
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth() + 1; //January is 0!
+        var yyyy = today.getFullYear();
+
+        if (dd < 10) {
+            dd = '0' + dd
+        }
+        if (mm < 10) {
+            mm = '0' + mm
+        }
+        today = yyyy + '-' + mm + '-' + dd;
+        document.getElementById("todayDate").innerHTML = today;
+        if (selectedOrgUnitLevel == 1 || selectedOrgUnitLevel == 2) {
+            alert("Please Select Country level");
+            window.history.back();
+        }
+        else if (selectedOrgUnitLevel == 3) {
+            $(".hideInPrint").hide();
+            // $("#btnExport").click(function (e) {
+            //     window.open('data:application/vnd.ms-excel,' + encodeURIComponent($('#printing').html()));
+            //     e.preventDefault();
+            // });
+            document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+            document.getElementById('periodID').innerHTML = periodstr4;
+
+
+            $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
+                orgUnitChildrenUIds += childOrgUnit[0] + ";";
+            });
+
+            $("table > tbody").find("td").each(function (i, td) {
+
+                if (td.id.search("_") == -1) {
+                    if (td.id.search("-") > -1) {
+                        if ($.inArray(td.id.split('-')[0], deUIDsArray) == -1) {
+                            deUIDsArray.push(td.id.split('-')[0]);
+                        }
+                        trIDsArray.push(td.id);
+                    }
+                } else {
+                    var ids = td.id.split('_');
+                    $.each(ids, function (j, uid) {
+                        if ($.inArray(uid.split('-')[0], deUIDsArray) == -1) {
+                            deUIDsArray.push(uid.split('-')[0]);
+                        }
+                    });
+                    trIDsArray.push(td.id);
+                }
+            });
+            $.each(deUIDsArray, function (i, item) {
+                deUIDsStr += item + ";";
+            });
+
+            $.each(urlParams, function (i, item) {
+                if (item.split("=")[0] == "pe") {
+                    sdParam = item.split("=")[1];
+                }
+                else if (item.split("=")[0] == "ed") {
+                    edParam = item.split("=")[1];
+                }
+            });
+            edParam = edParam.substring(0, 4) + '-' + edParam.substring(4, 7);
+            edParam = edParam.replace(/-/g, "");
+            console.log(edParam);
+            generateMonthlyPeriods(sdParam, edParam);
+        } loadData();
+
+    });
+
+    // function for load table data
+    function loadData() {
+        var url = '../api/dataValueSets.json?dataSet=HuEPuYmPfvj,FXUtbpATKSD,HEldDUlDSFX&orgUnit=' + orgUnit.id + "&period=" + periodstr + "&skipMeta=true";
+        var url1 = '../api/dataValueSets.json?dataSet=FXUtbpATKSD,HEldDUlDSFX&orgUnit=' + orgUnit.id + "&period=" + periodstr;
+        console.log('../api/analytics.json?dimension=dx:' + deUIDsStr + '&dimension=co&dimension=ou:' + orgUnit.id + "&dimension=co&dimension=pe:" + periodstr3 + "&skipMeta=true");
+        $.get(url, function (json) {
+            dataJsonObj = json;
+            console.log(dataJsonObj);
+            $.get(url1, function (json2) {
+                dataJsonObj2 = json2;
+                console.log(dataJsonObj2);
+                loadTable();
+            });
+        });
+    }
+    function loadTable() {
+
+        $(".heading1 > td").attr('colspan', no_of_orgUnitChildren + 3);
+        $("#periodID").attr('colspan', no_of_orgUnitChildren);
+        $(".rowH1 > td:nth-child(2)").attr('colspan', no_of_orgUnitChildren + 1);
+        $(".rowH2 > td:nth-child(2)").attr('colspan', no_of_orgUnitChildren + 1);
+        $(".rowH3 > td:nth-child(2)").attr('colspan', no_of_orgUnitChildren + 1);
+        $(".rowH1").html();
+
+        $(".rowH1").append("<td>&nbsp</td>");
+        $(".rowH2").append("<td>&nbsp</td>");
+        $(".period").append("<td>&nbsp</td>");
+
+        $(".noUIDs").append("<td>&nbsp</td>");
+
+        var addOrgUnits = "";
+        $("#orgUnits").html();
+        $.each(orgUnitChildrenArray, function (i, child) {
+            addOrgUnits += "<td style='text-align: center'>" + child[1] + "</td>";
+        });
+        $("#tHead4").append(addOrgUnits);
+        $.each(deUIDsArray, function (i, rowID) {
+            var addTdata = "";
+            $("#" + rowID[0] + "-" + rowID[1]).html();
+            $.each(orgUnitChildrenArray, function (j, child) {
+                addTdata += "<td colspan='1' style='text-align: center'>" + getCellValue(rowID[0], orgUnit.id, rowID[1]) + "</td>";
+            });
+            $("#" + rowID[0] + "-" + rowID[1]).append(addTdata);
+        });
+        // dataoutput = dataJsonObj2.dataValues[0].value;
+        // document.getElementById('dataoutput').innerHTML = dataoutput;
+        $.each(trIDsArray, function (idx, trID) {
+
+            if (trID == 'TywFTHzhc4s-HllvX50cXC0') {
+                var cellValue = 0;
+                cellValue = getCellValue1(trID.split('-')[0], orgUnit.id, trID.split('-')[1], periodstr);
+                //	$("#" + trID).append( cellValue );
+                if(cellValue!=0) {
+                    var sp = splits = cellValue.split('-', 3);
+                    var sp0 = sp[0];
+                    var sp1 = sp[1];
+                    var sp2 = sp[2];
+                    console.log(sp0);
+                    console.log(sp1);
+                    console.log(sp2);
+                    var res = sp0 + '-' + sp1 + '-' + sp2;
+
+                    console.log(res);
+                    document.getElementById('revdate').innerHTML = '';
+                    document.getElementById('revdate').innerHTML = res;
+                }               
+            }
+            else if (trID == 'LWOkfQ544rZ-HllvX50cXC0') {
+                var cellValue = 0;
+                cellValue = getCellValue1(trID.split('-')[0], orgUnit.id, trID.split('-')[1], periodstr);
+                //	$("#" + trID).append( cellValue );
+                if(cellValue!=0) {
+                    var sp = splits = cellValue.split('-', 3);
+                    var sp0 = sp[0];
+                    var sp1 = sp[1];
+                    var sp2 = sp[2];
+                    console.log(sp0);
+                    console.log(sp1);
+                    console.log(sp2);
+                    var res = sp0 + '-' + sp1 + '-' + sp2;
+
+                    console.log(res);
+                    document.getElementById('revdates').innerHTML = '';
+                    document.getElementById('revdates').innerHTML = res;
+                }
+            }
+            else if (trID == 'kBUpO96e5eT-HllvX50cXC0') {
+                var cellValue = 0;
+                cellValue = getCellValue1(trID.split('-')[0], orgUnit.id, trID.split('-')[1], periodstr);
+                $("#" + trID).append(cellValue);
+            }
+
+            
+            else {
+
+                var cellValue = 0;
+
+                if (trID.search('_') == -1) {
+                    cellValue = getCellValue(trID.split('-')[0], orgUnit.id, trID.split('-')[1], periodstr);
+                } else {
+                    var UIDs = trID.split('_');
+                    $.each(UIDs, function (j, deID) {
+                        cellValue += getCellValue(deID.split('-')[0], orgUnit.id, deID.split('-')[1], periodstr);
+                    });
+                }
+                $("#" + trID).append(cellValue);
+            }
+        });
+    }
+
+    // function for getting cell values
+    function getCellValue(de, ou, co, pe) {
+        var result = null;
+        var re = /^[A-Za-z]+$/;
+        for (var i = 0; i < dataJsonObj.dataValues.length; i++) {
+            if (dataJsonObj.dataValues[i].dataElement == de && dataJsonObj.dataValues[i].orgUnit == ou && dataJsonObj.dataValues[i].categoryOptionCombo == co && dataJsonObj.dataValues[i].period == pe && dataJsonObj.dataValues[i].value != null) {
+                result = dataJsonObj.dataValues[i].value;
+            }
+        }
+        if (result === 'true') {
+            result = 'Yes';
+            return result;
+        } else
+            if (result === 'false') {
+                result = 'No';
+                return result;
+            }
+            else
+
+                if (re.test(result))
+                    return result;
+                else
+                    return parseInt(result);
+    }
+
+    function getCellValue1(de, ou, co, pe) {
+        var result = 0;
+        for (var i = 0; i < dataJsonObj2.dataValues.length; i++) {
+            if (dataJsonObj2.dataValues[i].dataElement == de && dataJsonObj2.dataValues[i].orgUnit == ou && dataJsonObj2.dataValues[i].categoryOptionCombo == co && dataJsonObj2.dataValues[i].period == pe && dataJsonObj2.dataValues[i].value != null) {
+                result = dataJsonObj2.dataValues[i].value;
+            }
+        }
+        return result;
+    }
+    function generateMonthlyPeriods(sD, eD) {
+        var sDate = new Date(parseInt(sD.substring(0, 4)), parseInt(sD.substring(4, 6) - 1));
+        sDate.setDate(1);
+        var eDate = new Date(parseInt(eD.substring(0, 4)), parseInt(eD.substring(4, 6)));
+
+        while (sDate < eDate) {
+            var month = sDate.getMonth() + 1;
+            month = (month) > 9 ? month : "0" + month;
+
+            var dhisDate = sDate.getFullYear() + "" + month;
+            periodsStr = (periodsStr == "") ? dhisDate : (periodsStr + ";" + dhisDate);
+
+            periodArray.push(dhisDate);
+
+            sDate.setMonth(sDate.getMonth() + 1);
+        }
+    }
+    // function to convert periods to more visible info
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1") strMonth = "January";
+        else if (month == "02" || month == "2") strMonth = "February";
+        else if (month == "03" || month == "3") strMonth = "March";
+        else if (month == "04" || month == "4") strMonth = "April";
+        else if (month == "05" || month == "5") strMonth = "May";
+        else if (month == "06" || month == "6") strMonth = "June";
+        else if (month == "07" || month == "7") strMonth = "July";
+        else if (month == "08" || month == "8") strMonth = "August";
+        else if (month == "09" || month == "9") strMonth = "September";
+        else if (month == "10") strMonth = "October";
+        else if (month == "11") strMonth = "November";
+        else if (month == "12") strMonth = "December";
+        return strMonth + " " + year;
+    }
+    // function to hide loading animation
+</script>
+<!-- script for printing ******************************************************************-->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<script>
+    function genScreenshot() {
+
+        var doc = new jsPDF('p', 'pt', 'letter');
+        doc.addHTML($('#printing'), function () {
+            doc.save('Annual MDT request_' + orgUnit.name + '_' + periodstr4 + '.pdf');
+            location.reload();
+        });
+
+
+    }
+</script>
+
+
+<script type="text/javascript">
+    function convert(dataURI) {
+        // convert base64 to raw binary data held in a string
+        // doesn't handle URLEncoded DataURIs
+        var byteString;
+        if (dataURI.split(',')[0].indexOf('base64') >= 0)
+            byteString = atob(dataURI.split(',')[1]);
+        else
+            byteString = unescape(dataURI.split(',')[1]);
+        // separate out the mime component
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+        // write the bytes of the string to an ArrayBuffer
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+
+        // write the ArrayBuffer to a blob, and you're done
+        return new Blob([ab], { type: mimeString });
+    }
+
+</script>
+
+<span style="font-size:12px;">
+    <style>
+        td {
+            padding: 5px 10px;
+            font: Arial, Helvetica, sans-serif;
+        }
+
+        .vtext {
+            width: 1px;
+            height: 50px;
+            -ms-transform: rotate(90deg);
+            -webkit-transform: rotate(90deg);
+            transform: rotate(90deg);
+            border-style: hidden;
+        }
+
+        #dataTable {
+            margin: auto;
+            background-color: white;
+
+        }
+    </style>
+</span>
+
+
+<table id="buttonTable">
+    <tr>
+        <td>
+
+            <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='http://dhis.searo.who.int/lep/dhis-web-reporting/displayViewReportForm.action'"
+            />
+            <!--   <input type="button" onclick="printContent('printing');" value="Print"/>-->
+            <button>
+                <a href="javascript:genScreenshot()"> Download PDF</a>
+            </button>
+
+            <button id="btnExport" onclick="tableToExcel('printing', 'Annual MDT Report','Annual MDT Report_' + orgUnit.name + '_' + periodstr4 +' .xls')">
+                Downlaod Excel </button>
+        </td>
+    </tr>
+    <a id="dlink" style="display:none;"></a>
+
+</table>
+
+<!--<br/>-->
+<div id="test">
+    <div id="printing">
+        <div id="showAnnualMDTReport">
+            <table id="dataTable" class="table" cellspacing='6' cellpadding='4' border='1' width='100%' style='border-collapse: collapse; font-size: 14px;'>
+                <style>
+                    .heading1 {
+                        font-weight: bold;
+                        background-color: #c1c1c1;
+                        text-align: center;
+                        font-size: 24px;
+                    }
+
+                    .heading2 {
+                        font-weight: bold;
+                        background-color: #c1c1c1;
+                        text-align: left;
+                        font-size: 18px;
+                    }
+
+                    .tHead4 {
+                        font-weight: bold;
+                        background-color: #c1c1c1;
+                        text-align: left;
+                        font-size: 18px;
+                    }
+
+                    #periodTitle {
+                        font-weight: bold;
+                        background-color: #f1f1f1;
+                        text-align: center;
+                        font-size: 18px;
+                    }
+
+                    .rowH1 {
+                        font-weight: bold;
+                        background-color: #c1c1c1;
+                    }
+
+                    .rowH2 {
+                        font-weight: bold;
+                        background-color: #cae3e7;
+                    }
+
+                    .rowH3 {
+                        font-weight: bold;
+                        background-color: #e1e1e1;
+                    }
+
+                    #dataTable>tbody>tr>td:first-child {
+                        text-align: center;
+                    }
+
+                    .label {
+                        display: inline;
+                    }
+                    tr.noBorder td {
+                        border: 0;
+                    }
+                    td.noBorder {
+                        border: 0;
+                    }
+                   
+                    
+                </style>
+
+                <tbody>
+                    <tr>
+                        <td bgcolor="#DCDCDC" colspan="9" width="1245">
+                            <div align="right">Annual Request</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="150" rowspan="3" align="left" valign="top">
+                                <img src="http://dhis.searo.who.int/lep/api/staticContent/logo_front" style="border:none">
+                        </td>
+                        <td style="border:none;" bgcolor="#FFFFCC" colspan="9" align="left" valign="top">
+                            <div align="center">
+                                <b>WORLD HEALTH ORGANIZATION</b>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:none;" bgcolor="#FFFFCC" colspan="9" align="center">
+                            <b>LEPROSY ELIMINATION PROJECT</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td  bgcolor="#FFFFCC" colspan="8" align="right" class="noBorder">
+                            <b>
+                                <p class="label " style="font-size: 30px; text-align :center;">ANNUAL REQUEST TO WHO FOR ANTI-LEPROSY MEDICINE SUPPLY</p>
+                            </b>
+                        </td>
+                    </tr>
+                    <tr>
+                            <td  bgcolor="#FFFFCC" style="text-align: right;"  colspan="8">Request Year:</td>
+                            <td  align="left" id="periodID"  colspan="1"></td>
+                    </tr>
+
+                       
+                    <tr>
+                        <td rowspan="2" colspan="3" bgcolor="#FFFFCC">
+                            <b>COUNTRY:</b>
+                        </td>
+                        <td style="text-align: center;" colspan="2" rowspan="2" id="orgUnitID"></td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>MB PATIENTS</b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>PB PATIENTS</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" bgcolor="#FFFFCC">
+                            <b>ADULT</b>
+                        </td>
+                        <td align="center" bgcolor="#FFFFCC">
+                            <b>CHILD&nbsp;&nbsp;</b>
+                        </td>
+                        <td align="center" bgcolor="#FFFFCC">
+                            <b>ADULT</b>
+                        </td>
+                        <td align="center" bgcolor="#FFFFCC">
+                            <b>CHILD&nbsp;&nbsp;&nbsp;&nbsp;</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC">
+                            <b>
+                                <p class="label">Total new cases detected</p>
+                                <font color=red>* </font>
+                            </b>
+                        </td>
+
+                        <td align="center" id="anotherYear" colspan="2"></td>
+                        <td align="center" id="evXyDr6c7eu-Te9RyzefSAz_evXyDr6c7eu-sdMU6tpPki6_IQgrP2W9gTV-Te9RyzefSAz_IQgrP2W9gTV-sdMU6tpPki6">&nbsp;</td>
+                        <td align="center" id="evXyDr6c7eu-ZZFiCRpT37i"></td>
+                        <td align="center" id="gVmFx873rdZ-Te9RyzefSAz_gVmFx873rdZ-sdMU6tpPki6"></td>
+                        <td align="center" id="gVmFx873rdZ-ZZFiCRpT37i"></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC">
+                            <b>
+                                <p class="label">Number of latest cases registerd</p>
+                                <font color=red>* </font>
+                            </b>
+                        </td>
+
+                        <td align="center" colspan="2" id="kBUpO96e5eT-HllvX50cXC0"></td>
+                        <td align="center" colspan="1" id="xvjPwasBh1i-Te9RyzefSAz"></td>
+                        <td align="center" colspan="1" id="xvjPwasBh1i-ZZFiCRpT37i"></td>
+                        <td align="center" colspan="1" id="B3ohAQdMJ4i-Te9RyzefSAz"></td>
+                        <td align="center" colspan="1" id="B3ohAQdMJ4i-ZZFiCRpT37i"></td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="9"></td>
+                    </tr>
+                    <tr bgcolor="#FFFFCC" height="20">
+                        <td style="text-align: left;" colspan="9">
+                            <p class="label"><b>
+                                <font color=red>* </font>As WHO provides both adult and child blister packs, please provide a breakdown by the type of case. WHO will review and confirm your medicine requirements basing on the reported data. The new supply or supplies will normally be shipped within next 12 months depending on the trend and available stocks. A detailed supply plan will be provided by WHO.</b></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9"></td>
+
+                    </tr>
+                    <tr>
+                        <td rowspan="2" style="text-align: left;" colspan="3" bgcolor="#FFFFCC">
+                            <b>STOCKS
+                                <font color=red>** </font>
+                            </b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>MB (3 drugs) Blisters</b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>PB( 2 drugs)Blisters</b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>CLOFAZIMINE Capsules</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>ADULT</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>CHILD</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>ADULT</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>CHILD&nbsp;&nbsp;&nbsp;</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>50 mg</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>100 mg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b>
+                        </td>
+                    </tr>
+                    <tr id="tot">
+                        <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC">
+                            <b>CENTRAL LEVEL STOCKS</b>
+                        </td>
+
+                        <td align="center" colspan="1" id="L7hh1YhgC9r-L4l8bjmXAOw">&nbsp;</td>
+                        <td align="center" colspan="1" id="L7hh1YhgC9r-FguxPzk0zgd">&nbsp;</td>
+                        <td align="center" colspan="1" id="iPq97RFrzOM-L4l8bjmXAOw">&nbsp;</td>
+                        <td align="center" colspan="1" id="iPq97RFrzOM-FguxPzk0zgd">&nbsp;</td>
+                        <td align="center" colspan="1" id="sU0XC8KwCMS-j8nRl4XOh9Z">&nbsp;</td>
+                        <td align="center" colspan="1" id="sU0XC8KwCMS-muHyaF03SpI">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC">
+                            <b>REGIONAL LEVEL STOCKS</b>
+                        </td>
+
+                        <td align="center" colspan="1" id="G7tRDnxDLu1-L4l8bjmXAOw">&nbsp;</td>
+                        <td align="center" colspan="1" id="G7tRDnxDLu1-FguxPzk0zgd">&nbsp;</td>
+                        <td align="center" colspan="1" id="v37Or4BVtAp-L4l8bjmXAOw">&nbsp;</td>
+                        <td align="center" colspan="1" id="v37Or4BVtAp-FguxPzk0zgd">&nbsp;</td>
+                        <td align="center" colspan="1" id="VY0IqaYyUU4-j8nRl4XOh9Z">&nbsp;</td>
+                        <td align="center" colspan="1" id="VY0IqaYyUU4-muHyaF03SpI">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC">
+                            <b>DISTRICT LEVEL STOCKS</b>
+                        </td>
+                        <td align="center" colspan="1" id="hUpNI5ioZ63-L4l8bjmXAOw">&nbsp;</td>
+                        <td align="center" colspan="1" id="hUpNI5ioZ63-FguxPzk0zgd">&nbsp;</td>
+                        <td align="center" colspan="1" id="AvMSN2UQsy6-L4l8bjmXAOw">&nbsp;</td>
+                        <td align="center" colspan="1" id="AvMSN2UQsy6-FguxPzk0zgd">&nbsp;</td>
+                        <td align="center" colspan="1" id="xqMSnnJSv8O-j8nRl4XOh9Z">&nbsp;</td>
+                        <td align="center" colspan="1" id="xqMSnnJSv8O-muHyaF03SpI">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC">
+                            <b>SUPPLIES ON THE WAY TO THE COUNTRY (IN THE PIPELINE)</b>
+                        </td>
+                        <td align="center" colspan="1" id="tp6QUfVDv5N-L4l8bjmXAOw"  >&nbsp;</td>
+                        <td align="center" colspan="1" id="tp6QUfVDv5N-FguxPzk0zgd"  >&nbsp;</td>
+                        <td align="center" colspan="1" id="sSA6nyxkXye-L4l8bjmXAOw"  >&nbsp;</td>
+                        <td align="center" colspan="1" id="sSA6nyxkXye-FguxPzk0zgd"  >&nbsp;</td>
+                        <td align="center" colspan="1" id="pS0pxWNAPku-j8nRl4XOh9Z"  >&nbsp;</td>
+                        <td align="center" colspan="1" id="pS0pxWNAPku-muHyaF03SpI"  >&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="text-align: left;" bgcolor="#3366ff">
+                            <b>TOTAL STOCKS</b>
+                        </td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="L7hh1YhgC9r-L4l8bjmXAOw_G7tRDnxDLu1-L4l8bjmXAOw_hUpNI5ioZ63-L4l8bjmXAOw_tp6QUfVDv5N-L4l8bjmXAOw"></td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="L7hh1YhgC9r-FguxPzk0zgd_G7tRDnxDLu1-FguxPzk0zgd_hUpNI5ioZ63-FguxPzk0zgd_tp6QUfVDv5N-FguxPzk0zgd"></td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="iPq97RFrzOM-L4l8bjmXAOw_v37Or4BVtAp-L4l8bjmXAOw_AvMSN2UQsy6-L4l8bjmXAOw_sSA6nyxkXye-L4l8bjmXAOw"></td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="iPq97RFrzOM-FguxPzk0zgd_v37Or4BVtAp-FguxPzk0zgd_AvMSN2UQsy6-FguxPzk0zgd_sSA6nyxkXye-FguxPzk0zgd"></td>
+                        <td align="center" bgcolor="#3366ff"  colspan="1" id="sU0XC8KwCMS-j8nRl4XOh9Z_VY0IqaYyUU4-j8nRl4XOh9Z_xqMSnnJSv8O-j8nRl4XOh9Z_pS0pxWNAPku-j8nRl4XOh9Z"></td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="sU0XC8KwCMS-muHyaF03SpI_VY0IqaYyUU4-muHyaF03SpI_xqMSnnJSv8O-muHyaF03SpI_pS0pxWNAPku-muHyaF03SpI"></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;" colspan="9"><b>
+                            <font color=red>Important: Ignore any stocks of loose or expired drugs. </font></b>
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td colspan="9"></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;" colspan="5">
+                            <b></b>
+                        </td>
+                        <td style="text-align: left;" colspan="3" bgcolor="#FFFFCC">
+                            <b>Stock check date :</b>
+                        </td>
+                        <td  colspan="1" style="text-align: left;" type="date" id="TywFTHzhc4s-HllvX50cXC0" ><span id="revdate"></span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;" width="1245" colspan="9" bgcolor="#FFFFCC"><b>
+                        <font color=red>**</font> Please complete this section on stocks as fully as possible, keeping in mind that significant quantities of medicines may exist at regional and district levels, which if ignored, may result in an oversupply by WHO and consequent wastage due to expired drugs. Only stocks of medicines donated by WHO for the country leprosy programmes have to be taken into consideration. Please show in the field "Remarks"details of any stocks within<font color=red> up to 12 months</font> of expiry, giving quantity, batch number and expiry date.</b></td>
+                    </tr>
+                    <tr>
+                        <td colspan="9"></td>
+                    </tr>
+                    <tr  colspan="9">
+                        <td bgcolor="#ffc0cb"  colspan="5" style="text-align: left;"><b><span>Request in accordance with the 2018 WHO guidelines, 3 drugs clofazimine/dapsone/rifampicin for MB and PB patients</span></b></td>
+                        <td  colspan="4" style="text-align: left;" id="DQEId12dadC-HllvX50cXC0">&nbsp; </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#ffc0cb"  colspan="1" style="text-align: left;"><b><span>Shift Date</span></b></td>
+                        <td  colspan="8" style="text-align: left;" id="LWOkfQ544rZ-HllvX50cXC0" ><span id="revdates"></span></td>
+                       
+                    </tr>
+                    <tr>
+                        <td colspan="9"></td>
+                    </tr>
+                   
+                    <tr>
+                        <td rowspan="3" style="text-align: left;" colspan="1" bgcolor="#FFFFCC">
+                            <b>REQUEST for medicines
+                                <font color=red>***</font>
+                            </b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>MB Patients</b>
+                        </td>
+                        <td colspan="4" align="center" bgcolor="#FFFFCC">
+                                <b>PB Patients</b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                                <b>ENL Reactions</b>
+                        </td>
+                        
+                    </tr>
+
+                    <tr>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>3-drug Blisters</b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>3-drug Blisters</b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>2-drug Blisters</b>
+                        </td>
+                        <td colspan="2" align="center" bgcolor="#FFFFCC">
+                            <b>CLOFAZIMINE Capsules</b>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>ADULT</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>CHILD&nbsp;&nbsp;&nbsp;</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>ADULT</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>CHILD</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>ADULT</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>CHILD</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>50 mg</b>
+                        </td>
+                        <td align="center" colspan="1" bgcolor="#FFFFCC">
+                            <b>100 mg&nbsp;&nbsp;&nbsp;</b>
+                        </td>
+                    </tr>
+
+                    <tr id="tot">
+                        <td style="text-align: left;" colspan="1" bgcolor="#3366ff">
+                            <b>TOTAL</b>
+                        </td>
+
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="Ya3pZ5MqWb0-Te9RyzefSAz">&nbsp;</td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="Ya3pZ5MqWb0-ZZFiCRpT37i">&nbsp;</td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="tNDxT1pfzUM-Te9RyzefSAz">&nbsp;</td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="tNDxT1pfzUM-ZZFiCRpT37i">&nbsp;</td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="rPP8oKUZTK8-Te9RyzefSAz">&nbsp;</td>
+                        <td align="center" bgcolor="#3366ff" colspan="1" id="rPP8oKUZTK8-ZZFiCRpT37i">&nbsp;</td>
+                        <td align="center" colspan="1" id="tt8SqZ6SXRy-j8nRl4XOh9Z">&nbsp;</td>
+                        <td align="center" colspan="1" id="tt8SqZ6SXRy-muHyaF03SpI">&nbsp;</td>
+                    </tr>
+                    <tr bgcolor="#FFFFCC">
+                        <td style="text-align: left;" width="1245" colspan="9">
+                            <p class="label"><b>
+                                    <font color=red>***</font> Please estimate country demand for each type of blister required for the supply year in question (the 18-month period from July of the current year to December of the following year) and fill out this section. WHO does not recommend creating buffer stocks, as it maintains adequate stocks at its supplier’s production site and at regional hubs in Geneva and Manila under optimal conditions; WHO can respond rapidly to unforseen demand. WHO encourages countries to plan case detection campaigns and other important activities that may impact their need for medicines in advance and to incorporate anticipated medicine needs in this request form. WHO will review and confirm your medicine requirement based on the reported data. The new medicine supplies will normally be shipped within 12 months, depending on the case trend and available inventory. A detailed supply plan will be provided by WHO. </b></p>
+                        </td>
+                        </tr>
+                    <tr bgcolor="#FFFFCC">
+                        <td style="text-align: left;" width="1245" colspan="9">
+                            <p class="label"><b>
+                                    This form constitutes an official government request to WHO for the supply of anti-leprosy drugs.  As part of its contractual obligations to donors and other partners, WHO or its appointed agents reserve the right to periodically inspect MDT/Clofazimine stocks in country.By signing this form, the requester agrees to provide WHO with a delivery/transfer note upon receipt of every consignment. MDT blisters and loose Clofaizimine donated by WHO are designated for leprosy. By signing this form, the requester accepts to use MDT blisters and loose Clofaizimine strictly for the treatment of leprosy and management of ENL reactions. </b></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9"></td>
+                    </tr>
+                    
+                    <tr bgcolor="#FFFFCC">
+                           <td colspan="9" style="text-align: left;border:none;"><b><font color=red>SUBMISSION PERIOD:  From July 1st to August 15th of every year</font></b></td>
+                    </tr>
+                    <tr bgcolor="#FFFFCC" height="28">
+                        <td colspan="9" style="text-align:left;border:none;"><b> PLEASE SEND THE REQUEST IN PDF/JPEG <font color=red> AND </font>EXCEL FORMATS BY EMAIL TO:</b></td>
+
+                    </tr>
+                    <tr bgcolor="#FFFFCC">
+                        <td colspan="3" style="text-align: left;border:none;"><b>a) WHO HQ ( <font color=blue>esind@who.int</font> <font color=blue>leprosy@who.int)</font></b></td>
+                        <td colspan="3" style="text-align: right;border:none;"><b>First Name, Surname:</b></td>
+                        <td colspan="3" style="text-align: left;border:none;"><Input ></td>
+
+                    </tr>
+                    <tr bgcolor="#FFFFCC">
+                        <td colspan="3" style="text-align: left;border:none;"><b>b) WHO Regional Adviser </b> </td>
+                        <td colspan="3" style="text-align: right;border:none;"><b>Signature & Stamp:</b></td>
+                        <td colspan="3" style="text-align: left;border:none;">_________________________</td>
+                    </tr>
+                    <tr bgcolor="#FFFFCC">
+                        <td colspan="6" style="text-align: left;border:none;"><b>c) WHO Country Office</b></td>
+                        <td colspan="3" style="text-align: left;border:none;">National Programme Manager</td>
+                    </tr>
+                    <tr bgcolor="#FFFFCC">
+                        <td colspan="3" style="text-align: left;border:none;"><b>d) National Programme Manager</b></td>
+                        <td colspan="3" style="text-align: right;border:none;"><b>Date:</b></td>
+                        <td colspan="3" align="left" id="todayDate" style="text-align: left;border:none;"> <input type="date"></td>
+                    </tr>
+                    <tr colspan="9" bgcolor="#FFFFCC" style="border:none;">
+                    </tr>
+                    <tr colspan="9" bgcolor="#FFFFCC" style="border:none;">
+                            <td colspan="9" style="text-align: left;border:none;"><b><font color=red>!!!!</font></b><input type="checkbox" /><b><font color=red>I have read and accepted WHO Data Sharing Policy</font></b></td>
+                    </tr>
+                    <tr colspan="9" bgcolor="#FFFFCC" style="border:none;">
+                        <td colspan="9" style="text-align: left;border:none;"><b><font color=red>IMPORTANT: The supply information form (see 2nd sheet) has to be filled out</font></b></td>
+                    </tr>
+                    <tr colspan="9" bgcolor="#FFFFCC" style="border:none;">
+                        <td colspan="9" style="text-align: left;border:none;"><b><font color=red>and submitted with the request </font></b></td>
+                    </tr>
+                   
+                    <tr>
+                        <td colspan="9"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="9" style="text-align: left;"><b>Remarks:</b></td>
+                    </tr>
+                    <tr>
+                        <td colspan="9" height="100" id="iINDXwxmVsG-HllvX50cXC0"> </td>
+                    </tr>
+
+                    <tr>
+                        <td style="text-align: left;" colspan="9" class="no"><b>
+                            <font color='red' >Show details of any stocks within up to 12 months of expiry, giving quantities, batch numbers and expiry dates.</font></b>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <script>
+        var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,'
+                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+            return function (table, name, filename) {
+                // if (!table.nodeType) 
+                table = document.getElementById(table);
+                // table1 = document.getElementById(table[1]);
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+
+                document.getElementById("dlink").href = uri + base64(format(template, ctx));
+                document.getElementById("dlink").download = filename;
+                document.getElementById("dlink").click();
+
+            }
+        })()
+
+    </script>
+</div>
