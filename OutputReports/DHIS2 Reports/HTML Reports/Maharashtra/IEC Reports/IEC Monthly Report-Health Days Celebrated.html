@@ -1,0 +1,389 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('printing')">
+    <span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'IEC Monthly Report-Health Days Celebrated', 'IEC Monthly Report-Health Days Celebrated.xls')">
+    <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div align="center">
+    <label>
+        <strong>Financial Year : </strong>
+        <select id="selected-option">
+            <option value="2020">April 2019 to March 2020</option>
+            <option value="2019">April 2018 to March 2019</option>
+        </select>
+    </label>
+    <button id="tap" onclick="checkMonth()">Run</button>
+
+</div>
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; visibility: hidden">
+            <thead id="tableHead">
+                <tr style="font-weight:400; text-align:center;">
+                    <td colspan="13" style="border:1px solid black;background:#ADD8E6;">IEC Monthly Report-Health Days
+                        Celebrated</td>
+                </tr>
+                <tr style="font-weight:400; text-align:center;">
+                    <td id="facility" colspan="13" style="border:1px solid black;background:#ADD8E6;"></td>
+                </tr>
+                <tr style="font-weight:400; text-align:center;">
+                    <td style="border:1px solid black;background:#ADD8E6;"></td>
+                    <td style="border:1px solid black;background:#ADD8E6;">April</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">May</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">June</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">July</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">August</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">September</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">October</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">November</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">December</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">January</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">February</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">March</td>
+                </tr>
+
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+
+    document.getElementsByClassName("hideInPrint")["0"].style.display = "none"
+    var FinancialMonth = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var orgUnit = dhis2.report.organisationUnitChildren;
+    var organisationUnitChildren = orgUnit.sort((a, b) => a.name.localeCompare(b.name));
+    var level = dhis2.report.organisationUnitHierarchy.length;
+
+    var months = []
+    var printTotalValue = [];
+    var totalCells = 12; //Number of Cells
+
+    for (var j = 6; j >= level; j--) {
+        for (var i = 0; i < totalCells; i++) {
+            printTotalValue[j + "totalValue" + i] = "";
+        }
+    }
+    $('#loader').hide();
+
+    function checkMonth() {
+
+        for (let i = 0; i < FinancialMonth.length; i++) {
+            if (i <= 9) {
+                months.push(FinancialMonth[i] + document.getElementById("selected-option").value - 1)
+            } else {
+                months.push(FinancialMonth[i] + document.getElementById("selected-option").value)
+            }
+
+        }
+        let monthArr = [document.getElementById("selected-option").value - 1 + "-04-01",
+        Number(document.getElementById("selected-option").value) + "-03-" + new Date(Number(document.getElementById("selected-option").value), 3, 0).getDate()];
+
+        document.querySelector("#facility").innerHTML = selectedOrgUnit.name + " (April " + (document.getElementById("selected-option").value - 1) + " to March " + document.getElementById("selected-option").value + ")";
+
+        document.getElementById("dataTable").style.visibility = "hidden";
+        document.getElementById("tableBody").innerHTML = "";
+        $('#loader').show();
+        setTimeout(function () {
+            getData(monthArr);
+        }, 1000);
+
+    }
+
+    function getData(smToem) {
+
+
+        var excludedOrgUnitGroups = [];
+
+
+        var orgUnitData = [];
+        var SQLParameters = "var=startDate:" + smToem["0"] + "&var=endDate:" + smToem["1"] + "&var=orgUnit:" + selectedOrgUnit.id;
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/sqlViews/UovM8sWvGlk/data.json?" + SQLParameters + "&paging=false",
+            data: JSON,
+            success: function (datas, status) {
+                datas.rows.forEach(data => {
+                    if (!orgUnitData[data["1"]]) {
+                        orgUnitData[data["1"]] = []
+                        let dates = data["5"].split("-")
+                        orgUnitData[data["1"]][FinancialMonth[dates[1] - 1] + dates[0]] = data["6"];
+                    } else {
+                        let dates = data["5"].split("-")
+                        orgUnitData[data["1"]][FinancialMonth[dates[1] - 1] + dates[0]] += data["6"];
+                    }
+                })
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/27/organisationUnitGroups/xx89xJInk4H.json?fields=id,name,organisationUnits&paging=false",
+            data: JSON,
+            success: function (datas, status) {
+
+                datas.organisationUnits.forEach(data => {
+                    excludedOrgUnitGroups[data.id] = true;
+                });
+
+            }
+        });
+
+        var url = '../api/organisationUnits/' + selectedOrgUnit.id + '.json?paging=false&fields=id,name,level,dataSets[id]';
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: '../api/organisationUnitLevels.json',
+            data: JSON,
+            success: function (data, status) {
+
+                for (let i = 0; i < data.organisationUnitLevels.length; i++) {
+                    url += ',children[id,name,level,dataSets[id]';
+                }
+                url += ']';
+            }
+        });
+
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: url,
+            data: JSON,
+            success: function (data, status) {
+                var levelColor = [];
+                levelColor["2"] = "#89CFF0"; //State level
+                levelColor["3"] = "#A0D6B4"; //Cricle level
+                levelColor["4"] = "#B2BEB5"; //District level
+                levelColor["6"] = "#FFCC99"; //Block level
+                treeDown(data, levelColor);
+
+                document.getElementById("dataTable").style.visibility = "visible";
+                $('#loader').hide();
+                document.getElementById("printing").style.display = "block";
+            }
+        });
+        function treeDown(arr, color) {
+            var key = arr;
+            var obj = {}
+
+            if (key.children.length) {
+                key.children.sort((a, b) => a.name.localeCompare(b.name))
+                for (let i = 0; i < key.children.length; i++) {
+                    if (excludedOrgUnitGroups[key.children[i].id]) continue;
+                    treeDown(key.children[i], color);
+                }
+            }
+
+
+            obj["id"] = key.id;
+            obj["name"] = key.name;
+            obj["level"] = key.level;
+            if (key.children.length) obj["color"] = color[key.level];
+            runAPI(obj.id, obj.name, obj.color, obj.level);
+        }
+
+        function runAPI(orgUnitId, orgUnit, levelColor, orgUnitLevel) {
+            var printValue = [];
+            var addRow = "";
+            for (var i = 0; i < FinancialMonth.length; i++) {
+                printValue["value" + i] = "";
+            }
+
+            if (orgUnitData[orgUnitId]) {
+
+                months.forEach((month, index) => {
+                    printValue["value" + index] = orgUnitData[orgUnitId][month] ? orgUnitData[orgUnitId][month] : "";
+                    if (orgUnitLevel >= 6) printTotalValue["6totalValue" + index] = Number(printTotalValue["6totalValue" + index]) + Number(printValue["value" + index]);
+
+                });
+            }
+
+
+            if (orgUnitLevel <= 6 && orgUnitLevel >= 2) {
+
+                if (orgUnitLevel < 5) {
+                    for (let i = 0; i < totalCells; i++)  printTotalValue[orgUnitLevel + "totalValue" + i] = Number(printValue["value" + i]) + Number(printTotalValue[orgUnitLevel + "totalValue" + i]);
+                }
+                if (orgUnitLevel != 5) {
+                    addRow = ""
+                    if (orgUnitLevel != 3) {
+
+                        addRow += '<tr><td  style="font:bold;">' + orgUnit + '</td>';
+                        for (let i = 0; i < totalCells; i++) {
+                            addRow += '<td>' + printValue["value" + i] + '</td>'
+                        }
+                        addRow += '</tr>'
+                    }
+                    addRow += '<tr style=" background:' + levelColor + ';"><td  style="font:bold;">' + orgUnit + ' Total </td>';
+                    for (let i = 0; i < totalCells; i++) {
+                        addRow += '<td>' + printTotalValue[orgUnitLevel + "totalValue" + i] + '</td>'
+                    }
+                    addRow += '</tr>'
+
+                }
+                for (let i = 0; i < totalCells; i++) {
+                    printTotalValue[orgUnitLevel - 1 + "totalValue" + i] = Number(printTotalValue[orgUnitLevel - 1 + "totalValue" + i]) + Number(printTotalValue[orgUnitLevel + "totalValue" + i]);
+                    printTotalValue[orgUnitLevel + "totalValue" + i] = "";
+                }
+
+            } else {
+                addRow = '<tr style=" background:' + levelColor + ';"><td  style="font:bold;">' + orgUnit + '</td>';
+                for (let i = 0; i < totalCells; i++) {
+                    addRow += '<td>' + printValue["value" + i] + '</td>'
+                }
+                addRow += '</tr>'
+            }
+            document.getElementById("tableBody").innerHTML += addRow;
+
+        }
+
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
