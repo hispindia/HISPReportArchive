@@ -1,0 +1,447 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+    onclick="tableToExcel('dataTable', 'CCC Summary Report', 'CCC Summary Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div style="width: 50%; margin-left:25%;">
+    <table class="table table-borderless table-striped">
+        <tr style="border: 1px solid #DDDDDD;">
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Start Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="date" id="start-date">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>End Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="date" id="end-date">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Implementing Agency :</strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="agency">
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Implementing Partner:</strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="partner">
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; visibility:hidden">
+            <thead>
+                <tr style="font-weight:800; text-align:center;">
+                    <th style="border:1px solid black;background:#ADD8E6;text-align:center" colspan="12">CCC Summary
+                        Report</th>
+                </tr>
+                <tr style="font-weight:800; text-align:center;">
+                    <th id="facility" style="border:1px solid black;background:#ADD8E6; text-align: center"
+                        colspan="12">
+                    </th>
+                </tr>
+                <tr style="font-weight:800; text-align:center;">
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" rowspan="2">Sr. No. </th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" rowspan="2">Particular
+                    </th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" colspan="3">Beneficiary
+                    </th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" colspan="2">SEX</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" colspan="5">Age Group(In
+                        Years)</th>
+                </tr>
+                <tr style="font-weight:800; text-align:center;">
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">New</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Old</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Total</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Male</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Female</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">0-9</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">10-19</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">20-29</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">30-39</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Above 40</th>
+                </tr>
+
+            </thead>
+            <tbody id="tableBody" style="text-align:left;"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+    var partner = [], agency = [];
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: "../api/29/optionSets/Q0I6uQsz9L3.json?fields=id,name,options[id,name]&paging=false",
+        data: JSON,
+        success: function (optionSet) {
+            var partnerOption = ""
+            optionSet.options.forEach(option => {
+
+                partnerOption += "<option value='" + option.name + "'>" + option.name + "</option>"
+                agency[option.name] = true;
+            })
+            document.getElementById("agency").innerHTML = partnerOption;
+
+        }
+    })
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: "../api/29/optionSets/VpiNVfKuysp.json?fields=id,name,options[id,name]&paging=false",
+        data: JSON,
+        success: function (optionSet) {
+            var partnerOption = ""
+            partnerOption += "<option value='ifEmpty'>Please select</option>"
+            partner["ifEmpty"] = true;
+
+            optionSet.options.forEach(option => {
+                partnerOption += "<option value='" + option.name + "'>" + option.name + "</option>"
+                partner[option.name] = true;
+            })
+            document.getElementById("partner").innerHTML = partnerOption;
+        }
+    })
+
+    var printValue = [];
+
+    function submitData() {
+
+        for (let i = 0; i < 27; i++) {
+            printValue[i] = [];
+            for (let j = 0; j < 10; j++) {
+
+                printValue[i][j] = 0;
+            }
+        }
+
+        var startDate = document.getElementById("start-date").value;
+        var endDate = document.getElementById("end-date").value;
+        var month = [startDate, endDate];
+
+        if (startDate.split("-").join("") > endDate.split("-").join("")) {
+            alert("Please Select dates Correctly!");
+            return;
+        } else {
+            document.getElementById("dataTable").style.visibility = "hidden";
+            document.getElementById("facility").innerHTML = selectedOrgunit.name + " ( " + startDate + " to " + endDate + " )"
+            document.getElementById("loader").style.display = "block";
+            setTimeout(function () {
+                getData(month);
+                showData();
+            }, 1000);
+
+        }
+    }
+
+
+    function getData(month) {
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/events.json?program=L78QzNqadTV&startDate=" + month["0"] + "&endDate=" + month["1"] + "&orgUnit=" + selectedOrgunit.id + "&ouMode=DESCENDANTS&paging=false",
+            data: JSON,
+            success: function (tei) {
+                let teis = [];
+                var partnerName = document.getElementById("partner").value;
+                var agencyName = document.getElementById("agency").value;
+
+                tei.events.forEach(event => {
+
+                    if (event.programStage == "xYcDpATOc1y" || event.programStage == "ngJg5lvavdO" || event.programStage == "BN8zKiaR9lI") {
+
+                        if (!teis[event.trackedEntityInstance]) {
+                            teis[event.trackedEntityInstance] = [];
+                            teis[event.trackedEntityInstance]["adultChildrenCount"] = true;
+                        }
+                        teis[event.trackedEntityInstance][event.programStage] = true;
+                        event.dataValues.forEach(dataValue => {
+                            if (dataValue.value) teis[event.trackedEntityInstance][dataValue.dataElement] = dataValue.value;
+                            if (dataValue.dataElement == "ilmyEDhD3FH") teis[event.trackedEntityInstance]["gender"] = dataValue.value;
+                            if (dataValue.dataElement == "zTwMKXGt0xF") teis[event.trackedEntityInstance]["age"] = dataValue.value;
+                            if (dataValue.dataElement == "GN5Vq4h4ET3" || dataValue.dataElement == "lxPE2txL0i9" ) {
+                                if (!teis[event.trackedEntityInstance][dataValue.dataElement]) {
+                                    teis[event.trackedEntityInstance][dataValue.dataElement] = dataValue.value;
+                                } else {
+                                    teis[event.trackedEntityInstance][dataValue.dataElement] += dataValue.value;
+                                }
+                            }
+                        });
+                    }
+                })
+
+                for (tei in teis) {
+                    let ids = ["adultChildrenCount", "dIqY1VTWt3P", "w9BuI1GsRhE", "ymz8mxCGoyF", "lu8yhtFs8Yp", "sBApVPzQQzj", "WUSksUaYWbk", "JKXmNrkzvxN", "ORvdTBpZVIG", "Jr0uQMOPSkr", "n9KTur2G7BU", "DG85ohmmlvA", "u9xNFfDOrTF", "HjIsvkriMKj", "dH9uTwjr84E", "UzdOjHb5BLb", "hBa1ikNzT96", "GN5Vq4h4ET3 + lxPE2txL0i9", "gIOaMDcgAZG", "rmTBrUcMQEO", "Pc1aAxfzr6t", "LB7jZBNxGvl", "gRDqllCaqqO", "W9h0hcZ9Ad2", "tGsM3mp5JEO", "qvmrxmoTLAx"];
+                    ids.forEach((id, index) => {
+                        if (index == 17) {
+                            let idArr = id.split("+");
+                            let index = 17;
+                            let gender = teis[tei]["gender"], age = teis[tei]["age"]
+                            idArr.forEach(id => {
+                                if (teis[tei][id]) {
+                                    if (tei["ngJg5lvavdO"] && tei["xYcDpATOc1y"] && !tei["BN8zKiaR9lI"]) {
+                                        printValue[index]["0"] += Number(teis[tei][id]);
+                                        printValue[index]["2"] += Number(teis[tei][id]);
+                                    }
+                                    if (tei["ngJg5lvavdO"] && tei["xYcDpATOc1y"] && tei["BN8zKiaR9lI"]) {
+                                        printValue[index]["1"] += Number(teis[tei][id]);
+                                        printValue[index]["2"] += Number(teis[tei][id]);
+                                    }
+
+                                    if (gender == "Male") {
+                                        printValue[index]["3"] += 1;
+                                    }
+                                    else if (gender == "Female") {
+                                        printValue[index]["4"] += 1;
+                                    }
+
+                                    if (age >= 0 && age <= 9) {
+                                        printValue[index]["5"] += 1;
+                                    }
+                                    else if (age >= 10 && age <= 19) {
+                                        printValue[index]["6"] += 1;
+                                    }
+                                    else if (age >= 20 && age <= 29) {
+                                        printValue[index]["7"] += 1;
+                                    }
+                                    else if (age >= 30 && age <= 39) {
+                                        printValue[index]["8"] += 1;
+                                    }
+                                    else {
+                                        printValue[index]["9"] += 1;
+                                    }
+
+                                }
+                            })
+                        }
+                        if (teis[tei][id]) {
+                            addValues(teis[tei], teis[tei]["gender"], teis[tei]["age"], index);
+                        }
+                    })
+
+                }
+
+            }
+        })
+
+        function addValues(tei, gender, age, index) {
+            if (tei["ngJg5lvavdO"] && tei["xYcDpATOc1y"] && !tei["BN8zKiaR9lI"]) {
+                printValue[index]["0"] += 1;
+                printValue[index]["2"] += 1;
+            }
+            if (tei["ngJg5lvavdO"] && tei["xYcDpATOc1y"] && tei["BN8zKiaR9lI"]) {
+                printValue[index]["1"] += 1;
+                printValue[index]["2"] += 1;
+            }
+
+            if (gender == "Male") {
+                printValue[index]["3"] += 1;
+            }
+            else if (gender == "Female") {
+                printValue[index]["4"] += 1;
+            }
+
+            if (age >= 0 && age <= 9) {
+                printValue[index]["5"] += 1;
+            }
+            else if (age >= 10 && age <= 19) {
+                printValue[index]["6"] += 1;
+            }
+            else if (age >= 20 && age <= 29) {
+                printValue[index]["7"] += 1;
+            }
+            else if (age >= 30 && age <= 39) {
+                printValue[index]["8"] += 1;
+            }
+            else {
+                printValue[index]["9"] += 1;
+            }
+
+
+
+        }
+    }
+
+    function showData() {
+
+        var arr = ["Number of adults and children living with HIV currently receiving C&S services out side facilities (CHBC)", "1) Condom",
+            "2) Counseling", "3) Family Planning", "4) HIV and AIDS", "5) Nutrition", "6) OI", "7) Positive Prevention", "8) Prevention of Infection", "9) Side Effect",
+            "10) Tuberculosis (TB)", "1) Infection about Skin", "2) Diahreia", "3) Fever", "4) Other", "5) Pain Management", "6) Infection", "Condom distribution (Pcs)",
+            "NUTRITION", "COTRIM", "ARV", "1) ART", "2) CD4", "3) Community Care Center", "4) Local Health Facility", "5) PMTCT", "6) TB Diagnosis & Treatment"];
+        var count = 2;
+        var tableRow = "";
+
+        for (let i = 0; i < arr.length; i++) {
+            if (i != 0) tableRow += "<tr>"
+            tableRow += "<td>" + (i >= 17 && i <= 20 ? ++count : "") + "</td><td>" + arr[i] + "</td>";
+            for (let j = 0; j < 10; j++) {
+                tableRow += "<td>" + printValue[i][j] + "</td>";
+
+            }
+            tableRow += "</tr>"
+            if (i == 0) tableRow += "<tr style='background:#eaeaea'><td>1</td><td colspan='11'>Information and Education</td></tr>";
+            if (i == 10) tableRow += "<tr style='background:#eaeaea'><td>2</td><td colspan='11'>Service Provided</td></tr>";
+            if (i == 20) tableRow += "<tr style='background:#eaeaea'><td>8</td><td colspan='11'>Referral</td></tr>";
+        }
+
+        document.getElementById("tableBody").innerHTML = tableRow;
+        document.getElementById("dataTable").style.visibility = "visible";
+        document.getElementById("loader").style.display = "none";
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>

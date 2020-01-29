@@ -1,0 +1,615 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Index Testing Summary', 'Index Testing Summary.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div align="center">
+    <label>
+        <strong>Start Date : </strong>
+        <input type="date" id="start-date">
+    </label>
+    <label>
+        <strong>End Date : </strong>
+        <input type="date" id="end-date">
+    </label>
+
+    <button onclick="submitData()">Submit</button>
+
+</div>
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; visibility:hidden">
+            <thead>
+                <tr style="font-weight:800; text-align:center;">
+                    <th style="border:1px solid black;background:#ADD8E6;text-align:center" colspan="15">Index Testing
+                        Summary</th>
+                </tr>
+                <tr style="font-weight:800; text-align:center;">
+                    <th id="facility" style="border:1px solid black;background:#ADD8E6; text-align: center"
+                        colspan="15"></th>
+                </tr>
+                <tr style="font-weight:800; text-align:center;">
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" rowspan="2">Age Group</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" rowspan="2">Indicator</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" colspan="3">Sexual Partner
+                    </th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" colspan="3">Needle Sharing
+                        Partner</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" colspan="3">Biological
+                        Children</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center" colspan="4">Total</th>
+                </tr>
+                <tr style="font-weight:800; text-align:center;">
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">F</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">M</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">TG</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">F</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">M</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">TG</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">F</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">M</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">TG</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">F</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">M</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">TG</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Total</th>
+                </tr>
+
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+
+
+    var printValue = [];
+    printValue["0-14"] = [];
+    printValue["15-19"] = [];
+    printValue["20-24"] = [];
+    printValue["25-49"] = [];
+    printValue["50 and Above"] = [];
+    printValue["Total"] = [];
+
+
+    function submitData() {
+
+        for (let key in printValue) {
+            for (let i = 0; i < 4; i++) {
+                printValue[key][i] = [];
+                for (let j = 0; j < 13; j++) {
+
+                    printValue[key][i][j] = 0;
+                }
+            }
+        }
+
+        var startDate = document.getElementById("start-date").value;
+        var endDate = document.getElementById("end-date").value;
+        var month = [startDate, endDate];
+
+        if (startDate.split("-").join("") > endDate.split("-").join("")) {
+            alert("Please Select dates Correctly!");
+            return;
+        } else {
+            document.getElementById("dataTable").style.visibility = "hidden";
+            document.getElementById("facility").innerHTML = selectedOrgunit.name + " ( " + startDate + " to " + endDate + " )"
+            document.getElementById("loader").style.display = "block";
+            setTimeout(function () {
+                getData(month);
+                showData();
+            }, 1000);
+
+        }
+    }
+
+
+    function getData(month) {
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/events.json?program=L78QzNqadTV&startDate=" + month["0"] + "&endDate=" + month["1"] + "&orgUnit=" + selectedOrgunit.id + "&ouMode=DESCENDANTS&paging=false",
+            data: JSON,
+            success: function (tei) {
+                let teis = [];
+
+                tei.events.forEach(event => {
+                    let eventValues = {};
+                    event.dataValues.forEach(dataValue => {
+                        eventValues[dataValue.dataElement] = dataValue.value
+                    });
+                    teis.push(eventValues);
+                });
+
+                teis.forEach(event => {
+                    let val = [];
+                    if (event["cvrH4Mmrclp"]) {
+                        val.push(event["cvrH4Mmrclp"]);
+                        if (event["VX0fbDEhYRq"] || event["dtfLrw7XBxV"] || event["qvNo4h58qzu"]) {
+                            val.push(event["VX0fbDEhYRq"], event["dtfLrw7XBxV"], event["qvNo4h58qzu"]);
+                            if (event["BEgPpjSrcly"]) {
+                                val.push(event["BEgPpjSrcly"]);
+                                if (event["YM2INzWqfWX"]) {
+                                    val.push(event["YM2INzWqfWX"]);
+                                    storeValue(val);
+                                    val = [];
+                                }
+                            }
+                        }
+                    }
+                    if (event["YVkSznpbBix"]) {
+                        val.push(event["YVkSznpbBix"]);
+                        if (event["Li2M6eClj2J"] || event["SnSPzhtQCSm"] || event["hW5Vj3STOSO"]) {
+                            val.push(event["Li2M6eClj2J"], event["SnSPzhtQCSm"], event["hW5Vj3STOSO"]);
+                            if (event["jeaZE8ba3fT"]) {
+                                val.push(event["jeaZE8ba3fT"]);
+                                if (event["ZVgy4or7J6j"]) {
+                                    val.push(event["ZVgy4or7J6j"]);
+                                    storeValue(val);
+                                    val = [];
+                                }
+                            }
+                        }
+                    }
+                    if (event["Gj6VoeYiOVZ"]) {
+                        val.push(event["Gj6VoeYiOVZ"]);
+                        if (event["lcfXrhqhe1E"] || event["hqCJZJO5Sxc"] || event["CcFAGqsY5Ea"]) {
+                            val.push(event["lcfXrhqhe1E"], event["hqCJZJO5Sxc"], event["CcFAGqsY5Ea"]);
+                            if (event["m4RolFbDQSr"]) {
+                                val.push(event["m4RolFbDQSr"]);
+                                if (event["UMyPtXULN8m"]) {
+                                    val.push(event["UMyPtXULN8m"]);
+                                    storeValue(val);
+                                    val = [];
+                                }
+                            }
+                        }
+                    }
+                    if (event["shdyCtU0fTu"]) {
+                        val.push(event["shdyCtU0fTu"]);
+                        if (event["OJWt6ZdZHFP"] || event["mhCFn6WyWWq"] || event["H1KDeoSbNk2"]) {
+                            val.push(event["OJWt6ZdZHFP"], event["mhCFn6WyWWq"], event["H1KDeoSbNk2"]);
+                            if (event["yQ5BHL183bV"]) {
+                                val.push(event["yQ5BHL183bV"]);
+                                if (event["DuXGeiFiMiX"]) {
+                                    val.push(event["DuXGeiFiMiX"]);
+                                    storeValue(val);
+                                    val = [];
+                                }
+                            }
+                        }
+                    }
+                    if (event["Yhcaa0oKy3Y"]) {
+                        val.push(event["Yhcaa0oKy3Y"]);
+                        if (event["TIS8puVTDUj"] || event["Sg5sUDeTuL0"] || event["FmGBLHklhDL"]) {
+                            val.push(event["TIS8puVTDUj"], event["Sg5sUDeTuL0"], event["FmGBLHklhDL"]);
+                            if (event["Fw19SrP1Gj9"]) {
+                                val.push(event["Fw19SrP1Gj9"]);
+                                if (event["cyOh8641ZsQ"]) {
+                                    val.push(event["cyOh8641ZsQ"]);
+                                    storeValue(val);
+                                    val = [];
+                                }
+                            }
+                        }
+                    }
+
+                    function storeValue(val, event) {
+
+                        if (val["0"] >= 0 && val["0"] <= 14) val["0"] = "0-14";
+                        else if (val["0"] >= 15 && val["0"] <= 19) val["0"] = "15-19";
+                        else if (val["0"] >= 20 && val["0"] <= 24) val["0"] = "20-24";
+                        else if (val["0"] >= 25 && val["0"] <= 49) val["0"] = "25-49";
+                        else val["0"] = "50 and Above";
+
+                        if (val["1"]) {
+                            if (val["4"] == "Sexual") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["0"]["0"] += 1;
+                                    printValue[val["0"]]["0"]["9"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["0"] += 1;
+                                    printValue["Total"]["0"]["9"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+
+
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["0"]["1"] += 1;
+                                    printValue[val["0"]]["0"]["10"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["1"] += 1;
+                                    printValue["Total"]["0"]["10"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["0"]["2"] += 1;
+                                    printValue[val["0"]]["0"]["11"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["2"] += 1;
+                                    printValue["Total"]["0"]["11"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+                                }
+                            }
+                            if (val["4"] == "NP") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["0"]["3"] += 1;
+                                    printValue[val["0"]]["0"]["9"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["3"] += 1;
+                                    printValue["Total"]["0"]["9"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["0"]["4"] += 1;
+                                    printValue[val["0"]]["0"]["10"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["4"] += 1;
+                                    printValue["Total"]["0"]["10"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["0"]["5"] += 1;
+                                    printValue[val["0"]]["0"]["11"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["5"] += 1;
+                                    printValue["Total"]["0"]["11"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+                                }
+                            }
+                            if (val["4"] == "BC") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["0"]["6"] += 1;
+                                    printValue[val["0"]]["0"]["9"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["6"] += 1;
+                                    printValue["Total"]["0"]["9"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["0"]["7"] += 1;
+                                    printValue[val["0"]]["0"]["10"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["7"] += 1;
+                                    printValue["Total"]["0"]["10"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["0"]["8"] += 1;
+                                    printValue[val["0"]]["0"]["11"] += 1;
+                                    printValue[val["0"]]["0"]["12"] += 1;
+                                    printValue["Total"]["0"]["8"] += 1;
+                                    printValue["Total"]["0"]["11"] += 1;
+                                    printValue["Total"]["0"]["12"] += 1;
+                                }
+                            }
+
+                        }
+                        if (val["2"] == "positive") {
+                            if (val["4"] == "Sexual") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["2"]["0"] += 1;
+                                    printValue[val["0"]]["2"]["9"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["0"] += 1;
+                                    printValue["Total"]["2"]["9"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["2"]["1"] += 1;
+                                    printValue[val["0"]]["2"]["10"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["1"] += 1;
+                                    printValue["Total"]["2"]["10"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["2"]["2"] += 1;
+                                    printValue[val["0"]]["2"]["11"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["2"] += 1;
+                                    printValue["Total"]["2"]["11"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+                                }
+                            }
+                            if (val["4"] == "NP") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["2"]["3"] += 1;
+                                    printValue[val["0"]]["2"]["9"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["3"] += 1;
+                                    printValue["Total"]["2"]["9"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["2"]["4"] += 1;
+                                    printValue[val["0"]]["2"]["10"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["4"] += 1;
+                                    printValue["Total"]["2"]["10"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["2"]["5"] += 1;
+                                    printValue[val["0"]]["2"]["11"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["5"] += 1;
+                                    printValue["Total"]["2"]["11"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+
+                                }
+                            }
+                            if (val["4"] == "BC") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["2"]["6"] += 1;
+                                    printValue[val["0"]]["2"]["9"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["6"] += 1;
+                                    printValue["Total"]["2"]["9"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["2"]["7"] += 1;
+                                    printValue[val["0"]]["2"]["10"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["7"] += 1;
+                                    printValue["Total"]["2"]["10"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["2"]["8"] += 1;
+                                    printValue[val["0"]]["2"]["11"] += 1;
+                                    printValue[val["0"]]["2"]["12"] += 1;
+                                    printValue["Total"]["2"]["8"] += 1;
+                                    printValue["Total"]["2"]["11"] += 1;
+                                    printValue["Total"]["2"]["12"] += 1;
+                                }
+                            }
+                        }
+                        if (val["3"]) {
+                            if (val["4"] == "Sexual") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["3"]["0"] += 1;
+                                    printValue[val["0"]]["3"]["9"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["0"] += 1;
+                                    printValue["Total"]["3"]["9"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["3"]["1"] += 1;
+                                    printValue[val["0"]]["3"]["10"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["1"] += 1;
+                                    printValue["Total"]["3"]["10"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["3"]["2"] += 1;
+                                    printValue[val["0"]]["3"]["11"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["2"] += 1;
+                                    printValue["Total"]["3"]["11"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                            }
+                            if (val["4"] == "NP") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["3"]["3"] += 1;
+                                    printValue[val["0"]]["3"]["9"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["3"] += 1;
+                                    printValue["Total"]["3"]["9"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["3"]["4"] += 1;
+                                    printValue[val["0"]]["3"]["10"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["4"] += 1;
+                                    printValue["Total"]["3"]["10"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["3"]["5"] += 1;
+                                    printValue[val["0"]]["3"]["11"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["5"] += 1;
+                                    printValue["Total"]["3"]["11"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                            }
+                            if (val["4"] == "BC") {
+                                if (val["5"] == "Female") {
+                                    printValue[val["0"]]["3"]["6"] += 1;
+                                    printValue[val["0"]]["3"]["9"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["6"] += 1;
+                                    printValue["Total"]["3"]["9"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                                if (val["5"] == "Male") {
+                                    printValue[val["0"]]["3"]["7"] += 1;
+                                    printValue[val["0"]]["3"]["10"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["7"] += 1;
+                                    printValue["Total"]["3"]["10"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                                if (val["5"] == "Other") {
+                                    printValue[val["0"]]["3"]["8"] += 1;
+                                    printValue[val["0"]]["3"]["11"] += 1;
+                                    printValue[val["0"]]["3"]["12"] += 1;
+                                    printValue["Total"]["3"]["8"] += 1;
+                                    printValue["Total"]["3"]["11"] += 1;
+                                    printValue["Total"]["3"]["12"] += 1;
+                                }
+                            }
+                        }
+
+                    }
+
+                })
+
+            }
+        })
+    }
+
+    function showData() {
+
+        var arr = ["Screened", "Reactive", "Confirmed", "Linked to ART"];
+        var tableRow = "";
+        for (let key in printValue) {
+            tableRow += "<tr style='" + (key == "Total" ? 'background:#eaeaea' : "") + "'>"
+            tableRow += "<td rowspan='4'>" + key + "</td>";
+            for (let i = 0; i < arr.length; i++) {
+                if (i != 0) tableRow += "<tr style='" + (key == "Total" ? 'background:#eaeaea' : "") + "'>"
+                tableRow += "<td>" + arr[i] + "</td>";
+                for (let j = 0; j < 13; j++) {
+                    tableRow += "<td style='" + (j > 8 ? 'background:#eaeaea' : "") + "'>" + printValue[key][i][j] + "</td>";
+                }
+                tableRow += "</tr>"
+            }
+        }
+        document.getElementById("tableBody").innerHTML = tableRow;
+        document.getElementById("dataTable").style.visibility = "visible";
+        document.getElementById("loader").style.display = "none";
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
