@@ -10,44 +10,37 @@
 <body>
 
     <a id="dlink" style="display:none;"></a>
-    <div style="padding-left:10%">
-        <div style="height:154px; width:40%;float:left; overflow:auto; border:1px solid rgb(165, 149, 149);">
 
-            <table class="table  table-bordered  display-date" style="text-align: center">
+    <div style="width: 40%; margin-left:30%;">
+        <table class="table table-borderless table-striped" style="text-align: center;">
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="font-size: 15px;padding-top: 15px;">Select Year :</td>
+                <td style="width: 60%;"><select  class="form-control" id="select-year" onchange="getMonths(this.value)"></select>
+            </tr>
 
-            </table>
-        </div>
-        <div style="width: 40%; margin-left:2%; float:left;">
-            <table class="table table-borderless table-striped" style="text-align: center;">
-                <tr style="border: 1px solid #DDDDDD;">
-                    <td style="font-size: 15px;padding-top: 15px;">Start Date :</td>
-                    <td style="width: 60%;"><input class="form-control" type="date" id="start-week" required></td>
-                </tr>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="font-size: 15px;padding-top: 15px;">Select Month :</td>
+                <td style="width: 60%;"><select  class="form-control" id="select-month"></select>
+            </tr>
 
-                <tr style="border: 1px solid #DDDDDD;">
-                    <td style="font-size: 15px;padding-top: 15px;">End Date :</td>
-                    <td style="width: 60%;"><input class="form-control" type="date" id="end-week" required></td>
-                </tr>
-
-                <tr style="border: 1px solid #DDDDDD;">
-                    <td><button onClick="submitValues()" class="btn" id="tap">Submit</button></td>
-                    <td style="text-align: right">
-                        <img src="https://img.icons8.com/color/35/000000/ms-excel.png"
-                            onmouseover="this.style.cursor='pointer'"
-                            onClick="tableToExcel('dataTable', 'ART Report', 'ART Report.xls')" alt="xls">
-                        <img src="https://img.icons8.com/ultraviolet/35/000000/print.png" alt="print"
-                            onmouseover="this.style.cursor='pointer'" onclick="printContent('#printData')">
-                        <img src="https://img.icons8.com/dusk/35/000000/export-csv.png" alt="print"
-                            onmouseover="this.style.cursor='pointer'" onclick="downloadCSV()">
-                    </td>
-                </tr>
-                <tr id="loader" style="display:none">
-                    <td>
-                        <h2>Loading...</h2>
-                    </td>
-                </tr>
-            </table>
-        </div>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td><button onClick="submitValues()" class="btn" id="tap">Submit</button></td>
+                <td style="text-align: right">
+                    <img src="https://img.icons8.com/color/35/000000/ms-excel.png"
+                        onmouseover="this.style.cursor='pointer'"
+                        onClick="tableToExcel('dataTable', 'ART Report', 'ART Report.xls')" alt="xls">
+                    <img src="https://img.icons8.com/ultraviolet/35/000000/print.png" alt="print"
+                        onmouseover="this.style.cursor='pointer'" onclick="printContent('#printData')">
+                    <img src="https://img.icons8.com/dusk/35/000000/export-csv.png" alt="print"
+                        onmouseover="this.style.cursor='pointer'" onclick="downloadCSV()">
+                </td>
+            </tr>
+            <tr id="loader" style="display:none">
+                <td>
+                    <h2>Loading...</h2>
+                </td>
+            </tr>
+        </table>
     </div>
     <div id="printData">
         <table class="table table-bordered reportTable" id="dataTable" style="width:98%;display:none" align="center">
@@ -141,19 +134,15 @@
         var CSVFirstRow = "dataelement, period, orgunit, catoptcombo, attroptcombo, value,	storedby, lastupd, comment";
 
         $.ajax({
-                    async: false,
-                    type: "GET",
-                    url: "../api/me.json",
-                    success: function (data) {
-                        username = data.userCredentials.username;
-                    }
-                });
-           
-        displayDate += '<tr><td >Year</td>\
-                            <td >Month Number</td>\
-                            <td >Month Name</td>\
-                            <td>Start Date</td>\
-                            <td>End Date</td></tr>'
+            async: false,
+            type: "GET",
+            url: "../api/me.json",
+            success: function (data) {
+                username = data.userCredentials.username;
+            }
+        });
+
+        var year = "";
         var dates = [
             ["2076", "1", "Baisakh", "2019-04-14", "2019-05-14"],
             ["2076", "2", "Jestha", "2019-05-15", "2019-06-15"],
@@ -172,24 +161,37 @@
 
 
         dates.forEach(date => {
-            displayDate += '<tr>\
-                            <td>' + date["0"] + '</td>\
-                            <td>' + date["1"] + '</td>\
-                            <td>' + date["2"] + '</td>\
-                            <td>' + date["3"] + '</td>\
-                            <td>' + date["4"] + '</td></tr>'
+            if (year != date["0"]) {
+                document.querySelector("#select-year").innerHTML += '<option>' + date["0"] + '</option>';
+                year = date["0"]
+            }
         });
 
-        document.querySelector(".display-date").innerHTML = displayDate;
+        dates.forEach(date => {
+            if (date["0"] == document.querySelector("#select-year").value) document.querySelector("#select-month").innerHTML += '<option>' + date["2"] + '</option>';
+
+        });
+
+        function getMonths(value) {
+            document.querySelector("#select-month").innerHTML = ''
+            dates.forEach(date => {
+                if (date["0"] == value) document.querySelector("#select-month").innerHTML += '<option>' + date["2"] + '</option>';
+            });
+        }
 
 
         function submitValues() {
 
+            dates.forEach(date => {
+                if (document.querySelector("#select-year").value == date["0"] && document.querySelector("#select-month").value == date["2"]) {
+                    startWeek = date["3"];
+                    endWeek = date["4"];
+                }
 
-            startWeek = document.querySelector("#start-week").value;
-            endWeek = document.querySelector("#end-week").value;
+            });
 
-            if (startWeek > endWeek || !startWeek || !endWeek) {
+
+            if (new Date(startWeek) > new Date(endWeek) || !startWeek || !endWeek) {
                 alert("Please select dates correctly");
                 return;
             }
@@ -197,8 +199,9 @@
             for (let i = 0; i < dates.length; i++) {
 
                 if (dates[i]["3"] == startWeek && dates[i]["4"] == endWeek) {
-                    nepaliDate = dates[i]["2"] + " " + dates[i]["1"] + " " + dates[i]["0"];
-                    CSVNepaliDate = dates[i]["1"] >= 10 ? dates[i]["1"] + "" + dates[i]["0"] : "0" + dates[i]["1"] + "" + dates[i]["0"];
+                    nepaliDate = dates[i]["2"] + " " + dates[i]["0"];
+                    //CSVNepaliDate = dates[i]["1"] >= 10 ? dates[i]["1"] + "" + dates[i]["0"] : "0" + dates[i]["1"] + "" + dates[i]["0"];
+					CSVNepaliDate = dates[i]["1"] >= 10 ?  dates[i]["0"] + dates[i]["1"] : dates[i]["0"] + "0" + dates[i]["1"];
                     document.querySelector("#nepali-date").innerHTML = nepaliDate
                     checkValidDate = 0;
                 }
@@ -920,10 +923,10 @@
                 if (char != "d" && char != "o") indexCSV++;
                 column.forEach((col, index) => {
                     tableData += '<td>' + variables[char + col] + '</td>';
-                    if(index != 9  && index <= 14 && char != "d" && char != "o") {
-                        index <= 8 ? CSVFile[indexCSV][index].push(variables[char + col]) : CSVFile[indexCSV][index-1].push(variables[char + col]);
+                    if (index != 9 && index <= 14 && char != "d" && char != "o") {
+                        index <= 8 ? CSVFile[indexCSV][index].push(variables[char + col]) : CSVFile[indexCSV][index - 1].push(variables[char + col]);
                     }
-                 })
+                })
                 return tableData;
             }
         }
