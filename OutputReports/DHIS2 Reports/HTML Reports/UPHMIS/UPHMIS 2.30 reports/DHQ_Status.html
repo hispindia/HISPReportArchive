@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<script type="text/javascript" src="../dhis-web-commons/bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="../dhis-web-commons/bootstrap/css/bootstrap.min.css" />
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        .gridDiv {
+            font-family: sans-serif, arial;
+        }
+
+        table.gridTable {
+            border-collapse: collapse;
+            font-size: 11pt;
+        }
+
+        .gridTable th, .gridTable td {
+            padding: 8px 4px 7px 4px;
+            border: 1px solid #e7e7e7;
+			width: 100px;
+        }
+
+        .gridTable th {
+            background-color: #f3f3f3;
+            font-weight: bold;
+        }
+		
+		
+    </style>
+</head>
+<body>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    var sdParam = "";
+    var edParam = "";
+    var startdate = "";
+    var enddate = "";
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2].toString().substring(0, 6);
+    var urlParams = url.split('&');
+    var district_Array = [];
+    var division_Array = [];
+    var expected_forms_list = [];
+    var actual_forms_list = [];
+    var actual_forms_list_final = [];
+    var htmlReport = "";
+    var report_period="";
+    var forms_uid=[
+        {
+            "UjLSNpOxKML": "01 Form 01-DHQ POST ABORTION FP UPHMIS",
+            "hBA2r346xpA": "02 Form 02-DHQ URBAN CAMP",
+            "JRF9hOMyyRp": "03 Form 03 - National Leprosy Eradication Program (NLEP)",
+            "u1lX7bKbdJM": "04 Form 04 - Vector Borne Disease Control Program",
+            "CXn1hGxGTuZ": "05 Form 05 - DHQ DOHC Annexure VI Data Set",
+            "qrAsPL6KWzl": "06 Form 06 - DHQ Screening Camp Annexure VII",
+            "kQPheQcF0iu": "07 Form 07 - DHQ Screening Camp Annexure VII",
+            "PsUKoyz1jZE": "08 Form 08 - DHQ NTPC Quarterly Reporting (NTPC)",
+            "v7zU6PDhgNb": "09 Form 09 - DHQ NIDDCP",
+            "eNSFYApNdlt": "10 Form 10 - NPCDCS (National Programme on Prevention &amp; Control of Cancer, Diabetes,CVDs &amp; Stroke )",
+            "YYmsKcX33t1": "11 Form 11- National Programme on Health Care of the Elderly",
+            "jkk4sdj66Ys": "12 Form 12- DHQ Sampoorna NCD (Cervical cancer)",
+            "SNARGELmLV5": "13 Form 13 - DHQ NPPCD",
+            "hick3lRNxrf": "14 Form 14 - DHQ NMHP",
+            "zEvrpWrL7QK": "15 Form 15 - DHQ WIFS",
+            "yO6jZcXKiRP": "16 Form 16 - DHQ AFHC",
+            "Y5SuoZRMdh1": "17 Form 17 (Adolescent health day &amp; Peer Education)",
+            "cywjvgS5rYg": "18 Form 18 - DHQ IEC UPHMIS Data Set",
+            "DZSkxcUuw4V": "19 Form 19- DHQ MDR format",
+            "HxSQ6fJ57sC": "24 Form 24-RBSK annual target",
+            "CtgKHNWgrDl": "27 Form 27 - NBSU reporting format (New)",
+            "DAmSd1E7nmy": "28 Form 28 DHQ Community Process &amp; Immunization (New)"
+        }];
+
+    jQuery(document).ready(function () {
+        // var urlall = "../api/analytics.json?dimension=dx:UjLSNpOxKML.ACTUAL_REPORTS;hBA2r346xpA.ACTUAL_REPORTS;JRF9hOMyyRp.ACTUAL_REPORTS;u1lX7bKbdJM.ACTUAL_REPORTS;CXn1hGxGTuZ.ACTUAL_REPORTS;qrAsPL6KWzl.ACTUAL_REPORTS;PsUKoyz1jZE.ACTUAL_REPORTS;v7zU6PDhgNb.ACTUAL_REPORTS;eNSFYApNdlt.ACTUAL_REPORTS;YYmsKcX33t1.ACTUAL_REPORTS;jkk4sdj66Ys.ACTUAL_REPORTS;SNARGELmLV5.ACTUAL_REPORTS;hick3lRNxrf.ACTUAL_REPORTS;zEvrpWrL7QK.ACTUAL_REPORTS;yO6jZcXKiRP.ACTUAL_REPORTS;Y5SuoZRMdh1.ACTUAL_REPORTS;cywjvgS5rYg.ACTUAL_REPORTS;DZSkxcUuw4V.ACTUAL_REPORTS;HxSQ6fJ57sC.ACTUAL_REPORTS;CtgKHNWgrDl.ACTUAL_REPORTS;DAmSd1E7nmy.ACTUAL_REPORTS;UjLSNpOxKML.EXPECTED_REPORTS;hBA2r346xpA.EXPECTED_REPORTS;JRF9hOMyyRp.EXPECTED_REPORTS;u1lX7bKbdJM.EXPECTED_REPORTS;CXn1hGxGTuZ.EXPECTED_REPORTS;qrAsPL6KWzl.EXPECTED_REPORTS;PsUKoyz1jZE.EXPECTED_REPORTS;v7zU6PDhgNb.EXPECTED_REPORTS;eNSFYApNdlt.EXPECTED_REPORTS;YYmsKcX33t1.EXPECTED_REPORTS;jkk4sdj66Ys.EXPECTED_REPORTS;SNARGELmLV5.EXPECTED_REPORTS;hick3lRNxrf.EXPECTED_REPORTS;zEvrpWrL7QK.EXPECTED_REPORTS;yO6jZcXKiRP.EXPECTED_REPORTS;Y5SuoZRMdh1.EXPECTED_REPORTS;cywjvgS5rYg.EXPECTED_REPORTS;DZSkxcUuw4V.EXPECTED_REPORTS;HxSQ6fJ57sC.EXPECTED_REPORTS;CtgKHNWgrDl.EXPECTED_REPORTS;DAmSd1E7nmy.EXPECTED_REPORTS&dimension=ou:v8EzhiynNtf;LEVEL-4&filter=pe:202001&skipRounding=true&displayProperty=NAME&hierarchyMeta=true";
+        $(".hideInPrint").hide();
+        $("#dataTable").fadeOut();
+        showLoad();
+        if (selOrgUnitLevel == 2)
+        {
+
+            $("#btnExport").click(function (e) {
+                var a = document.createElement('a');
+                var data_type = 'data:application/vnd.ms-excel';
+                var table_div = document.getElementById('state');
+                var table_html = table_div.outerHTML.replace(/ /g, '%20');
+                a.href = data_type + ', ' + table_html;
+                a.download = 'Data Status UPHMIS.xls';
+                a.click();
+                e.preventDefault();
+            });
+            $.each(urlParams, function (i, item) {
+                if (item.split("=")[0] == "sd") {
+                    startdate = item.split("=")[1];
+                }
+                else if (item.split("=")[0] == "ed") {
+                    enddate = item.split("=")[1];
+                }
+
+                console.log(startdate + " " + enddate);
+            });
+            report_period=gotPeriod;
+            document.getElementById('period').innerHTML = getPeriod(gotPeriod);
+            sdParam = startdate.substring(0, 4) + '-' + edParam.substring(4, 7);
+            sdParam = startdate.replace(/-/g, "");
+            edParam = enddate.substring(0, 4) + '-' + edParam.substring(4, 7);
+            edParam = enddate.replace(/-/g, "");
+            debugger;
+
+            var urlall_actual = "../api/analytics.json?dimension=dx:UjLSNpOxKML.ACTUAL_REPORTS;hBA2r346xpA.ACTUAL_REPORTS;JRF9hOMyyRp.ACTUAL_REPORTS;u1lX7bKbdJM.ACTUAL_REPORTS;CXn1hGxGTuZ.ACTUAL_REPORTS;qrAsPL6KWzl.ACTUAL_REPORTS;kQPheQcF0iu.ACTUAL_REPORTS;PsUKoyz1jZE.ACTUAL_REPORTS;v7zU6PDhgNb.ACTUAL_REPORTS;eNSFYApNdlt.ACTUAL_REPORTS;YYmsKcX33t1.ACTUAL_REPORTS;jkk4sdj66Ys.ACTUAL_REPORTS;SNARGELmLV5.ACTUAL_REPORTS;hick3lRNxrf.ACTUAL_REPORTS;zEvrpWrL7QK.ACTUAL_REPORTS;yO6jZcXKiRP.ACTUAL_REPORTS;Y5SuoZRMdh1.ACTUAL_REPORTS;cywjvgS5rYg.ACTUAL_REPORTS;DZSkxcUuw4V.ACTUAL_REPORTS;HxSQ6fJ57sC.ACTUAL_REPORTS;CtgKHNWgrDl.ACTUAL_REPORTS;DAmSd1E7nmy.ACTUAL_REPORTS&dimension=ou:v8EzhiynNtf;LEVEL-4&filter=pe:"+report_period+"&skipRounding=true&displayProperty=NAME&hierarchyMeta=true";
+            var urlall_expected = "../api/analytics.json?dimension=dx:UjLSNpOxKML.EXPECTED_REPORTS;hBA2r346xpA.EXPECTED_REPORTS;JRF9hOMyyRp.EXPECTED_REPORTS;u1lX7bKbdJM.EXPECTED_REPORTS;CXn1hGxGTuZ.EXPECTED_REPORTS;qrAsPL6KWzl.EXPECTED_REPORTS;kQPheQcF0iu.EXPECTED_REPORTS;PsUKoyz1jZE.EXPECTED_REPORTS;v7zU6PDhgNb.EXPECTED_REPORTS;eNSFYApNdlt.EXPECTED_REPORTS;YYmsKcX33t1.EXPECTED_REPORTS;jkk4sdj66Ys.EXPECTED_REPORTS;SNARGELmLV5.EXPECTED_REPORTS;hick3lRNxrf.EXPECTED_REPORTS;zEvrpWrL7QK.EXPECTED_REPORTS;yO6jZcXKiRP.EXPECTED_REPORTS;Y5SuoZRMdh1.EXPECTED_REPORTS;cywjvgS5rYg.EXPECTED_REPORTS;DZSkxcUuw4V.EXPECTED_REPORTS;HxSQ6fJ57sC.EXPECTED_REPORTS;CtgKHNWgrDl.EXPECTED_REPORTS;DAmSd1E7nmy.EXPECTED_REPORTS&dimension=ou:v8EzhiynNtf;LEVEL-4&filter=pe:"+report_period+"&skipRounding=true&displayProperty=NAME&hierarchyMeta=true";
+            var districts_URL = "../api/organisationUnits.json?level=4&fields=[id,name,path]&paging=false";
+            var division_URL = "../api/organisationUnits.json?level=3&fields=[id,name]";
+            var URLs = [];
+            var ajaxReq = [];
+
+            URLs.push(districts_URL);
+            URLs.push(division_URL);
+            URLs.push(urlall_expected);
+            URLs.push(urlall_actual);
+            for (i = 0; i < URLs.length; i++) {
+                ajaxReq.push($.ajax(URLs[i]));
+            }
+            $.when.apply($, ajaxReq).done(function () {
+                console.log(arguments); //it is an array like object which can be looped*/
+                $.each(arguments, function (i, data) {
+                    if (i == 3) {
+
+                        for (var i = 0; i < data[0].rows.length; i++) {
+                            var form_Name=getValue(data[0].rows[i][0].substr(0,data[0].rows[i][0].indexOf('.')),forms_uid);
+                            var org_Name=findId(district_Array, data[0].rows[i][1]);
+                            var org_div=findId_div(district_Array, data[0].rows[i][1]);
+                            var div_Name=findId(division_Array, org_div);
+                            actual_forms_list.push({
+                                formName:form_Name,
+                                form: data[0].rows[i][0].substr(0,data[0].rows[i][0].indexOf('.')),
+                                orgunit:data[0].rows[i][1] ,
+                                orgunitname:org_Name,
+                                divisionname:div_Name,
+                                value: data[0].rows[i][2].substr(0,data[0].rows[i][2].indexOf('.'))
+                            });
+                        }
+                        for (var i = 0; i < expected_forms_list.length; i++) {
+                            var value="";
+                            actual_forms_list.forEach(function(entry) {
+                                if (entry.form == expected_forms_list[i].form && entry.orgunit == expected_forms_list[i].orgunit) {
+
+                                    value = entry.value;
+                                }
+                            });
+                            actual_forms_list_final.push({
+                                formName:expected_forms_list[i].formName,
+                                form: expected_forms_list[i].form,
+                                orgunit:expected_forms_list[i].orgunit ,
+                                orgunitname:expected_forms_list[i].orgunitname,
+                                divisionname:expected_forms_list[i].divisionname,
+                                value: value
+                            });
+
+
+                        }
+                        loadTableData();
+                    }
+                    else if (i == 2) {
+                        for (var i = 0; i < data[0].rows.length; i++) {
+                            var form_Name=getValue(data[0].rows[i][0].substr(0,data[0].rows[i][0].indexOf('.')),forms_uid);
+                            var org_Name=findId(district_Array, data[0].rows[i][1]);
+                            var org_div=findId_div(district_Array, data[0].rows[i][1]);
+                            var div_Name=findId(division_Array, org_div);
+                            expected_forms_list.push({
+                                // alert(getValue("Book1", jsonTitles));
+                                formName:form_Name,
+                                form: data[0].rows[i][0].substr(0,data[0].rows[i][0].indexOf('.')),
+                                orgunit:data[0].rows[i][1] ,
+                                orgunitname:org_Name,
+                                divisionname:div_Name,
+                                value: data[0].rows[i][2].substr(0,data[0].rows[i][2].indexOf('.'))
+                            });
+                        }
+
+                    }
+                    else if (i==0)
+                    {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            var divisionID = item.path.split("/")[3];
+                            district_Array.push([item.id, item.name, divisionID]);
+
+                        });
+
+                    }
+                    else if (i==1)
+                    {
+                        $.each(data[0].organisationUnits, function (i, item) {
+                            division_Array.push([item.id, item.name]);
+
+                        });
+                    }
+                });
+            });
+
+            function getValue(key, array) {
+                for (var el in array) {
+                    if (array[el].hasOwnProperty(key)) {
+                        return array[el][key];
+                    }
+                }
+            }
+            function findId(data, idToLookFor) {
+                var categoryArray = data;
+                for (var i = 0; i < categoryArray.length; i++) {
+                    if (categoryArray[i][0] == idToLookFor) {
+                        return(categoryArray[i][1]);
+                    }
+                }
+            }
+            function findId_div(data, idToLookFor) {
+                var categoryArray = data;
+                for (var i = 0; i < categoryArray.length; i++) {
+                    if (categoryArray[i][0] == idToLookFor) {
+                        return(categoryArray[i][2]);
+                    }
+                }
+            }
+        }
+        else
+        {
+            alert("Please select the State");
+            window.history.back();
+        }
+
+        generateMonthlyPeriods(sdParam, edParam);
+
+    });
+
+    function generateMonthlyPeriods(sD, eD) {
+        var sDate = new Date(parseInt(sD.substring(0, 4)), parseInt(sD.substring(4, 6) - 1));
+        sDate.setDate(1);
+        var eDate = new Date(parseInt(eD.substring(0, 4)), parseInt(eD.substring(4, 6)));
+
+        while (sDate < eDate) {
+            var month = sDate.getMonth() + 1;
+            month = (month) > 9 ? month : "0" + month;
+
+            var dhisDate = sDate.getFullYear() + "-" + month;
+            gotPeriod = (gotPeriod == "") ? dhisDate : (gotPeriod + ";" + dhisDate);
+            sDate.setMonth(sDate.getMonth() + 1);
+        }
+        console.log("sDate" + sDate);
+        console.log("eDate" + eDate);
+    }
+
+
+    function getPeriodYear(pey) {
+
+        var year = pey.substring(0, 4);
+
+
+        return year;
+    }
+    function loadTableData() {
+
+        console.log('Expected: sorted by form (asc), orgunit (asc)', multiSort(expected_forms_list, {
+            divisionname:'asc',
+            orgunitname:'asc',
+            formName:'asc'
+
+        }));
+        console.log('Uploaded: sorted by form (asc), orgunit (asc)', multiSort(actual_forms_list_final, {
+            divisionname:'asc',
+            orgunitname:'asc',
+            formName:'asc'
+        }));
+        for (var i=0;i<expected_forms_list.length;i++)
+        {
+            if (expected_forms_list[i].form=='zEvrpWrL7QK')
+            {
+                if (expected_forms_list[i+1].form=='yO6jZcXKiRP')
+                {
+                    console.log("form 16 exist");
+                }
+                else
+                {
+                    expected_forms_list.push({
+                        // alert(getValue("Book1", jsonTitles));
+                        formName:expected_forms_list[15].formName,
+                        form: expected_forms_list[15].form,
+                        orgunit:expected_forms_list[i].orgunit ,
+                        orgunitname:expected_forms_list[i].orgunitname,
+                        divisionname:expected_forms_list[i].divisionname,
+                        value: "NA"
+                    });
+                    actual_forms_list_final.push({
+                        // alert(getValue("Book1", jsonTitles));
+                        formName:expected_forms_list[15].formName,
+                        form: expected_forms_list[15].form,
+                        orgunit:expected_forms_list[i].orgunit ,
+                        orgunitname:expected_forms_list[i].orgunitname,
+                        divisionname:expected_forms_list[i].divisionname,
+                        value: "NA"
+                    });
+                }
+            }
+        }
+        console.log('Expected: sorted by form (asc), orgunit (asc)', multiSort(expected_forms_list, {
+            divisionname:'asc',
+            orgunitname:'asc',
+            formName:'asc'
+
+        }));
+
+        console.log('Uploaded: sorted by form (asc), orgunit (asc)', multiSort(actual_forms_list_final, {
+            divisionname:'asc',
+            orgunitname:'asc',
+            formName:'asc'
+        }));
+
+        for (var i=0;i<expected_forms_list.length;i++) {
+            if (i % 22 == 0) {
+                htmlReport += "<tr>";
+                htmlReport += "<td style='font-weight:bold'>" + expected_forms_list[i].divisionname + "</td>";
+                htmlReport += "<td style='font-weight:bold'>" + expected_forms_list[i].orgunitname + "</td>";
+                for (var j = i; j < i + 22; j++)
+                {
+                    if (j<1650)
+                    {
+                        htmlReport += "<td style='text-align:center'>" + expected_forms_list[j].value + "</td>";
+                        htmlReport += "<td style='text-align:center'>" + actual_forms_list_final[j].value + "</td>";
+                    }
+
+                }
+
+                htmlReport += "</tr>";
+            }
+
+        }
+        $("#dataTable > tbody").append(htmlReport);
+        hideLoad();
+        $("#dataTable").fadeIn();
+        }
+
+        function multiSort(array, sortObject = {}) {
+            const sortKeys = Object.keys(sortObject);
+
+            // Return array if no sort object is supplied.
+            if (!sortKeys.length) {
+                return array;
+            }
+
+            // Change the values of the sortObject keys to -1, 0, or 1.
+            for (let key in sortObject) {
+                sortObject[key] = sortObject[key] === 'desc' || sortObject[key] === -1 ? -1 : (sortObject[key] === 'skip' || sortObject[key] === 0 ? 0 : 1);
+            }
+
+            const keySort = (a, b, direction) => {
+                direction = direction !== null ? direction : 1;
+
+                if (a === b) { // If the values are the same, do not switch positions.
+                    return 0;
+                }
+
+                // If b > a, multiply by -1 to get the reverse direction.
+                return a > b ? direction : -1 * direction;
+            };
+
+            return array.sort((a, b) => {
+                let sorted = 0;
+                let index = 0;
+
+                // Loop until sorted (-1 or 1) or until the sort keys have been processed.
+                while (sorted === 0 && index < sortKeys.length) {
+                    const key = sortKeys[index];
+
+                    if (key) {
+                        const direction = sortObject[key];
+
+                        sorted = keySort(a[key], b[key], direction);
+                        index++;
+                    }
+                }
+
+                return sorted;
+            });
+        }
+    // function to convert periods to more visible info
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1") strMonth = "January";
+        else if (month == "02" || month == "2") strMonth = "February";
+        else if (month == "03" || month == "3") strMonth = "March";
+        else if (month == "04" || month == "4") strMonth = "April";
+        else if (month == "05" || month == "5") strMonth = "May";
+        else if (month == "06" || month == "6") strMonth = "June";
+        else if (month == "07" || month == "7") strMonth = "July";
+        else if (month == "08" || month == "8") strMonth = "August";
+        else if (month == "09" || month == "9") strMonth = "September";
+        else if (month == "10") strMonth = "October";
+        else if (month == "11") strMonth = "November";
+        else if (month == "12") strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+    function getPeriodMonth(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(5, 7);
+        var strMonth = "";
+
+        if (month == "01" || month == "1") strMonth = "January";
+        else if (month == "02" || month == "2") strMonth = "February";
+        else if (month == "03" || month == "3") strMonth = "March";
+        else if (month == "04" || month == "4") strMonth = "April";
+        else if (month == "05" || month == "5") strMonth = "May";
+        else if (month == "06" || month == "6") strMonth = "June";
+        else if (month == "07" || month == "7") strMonth = "July";
+        else if (month == "08" || month == "8") strMonth = "August";
+        else if (month == "09" || month == "9") strMonth = "September";
+        else if (month == "10") strMonth = "October";
+        else if (month == "11") strMonth = "November";
+        else if (month == "12") strMonth = "December";
+
+        return strMonth;
+    }
+
+    // function to hide loading animation
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+        //document.getElementById("loading").style.display="none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+
+    function showLoad() {
+        document.getElementById("cover").style.display = "block";
+        document.getElementById("loads").style.display = "block";
+        //document.getElementById("loading").style.display="visible";
+        document.getElementsByTagName("body")[0].style.overflow = "visible";
+        //alert( "inside showload method" );
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+
+</script>
+
+<!-- css style for animating loading -->
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                }
+
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+                #periodTitle {
+                    font-weight: bold;
+                    background-color: #f1f1f1;
+                    text-align: center;
+                    font-size: 18px;
+                }
+                .vtext {
+                    width: 1px;
+                    height: 50px;
+                    -ms-transform: rotate(-90deg);
+                    -webkit-transform: rotate(-90deg);
+                    transform: rotate(-90deg);
+                    border-style: solid;
+                }
+
+            </style>
+
+            <div id="loads"><p class="loading" align="center" style="font-size: 12px;">Report is loading... Wait for a
+    while...</p></div>
+<div id="cover"></div>
+
+</span></p>
+<a id="dlink" style="display:none;"></a>
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle;" onclick="location.href='../api/apps/Report-App/index.html#/generate-report'"><span
+        class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" onclick="tableToExcel('dataTable', 'name', 'District Data Summary UPHMIS-State.xls')"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;
+    Download As Excel
+</button>
+
+<br><br>
+
+<div id="printing">
+    <div id='state'>
+<table class="listTable gridTable" id="dataTable" border="1">
+    <thead>
+    <tr>
+        <th style="text-align:left;background-color:powderblue;"  >Division</th>
+        <th style="text-align:left;background-color:powderblue;"  >District</th>
+        <th colspan="2" style="background-color:powderblue;">Form 01-DHQ POST ABORTION FP UPHMIS</th>
+        <th colspan="2" style="background-color:powderblue;">Form 02-DHQ URBAN CAMP </th>
+        <th colspan="2" style="background-color:powderblue;" >Form 03 - National Leprosy  Eradication Program (NLEP)</th>
+        <th colspan="2" style="background-color:powderblue;">Form 04 - Vector Borne Disease Control Program</th>
+        <th colspan="2" style="background-color:powderblue;">Form 05 - DHQ DOHC Annexure VI  Data Set</th>
+        <th colspan="2"style="background-color:powderblue;">Form 06 - DHQ Screening Camp Annexure VII</th>
+        <th colspan="2"style="background-color:powderblue;">Form 07 - DHQ Screening Camp Annexure VII</th>
+        <th colspan="2"style="background-color:powderblue;">Form 08 - DHQ NTPC Quarterly Reporting (NTPC)</th>
+        <th colspan="2"style="background-color:powderblue;">Form 09 - DHQ NIDDCP</th>
+        <th colspan="2"style="background-color:powderblue;">Form 10 - NPCDCS (National Programme on Prevention &amp; Control of Cancer, Diabetes, CVDs &amp; Stroke )</th>
+        <th colspan="2"style="background-color:powderblue;">Form 11- National Programme on Health Care of the Elderly</th>
+        <th colspan="2"style="background-color:powderblue;">Form 12- DHQ Sampoorna NCD (Cervical cancer)</th>
+        <th colspan="2"style="background-color:powderblue;">Form 13 - DHQ NPPCD</th>
+        <th colspan="2"style="background-color:powderblue;">Form 14 - DHQ NMHP</th>
+        <th colspan="2" style="background-color:powderblue;">Form 15 - DHQ WIFS</th>
+        <th colspan="2" style="background-color:powderblue;">Form 16 - DHQ WIFS</th>
+        <th colspan="2"style="background-color:powderblue;">Form 17 (Adolescent health day &amp; Peer Education)</th>
+        <th colspan="2"style="background-color:powderblue;">Form 18 - DHQ IEC UPHMIS Data Set</th>
+        <th colspan="2"style="background-color:powderblue;" >Form 19- DHQ MDR format</th>
+        <th colspan="2"style="background-color:powderblue;" >Form 24-RBSK annual target</th>
+        <th colspan="2" style="background-color:powderblue;">Form 27 - NBSU reporting format (New)</th>
+        <th colspan="2"style="background-color:powderblue;" >Form 28  DHQ Community Process &amp; Immunization (New)</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td style="text-align:center;font-weight:bold;background-color:powderblue;" colspan="2" id="period"></td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left ;background-color:powderblue;font-weight:bold">Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold">Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold">Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold">Uploaded</td>
+        <td style="text-align:left;background-color:powderblue;font-weight:bold">Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold">Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold" >Expected</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+        <td style="text-align:left;background-color:powderblue; font-weight:bold" >Expected</td>
+        <td style="text-align:left; background-color:powderblue;font-weight:bold"  >Uploaded</td>
+    </tr>
+    </tbody>
+</table>
+    </div>
+    </div>
+</body>
+</html>
