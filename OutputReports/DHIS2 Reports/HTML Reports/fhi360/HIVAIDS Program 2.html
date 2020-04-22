@@ -1,0 +1,778 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+    onclick="tableToExcel('state', 'CCC Summary Report', 'CCC Summary Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div style="width: 50%; margin-left:25%;">
+    <table class="table table-borderless table-striped">
+        <tr style="border: 1px solid #DDDDDD;">
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Start Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="date" id="start-date">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>End Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="date" id="end-date">
+            </td>
+        </tr>
+        <!-- <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Implementing Agency :</strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="agency">
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Implementing Partner:</strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="partner">
+                </select>
+            </td>
+        </tr> -->
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state' style="visibility: hidden;">
+        <table border="1" id="dataTableFirst" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="width:100%; ">
+            <thead>
+                <tr style="text-align:center;">
+                    <td colspan="8" style="font-weight:600;background: rgb(39, 102, 150);font-size:20px; color:white">
+                        12. HIV/AIDS
+                        Program </td>
+                </tr>
+                <thead>
+                    <tr style=" text-align:center;">
+                        <td colspan="8" id="facility"
+                            style="font-weight:600;background: rgb(39, 102, 150);font-size:20px; color:white"> </td>
+                    </tr>
+                </thead>
+        </table><br />
+        <table border="1" id="dataTableFirst" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="float:left; width:65%">
+            <thead>
+                <tr style=" text-align:center;">
+                    <td colspan="8" style="font-weight:600;background: rgb(39, 102, 150);font-size:20px; color:white">
+                        HIV Exposed Baby- Early Infant
+                        Diagnosis(EID)</td>
+                </tr>
+                <tr style=" text-align:center;">
+                    <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">With in 2 months
+                    </td>
+                    <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">2-9 months</td>
+                    <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">9-18 months</td>
+                    <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">Antibody>18
+                        months</td>
+                </tr>
+                <tr style=" text-align:center;">
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Positive</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Negative</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Positive</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Negative</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Positive</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Negative</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Positive</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Negative</td>
+                </tr>
+            </thead>
+            <tbody id="tableBodyFirst"></tbody>
+        </table><br />
+        <table border="1" id="dataTableSecond" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; float:right; width:34%">
+            <thead id="tableHeadSecond">
+                <tr style=" text-align:center;">
+                    <td colspan="2"
+                        style="font-weight:600; border:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Needle Syringe Exchange Programme</td>
+                </tr>
+                <tr style="text-align:center;">
+                    <td style="font-weight:600; background:#f2f2f2">IN</td>
+                    <td style="font-weight:600; background:#f2f2f2">OUT</td>
+                </tr>
+
+            </thead>
+
+            <tbody id="tableBodySecod">
+                <tr>
+                    <td id="syringe-in"></td>
+                    <td id="syringe-out"></td>
+                </tr>
+            </tbody>
+        </table><br />
+        <table border="1" id="dataTableThird" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse;">
+            <thead id="tableHeadThird">
+
+                <tr style=" text-align:center;">
+
+                    <td colspan="8"
+                        style="font-weight:600; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Sexually Transmitted Infection Management - <i>To be filled by STI sites Designated to provide
+                            treatment of Risk group (Key Populaiton) </i></td>
+                </tr>
+                <tr style=" text-align:center;">
+                    <td rowspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2">Risk Groups/ Key
+                        Population Group</td>
+                    <td rowspan="3"
+                        style="border:1px solid black; font-weight:600; border:1px solid black; background:#f2f2f2">
+                        Total Clients Assessed</td>
+                    <td colspan="6"
+                        style="border:1px solid black; font-weight:600; border:1px solid black; background:#f2f2f2">STI
+                        Cases - by Etiology</td>
+                </tr>
+
+                <tr style=" text-align:center;">
+                    <td rowspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">Cervicitis</td>
+                    <td rowspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">Vaginitis </td>
+                    <td rowspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">Herpes genitalis
+                    </td>
+                    <td style=" border:1px solid black; font-weight:600; background:#f2f2f2">GNID</td>
+                    <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">Syphilis </td>
+                </tr>
+
+                <tr style=" text-align:center;">
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Gm Stain +ve</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Diagnosed</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Treated </td>
+                </tr>
+
+            </thead>
+
+            <tbody id="tableBodyThird"></tbody>
+        </table><br />
+        <table border="1" id="dataTableFifth" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; float:right; width:50%">
+            <thead id="tableHeadFifth">
+
+                <tr style=" text-align:center;">
+                    <td rowspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2">OST Indicators
+                    </td>
+                    <td colspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2">Methadone</td>
+                    <td colspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2">Buprenorphin
+                    </td>
+                </tr>
+                <tr style=" text-align:center;">
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> M </td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> F </td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> TG </td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> M </td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> F </td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> TG </td>
+                </tr>
+            </thead>
+
+            <tbody id="tableBodyFifth"></tbody>
+        </table><br />
+        <table border="1" id="dataTableFourth" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; float:left; width:48%">
+            <thead id="tableHeadFourth">
+                <tr style=" text-align:center;">
+                    <td rowspan="2" colspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2">STI
+                        Cases by Sex </td>
+                    <td colspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2">No of Cases</td>
+                </tr>
+                <tr style=" text-align:center;">
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> M </td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> F </td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2"> TG </td>
+                </tr>
+
+            </thead>
+
+            <tbody id="tableBodyFourth">
+                <tr>
+                    <td rowspan="3">Etiological Mgmt of STI</td>
+                    <td>Screened/Couns.</td>
+                    <td>Screening done</td>
+                    <td id="printValueFourth00"></td>
+                    <td id="printValueFourth01"></td>
+                    <td id="printValueFourth02"></td>
+
+                </tr>
+                <tr>
+                    <td>Diagnosed</td>
+                    <td>Syphillis</td>
+                    <td id="printValueFourth10"></td>
+                    <td id="printValueFourth11"></td>
+                    <td id="printValueFourth12"></td>
+                </tr>
+                <tr>
+                    <td>Tested</td>
+                    <td>Syphillis</td>
+                    <td id="printValueFourth20"></td>
+                    <td id="printValueFourth21"></td>
+                    <td id="printValueFourth22"></td>
+                </tr>
+                <tr>
+                    <td colspan="2">Presumptive Treatment to SWs</td>
+                    <td>Presumptive cervicitis</td>
+                    <td id="printValueFourth30"></td>
+                    <td id="printValueFourth31"></td>
+                    <td id="printValueFourth32"></td>
+                </tr>
+                <tr>
+                    <td colspan="2">Asymptomatic Partners Treated</td>
+                    <td></td>
+                    <td id="printValueFourth40"></td>
+                    <td id="printValueFourth41"></td>
+                    <td id="printValueFourth42"></td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>
+<script>
+
+    document.getElementById("loader").style.display = "none";
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+    var partner = [], agency = [];
+    // $.ajax({
+    //     type: "GET",
+    //     async: false,
+    //     url: "../api/29/optionSets/Q0I6uQsz9L3.json?fields=id,name,options[id,name]&paging=false",
+    //     data: JSON,
+    //     success: function (optionSet) {
+    //         var partnerOption = ""
+    //         optionSet.options.forEach(option => {
+
+    //             partnerOption += "<option value='" + option.name + "'>" + option.name + "</option>"
+    //             agency[option.name] = true;
+    //         })
+    //         document.getElementById("agency").innerHTML = partnerOption;
+
+    //     }
+    // })
+    // $.ajax({
+    //     type: "GET",
+    //     async: false,
+    //     url: "../api/29/optionSets/VpiNVfKuysp.json?fields=id,name,options[id,name]&paging=false",
+    //     data: JSON,
+    //     success: function (optionSet) {
+    //         var partnerOption = ""
+    //         partnerOption += "<option value='ifEmpty'>Please select</option>"
+    //         partner["ifEmpty"] = true;
+
+    //         optionSet.options.forEach(option => {
+    //             partnerOption += "<option value='" + option.name + "'>" + option.name + "</option>"
+    //             partner[option.name] = true;
+    //         })
+    //         document.getElementById("partner").innerHTML = partnerOption;
+    //     }
+    // })
+
+    var printValue = [];
+    var printValueFourth = [];
+
+    function submitData() {
+        printValue["syringOut"] = 0;
+        printValue["syringIn"] = 0;
+
+        for (let i = 0; i < 9; i++) {
+            printValue[i] = [];
+            for (let j = 0; j < 7; j++) {
+
+                printValue[i][j] = 0;
+            }
+        }
+        for (let i = 0; i < 5; i++) {
+            printValueFourth[i] = [];
+            for (let j = 0; j < 3; j++) {
+
+                printValueFourth[i][j] = 0;
+            }
+        }
+
+        var startDate = document.getElementById("start-date").value;
+        var endDate = document.getElementById("end-date").value;
+        var month = [startDate, endDate];
+
+        if (startDate.split("-").join("") > endDate.split("-").join("")) {
+            alert("Please Select dates Correctly!");
+            return;
+        } else {
+            document.getElementById("state").style.visibility = "hidden";
+            document.getElementById("facility").innerHTML = selectedOrgunit.name + " ( " + startDate + " to " + endDate + " )"
+            document.getElementById("loader").style.display = "block";
+            setTimeout(function () {
+                getData(month);
+            }, 1000);
+
+        }
+    }
+
+
+    function getData(month) {
+
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+
+            return arr;
+        }
+
+        //getting between dates
+        var smToEm = getBetweenDates(month["0"], month["1"]);
+
+        var columnThird = ["Female Sex Workers (FSWs)", "People who Inject Drugs (PWIDs)", "MSM and TG", "Clients of FSWs", "Male migrants", "Spouses of male migrants", "Pregnant women", "Neonates", "Others"];
+        var columnFifth = ["Clients on OST at end of last month", "New Clients Enrolled at this month", "Clients Re-entry at this month", "Clients Completed OST at this month", "Clients Drop Out at this month", "Clients on OST at End  of this month"];
+        //tableFirst
+        var dataElementFirst = [
+            "C8Cpn37QEHd",
+            "r2cfNWOTSnl",
+            "y25ckxuwXk6",
+            "dODw3ESNR74",
+            "epb3BR3veat",
+            "UWsm8cu03Fe",
+            "I3zQDUxsyYa",
+            "nrQwdY8sdNq",
+        ]
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: '../api/29/analytics.json?dimension=dx:' + dataElementFirst.join(";") + '&dimension=ou:' + selectedOrgunit.id + '&filter=pe:' + smToEm.join(";") + '&displayProperty=NAME&user=kYp5QA3JRxJ',
+            data: JSON,
+            success: function (dataValues) {
+                let printValue = [];
+                for (let i = 0; i < dataElementFirst.length; i++) printValue[i] = 0;
+
+                dataValues.rows.forEach(val => {
+                    dataElementFirst.forEach((de, index) => {
+                        if (val["0"] == de) printValue[index] += val["3"]
+                    })
+                })
+
+                var dataRow = '<tr>';
+                for (let i = 0; i < dataElementFirst.length; i++) dataRow += '<td>' + printValue[i] + '</td>';
+                dataRow += "</tr>"
+
+                document.getElementById("tableBodyFirst").innerHTML = dataRow;
+            }
+        });
+        var dataElementFifth = [
+            ["tXg8i93LPFX", "UNWZA9tEyXF", "DMQlb3gG63s", "qCN9PkfRvLe", "XHvXPSuG2q5", "nyoHqkQQ9FE"],
+            ["kTPU9TXxliB", "KBGEh5IfkR5", "vA7xWkErPCK", "ZvUSvomS8uL", "OerOKiXG7B1", "F2M3JXzdnmT"],
+            ["fdJabis0P4c", "w9QbmLrPKsW", "kTe2ogWlSbZ", "HPvS2KDcrOw", "VfZHv2jbjwe", "s5DAt1b7NOx"],
+            ["G8YwJz91OmY", "yNUhVrOHAzs", "sjnGoXxd8rS", "Sw2RXgZb1XZ", "rXicD62xQUK", "jCVik5sep6x"],
+            ["yYmVqEVtobk", "D6Z8lra2eo6", "Tag12yxoZNE", "fyRlLj6WI7U", "UZG06J8vN8V", "BDNBg7Y7cO4"],
+            ["de2f5wzMuif", "qYCkwAh5nri", "UyPA3LjMasu", "qyKAOLS2tWp", "s8ew3Hoi6Bf", "uOk0R7uzizz"]
+        ]
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: '../api/29/analytics.json?dimension=dx:' + dataElementFifth.toString().replace(/,/g, ";") + '&dimension=ou:' + selectedOrgunit.id + '&filter=pe:' + smToEm.join(";") + '&displayProperty=NAME&user=kYp5QA3JRxJ',
+            data: JSON,
+            success: function (dataValues) {
+                let printValueFifth = [];
+
+                for (let i = 0; i < dataElementFifth.length; i++) {
+                    printValueFifth[i] = [];
+                    for (let j = 0; j < 6; j++) {
+
+                        printValueFifth[i][j] = 0;
+                    }
+                }
+
+                dataValues.rows.forEach(val => {
+                    dataElementFifth.forEach((deId, indexFirst) => {
+                        deId.forEach((de, indexSecond) => {
+                            if (val["0"] == dataElementFifth[indexFirst][de]) printValueFifth[indexFirst][indexSecond] += val["3"]
+                        })
+
+                    })
+                })
+                let tableRowFifth = "<tr>"
+                for (let i = 0; i < columnFifth.length; i++) {
+                    tableRowFifth += "<td>" + columnFifth[i] + "</td>";
+                    for (let j = 0; j < 6; j++) {
+                        tableRowFifth += "<td>" + printValueFifth[i][j] + "</td>";
+                    }
+                    tableRowFifth += "</tr>"
+                }
+
+                document.getElementById("tableBodyFifth").innerHTML = tableRowFifth;
+            }
+        });
+
+        //table first end
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/events.json?program=L78QzNqadTV&startDate=" + month["0"] + "&endDate=" + month["1"] + "&orgUnit=" + selectedOrgunit.id + "&ouMode=DESCENDANTS&paging=false",
+            data: JSON,
+            success: function (tei) {
+                let teis = [];
+                // var partnerName = document.getElementById("partner").value;
+                // var agencyName = document.getElementById("agency").value;
+
+                tei.events.forEach(event => {
+
+                    if (event.programStage == "VUD50raolGD" || event.programStage == "goEnnJeZzyf") {
+                        if (!teis[event.trackedEntityInstance]) teis[event.trackedEntityInstance] = [];
+                        event.dataValues.forEach(dataValue => {
+                            if (dataValue.dataElement == "ilmyEDhD3FH") teis[event.trackedEntityInstance]["ilmyEDhD3FH"] = dataValue.value;
+                            else if (dataValue.dataElement == "eVz13uDVh4P" || dataValue.dataElement == "GWEAzyT7EOv" || dataValue.dataElement == "wkXdnuUZqpI"
+                                || dataValue.dataElement == "EUqr9k7wlWW" || dataValue.dataElement == "Q8uHQYtqFpt") {
+                                if (!teis[event.trackedEntityInstance][dataValue.dataElement]) {
+                                    teis[event.trackedEntityInstance][dataValue.dataElement] = Number(Boolean(dataValue.value));
+                                } else {
+                                    teis[event.trackedEntityInstance][dataValue.dataElement] += Number(Boolean(dataValue.value));
+                                }
+                            }
+                            else if (dataValue.dataElement == "NeObC0WprX6" || dataValue.dataElement == "tJssCUudncd" || dataValue.dataElement == "clMD2ouqbMm" || dataValue.dataElement == "qJNa0mhix75") {
+                                if (!teis[event.trackedEntityInstance]["syringeIn"]) {
+                                    teis[event.trackedEntityInstance]["syringeIn"] = Number(dataValue.value);
+                                } else {
+                                    teis[event.trackedEntityInstance]["syringeIn"] += Number(dataValue.value);
+                                }
+                            }
+                            else if (dataValue.dataElement == "OZ5icXVrwks" || dataValue.dataElement == "UIVkcnNRSlq" || dataValue.dataElement == "cWku9dlnbA8" || dataValue.dataElement == "dageiqlKnIy") {
+
+                                if (!teis[event.trackedEntityInstance]["syringeOut"]) {
+                                    teis[event.trackedEntityInstance]["syringeOut"] = Number(dataValue.value);
+                                } else {
+                                    teis[event.trackedEntityInstance]["syringeOut"] += Number(dataValue.value);
+                                }
+                            }
+                            else if (dataValue.dataElement == "I794wsAaNMo") {
+
+                                if (!teis[event.trackedEntityInstance]["screeningDone"]) {
+                                    teis[event.trackedEntityInstance]["screeningDone"] =  Number(Boolean(dataValue.value));
+                                } else {
+                                    teis[event.trackedEntityInstance]["screeningDone"] += Number(Boolean(dataValue.value));
+                                }
+                            }
+                            else teis[event.trackedEntityInstance][dataValue.dataElement] = dataValue.value;
+
+                        });
+                    }
+                })
+
+                for (tei in teis) {
+
+
+                    if (teis[tei]["syringeOut"]) printValue["syringOut"] += teis[tei]["syringeOut"];
+                    if (teis[tei]["syringeIn"]) printValue["syringIn"] += teis[tei]["syringeIn"];
+
+                    if (teis[tei]["kNOXyHVm6PF"] == "sex_worker") {
+                        printValue["0"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["0"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["0"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["0"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["0"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["0"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["0"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["0"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+                    if (teis[tei]["kNOXyHVm6PF"] == "pwid") {
+                        printValue["1"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["1"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["1"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["1"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["1"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["1"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["1"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["1"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+                    if (teis[tei]["kNOXyHVm6PF"] == "msm_tg" || teis[tei]["kNOXyHVm6PF"] == "TG") {
+                        printValue["2"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["2"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["2"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["2"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["2"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["2"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["2"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["2"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+                    if (teis[tei]["kNOXyHVm6PF"] == "client_sex_worker") {
+                        printValue["3"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["3"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["3"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["3"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["3"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["3"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["3"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["3"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+                    if (teis[tei]["kNOXyHVm6PF"] == "migrants") {
+                        printValue["4"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["4"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["4"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["4"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["4"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["4"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["4"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["4"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+                    if (teis[tei]["kNOXyHVm6PF"] == "spouse_migrants") {
+                        printValue["5"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["5"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["5"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["5"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["5"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["5"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["5"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["5"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+                    if (teis[tei]["kNOXyHVm6PF"] == "PregnantWomenNoEntry") {
+                        printValue["6"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["6"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["6"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["6"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["6"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["6"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["6"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["6"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+                    if (teis[tei]["kNOXyHVm6PF"] == "Child") {
+                        printValue["7"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["7"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["7"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["7"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["7"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["7"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["7"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["7"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+                    if (teis[tei]["kNOXyHVm6PF"] == "other_risk_group") {
+                        printValue["8"]["0"] += 1;
+                        if (teis[tei]["eVz13uDVh4P"] || teis[tei]["GWEAzyT7EOv"]) {
+                            if (teis[tei]["eVz13uDVh4P"]) printValue["8"]["1"] += teis[tei]["eVz13uDVh4P"]
+                            if (teis[tei]["GWEAzyT7EOv"]) printValue["8"]["1"] += teis[tei]["GWEAzyT7EOv"]
+                        }
+                        if (teis[tei]["wkXdnuUZqpI"]) printValue["8"]["2"] += teis[tei]["wkXdnuUZqpI"];
+                        if (teis[tei]["EUqr9k7wlWW"]) printValue["8"]["3"] += teis[tei]["EUqr9k7wlWW"];
+                        if (teis[tei]["NoID"]) printValue["8"]["4"] += 1;
+                        if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") printValue["8"]["5"] += 1;
+                        if (teis[tei]["Q8uHQYtqFpt"]) printValue["8"]["6"] += teis[tei]["Q8uHQYtqFpt"];
+
+                    }
+
+                    //fourth row
+                    if (teis[tei]["screeningDone"]) {
+                        if (teis[tei]["ilmyEDhD3FH"] == "Male") printValueFourth["0"]["0"] += teis[tei]["screeningDone"]
+                        if (teis[tei]["ilmyEDhD3FH"] == "Female") printValueFourth["0"]["1"] += teis[tei]["screeningDone"]
+                        if (teis[tei]["ilmyEDhD3FH"] == "Other") printValueFourth["0"]["2"] += teis[tei]["screeningDone"]
+                    }
+                    if (teis[tei]["XoTIHdKBibd"] == "RPR Reactive and TPPA Positive") {
+                        if (teis[tei]["ilmyEDhD3FH"] == "Male") printValueFourth["1"]["0"] += 1;
+                        if (teis[tei]["ilmyEDhD3FH"] == "Female") printValueFourth["1"]["1"] += 1;
+                        if (teis[tei]["ilmyEDhD3FH"] == "Other") printValueFourth["1"]["2"] += 1;
+                    }
+                    if (teis[tei]["Q8uHQYtqFpt"]) {
+                        if (teis[tei]["ilmyEDhD3FH"] == "Male") printValueFourth["2"]["0"] += teis[tei]["Q8uHQYtqFpt"]
+                        if (teis[tei]["ilmyEDhD3FH"] == "Female") printValueFourth["2"]["1"] += teis[tei]["Q8uHQYtqFpt"]
+                        if (teis[tei]["ilmyEDhD3FH"] == "Other") printValueFourth["2"]["2"] += teis[tei]["Q8uHQYtqFpt"]
+                    }
+                    if (teis[tei]["eVz13uDVh4P"]) {
+                        if (teis[tei]["ilmyEDhD3FH"] == "Male") printValueFourth["3"]["0"] += teis[tei]["eVz13uDVh4P"]
+                        if (teis[tei]["ilmyEDhD3FH"] == "Female") printValueFourth["3"]["1"] += teis[tei]["eVz13uDVh4P"]
+                        if (teis[tei]["ilmyEDhD3FH"] == "Other") printValueFourth["3"]["2"] += teis[tei]["eVz13uDVh4P"]
+                    }
+
+                }
+
+                for (let i = 0; i < 5; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        document.getElementById("printValueFourth" + i +""+ j).innerHTML = printValueFourth[i][j]
+                    }
+                }
+
+                document.getElementById("syringe-in").innerHTML = printValue["syringIn"];
+                document.getElementById("syringe-out").innerHTML = printValue["syringOut"];
+                let tableRow = "<tr>"
+                for (let i = 0; i < columnThird.length; i++) {
+                    tableRow += "<td>" + columnThird[i] + "</td>";
+                    for (let j = 0; j < 7; j++) {
+                        tableRow += "<td>" + printValue[i][j] + "</td>";
+                    }
+                    tableRow += "</tr>"
+                }
+
+                document.getElementById("tableBodyThird").innerHTML = tableRow;
+                document.getElementById("state").style.visibility = "visible";
+                document.getElementById("loader").style.display = "none";
+
+            }
+        })
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
