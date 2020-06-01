@@ -1,0 +1,343 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Weekly COVID Quarantine status update - Foreign Tibetan', 'Weekly COVID Quarantine status update - Foreign Tibetan.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div style="width: 50%; margin-left:25%;">
+    <table class="table table-borderless table-striped">
+
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Select Date : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="date" id="end-date">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; visibility:hidden">
+            <thead>
+                <tr style="font-weight:800; text-align:center;">
+                    <th style="border:1px solid black;background:#ADD8E6;text-align:center" colspan="26">Weekly Health
+                        status monitoring Update on Foreign Tibetans nationals under Quarantine to DOHe</th>
+                </tr>
+                <tr style="font-weight:800; text-align:left;">
+                    <th colspan="8" style="border:1px solid black;background:#ADD8E6; text-align: left">Date: <span id="period"></span> </th>
+                    <th colspan="9" style="border:1px solid black;background:#ADD8E6; text-align: left">Settlement: <span id="facility"></span> </th>
+                    <th colspan="9" style="border:1px solid black;background:#ADD8E6; text-align: left">Name
+                        Reporting nurse: <span id="orgUnit-nurse"></span></th>
+                </tr>
+                <tr style="font-weight:800; text-align:center;">
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">S.No.</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Name</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">DOH ID No.</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Sex</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Age</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Country</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Local Address (Camp and
+                        House No.)</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Passport No.</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">PassPort Validity </th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Date of Arrival</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Phone No.</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Comorbidities</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Quarintine start
+                        date (yyyy-mm-dd)</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Quarantine Reason</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Completed days of quarantine</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Cough</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Fever</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Shortness of Breath</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Chills</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Headache</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Loss of taste or smell
+                    </th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Muscle pain</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Sore throat</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Remarks (If any)</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Health status</th>
+                    <th style="border:1px solid black;background:#ADD8E6; text-align: center">Intervention taken</th>
+                </tr>
+
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+
+    var printValue = [];
+
+    function submitData() {
+        for (let i = 0; i < 25; i++)  printValue[i] = "";
+
+
+        var endDate = document.getElementById("end-date").value;
+
+
+        document.getElementById("dataTable").style.visibility = "hidden";
+        document.getElementById("facility").innerHTML = selectedOrgunit.name;
+        document.getElementById("period").innerHTML = endDate;
+        document.getElementById("loader").style.display = "block";
+        setTimeout(function () {
+            getData(endDate);
+        }, 1000);
+    
+    }
+
+
+    function getData(endDate) {
+        
+        var tableRow = "";
+        var serialNum = 0;
+        
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/organisationUnits/" + selectedOrgunit.id + ".json?paging=false",
+            data: JSON,
+            success: function (orgUnit) {
+                orgUnit.attributeValues.forEach(arrValue => {
+                    if(arrValue.attribute.id == "lllCzFvcWar") document.getElementById("orgUnit-nurse").innerHTML =  arrValue.value;
+                })
+            }
+        })
+        
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/events.json?program=rKmKTk2mYSi&endDate=" + endDate + "&orgUnit=" + selectedOrgunit.id + "&&ouMode=DESCENDANTS&paging=false",
+            data: JSON,
+            success: function (tei) {
+                let teis = [];
+                let teiAttr = [];
+
+                tei.events.forEach(event => {
+
+                    if (!teiAttr[event.trackedEntityInstance]) {
+                        teiAttr[event.trackedEntityInstance] = [];
+                        $.ajax({
+                            type: "GET",
+                            async: false,
+                            url: "../api/trackedEntityInstances/" + event.trackedEntityInstance + ".json",
+                            data: JSON,
+                            success: function (teiAttrs) {
+                                teiAttrs.attributes.forEach(attr => {
+                                    teiAttr[event.trackedEntityInstance][attr.attribute] = attr.value;
+                                })
+                            }
+                        })
+                    }
+
+                    
+                    if (!teis[event.trackedEntityInstance] && teiAttr[event.trackedEntityInstance]["MkAeABqgkKg"] == "Foreign Tibetan" && event.enrollmentStatus == "ACTIVE") {
+                        teis[event.trackedEntityInstance] = [];
+                        teis[event.trackedEntityInstance]["eventDate"] = 0
+                    }
+                    if(teis[event.trackedEntityInstance] ) {
+
+                        if (new Date(event.eventDate) >= new Date(teis[event.trackedEntityInstance]["eventDate"])) {
+                        teis[event.trackedEntityInstance] = [];
+                        teis[event.trackedEntityInstance]["eventDate"] = event.eventDate;
+
+                        event.dataValues.forEach(dataValue => {
+                            teis[event.trackedEntityInstance][dataValue.dataElement] = dataValue.value;
+                        });
+                    }
+                    }
+
+
+                    
+                })
+
+                for (tei in teis) {
+                    if (teiAttr[tei]["ENO9GZR8bSA"]) printValue["0"] = teiAttr[tei]["ENO9GZR8bSA"];
+                    if (teiAttr[tei]["yeI6AOQjrqg"]) printValue["1"] = teiAttr[tei]["yeI6AOQjrqg"];
+                    if (teiAttr[tei]["jQOWgNxC3N0"]) printValue["2"] = teiAttr[tei]["jQOWgNxC3N0"];
+                    if (teiAttr[tei]["GjdO5wHfmru"]) printValue["3"] = teiAttr[tei]["GjdO5wHfmru"];
+                    if (teiAttr[tei]["GbFAJDbFhzU"]) printValue["4"] = teiAttr[tei]["GbFAJDbFhzU"];
+                    if (teiAttr[tei]["RoPMahAKMc3"]) printValue["5"] = teiAttr[tei]["RoPMahAKMc3"];
+                    if (teiAttr[tei]["nf6rcwQt2fu"]) printValue["6"] = teiAttr[tei]["nf6rcwQt2fu"];
+                    if (teiAttr[tei]["ZFkYgfPrpqB"]) printValue["7"] = teiAttr[tei]["ZFkYgfPrpqB"];
+                    if (teiAttr[tei]["W71zBKbiT4o"]) printValue["8"] = teiAttr[tei]["W71zBKbiT4o"];
+                    if (teiAttr[tei]["UWVuTCtBs1u"]) printValue["9"] = teiAttr[tei]["UWVuTCtBs1u"];
+                    if (teis[tei]["TbX6FfIpdgT"]) printValue["10"] = (teis[tei]["TbX6FfIpdgT"]=="true") ?"Yes" : "No";
+                    if (teiAttr[tei]["Qy3hRJ84js7"]) printValue["11"] = teiAttr[tei]["Qy3hRJ84js7"];
+                    if (teiAttr[tei]["flctvB9Z6Jg"]) printValue["12"] = teiAttr[tei]["flctvB9Z6Jg"];
+                    if (teis[tei]["Z9N6pA4TOoF"]) printValue["13"] = teis[tei]["Z9N6pA4TOoF"];
+                    if (teis[tei]["dzwWq1Y2l4Q"]) printValue["14"] = teis[tei]["dzwWq1Y2l4Q"]=="true"?"Yes" : "";
+                    if (teis[tei]["qa4Ghb7b6iQ"]) printValue["15"] = teis[tei]["qa4Ghb7b6iQ"]=="true"?"Yes" : "";
+                    if (teis[tei]["fKu7h3AgySc"]) printValue["16"] = teis[tei]["fKu7h3AgySc"]=="true"?"Yes" : "";
+                    if (teis[tei]["bfp6hKh7HWi"]) printValue["17"] = teis[tei]["bfp6hKh7HWi"]=="true"?"Yes" : "";
+                    if (teis[tei]["VEWFyYyOLZu"]) printValue["18"] = teis[tei]["VEWFyYyOLZu"]=="true"?"Yes" : "";
+                    if (teis[tei]["HNKK5o8VGgx"]) printValue["19"] = teis[tei]["HNKK5o8VGgx"]=="true"?"Yes" : "";
+                    if (teis[tei]["e5NiDhrRRgW"]) printValue["20"] = teis[tei]["e5NiDhrRRgW"]=="true"?"Yes" : "";
+                    if (teis[tei]["AI84mA7IhqL"]) printValue["21"] = teis[tei]["AI84mA7IhqL"]=="true"?"Yes" : "";
+                    if (teis[tei]["ppRyskMlsYQ"]) printValue["22"] = teis[tei]["ppRyskMlsYQ"];
+                    if (teis[tei]["Y27pITKHZ98"]) printValue["23"] = teis[tei]["Y27pITKHZ98"];
+                    if (teis[tei]["IhrPAchjo0Q"]) printValue["24"] = teis[tei]["IhrPAchjo0Q"];
+
+                    tableRow += "<tr><td>" + ++serialNum + "</td>";
+                    for (let j = 0; j < 25; j++) {
+                        tableRow += "<td>" + printValue[j] + "</td>";
+                        printValue[j] = "";
+                    }
+                    tableRow += "</tr>"
+
+                }
+
+
+                document.getElementById("tableBody").innerHTML = tableRow;
+                document.getElementById("dataTable").style.visibility = "visible";
+                document.getElementById("loader").style.display = "none";
+
+            }
+        })
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
