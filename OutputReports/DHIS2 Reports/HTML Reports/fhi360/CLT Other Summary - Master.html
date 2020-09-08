@@ -1213,37 +1213,73 @@
     onclick="tableToExcel('dataTable', 'Index Testing Summary', 'Index Testing Summary.xls')"><span
         class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
 
-
-
-
-<div style="width: 50%; margin-left:25%;">
-    <table class="table table-borderless table-striped">
-        <tr style="border: 1px solid #DDDDDD;">
-            <td style="font-size: 15px;padding-top: 15px;">
-                <strong>Start Month : </strong>
-            </td>
-            <td style="width: 60%;">
-                <input class="form-control date" type="text" id="start-date">
-            </td>
-        </tr>
-        <tr>
-            <td style="font-size: 15px;padding-top: 15px;">
-                <strong>End Month : </strong>
-            </td>
-            <td style="width: 60%;">
-                <input class="form-control date" type="text" id="end-date">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
-        </tr>
-    </table>
-</div>
-
-
-<div id="loader" style="display: none"></div>
-<div id="printing" class="animate-bottom">
-    <div id='state'>
+        <div style="width: 50%; margin: 0 auto;">
+            <table class="table table-borderless table-striped">
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td style="font-size: 15px;padding-top: 15px;">
+                        <label for="dateFormat"><strong>Select Date Fomart : </strong></label>
+                    </td>
+                    <td style="width: 60%;">
+        
+                        <select id="dateFormat" onchange="showCalendar()" class="form-control">
+                            <option selected hidden> Please Select a Calendar Format</option>
+                            <option value="vc">Nepali calendar</option>
+                            <option value="gc">English calendar</option>
+                        </select>
+                    </td>
+                </tr>
+        
+            </table>
+        </div>
+        
+        
+        <div id="loader" style="display: none"></div>
+        
+        <div id='state'>
+            <div style="width: 50%; margin-left:25%;">
+                <table class="table table-borderless table-striped">
+                    <tr style="border: 1px solid #DDDDDD;">
+                        <td style="font-size: 15px;padding-top: 15px;">
+                            <strong>Start Month : </strong>
+                        </td>
+                        <td style="width: 60%;">
+                            <input type="text" class="date form-control" id="start-date">
+                            <input type="date" class="form-control" id="start-date-gc">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 15px;padding-top: 15px;">
+                            <strong>End Month : </strong>
+                        </td>
+                        <td style="width: 60%;">
+                            <input type="text" class="date form-control" id="end-date">
+                            <input type="date" class="form-control" id="end-date-gc">
+                        </td>
+                    </tr>
+                    <!-- <tr>
+                        <td style="font-size: 15px;padding-top: 15px;">
+                            <strong>Implementing Agency :</strong>
+                        </td>
+                        <td style="width: 60%;">
+                            <select class="form-control" id="agency">
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 15px;padding-top: 15px;">
+                            <strong>Implementing Partner:</strong>
+                        </td>
+                        <td style="width: 60%;">
+                            <select class="form-control" id="partner">
+                            </select>
+                        </td>
+                    </tr> -->
+                    <tr>
+                        <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+                    </tr>
+                </table>
+            </div>
+            <div id="printing" class="animate-bottom">
         <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
             style="border-collapse: collapse; text-align: center; visibility:hidden">
             <thead>
@@ -1311,6 +1347,24 @@
 
 <script>
 
+document.getElementById("state").style.display = "none";
+    function showCalendar() {
+        let calendar = document.getElementById("dateFormat").value;
+        if (calendar == "gc") {
+            document.getElementById("start-date-gc").style.display = "block";
+            document.getElementById("end-date-gc").style.display = "block";
+            document.getElementById("start-date").style.display = "none";
+            document.getElementById("end-date").style.display = "none";
+        } else {
+            document.getElementById("start-date-gc").style.display = "none";
+            document.getElementById("end-date-gc").style.display = "none";
+            document.getElementById("start-date").style.display = "block";
+            document.getElementById("end-date").style.display = "block";
+        }
+
+        document.getElementById("state").style.display = "block";
+    }
+
     var currentDate = new Date();
     var currentNepaliDate = calendarFunctions.getBsDateByAdDate(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
     var formatedNepaliDate = calendarFunctions.bsDateFormat("%y-%m-%d", currentNepaliDate.bsYear, currentNepaliDate.bsMonth, currentNepaliDate.bsDate);
@@ -1346,23 +1400,33 @@
             }
         }
 
-        var StartDate = document.getElementById("start-date").value;
-        var EndDate = document.getElementById("end-date").value;
 
-        var d = StartDate.split('-')
-        var e = EndDate.split('-')
-        var sYear = calendarFunctions.getNumberByNepaliNumber(d[0])
-        var sMonth = calendarFunctions.getNumberByNepaliNumber(d[1])
-        var sDay = calendarFunctions.getNumberByNepaliNumber(d[2])
-        var eYear = calendarFunctions.getNumberByNepaliNumber(e[0])
-        var eMonth = calendarFunctions.getNumberByNepaliNumber(e[1])
-        var eDay = calendarFunctions.getNumberByNepaliNumber(e[2])
-        var sdate = calendarFunctions.getAdDateByBsDate(sYear, sMonth, sDay)
-        var startDate = sdate.getFullYear() + '-' + (sdate.getMonth() + 1) + '-' + sdate.getDate();
-        var edate = calendarFunctions.getAdDateByBsDate(eYear, eMonth, eDay)
-        var endDate = edate.getFullYear() + '-' + (edate.getMonth() + 1) + '-' + edate.getDate();
+        let startDate = "", endDate = "";
+        let calendar = document.getElementById("dateFormat").value;
+        if (calendar == "gc") {
+            let StartDate = document.getElementById("start-date-gc").value;
+            let EndDate = document.getElementById("end-date-gc").value;
+            startDate = StartDate;
+            endDate = EndDate;
+        } else {
+            let StartDate = document.getElementById("start-date").value;
+            let EndDate = document.getElementById("end-date").value;
+            let d = StartDate.split('-')
+            let e = EndDate.split('-')
+            let sYear = calendarFunctions.getNumberByNepaliNumber(d[0])
+            let sMonth = calendarFunctions.getNumberByNepaliNumber(d[1])
+            let sDay = calendarFunctions.getNumberByNepaliNumber(d[2])
+            let eYear = calendarFunctions.getNumberByNepaliNumber(e[0])
+            let eMonth = calendarFunctions.getNumberByNepaliNumber(e[1])
+            let eDay = calendarFunctions.getNumberByNepaliNumber(e[2])
+            let sdate = calendarFunctions.getAdDateByBsDate(sYear, sMonth, sDay)
+            startDate = sdate.getFullYear() + '-' + (sdate.getMonth() + 1) + '-' + sdate.getDate();
+            let edate = calendarFunctions.getAdDateByBsDate(eYear, eMonth, eDay)
+            endDate = edate.getFullYear() + '-' + (edate.getMonth() + 1) + '-' + edate.getDate();
 
+        }
         var month = [startDate, endDate];
+
 
         if (startDate.split("-").join("") > endDate.split("-").join("")) {
             alert("Please Select dates Correctly!");
