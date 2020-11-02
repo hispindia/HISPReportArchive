@@ -1,0 +1,10 @@
+select 'State Total',count(*) as registration,startdate from 
+( select division,district,count,startdate from ( select ou2.name division ,ou1.name district,ou.organisationunitid 
+from organisationunit ou INNER JOIN _orgunitstructure os ON ou.organisationunitid = os.organisationunitid 
+inner join organisationunit ou2 on ou2.organisationunitid = os.idlevel3 
+INNER JOIN organisationunit ou1 ON ou1.organisationunitid = os.idlevel4 
+group by ou1.name,ou2.name,ou.organisationunitid order by division )kapi 
+INNER JOIN ( select count(distinct date),cd.sourceid,SUBSTRING(cd.date::varchar,1,7) as startdate 
+from completedatasetregistration cd inner join period p on p.periodid = cd.periodid where datasetid IN (119902174) 
+AND cd.date between '${startdate}' and '${enddate}' and extract(month from cd.date)= extract(month from p.startdate)
+group by cd.sourceid,cd.date )kapi2 on kapi2.sourceid=kapi.organisationunitid )kapi3 group by startdate
