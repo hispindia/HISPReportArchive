@@ -1,0 +1,506 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('printing')">
+    <span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'RMHU OPD Report', 'RMHU OPD Report')">
+    <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<br />
+<br />
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; visibility: hidden;">
+            <colgroup>
+                <col width="5%">
+                <col width="15%">
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="22">Part A: Outpatient Services</th>
+                </tr>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: left;"
+                        colspan="11">
+                        Facility Name: <span id="selected-orgUnit"></span></th>
+
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: left;"
+                        colspan="11">
+                        Period: <span id="selected-monthYear"> </span></th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="4">
+                        S/N</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="4">
+                        OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="10">
+                        During Month</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="10">
+                        Progressive</th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2" colspan="2">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2" colspan="2">
+                        Female</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="4">
+                        Child</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2" colspan="2">
+                        Total</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2" colspan="2">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2" colspan="2">
+                        Female</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="4">
+                        Child</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2" colspan="2">
+                        Total</th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="2">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="2">
+                        Female</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="2">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="2">
+                        Female</th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        New OPD</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Old OPD</th>
+
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+
+        </table>
+    </div>
+</div>
+
+<script>
+
+    document.getElementsByClassName("hideInPrint")["0"].style.display = "none"
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+
+    document.getElementById("dataTable").style.visibility = "hidden";
+    document.getElementById("loader").style.display = "block";
+
+    String.prototype.insertAt = function (index, str) {
+        return this.slice(0, index) + str + this.slice(index)
+    }
+    var selectedMonth = window.location.href.split("&")["1"].split("=")["1"].insertAt(4, "-")
+    var month = (selectedMonth.split("-")["1"] >= 4) ? [`${(selectedMonth.split("-")["0"])}-04`, selectedMonth] : [`${(selectedMonth.split("-")["0"] - 1)}-04`, selectedMonth];
+
+    document.getElementById("selected-orgUnit").innerHTML = selectedOrgunit.name;
+    document.getElementById("selected-monthYear").innerHTML = `${months[(selectedMonth.split("-")["1"] - 1)]}, ${selectedMonth.split("-")["0"]}`
+
+    setTimeout(function () {
+        getData(month, selectedOrgunit);
+    }, 1000);
+
+    async function getData(month, selectedOrgunit) {
+
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+            return arr;
+        }
+        //getting between months
+        var swToEw = getBetweenDates(month["0"], month["1"]);
+
+        var dataElement = [
+            'Organic Mental Disorder', 'Dementia (Alzeimers)', 'Anxiety Disorder', 'Bipolar Disorder', 'Schizophernia',
+            'Major Depressive Disorders', 'Addiction', 'Epilepsy with Psychosis', 'Mental Retardation with Psychosis', 'Others',
+            'Cases of common (mild & moderate) mental disorders', 'Cases of severe mental disorders', 'Cases with suicidal risk'
+        ]
+        var dataElementId = [
+            "GnWd8caG91p.lL4NLjr3KRN", "GnWd8caG91p.nF2D5cXmYvg", "GnWd8caG91p.RTfwobTRgjj", "GnWd8caG91p.KU4HyzqBhVc",
+            "mD9SIHcKbGi.J0IWCs9lHCM", "mD9SIHcKbGi.HIoEk9DgU5C", "mD9SIHcKbGi.C0gSRDxiKyF", "mD9SIHcKbGi.JPxbJ3uHZ8v",
+            "z8IApOLtfFm.lL4NLjr3KRN", "z8IApOLtfFm.nF2D5cXmYvg", "z8IApOLtfFm.RTfwobTRgjj", "z8IApOLtfFm.KU4HyzqBhVc",
+            "HxJQ2kwTKyU.J0IWCs9lHCM", "HxJQ2kwTKyU.HIoEk9DgU5C", "HxJQ2kwTKyU.C0gSRDxiKyF", "HxJQ2kwTKyU.JPxbJ3uHZ8v",
+            "GgjQQPME9CX.lL4NLjr3KRN", "GgjQQPME9CX.nF2D5cXmYvg", "GgjQQPME9CX.RTfwobTRgjj", "GgjQQPME9CX.KU4HyzqBhVc",
+            "ookbBE1mqib.J0IWCs9lHCM", "ookbBE1mqib.HIoEk9DgU5C", "ookbBE1mqib.C0gSRDxiKyF", "ookbBE1mqib.JPxbJ3uHZ8v",
+            "cKROGBaL3Mf.lL4NLjr3KRN", "cKROGBaL3Mf.nF2D5cXmYvg", "cKROGBaL3Mf.RTfwobTRgjj", "cKROGBaL3Mf.KU4HyzqBhVc",
+            "Uc3Woy7XGVR.J0IWCs9lHCM", "Uc3Woy7XGVR.HIoEk9DgU5C", "Uc3Woy7XGVR.C0gSRDxiKyF", "Uc3Woy7XGVR.JPxbJ3uHZ8v",
+            "bl3WxRmSOkm.lL4NLjr3KRN", "bl3WxRmSOkm.nF2D5cXmYvg", "bl3WxRmSOkm.RTfwobTRgjj", "bl3WxRmSOkm.KU4HyzqBhVc",
+            "IaKQq8HZJ1c.J0IWCs9lHCM", "IaKQq8HZJ1c.HIoEk9DgU5C", "IaKQq8HZJ1c.C0gSRDxiKyF", "IaKQq8HZJ1c.JPxbJ3uHZ8v",
+            "eGMmjPTCKND.lL4NLjr3KRN", "eGMmjPTCKND.nF2D5cXmYvg", "eGMmjPTCKND.RTfwobTRgjj", "eGMmjPTCKND.KU4HyzqBhVc",
+            "dIDOBwge7k2.J0IWCs9lHCM", "dIDOBwge7k2.HIoEk9DgU5C", "dIDOBwge7k2.C0gSRDxiKyF", "dIDOBwge7k2.JPxbJ3uHZ8v",
+            "PFseMsPyiwt.lL4NLjr3KRN", "PFseMsPyiwt.nF2D5cXmYvg", "PFseMsPyiwt.RTfwobTRgjj", "PFseMsPyiwt.KU4HyzqBhVc",
+            "jS09RFPiiCU.J0IWCs9lHCM", "jS09RFPiiCU.HIoEk9DgU5C", "jS09RFPiiCU.C0gSRDxiKyF", "jS09RFPiiCU.JPxbJ3uHZ8v",
+            "zdQYzPQWsml.lL4NLjr3KRN", "zdQYzPQWsml.nF2D5cXmYvg", "zdQYzPQWsml.RTfwobTRgjj", "zdQYzPQWsml.KU4HyzqBhVc",
+            "db5s7PnpZJu.J0IWCs9lHCM", "db5s7PnpZJu.HIoEk9DgU5C", "db5s7PnpZJu.C0gSRDxiKyF", "db5s7PnpZJu.JPxbJ3uHZ8v",
+            "TJnXKRnlEF7.lL4NLjr3KRN", "TJnXKRnlEF7.nF2D5cXmYvg", "TJnXKRnlEF7.RTfwobTRgjj", "TJnXKRnlEF7.KU4HyzqBhVc",
+            "SY4VvNkM64j.J0IWCs9lHCM", "SY4VvNkM64j.HIoEk9DgU5C", "SY4VvNkM64j.C0gSRDxiKyF", "SY4VvNkM64j.JPxbJ3uHZ8v",
+            "gdpXuezaWXy.lL4NLjr3KRN", "gdpXuezaWXy.nF2D5cXmYvg", "gdpXuezaWXy.RTfwobTRgjj", "gdpXuezaWXy.KU4HyzqBhVc",
+            "yzyCgnPYP2S.J0IWCs9lHCM", "yzyCgnPYP2S.HIoEk9DgU5C", "yzyCgnPYP2S.C0gSRDxiKyF", "yzyCgnPYP2S.JPxbJ3uHZ8v",
+            "PzVEMYuDgWr.lL4NLjr3KRN", "PzVEMYuDgWr.nF2D5cXmYvg", "PzVEMYuDgWr.RTfwobTRgjj", "PzVEMYuDgWr.KU4HyzqBhVc",
+            "qvRzBBlDXvC.J0IWCs9lHCM", "qvRzBBlDXvC.HIoEk9DgU5C", "qvRzBBlDXvC.C0gSRDxiKyF", "qvRzBBlDXvC.JPxbJ3uHZ8v",
+            "Rwq3jDx03OB.lL4NLjr3KRN", "Rwq3jDx03OB.nF2D5cXmYvg", "Rwq3jDx03OB.RTfwobTRgjj", "Rwq3jDx03OB.KU4HyzqBhVc",
+            "GTLEeEYEJLr.J0IWCs9lHCM", "GTLEeEYEJLr.HIoEk9DgU5C", "GTLEeEYEJLr.C0gSRDxiKyF", "GTLEeEYEJLr.JPxbJ3uHZ8v",
+            "Il7F8KHgu3i.lL4NLjr3KRN", "Il7F8KHgu3i.nF2D5cXmYvg", "Il7F8KHgu3i.RTfwobTRgjj", "Il7F8KHgu3i.KU4HyzqBhVc",
+            "jKTwh8Dsc5K.J0IWCs9lHCM", "jKTwh8Dsc5K.HIoEk9DgU5C", "jKTwh8Dsc5K.C0gSRDxiKyF", "jKTwh8Dsc5K.JPxbJ3uHZ8v"
+        ];
+
+
+        var addRow = "";
+        var totalCells = 260;
+        var rowSplit = 20;
+
+        var printValue = {
+            'lv': [],
+            'uv': []
+        };
+
+        for (let i = 0; i < totalCells; i++) {
+            printValue['lv'][i] = "";
+            printValue['uv'][i] = 0;
+        };
+
+        var printTotalVal = [];
+        var count = 0;
+        for (let i = 0; i < 20; i++) printTotalVal[i] = 0;
+        var organisationUnits = await orgUnitChildren(selectedOrgunit)
+        var rmhuGroup = await getOrgUnits(organisationUnits);
+        if (!rmhuGroup.length) {
+            alert("No Organisation Unit Exist!");
+            window.open("../dhis-web-reports-app/#/generate-report", "_self")
+        }
+        var orgUnitData = await aggregatedData(selectedOrgunit, dataElementId, swToEw);
+
+        rmhuGroup.forEach(rmhu => {
+            let orgUnitId = rmhu.id;
+            let orgUnitName = rmhu.name;
+
+            for (let i = 0; i < totalCells; i++) {
+                printValue['lv'][i] = "";
+            };
+            if (orgUnitData["RM"][orgUnitId] || orgUnitData["CP"][orgUnitId]) {
+                let counter = 0;
+                let itemBreak = 8;
+                let cpIndex = 10;
+                dataElementId.forEach((de, index) => {
+                    printValue['lv'][counter] = (orgUnitData["RM"][orgUnitId] ? (orgUnitData["RM"][orgUnitId][de] ? Number(orgUnitData["RM"][orgUnitId][de]) : "") : "");
+                    printValue['lv'][(cpIndex + counter)] = (orgUnitData["CP"][orgUnitId] ? (orgUnitData["CP"][orgUnitId][de] ? Number(orgUnitData["CP"][orgUnitId][de]) : "") : "");
+                    if ((index + 1) % itemBreak == 0) {
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 4)]) + Number(printValue['lv'][(counter - 6)]) + Number(printValue['lv'][(counter - 8)]);
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 4)]) + Number(printValue['lv'][(counter - 6)]) + Number(printValue['lv'][(counter - 8)]);
+                        counter += itemBreak;
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 4)]) + Number(printValue['lv'][(counter - 6)]) + Number(printValue['lv'][(counter - 8)]);
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 4)]) + Number(printValue['lv'][(counter - 6)]) + Number(printValue['lv'][(counter - 8)]);
+                    }
+                    counter++;
+                });
+                for (let i = 0; i < totalCells; i++)  printValue['uv'][i] += Number(printValue['lv'][i]);
+            }
+
+            let sno = 0;
+            addRow += `<tr><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; font:bold;background:#f2f2f2;text-align:left">${orgUnitName}</td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td><td style="border: 1px solid black; background:#f2f2f2;"></td>`;
+            for (let i = 0; i < totalCells; i++) {
+                if (i % 20 == 0) count = 0;
+                if (i == '200') {
+                    addRow += `<tr><td style="background:#f2f2f2;text-align:left;"></td><td style="background:#f2f2f2;text-align:left;">Total</td>`;
+                    for (let j = 0; j < 20; j++) addRow += `<td style="background:#f2f2f2;">${printTotalVal[j]}</td>`;
+                    addRow += `</tr>`;
+                    addRow += `<tr><td style="background:#f2f2f2;text-align:left;">A.1</td><td style="background:#f2f2f2;text-align:left;">Out of total OPD (out of  A above)</td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td><td style="background:#f2f2f2;"></td></tr>`
+                    for (let j = 0; j < 20; j++) printTotalVal[j] = 0;
+                }
+                if (i % rowSplit == 0) addRow += `</tr><tr><td style="text-align:left;" >${(sno > 9 ? (++sno - 10) : ++sno)}</td><td style="text-align:left;">${dataElement[(sno - 1)]}</td>`;
+                addRow += `<td >${printValue['lv'][i]}</td>`
+                printTotalVal[(count++)] += Number(printValue['lv'][i]);
+            }
+
+            addRow += `</tr><tr><td style="background:#f2f2f2;text-align:left;"></td><td style="background:#f2f2f2;text-align:left;">Total</td>`;
+            for (let j = 0; j < 20; j++) addRow += `<td style="background:#f2f2f2;">${printTotalVal[j]}</td>`;
+            addRow += `</tr>`;
+            for (let j = 0; j < 20; j++) printTotalVal[j] = 0;
+
+        });
+
+        let sno = 0;
+        addRow += `<tr><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; font:bold;background:#89CFF0;text-align:left">Maharashtra</td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td><td style="border: 1px solid black; background:#89CFF0;"></td>`;
+        for (let i = 0; i < totalCells; i++) {
+            if (i % 20 == 0) count = 0;
+            if (i == '200') {
+                addRow += `<tr><td style="background:#f2f2f2;text-align:left;"></td><td style="background:#f2f2f2;text-align:left;">Total</td>`;
+                for (let j = 0; j < 20; j++) addRow += `<td style="background:#f2f2f2;">${printTotalVal[j]}</td>`;
+                addRow += `</tr>`;
+                addRow += `<tr><td style=" background:#f2f2f2;text-align:left;">A.1</td><td style=" font:bold;background:#f2f2f2;text-align:left;">Out of total OPD (out of  A above)</td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td><td style=" background:#f2f2f2;"></td>`;
+                for (let j = 0; j < 20; j++) printTotalVal[j] = 0;
+            }
+            if (i % rowSplit == 0) addRow += `</tr><tr><td style="text-align:left;" >${(sno > 9 ? (++sno - 10) : ++sno)}</td><td style="text-align:left;">${dataElement[(sno - 1)]}</td>`;
+
+            addRow += `<td >${printValue['uv'][i]}</td>`
+            printTotalVal[(count++)] += Number(printValue['uv'][i]);
+        }
+
+        addRow += `</tr><tr><td style="background:#f2f2f2;text-align:left;"></td><td style="background:#f2f2f2;text-align:left;">Total</td>`;
+        for (let j = 0; j < 20; j++) addRow += `<td style="background:#f2f2f2;">${printTotalVal[j]}</td>`;
+        addRow += `</tr>`;
+
+        document.getElementById("tableBody").innerHTML = addRow;
+        document.getElementById("dataTable").style.visibility = "visible";
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("printing").style.display = "block";
+    }
+
+    async function orgUnitChildren(selectedOrgUnit) {
+        var orgUnitChildren = [];
+        var url = '../api/organisationUnits/' + selectedOrgUnit.id + '.json?paging=false&fields=id,name,level,dataSets[id]';
+
+        let response = await fetch('../api/organisationUnitLevels.json');
+        var orgUnitLevel = await response.json();
+
+        for (let i = 0; i < orgUnitLevel.organisationUnitLevels.length; i++) url += ',children[id,name,level,dataSets[id]';
+        url += ']';
+
+        response = await fetch(url);
+        var data = await response.json();
+
+        treeDown(data);
+
+        function treeDown(arr) {
+            var key = arr;
+            if (key.children.length) for (let i = 0; i < key.children.length; i++)  treeDown(key.children[i]);
+            orgUnitChildren.push(key.id);
+        }
+        return orgUnitChildren;
+    }
+
+    function getOrgUnits(orgUnitChildren) {
+        return new Promise(resolve => {
+            $.get("../api/27/organisationUnitGroups/p8dcpuuGQ8d.json?fields=id,name,organisationUnits[id,name]&paging=false",
+                function (rmhu) {
+                    rmhu = rmhu.organisationUnits.filter(orgUnit => orgUnitChildren.includes(orgUnit.id) ? orgUnit : "")
+                    resolve(rmhu);
+                });
+        })
+    }
+
+    function aggregatedData(selectedOrgunit, dataElementId, swToEw) {
+        var orgUnitData = {
+            "RM": {},
+            "CP": {}
+        };
+        return new Promise(resolve => {
+            $.get(`../api/26/analytics.json?dimension=dx:${dataElementId.join(";")}&dimension=pe:${swToEw.join(";")}&dimension=ou:${selectedOrgunit.id};OU_GROUP-p8dcpuuGQ8d&displayProperty=NAME`, function (data) {
+                data.rows.forEach(row => {
+
+                    if (swToEw[(swToEw.length - 1)] == row["1"]) {
+                        if (!orgUnitData["RM"][row["2"]]) orgUnitData["RM"][row["2"]] = {}
+                        orgUnitData["RM"][row["2"]][row["0"]] = row["3"];
+
+                        if (!orgUnitData["CP"][row["2"]]) orgUnitData["CP"][row["2"]] = {};
+                        if (!orgUnitData["CP"][row["2"]][row["0"]]) orgUnitData["CP"][row["2"]][row["0"]] = "";
+                        orgUnitData["CP"][row["2"]][row["0"]] += Number(row["3"]);
+                    } else {
+                        if (!orgUnitData["CP"][row["2"]]) orgUnitData["CP"][row["2"]] = {};
+                        if (!orgUnitData["CP"][row["2"]][row["0"]]) orgUnitData["CP"][row["2"]][row["0"]] = "";
+                        orgUnitData["CP"][row["2"]][row["0"]] += Number(row["3"]);
+                    }
+                })
+                resolve(orgUnitData);
+            });
+        });
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = `${filename}-${selectedOrgunit.name}.xls`;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>

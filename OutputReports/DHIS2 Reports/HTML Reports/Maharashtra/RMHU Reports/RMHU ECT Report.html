@@ -1,0 +1,411 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('printing')">
+    <span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'RMHU ECT Report', 'RMHU ECT Report')">
+    <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<br />
+<br />
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; visibility: hidden;">
+            <colgroup>
+                <col width="5%">
+                <col width="15%">
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="16">Part T : ECT Report </th>
+                </tr>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: left;"
+                        colspan="8">
+                        Facility Name: <span id="selected-orgUnit"></span></th>
+
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: left;"
+                        colspan="8">
+                        Period: <span id="selected-monthYear"> </span></th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="3">
+                        S/N</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="3">
+                        Investigation</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="7">
+                        During Month</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="7">
+                        Progressive</th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2">
+                        Female</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="2">
+                        Child</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="2">
+                        Total</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2">
+                        Total ECT DM</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2">
+                        Female</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="2">
+                        Child</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        colspan="2">
+                        Total</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;"
+                        rowspan="2">
+                        Total ECT DM</th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Female</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Female</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Female</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Male</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Female</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+
+        </table>
+    </div>
+</div>
+
+<script>
+
+    document.getElementsByClassName("hideInPrint")["0"].style.display = "none"
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+
+    document.getElementById("dataTable").style.visibility = "hidden";
+    document.getElementById("loader").style.display = "block";
+
+    String.prototype.insertAt = function (index, str) {
+        return this.slice(0, index) + str + this.slice(index)
+    }
+    var selectedMonth = window.location.href.split("&")["1"].split("=")["1"].insertAt(4, "-")
+    var month = (selectedMonth.split("-")["1"] >= 4) ? [`${(selectedMonth.split("-")["0"])}-04`, selectedMonth] : [`${(selectedMonth.split("-")["0"] - 1)}-04`, selectedMonth];
+
+    document.getElementById("selected-orgUnit").innerHTML = selectedOrgunit.name;
+    document.getElementById("selected-monthYear").innerHTML = `${months[(selectedMonth.split("-")["1"] - 1)]}, ${selectedMonth.split("-")["0"]}`
+
+    setTimeout(function () {
+        getData(month, selectedOrgunit);
+    }, 1000);
+
+    async function getData(month, selectedOrgunit) {
+
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+            return arr;
+        }
+        //getting between months
+        var swToEw = getBetweenDates(month["0"], month["1"]);
+
+        var dataElementId = ["JnVkILQLGDV.tY82VK3LTQq", "JnVkILQLGDV.VHbljVQ8REF", "ycCeFWDv1gj.tY82VK3LTQq", "ycCeFWDv1gj.VHbljVQ8REF"];
+
+        var addRow = "";
+        var totalCells = 14;
+        var rowSplit = 14;
+
+        var printValue = {
+            'lv': [],
+            'uv': []
+        };
+
+        for (let i = 0; i < totalCells; i++) {
+            printValue['lv'][i] = "";
+            printValue['uv'][i] = 0;
+        };
+        var organisationUnits = await orgUnitChildren(selectedOrgunit)
+        var rmhuGroup = await getOrgUnits(organisationUnits);
+        if (!rmhuGroup.length) {
+            alert("No Organisation Unit Exist!");
+            window.open("../dhis-web-reports-app/#/generate-report", "_self")
+        }
+        var orgUnitData = await aggregatedData(selectedOrgunit, dataElementId, swToEw);
+
+        var sno = 0;
+        rmhuGroup.forEach(rmhu => {
+            let orgUnitId = rmhu.id;
+            let orgUnitName = rmhu.name;
+
+            for (let i = 0; i < totalCells; i++) {
+                printValue['lv'][i] = "";
+            };
+            if (orgUnitData["RM"][orgUnitId] || orgUnitData["CP"][orgUnitId]) {
+                let counter = 0;
+                let itemBreak = 4;
+                let cpIndex = 7;
+                dataElementId.forEach((de, index) => {
+                    printValue['lv'][counter] = (orgUnitData["RM"][orgUnitId] ? (orgUnitData["RM"][orgUnitId][de] ? Number(orgUnitData["RM"][orgUnitId][de]) : "") : "");
+                    printValue['lv'][(cpIndex + counter)] = (orgUnitData["CP"][orgUnitId] ? (orgUnitData["CP"][orgUnitId][de] ? Number(orgUnitData["CP"][orgUnitId][de]) : "") : "");
+                    if ((index + 1) % itemBreak == 0) {
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 4)]);
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 4)]);
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 1)]);
+                        counter += itemBreak;
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 4)]);
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 4)]);
+                        printValue['lv'][(++counter)] = Number(printValue['lv'][(counter - 2)]) + Number(printValue['lv'][(counter - 1)]);
+                    }
+                    counter++;
+                });
+                for (let i = 0; i < totalCells; i++)  printValue['uv'][i] += Number(printValue['lv'][i]);
+            }
+
+            for (let i = 0; i < totalCells; i++) {
+                if (i % rowSplit == 0) addRow += `</tr><tr><td style="text-align:left;" >${(++sno)}</td><td style="text-align:left;">${orgUnitName}</td>`;
+                addRow += `<td >${printValue['lv'][i]}</td>`
+            }
+            addRow += '</tr>'
+
+        });
+
+        for (let i = 0; i < totalCells; i++) {
+            if (i % rowSplit == 0) addRow += `</tr><tr><td style="text-align:left;" >${(++sno)}</td><td style="text-align:left;">Maharashtra</td>`;
+            addRow += `<td >${printValue['uv'][i]}</td>`
+        }
+        addRow += '</tr>'
+
+        document.getElementById("tableBody").innerHTML += addRow;
+
+
+        document.getElementById("dataTable").style.visibility = "visible";
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("printing").style.display = "block";
+    }
+
+    async function orgUnitChildren(selectedOrgUnit) {
+    var orgUnitChildren = [];
+    var url = '../api/organisationUnits/' + selectedOrgUnit.id + '.json?paging=false&fields=id,name,level,dataSets[id]';
+
+    let response = await fetch('../api/organisationUnitLevels.json');
+    var orgUnitLevel = await response.json();
+
+    for (let i = 0; i < orgUnitLevel.organisationUnitLevels.length; i++) url += ',children[id,name,level,dataSets[id]';
+    url += ']';
+
+    response = await fetch(url);
+    var data = await response.json();
+
+    treeDown(data);
+
+    function treeDown(arr) {
+        var key = arr;
+        if (key.children.length) for (let i = 0; i < key.children.length; i++)  treeDown(key.children[i]);
+        orgUnitChildren.push(key.id);
+    }
+    return orgUnitChildren;
+}
+
+function getOrgUnits(orgUnitChildren) {
+    return new Promise(resolve => {
+        $.get("../api/27/organisationUnitGroups/p8dcpuuGQ8d.json?fields=id,name,organisationUnits[id,name]&paging=false",
+            function (rmhu) {
+                rmhu = rmhu.organisationUnits.filter(orgUnit => orgUnitChildren.includes(orgUnit.id) ? orgUnit : "")
+                resolve(rmhu);
+            });
+    })
+}
+
+    function aggregatedData(selectedOrgunit, dataElementId, swToEw) {
+        var orgUnitData = {
+            "RM": {},
+            "CP": {}
+        };
+        return new Promise(resolve => {
+            $.get(`../api/26/analytics.json?dimension=dx:${dataElementId.join(";")}&dimension=pe:${swToEw.join(";")}&dimension=ou:${selectedOrgunit.id};OU_GROUP-p8dcpuuGQ8d&displayProperty=NAME`, function (data) {
+                data.rows.forEach(row => {
+
+                    if (swToEw[(swToEw.length - 1)] == row["1"]) {
+                        if (!orgUnitData["RM"][row["2"]]) orgUnitData["RM"][row["2"]] = {}
+                        orgUnitData["RM"][row["2"]][row["0"]] = row["3"];
+
+                        if (!orgUnitData["CP"][row["2"]]) orgUnitData["CP"][row["2"]] = {};
+                        if (!orgUnitData["CP"][row["2"]][row["0"]]) orgUnitData["CP"][row["2"]][row["0"]] = "";
+                        orgUnitData["CP"][row["2"]][row["0"]] += Number(row["3"]);
+                    } else {
+                        if (!orgUnitData["CP"][row["2"]]) orgUnitData["CP"][row["2"]] = {};
+                        if (!orgUnitData["CP"][row["2"]][row["0"]]) orgUnitData["CP"][row["2"]][row["0"]] = "";
+                        orgUnitData["CP"][row["2"]][row["0"]] += Number(row["3"]);
+                    }
+                })
+                resolve(orgUnitData);
+            });
+        });
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = `${filename}-${selectedOrgunit.name}.xls`;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>

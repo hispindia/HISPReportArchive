@@ -1,0 +1,588 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('printing')">
+    <span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'NCD Form 6 (State level report for GOI submission)', 'NCD Form 6 (State level report for GOI submission).xls')">
+    <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<br />
+<br />
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; visibility: hidden;">
+            <colgroup>
+                <col width="20%">
+                <col width="20%">
+                <col width="10%">
+                <col width="10%">
+                <col width="10%">
+                <col width="10%">
+                <col width="10%">
+                <col width="10%">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="8">Form 6 <br /> National Programme on Prevention & Control of Cancer, Diabetes, CVDs &
+                        Stroke (NPCDCS) <br /> Reporting format for State NCD Cell</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;" colspan="4">Name of the State:
+                        <span id="selected-orgUnit"></span></th>
+
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;" colspan="4">
+                        <span id="selected-monthYear"> </span></th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;" colspan="4">No. of district NCD
+                        Cells ___________ </th>
+
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;" colspan="4">No. Of District NCD
+                        Cells reported ___________ </th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;" colspan="4">Population
+                        ___________</th>
+
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;" colspan="4">Persons screened in
+                        previous month: <span id="personRM"> </span></th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;" colspan="4"> Eligible Population
+                        ___________</th>
+
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;" colspan="4">Cumulative number of
+                        persons screened: <span id="personCP"> </span></th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="8">Part A. Programme Data (Compiled data of Form 5A)</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:left"
+                        rowspan="2" colspan="2">
+                        Indicator</th>
+                    <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                        colspan="3">
+                        During the Reporting Month</th>
+                    <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                        colspan="3">
+                        Cummulative since April (Financial Year Data)</th>
+                </tr>
+                <tr>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Male</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Female</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Total</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Male</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Female</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Total</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="8">i). Common NCDS under NPCDCS</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+            <tfoot>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="8">C. Physical targets and achievements</td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="2">Name of Facility</td>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;">Annual
+                        Target for 2020-21</td>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;">
+                        Achievement during the reporting month</td>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;">
+                        Cumulative achievement since 1st Apr 2020</td>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;">
+                        Cumulative achievement since beginning of program</td>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="2">Remarks</td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="2">District NCD Cells</td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;" colspan="2"></td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="2">District NCD Clinics</td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;" colspan="2"></td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="2">District CCU facilities</td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;" colspan="2"></td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="2">District Day Care Centres</td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;" colspan="2"></td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="2">CHC NCD Clinics</td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;" colspan="2"></td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="2">Others</td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;"></td>
+                    <td style="text-align: left; font-weight: 600;border:1px solid black;" colspan="2"></td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="8">Signature</td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="8">Name and Designation</td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="8">Date of reporting</td>
+                </tr>
+                <tr>
+                    <td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="8">*This report should be generated by compiling data of Form 5A & Form 5B of all
+                        Districts in the State<br /> This report should be verified and signed by State Nodal
+                        Officer.<br /> This report should be sent to National NCD Cell by 15th day of every month.</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    document.getElementsByClassName("hideInPrint")["0"].style.display = "none"
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+
+    document.getElementById("dataTable").style.visibility = "hidden";
+    document.getElementById("loader").style.display = "block";
+
+    String.prototype.insertAt = function(index,str){
+  return this.slice(0,index) + str + this.slice(index)
+}
+    var selectedMonth = window.location.href.split("&")["1"].split("=")["1"].insertAt(4, "-")
+    var month = (selectedMonth.split("-")["1"] >= 4) ? [`${(selectedMonth.split("-")["0"])}-04`, selectedMonth] : [`${(selectedMonth.split("-")["0"] - 1)}-04`, selectedMonth];
+
+    document.getElementById("selected-orgUnit").innerHTML = selectedOrgunit.name;
+    document.getElementById("selected-monthYear").innerHTML = `Month: ${months[(selectedMonth.split("-")["1"] - 1)]}, Year: ${selectedMonth.split("-")["0"]}`
+
+    setTimeout(function () {
+        getData(month, selectedOrgunit);
+    }, 1000);
+
+
+
+
+    function getData(month, selectedOrgunit) {
+
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+            return arr;
+        }
+        //getting between dates
+        var swToEw = getBetweenDates(month["0"], month["1"]);
+
+        dataElement = [
+            ["1. Total no. of persons attended NCD Clinics (New and Follow Up)", "dLreWJzj6YF", "YdmRvBqa1m9"],
+            ["A. Diabetes Only", "JFuQ3bvctiY.tY82VK3LTQq", "JFuQ3bvctiY.VHbljVQ8REF"],
+            ["B.Hypertension Only", "nH5bIO5mJGT.tY82VK3LTQq", "nH5bIO5mJGT.VHbljVQ8REF"],
+            ["C. HTN & DM (Both)", "nC9HOd2YARI.tY82VK3LTQq", "nC9HOd2YARI.VHbljVQ8REF"],
+            ["D. CVDs", "bAnaD3TKwCy.tY82VK3LTQq", "bAnaD3TKwCy.VHbljVQ8REF"],
+            ["E. Stroke", "IMbE8o1b6n4.tY82VK3LTQq", "IMbE8o1b6n4.VHbljVQ8REF"],
+            ["F. COPD", "Ala5Kw7YVZp.tY82VK3LTQq", "Ala5Kw7YVZp.VHbljVQ8REF"],
+            ["G. CKD", "rXO3oz2SXaB.tY82VK3LTQq", "rXO3oz2SXaB.VHbljVQ8REF"],
+            ["H.Oral Cancer", "uKz5fbTXqqB.tY82VK3LTQq", "uKz5fbTXqqB.VHbljVQ8REF"],
+            ["I. Breast Cancer", "XbwbCvjDoVa.tY82VK3LTQq", "XbwbCvjDoVa.VHbljVQ8REF"],
+            ["J. Cervical Cancer", "VGCjLYXcvt7.tY82VK3LTQq", "VGCjLYXcvt7.VHbljVQ8REF"],
+            ["K. Other Cancers", "k7dnw9MTU4S.tY82VK3LTQq", "k7dnw9MTU4S.VHbljVQ8REF"],
+            ["A. Diabetes Only", "aIb35qzb1YE.tY82VK3LTQq", "aIb35qzb1YE.VHbljVQ8REF"],
+            ["B. Hypertension Only", "SjhcU2jX6hQ.tY82VK3LTQq", "SjhcU2jX6hQ.VHbljVQ8REF"],
+            ["C. HTN & DM (Both)", "uJYy4EF4vMw.tY82VK3LTQq", "uJYy4EF4vMw.VHbljVQ8REF"],
+            ["D. CVDs", "smcxG05xoFF.tY82VK3LTQq", "smcxG05xoFF.VHbljVQ8REF"],
+            ["E. Stroke", "NnApsw9zzpT.tY82VK3LTQq", "NnApsw9zzpT.VHbljVQ8REF"],
+            ["F. COPD", "bYl4EkbwqbJ.tY82VK3LTQq", "bYl4EkbwqbJ.VHbljVQ8REF"],
+            ["G. CKD", "dX50hhXPl91.tY82VK3LTQq", "dX50hhXPl91.VHbljVQ8REF"],
+            ["H.Oral Cancer", "g5oEjb7eHP2.tY82VK3LTQq", "g5oEjb7eHP2.VHbljVQ8REF"],
+            ["I. Breast Cancer", "a6B2wQqtcsf.tY82VK3LTQq", "a6B2wQqtcsf.VHbljVQ8REF"],
+            ["J. Cervical Cancer", "QTBHV7vyiy2.tY82VK3LTQq", "QTBHV7vyiy2.VHbljVQ8REF"],
+            ["K. Other Cancers", "ARj6nmRIBNB.tY82VK3LTQq", "ARj6nmRIBNB.VHbljVQ8REF"],
+            ["dePatientFollowUp"],
+            ["A. Diabetes Only", "rbhBPgqSOXU.tY82VK3LTQq", "rbhBPgqSOXU.VHbljVQ8REF"],
+            ["B. Hypertension Only", "dVN4jLGsoqT.tY82VK3LTQq", "dVN4jLGsoqT.VHbljVQ8REF"],
+            ["C. HTN & DM (Both)", "ApsV9wJrUzS.tY82VK3LTQq", "ApsV9wJrUzS.VHbljVQ8REF"],
+            ["D. CVDs", "Qdxb4R4buuR.tY82VK3LTQq", "Qdxb4R4buuR.VHbljVQ8REF"],
+            ["E. Stroke", "IrD8kzM2Wnc.tY82VK3LTQq", "IrD8kzM2Wnc.VHbljVQ8REF"],
+            ["F. COPD", "fVyamkPEONX.tY82VK3LTQq", "fVyamkPEONX.VHbljVQ8REF"],
+            ["G. CKD", "OJSsgmqtOMz.tY82VK3LTQq", "OJSsgmqtOMz.VHbljVQ8REF"],
+            ["H. Oral Cancer", "d3IakATmNsp.tY82VK3LTQq", "d3IakATmNsp.VHbljVQ8REF"],
+            ["I. Breast Cancer", "dr3zjFMK4Zn.tY82VK3LTQq", "dr3zjFMK4Zn.VHbljVQ8REF"],
+            ["J. Cervical Cancer", "OHMQZDpIQUe.tY82VK3LTQq", "OHMQZDpIQUe.VHbljVQ8REF"],
+            ["K. Other Cancers", "rosgP1PnhQA.tY82VK3LTQq", "rosgP1PnhQA.VHbljVQ8REF"],
+            ["A. CVDs", "iqttUyCSe8T.tY82VK3LTQq", "iqttUyCSe8T.VHbljVQ8REF"],
+            ["B. Stroke", "erjCDlGqNOs.tY82VK3LTQq", "erjCDlGqNOs.VHbljVQ8REF"],
+            ["7. No. of persons attended day care centre", "EdMPx4DN3hw.tY82VK3LTQq", "EdMPx4DN3hw.VHbljVQ8REF"],
+            ["8. No. of Persons counselled for health promotion and prevention of NCDs", "K4Kd4B1cV2x.tY82VK3LTQq", "K4Kd4B1cV2x.VHbljVQ8REF"],
+            ["9. No. of patients attended physiotherapy", "WLEUo73iejO.tY82VK3LTQq", "WLEUo73iejO.VHbljVQ8REF"],
+            ["A. No. of known TB  cases on  ATT", "UAHcD3Q0d8N.tY82VK3LTQq", "UAHcD3Q0d8N.VHbljVQ8REF"],
+            ["B. No. screened for TB Symptoms", "Ly94SGcpIqr.tY82VK3LTQq", "Ly94SGcpIqr.VHbljVQ8REF"],
+            ["C. No. suspected for TB & refered  to DMC/ PI ", "t2lpyN50Rbb.tY82VK3LTQq", "t2lpyN50Rbb.VHbljVQ8REF"],
+            ["Total No. of NCD check ups done", "YHsgyNtKFmP", "HAvu662xgKT"],
+        ];
+        var dePatientFollowUp = [
+            ["A. Diabetes Only", "Y4S5IEHVyWn.tY82VK3LTQq", "Y4S5IEHVyWn.VHbljVQ8REF"],
+            ["B. Hypertension Only", "yRtgwLOHYbP.tY82VK3LTQq", "yRtgwLOHYbP.VHbljVQ8REF"],
+            ["C. HTN & DM (Both)", "H7S17oRlpno.tY82VK3LTQq", "H7S17oRlpno.VHbljVQ8REF"],
+            ["D. CVDs", "ClmciVXtA4H.tY82VK3LTQq", "ClmciVXtA4H.VHbljVQ8REF"],
+            ["E. Stroke", "eM4kLUCnnNr.tY82VK3LTQq", "eM4kLUCnnNr.VHbljVQ8REF"],
+            ["F. COPD", "hT53zTH4gGg.tY82VK3LTQq", "hT53zTH4gGg.VHbljVQ8REF"],
+            ["G. CKD", "sOdLLl4SMm7.tY82VK3LTQq", "sOdLLl4SMm7.VHbljVQ8REF"],
+            ["H. Oral Cancer", "dgTXP8F4Mlh.tY82VK3LTQq", "dgTXP8F4Mlh.VHbljVQ8REF"],
+            ["I. Breast Cancer", "YkhpBE6dyXk.tY82VK3LTQq", "YkhpBE6dyXk.VHbljVQ8REF"],
+            ["J. Cervical Cancer", "UsUuEMUXqZE.tY82VK3LTQq", "UsUuEMUXqZE.VHbljVQ8REF"],
+            ["K. Other Cancers", "mphqUT5b6Fn.tY82VK3LTQq", "mphqUT5b6Fn.VHbljVQ8REF"]
+        ]
+
+        var dePatientDiagnosed = [
+            ["Diabetes only", "deMjgsFQN68.tY82VK3LTQq", "deMjgsFQN68.VHbljVQ8REF"],
+            ["Hypertension Only", "UV6LjxlOkcL.tY82VK3LTQq", "UV6LjxlOkcL.VHbljVQ8REF"],
+            ["HTN & DM (Both)", "Jrp0aSJ21wd.tY82VK3LTQq", "Jrp0aSJ21wd.VHbljVQ8REF"],
+            ["Oral  Cancers", "m5x7AuQsuOh.tY82VK3LTQq", "m5x7AuQsuOh.VHbljVQ8REF"],
+            ["Breast Cancers", "aGEsbgNDGqT.tY82VK3LTQq", "aGEsbgNDGqT.VHbljVQ8REF"],
+            ["Cervical  Cancers", "r305O2EPHiA.tY82VK3LTQq", "r305O2EPHiA.VHbljVQ8REF"],
+            ["Other Cancers", "LZe8Wl0Z4Yh.tY82VK3LTQq", "LZe8Wl0Z4Yh.VHbljVQ8REF"],
+            ["Diabetes only", "Y4S5IEHVyWn.tY82VK3LTQq", "Y4S5IEHVyWn.VHbljVQ8REF"],
+            ["Hypertension Only", "yRtgwLOHYbP.tY82VK3LTQq", "yRtgwLOHYbP.VHbljVQ8REF"],
+            ["HTN & DM (Both)", "H7S17oRlpno.tY82VK3LTQq", "H7S17oRlpno.VHbljVQ8REF"],
+            ["Oral  Cancers", "dgTXP8F4Mlh.tY82VK3LTQq", "dgTXP8F4Mlh.VHbljVQ8REF"],
+            ["Breast Cancers ", "YkhpBE6dyXk.tY82VK3LTQq", "YkhpBE6dyXk.VHbljVQ8REF"],
+            ["Cervical  Cancers", "UsUuEMUXqZE.tY82VK3LTQq", "UsUuEMUXqZE.VHbljVQ8REF"],
+            ["Other Cancers", "mphqUT5b6Fn.tY82VK3LTQq", "mphqUT5b6Fn.VHbljVQ8REF"]
+        ]
+        var dEMonthlyStatus = dataElement.map(value => ((value.length > 1) ? `${value["1"]};${value["2"]}` : "")).join(";");
+        var dEPatientFollowUp = dePatientFollowUp.map(value => ((value.length > 1) ? `${value["1"]};${value["2"]}` : "")).join(";");
+        var dEPatientDiagnosed = dePatientDiagnosed.map(value => ((value.length > 1) ? `${value["1"]};${value["2"]}` : "")).join(";");
+
+        var printTotal = [];
+        var columnLength = 3
+        for (let i = 0; i < dataElement.length; i++) {
+            printTotal[i] = [];
+            for (let j = 0; j < columnLength; j++) {
+                printTotal[i][j] = 0;
+            }
+        }
+
+        $.when(
+            $.get(`../api/analytics.json?dimension=dx:${dEMonthlyStatus};pHjOk7z3qem&filter=ou:${selectedOrgunit.id}&dimension=pe:${swToEw.join(";")}&displayProperty=NAME&outputIdScheme=UID&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${dEPatientFollowUp}&filter=ou:OU_GROUP-R9BqNOdb28Q;OU_GROUP-hpZ9fIQFMMM;OU_GROUP-gwKt4p6FHVC&dimension=pe:${swToEw.join(";")}&displayProperty=NAME&outputIdScheme=UID&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${dEPatientDiagnosed}&filter=ou:OU_GROUP-YOLBalOi30g;OU_GROUP-bYeMmLxh8Xs&dimension=pe:${swToEw.join(";")}&displayProperty=NAME&outputIdScheme=UID&paging=false`),
+        ).done(function (response, patientFollowUp, patientDiagnosed) {
+            var dataResponse = {
+                "RM": [],
+                "CP": []
+            };
+            var dataPatientFollowUP = {
+                "RM": [],
+                "CP": []
+            };
+            var dataPatientDiagnosed = {
+                "RM": [],
+                "CP": []
+            };
+            //cummulative period => CP && Reporting Month => RM
+            response["0"].rows.forEach(row => {
+                if (swToEw[(swToEw.length - 1)] == row["1"]) {
+                    dataResponse["RM"][row["0"]] = Number(row["2"]);
+
+                    if (!dataResponse["CP"][row["0"]]) dataResponse["CP"][row["0"]] = 0;
+                    dataResponse["CP"][row["0"]] += Number(row["2"]);
+                } else {
+                    if (!dataResponse["CP"][row["0"]]) dataResponse["CP"][row["0"]] = 0;
+                    dataResponse["CP"][row["0"]] += Number(row["2"]);
+                }
+            })
+
+            patientFollowUp["0"].rows.forEach(row => {
+                if (swToEw[(swToEw.length - 1)] == row["1"]) {
+                    dataPatientFollowUP["RM"][row["0"]] = Number(row["2"]);
+
+                    if (!dataPatientFollowUP["CP"][row["0"]]) dataPatientFollowUP["CP"][row["0"]] = 0;
+                    dataPatientFollowUP["CP"][row["0"]] += Number(row["2"]);
+                } else {
+                    if (!dataPatientFollowUP["CP"][row["0"]]) dataPatientFollowUP["CP"][row["0"]] = 0;
+                    dataPatientFollowUP["CP"][row["0"]] += Number(row["2"]);
+                }
+            })
+
+            patientDiagnosed["0"].rows.forEach(row => {
+                if (swToEw[(swToEw.length - 1)] == row["1"]) {
+                    dataPatientDiagnosed["RM"][row["0"]] = Number(row["2"]);
+
+                    if (!dataPatientDiagnosed["CP"][row["0"]]) dataPatientDiagnosed["CP"][row["0"]] = 0;
+                    dataPatientDiagnosed["CP"][row["0"]] += Number(row["2"]);
+                } else {
+                    if (!dataPatientDiagnosed["CP"][row["0"]]) dataPatientDiagnosed["CP"][row["0"]] = 0;
+                    dataPatientDiagnosed["CP"][row["0"]] += Number(row["2"]);
+                }
+            })
+
+            document.getElementById("personRM").innerHTML = (dataResponse["RM"]["pHjOk7z3qem"] ? dataResponse["RM"]["pHjOk7z3qem"] : "")
+            document.getElementById("personCP").innerHTML = (dataResponse["CP"]["pHjOk7z3qem"] ? dataResponse["CP"]["pHjOk7z3qem"] : "")
+
+            var tableRow = ""
+            dataElement.forEach((de, index) => {
+                tableRow += "<tr>"
+                if (index == "0") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" colspan="2">${de["0"]}</td>`;
+                else if (index == "1") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" rowspan="11" >2. No. newly diagnosed with</td><td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+                else if (index == "12") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" rowspan="11" >3. No of new patients initiated on treatment</td><td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+                else if (index == "23") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" rowspan="11" >4. No of Patients on Follow up</td>`;
+                else if (index == "24") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" rowspan="11" >5. No. of Patients Referred to Tertiary Care/TCCC</td><td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+                else if (index == "35") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" rowspan="2" >6. No of patients treated at CCU</td><td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+                else if (index == "37") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" colspan="2">${de["0"]}</td>`;
+                else if (index == "38") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" colspan="2">${de["0"]}</td>`;
+                else if (index == "39") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" colspan="2">${de["0"]}</td>`;
+                else if (index == "40") tableRow += `<td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;" colspan="8">ii). Comorbid Conditions</td></tr> <tr> <td style="border:1px solid black; text-align:left;font-weight:600;" rowspan="3" >10. Among all confirmed Diabetic patients [New  (2A+2C) & Follow up (4A+4C)]</td><td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+                else if (index == "43") tableRow += `<td style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;" colspan="8">B1. Other Programme Markers (Compiled data of Population based Screening (PBS))</td></tr> <tr><td style="border:1px solid black; text-align:left;font-weight:600;" colspan="2">${de["0"]}</td>`;
+                else tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+
+                if (de["0"] == "dePatientFollowUp") {
+                    dePatientFollowUp.forEach(de => {
+                        let maleRM = ((dataPatientFollowUP["RM"][de["1"]]) ? (dataPatientFollowUP["RM"][de["1"]]) : "")
+                        let femaleRM = ((dataPatientFollowUP["RM"][de["2"]]) ? (dataPatientFollowUP["RM"][de["2"]]) : "")
+                        let maleCP = ((dataPatientFollowUP["CP"][de["1"]]) ? (dataPatientFollowUP["CP"][de["1"]]) : "")
+                        let femaleCP = ((dataPatientFollowUP["CP"][de["2"]]) ? (dataPatientFollowUP["CP"][de["2"]]) : "")
+                        tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" >${de["0"]}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${maleRM}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${femaleRM}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${Number(maleRM) + Number(femaleRM)}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${maleCP}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${femaleCP}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${Number(maleCP) + Number(femaleCP)}</td></tr>`;
+                    });
+                } else {
+                    let maleRM = ((dataResponse["RM"][de["1"]]) ? (dataResponse["RM"][de["1"]]) : "")
+                    let femaleRM = ((dataResponse["RM"][de["2"]]) ? (dataResponse["RM"][de["2"]]) : "")
+                    let maleCP = ((dataResponse["CP"][de["1"]]) ? (dataResponse["CP"][de["1"]]) : "")
+                    let femaleCP = ((dataResponse["CP"][de["2"]]) ? (dataResponse["CP"][de["2"]]) : "")
+                    tableRow += `
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${maleRM}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${femaleRM}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${Number(maleRM) + Number(femaleRM)}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${maleCP}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${femaleCP}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${Number(maleCP) + Number(femaleCP)}</td></tr>`;
+
+                }
+            })
+
+            dePatientDiagnosed.forEach((de, index) => {
+                tableRow += "<tr>"
+                if (index == "0") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" rowspan="7" >Total No. Of Persons Suspected and refered  for</td><td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+                else if (index == "7") tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;" rowspan="7" >No. of diagnosed patients  on follow up in PHC and Sub centres</td><td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+                else tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;">${de["0"]}</td>`;
+
+                let maleRM = ((dataPatientDiagnosed["RM"][de["1"]]) ? (dataPatientDiagnosed["RM"][de["1"]]) : "")
+                let femaleRM = ((dataPatientDiagnosed["RM"][de["2"]]) ? (dataPatientDiagnosed["RM"][de["2"]]) : "")
+                let maleCP = ((dataPatientDiagnosed["CP"][de["1"]]) ? (dataPatientDiagnosed["CP"][de["1"]]) : "")
+                let femaleCP = ((dataPatientDiagnosed["CP"][de["2"]]) ? (dataPatientDiagnosed["CP"][de["2"]]) : "")
+                tableRow += `
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${maleRM}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${femaleRM}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${Number(maleRM) + Number(femaleRM)}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${maleCP}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${femaleCP}</td>
+                        <td style="border:1px solid black; text-align:center;font-weight:600;" >${Number(maleCP) + Number(femaleCP)}</td></tr>`;
+            })
+
+            document.getElementById("tableBody").innerHTML = tableRow;
+            document.getElementById("dataTable").style.visibility = "visible";
+            document.getElementById("loader").style.display = "none";
+        })
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
