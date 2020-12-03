@@ -26,8 +26,10 @@ FROM   (
                                            inner join period p 
                                                    ON p.periodid = cd.periodid 
                                     WHERE  datasetid IN ( 119902174 ) 
-                                           AND cd.date BETWEEN 
-                                               '${startdate}' AND '${enddate}' 
+                                           AND CAST(cd.date AS DATE)  >= 
+                                                        '${startdate}'  AND 
+														CAST(cd.date AS DATE)<=
+                                                         '${enddate}'  
 											   and extract(month from cd.date)= extract(month from p.startdate)
                                     GROUP  BY cd.sourceid, 
                                               cd.date)kapi2 
@@ -64,8 +66,10 @@ FROM   (
                                                    ON p.periodid = cd.periodid 
                                     WHERE  datasetid IN (119902174
                                                         ) 
-                                           AND cd.date BETWEEN 
-                                               '${startdate}' AND '${enddate}' 
+                                           AND CAST(cd.date AS DATE)  >= 
+                                                        '${startdate}'  AND 
+														CAST(cd.date AS DATE)<=
+                                                         '${enddate}'   
 											   and extract(month from cd.date)= extract(month from p.startdate)
                                     GROUP  BY cd.sourceid, 
                                               cd.date)kapi2 

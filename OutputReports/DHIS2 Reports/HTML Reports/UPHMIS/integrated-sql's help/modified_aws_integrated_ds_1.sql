@@ -26,10 +26,12 @@ FROM   (
                                     FROM   completedatasetregistration cd 
                                            inner join period p 
                                                    ON p.periodid = cd.periodid 
-                                    WHERE  datasetid IN ( 119902174) 
-                                           AND cd.date BETWEEN 
-                                                '${startdate}' AND '${enddate}'  
-												and extract(month from cd.date)= extract(month from p.startdate)
+                                    WHERE  datasetid = 119902174
+                                           AND CAST(cd.date AS DATE)  >= 
+                                                        '${startdate}'  AND 
+														CAST(cd.date AS DATE)<=
+                                                         '${enddate}'  
+												and extract(month from cd.date)= extract(month from p.startdate)  
                                     GROUP  BY cd.sourceid, 
                                               cd.date)kapi2 
                                 ON kapi2.sourceid = kapi.organisationunitid) 
@@ -66,9 +68,11 @@ FROM   (
                                            inner join period p 
                                                    ON p.periodid = cd.periodid 
                                     WHERE  datasetid IN (119902174) 
-                                           AND cd.date BETWEEN 
-                                                '${startdate}' AND '${enddate}'  
-												and extract(month from cd.date)= extract(month from p.startdate)
+                                           AND CAST(cd.date AS DATE)  >= 
+                                                        '${startdate}'  AND 
+														CAST(cd.date AS DATE)<=
+                                                         '${enddate}'  
+												and extract(month from cd.date)= extract(month from p.startdate)  
                                     GROUP  BY cd.sourceid, 
                                               cd.date)kapi2 
                                 ON kapi2.sourceid = kapi.organisationunitid) 
