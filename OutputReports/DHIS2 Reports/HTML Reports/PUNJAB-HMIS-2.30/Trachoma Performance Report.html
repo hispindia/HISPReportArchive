@@ -1,0 +1,321 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+crossorigin="anonymous">
+
+
+<style>
+        table {
+            border-collapse: collapse;
+        }
+
+        thead>tr>td {
+        font-weight: bold;
+        }
+        tbody>tr>td {
+        font-weight: bold;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button {  
+        opacity: 1;
+        }
+
+        /* Center the loader  */
+        #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+        }
+        
+        @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+        }
+        
+        @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+        }
+        /* Add animation to "page content" */
+        
+        .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+        }
+        
+        @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+        }
+        
+        @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+        }
+        
+        #printing {
+        
+        text-align: center;
+        }
+    </style>
+        
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span
+    class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', 'Trachoma Performance Report', 'Trachoma Performance Report.xls')"><span
+    class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table  border="1"  id="dataTable"  class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
+            <thead id="tableHead">
+                <tr style="font-weight:400; text-align:center;">
+                    <td colspan="14" style="border:1px solid black;background:#ADD8E6;">Proforma for Monthly Trachoma Report</td>
+                </tr>
+                <tr style="font-weight:400; text-align:center;">
+                    <td colspan="14" style="border:1px solid black;background:#ADD8E6;"><span id="month"></span></td>
+                </tr>
+                <tr  style="font-weight:400; text-align:center;">
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Sno</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Name of the facility</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">Estimated Population</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No of Children (1-9 yr age with active Trachoma (TF)/TI)</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Adults with active Trachoma (age 9 years and above)</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No. received treatment for trachoma with azithromycin</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Adult (>15 years of age) With Tr. Trichiasis (TT)</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No. of TT surgeons in district</td>
+                    <td colspan="3" style="border:1px solid black;background:#ADD8E6;">No. of Adult received surgery for TT during the month</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Adult (>15 years of age)cases awaiting for surgery</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No. refused surgery</td>
+                    <td rowspan="2" style="border:1px solid black;background:#ADD8E6;">No. of Adult (>15 years of age)  epilated</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid black;background:#ADD8E6;">Male</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">Female</td>
+                    <td style="border:1px solid black;background:#ADD8E6;">Total</td>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+    var selectedDate = dhis2.report.periods[0];
+    var selectedOrgUnit = [dhis2.report.organisationUnit]; 
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var organisationUnitChildren = orgUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+    var level = dhis2.report.organisationUnitHierarchy.length;
+    var orgUnitPopulation = [];
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    var year = parseInt(selectedDate.slice(0,4));
+    var month = parseInt(selectedDate.slice(4,6));
+    document.getElementById("month").innerHTML = months[month-1] + " - " + year;
+    var selectedChildren = [{
+        id: "yBeFECoZ6Qt",
+        name: "GMC Amritsar",
+        parentName:"Amritsar"
+    },{
+        id: "F3wRYWNQUCO",
+        name: "GMC Faridkot",
+        parentName:"Faridkot"
+    },{
+        id: "HT5WcKZcfXE",
+        name: "GMC Patiala",
+        parentName:"Patiala"
+    },]
+    var count = 0;
+    var printTableBody ='';
+    var printValue = [],globalTotal = [];
+
+    for(var i = 0; i < 12; i++) {
+        printValue["value"+i] = "";
+        globalTotal["value"+i] = false;
+    }
+
+    if(level == 2) {
+        runAPI(organisationUnitChildren);
+        runAPI(selectedChildren);
+     }
+    else if(level == 3) {
+        runAPI(selectedOrgUnit);
+        if(selectedOrgUnit[0].name == "Amritsar") {
+            let optOrgUnit = [selectedChildren[0]]
+            runAPI(optOrgUnit);
+        }
+        else if(selectedOrgUnit[0].name == "Faridkot") {
+            let optOrgUnit = [selectedChildren[1]]
+            runAPI(optOrgUnit);
+        }
+        else if(selectedOrgUnit[0].name == "Patiala") {
+            let optOrgUnit = [selectedChildren[2]]
+            runAPI(optOrgUnit);
+        }
+    }
+    function runAPI(children) {
+        children.forEach(child => {  
+            orgUnitPopulation[child.name] = '';
+            $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "../api/dataValueSets.json?dataSet=AapI1dFOAnj&orgUnit= " + child.id + " &period=" + ( month >= 4 ? year : year-1) + "April",
+                        data: JSON,            
+                        success: function (data, status) {
+                            if(data.hasOwnProperty("dataValues")) {                            
+                                data.dataValues.forEach( element => {
+                                    if(element.dataElement == "MPPa7nUMcMu") {
+                                        orgUnitPopulation[child.name] = element.value;
+                                        
+                                    }
+                                })
+                            }
+                        }
+                });      
+            $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "../api/dataValueSets.json?dataSet=RuFSW1djAIu&orgUnit= " + child.id + " &period=" + selectedDate,
+                    data: JSON,
+                    success: function (data, status) {
+                        showData(data, child.name);
+                    }
+                    
+                });
+        })
+          
+    } 
+
+    function showData(data, orgUnit) {
+        printValue["value" + 0] = orgUnitPopulation[orgUnit]; 
+        if(data.hasOwnProperty("dataValues")) {
+            data.dataValues.forEach(element=> {     
+                switch(element.dataElement) {
+                    case "qhwZ2Xo42JT":
+                        printValue["value" + 1] = element.value;
+                    break;
+                    case "ScD3wZFf4SM":
+                        printValue["value" + 2] = element.value;
+                    break;
+                    case "GTXr2wWHqpY":
+                        printValue["value" + 3] = element.value; 
+                    break; 
+                    case "m4NKzKYcnwO":
+                        printValue["value" + 4] = element.value; 
+                    break;
+                    case "s2j8vHFAqzv":
+                        printValue["value" + 5] = element.value; 
+                    break; 
+                    case "uv8ewi7nLxb":
+                    if (element.categoryOptionCombo == "CvZdNY7cTYg") {                       
+                        printValue["value" + 6] = element.value;
+                    } 
+                    else  if(element.categoryOptionCombo == "dzDWUXgDenP") {
+                        printValue["value" + 7] = element.value; 
+                    }
+                    break;
+                    case "mzNjTlCufq8":
+                        printValue["value" + 9] = element.value; 
+                    break; 
+                    case "XnFaPDYUHfr":
+                        printValue["value" + 10] = element.value; 
+                    break; 
+                    case "QQTJEHRvuKs":
+                        printValue["value" + 11] = element.value; 
+                    break;
+
+                }
+                if(printValue["value" + 6] == "" && printValue["value" + 7] == "") {
+                    printValue["value" + 8] = ""
+                } else {
+                    printValue["value" + 8] = Number(printValue["value" + 6]) + Number(printValue["value" + 7]);
+                }              
+            }) 
+        }
+
+            printTableBody += '<tr>\
+                                <td style="font-weight:800; text-align:center;">' + (count += 1) + '</td>\
+                                <td style="font-weight:800; text-align:center;">' + orgUnit + '</td>'
+                for(let i=0; i<12;i++) {
+                    printTableBody += '<td style="font-weight:800; text-align:center;">' + printValue["value"+i] + '</td>';
+                    globalTotal["value"+i] += Number(printValue["value" + i]);
+                    printValue["value"+i] = "";              
+                }
+                printTableBody += '</tr>';
+          
+    }
+    
+    printTableBody += '<tr style="font-weight:800; text-align:center;">\
+                                <td  colspan="2" style="border:1px solid black;background:#DCDCDC;">Total</td>'
+                        for(let i=0; i<12;i++) {
+                            if(!globalTotal["value" + i]) globalTotal["value" + i] = "";
+                            printTableBody += '<td style="border:1px solid black;background:#DCDCDC;">' + globalTotal["value"+i] + '</td>';                                     
+                        }
+                        printTableBody += '</tr>';
+                        
+                        document.getElementById('tableBody').innerHTML = printTableBody;
+                        document.getElementById("loader").style.display = "none";
+                        document.getElementById("printing").style.display = "block"; 
+                        
+     var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+           return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()    
+    
+</script>
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>

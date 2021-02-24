@@ -1,0 +1,597 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+    font-weight: bold;
+    
+    }
+    tbody>tr>td {
+    font-weight: bold;
+    }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button {  
+        opacity: 1;
+        }
+
+        /* Center the loader  */
+        #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+        }
+        
+        @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+        }
+        
+        @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+        }
+        /* Add animation to "page content" */
+        
+        .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+        }
+        
+        @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+        }
+        
+        @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+        }
+        
+        #printing {
+        
+        text-align: center;
+        }
+    </style>
+        
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span
+    class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', 'NRC Monthly Report', 'NRC_Monthly_Report.xls')"><span
+    class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table  border="1"   id="dataTable"   class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
+            <col width="5%">
+            <col width="55%">
+            <col width="20%">
+            <col width="20%">
+           <tbody id="tableBody">
+
+           </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    var selectedOrgUnit = dhis2.report.organisationUnit;  
+    var orgUnitChildrenGroupSet = [];
+    var level = dhis2.report.organisationUnitHierarchy.length;
+    var period = dhis2.report.date.split("-");
+    var selectedPeriod = period["0"] + "" + period["1"];
+    var MonthYear = months[period["1"] - 1] + " " + period["0"]; 
+    var orgUnitPopulation = [];
+    var levelName = '';
+
+    if(level != 4 ) { 
+        alert("Data is present in District level!");
+        window.history.back();
+    } 
+    else levelName = "District"
+
+    var elementId = ["AFtCp3veH82.HllvX50cXC0", "zCAbnaXYTRg.HllvX50cXC0", "U7rvgkQ0J58.RoZgLfY6SXU", "U7rvgkQ0J58.IEou6V291rA",
+                    "Ci1mSCKzHCd.RoZgLfY6SXU", "Ci1mSCKzHCd.IEou6V291rA", "r4O89NNVXZB.RoZgLfY6SXU", "r4O89NNVXZB.IEou6V291rA",
+                    "mRVpyFj03tl.RoZgLfY6SXU", "mRVpyFj03tl.IEou6V291rA", "f9W26YI3T0B.RoZgLfY6SXU", "f9W26YI3T0B.IEou6V291rA",
+                    "weg50Ed1Xye.RoZgLfY6SXU", "weg50Ed1Xye.IEou6V291rA", "Z2vgAxtfG58.RoZgLfY6SXU", "Z2vgAxtfG58.IEou6V291rA",
+                    "Edgm3UwgWXo.RoZgLfY6SXU", "Edgm3UwgWXo.IEou6V291rA", "ODFatz2gMAU.RoZgLfY6SXU", "ODFatz2gMAU.IEou6V291rA",
+                    "AT5nk1rzNaD.RoZgLfY6SXU", "AT5nk1rzNaD.IEou6V291rA", "v89Q9haN6XM.RoZgLfY6SXU", "v89Q9haN6XM.IEou6V291rA",
+                    "YTk0bMERnQO.RoZgLfY6SXU", "YTk0bMERnQO.IEou6V291rA", "yymhcHNSPL2.RoZgLfY6SXU", "yymhcHNSPL2.IEou6V291rA",
+                    "JMkFS6fWR6y.RoZgLfY6SXU", "JMkFS6fWR6y.IEou6V291rA", "N9HTo50xc9P.RoZgLfY6SXU", "N9HTo50xc9P.IEou6V291rA",
+                    "rYv7Z7Mz9Rc.RoZgLfY6SXU", "rYv7Z7Mz9Rc.IEou6V291rA", "fOqItpBI8H8.RoZgLfY6SXU", "fOqItpBI8H8.IEou6V291rA",
+                    "SUxS8Rp9PbS.RoZgLfY6SXU", "SUxS8Rp9PbS.IEou6V291rA", "wxEdqDKL5vT.RoZgLfY6SXU", "wxEdqDKL5vT.IEou6V291rA",
+                    "WT0pDwjsj2k.RoZgLfY6SXU", "WT0pDwjsj2k.IEou6V291rA", "BlqIhTw8jhu.RoZgLfY6SXU", "BlqIhTw8jhu.IEou6V291rA",
+                    "jCo4SPI6YDE.RoZgLfY6SXU", "jCo4SPI6YDE.IEou6V291rA", "jZHXFzoJlTT.RoZgLfY6SXU", "jZHXFzoJlTT.IEou6V291rA",
+                    "OIAjWhQsG8O.RoZgLfY6SXU", "OIAjWhQsG8O.IEou6V291rA", "Wi8eQiFC4UO.RoZgLfY6SXU", "Wi8eQiFC4UO.IEou6V291rA",
+                    "SslNjh5fmyB.RoZgLfY6SXU", "SslNjh5fmyB.IEou6V291rA", "lUdpoixEPr0.RoZgLfY6SXU", "lUdpoixEPr0.IEou6V291rA",
+                    "kO9dX1wWwl7.RoZgLfY6SXU", "kO9dX1wWwl7.IEou6V291rA", "X6aASSyLPIm.RoZgLfY6SXU", "X6aASSyLPIm.IEou6V291rA",
+                    "lZpXw8BYvGs.RoZgLfY6SXU", "lZpXw8BYvGs.IEou6V291rA", "FmDOUmFmycz.RoZgLfY6SXU", "FmDOUmFmycz.IEou6V291rA",
+                    "GiXVgZtaGUK.RoZgLfY6SXU", "GiXVgZtaGUK.IEou6V291rA", "ayYssQKcs05.RoZgLfY6SXU", "ayYssQKcs05.IEou6V291rA",
+                    "NgrKBGDab0O.RoZgLfY6SXU", "NgrKBGDab0O.IEou6V291rA", "uEeBOLRDKiw.RoZgLfY6SXU", "uEeBOLRDKiw.IEou6V291rA",
+                    "YakZlL9WlMf.RoZgLfY6SXU", "YakZlL9WlMf.IEou6V291rA", "xUh7dTA0bxQ.HllvX50cXC0", "p3xD0uYWgBE.HllvX50cXC0",
+                    "nlGKJdfooV1.HllvX50cXC0", "SkhkyLWMu63.HllvX50cXC0", "PZNy6ftKoe4.HllvX50cXC0", "dccXzs87aZn.HllvX50cXC0",
+                    "AfrpvDjY2Y0.HllvX50cXC0", "MdguU1QRQBM.HllvX50cXC0", "l4YKvZYwJOH.HllvX50cXC0", "Xs6jPF7aCia.HllvX50cXC0",
+                    "InpKeGMhHtP.HllvX50cXC0", "l6i4qik4Idx.HllvX50cXC0", "RnKd9FLIFgC.HllvX50cXC0"];
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/dataValueSets.json?dataSet=FdGxblvQtm9&orgUnit=" + selectedOrgUnit.id + "&period=" + selectedPeriod,
+            data: JSON,
+            success: function (data, status) {
+                if(data.dataValues) {
+                   showData(data);
+                } else {
+                    alert("No data is present in this district.");
+                    window.history.back();
+                }
+            }
+        });
+             
+
+    function showData(data) {  
+        var printTableBody = ''
+        var printValue = [];
+    
+            for(var i = 0; i < elementId.length; i++) {
+                printValue[elementId[i]] = "";
+                let dataElement = elementId[i].split(".")["0"];
+                let categoryOptionCombo = elementId[i].split(".")["1"];
+                 data.dataValues.forEach( child => {
+                    if(child.dataElement == dataElement && child.categoryOptionCombo == categoryOptionCombo) {
+                        printValue[elementId[i]] = child.value;
+                    }
+                })
+            }       
+           
+
+          printTableBody += '<tr style="font-weight:800">\
+                                <td colspan="4" style="border:1px solid black;background:#ADD8E6;">NRC Monthly Report</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="border:1px solid black;background:#ADD8E6;"></td>\
+                                <td style="border:1px solid black;background:#ADD8E6;text-align:left">Facility Name: ' + selectedOrgUnit.name + '</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;text-align:left">Period: ' + MonthYear + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="border:1px solid black;background:#ADD8E6;text-align:left">S.No</td>\
+                                <td style="border:1px solid black;background:#ADD8E6; text-align: left">Data Element</td>\
+                                <td colspan="2" style="border:1px solid black;background:#ADD8E6;"></td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">1</td>\
+                                <td style="text-align:left;">Date of Opertionalization</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["AFtCp3veH82.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">2</td>\
+                                <td style="text-align:left;">Number of beds available at NRC</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["zCAbnaXYTRg.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align: left; background:#ADD8E6;">3</td>\
+                                <td style="background:#ADD8E6; text-align:left;">Admission</td>\
+                                <td style="background:#ADD8E6; text-align:center;">Male</td>\
+                                <td style="background:#ADD8E6; ">Female</td>\
+                            </tr>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">3.1</td>\
+                                <td style="text-align:left;">Total admission</td>\
+                                <td style="text-align:center;">' + printValue["U7rvgkQ0J58.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["U7rvgkQ0J58.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;">4 </td>\
+                                <td style="background:#ADD8E6;text-align:left;">Caste wise Distribution</td>\
+                                <td style="background:#ADD8E6;">Male</td>\
+                                <td style="background:#ADD8E6;">Female</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">4.1 </td>\
+                                <td style="text-align:left;">SC</td>\
+                                <td style="text-align:center;">' + printValue["Ci1mSCKzHCd.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["Ci1mSCKzHCd.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">4.2 </td>\
+                                <td style="text-align:left;">ST</td>\
+                                <td style="text-align:center;">' + printValue["r4O89NNVXZB.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["r4O89NNVXZB.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 4.3 </td>\
+                                <td style="text-align:left;">OBC</td>\
+                                <td style="text-align:center;">' + printValue["mRVpyFj03tl.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["mRVpyFj03tl.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">4.4</td>\
+                                <td style="text-align:left;">EBC</td>\
+                                <td style="text-align:center;">' + printValue["f9W26YI3T0B.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["f9W26YI3T0B.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 4.5 </td>\
+                                <td style="text-align:left;">General</td>\
+                                <td style="text-align:center;">' + printValue["weg50Ed1Xye.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["weg50Ed1Xye.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 4.6 </td>\
+                                <td style="text-align:left;">BPL</td>\
+                                <td style="text-align:center;">' + printValue["Z2vgAxtfG58.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["Z2vgAxtfG58.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left"> 4.7 </td>\
+                                <td style="text-align:left;">APL</td>\
+                                <td style="text-align:center;">' + printValue["Edgm3UwgWXo.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["Edgm3UwgWXo.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;">5</td>\
+                                <td style="background:#ADD8E6;text-align:left;">Age Range</td>\
+                                <td style="background:#ADD8E6;">Male</td>\
+                                <td style="background:#ADD8E6;">Female</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 5.1 </td>\
+                                <td style="text-align:left;">0 month-5 months</td>\
+                                <td style="text-align:center;">' + printValue["ODFatz2gMAU.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["ODFatz2gMAU.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 5.2 </td>\
+                                <td style="text-align:left;">6 months-23 months</td>\
+                                <td style="text-align:center;">' + printValue["AT5nk1rzNaD.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["AT5nk1rzNaD.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">5.3</td>\
+                                <td style="text-align:left;">24 months-59 months</td>\
+                                <td style="text-align:center;">' + printValue["v89Q9haN6XM.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["v89Q9haN6XM.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;">6</td>\
+                                <td style="text-align:left;background:#ADD8E6;">Admission criteria </td>\
+                                <td style="background:#ADD8E6;">Male</td>\
+                                <td style="background:#ADD8E6;">Female</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 6.1 </td>\
+                                <td style="text-align:left;">-3SD WFH</td>\
+                                <td style="text-align:center;">' + printValue["YTk0bMERnQO.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["YTk0bMERnQO.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 6.2 </td>\
+                                <td style="text-align:left;">MUAC <115mm</td>\
+                                <td style="text-align:center;">' + printValue["yymhcHNSPL2.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["yymhcHNSPL2.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">6.3</td>\
+                                <td style="text-align:left;">Bilateral pitting edema</td>\
+                                <td style="text-align:center;">' + printValue["JMkFS6fWR6y.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["JMkFS6fWR6y.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;">7</td>\
+                                <td style="text-align:left;background:#ADD8E6;">Referral by </td>\
+                                <td style="background:#ADD8E6;">Male</td>\
+                                <td style="background:#ADD8E6;">Female</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 7.1 </td>\
+                                <td style="text-align:left;">Self</td>\
+                                <td style="text-align:center;">' + printValue["N9HTo50xc9P.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["N9HTo50xc9P.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 7.2 </td>\
+                                <td style="text-align:left;">Frontline worker < 115mm </td>\
+                                <td style="text-align:center;">' + printValue["rYv7Z7Mz9Rc.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["rYv7Z7Mz9Rc.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">7.3</td>\
+                                <td style="text-align:left;">Paediatric ward/emergency/OPD</td>\
+                                <td style="text-align:center;">' + printValue["fOqItpBI8H8.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["fOqItpBI8H8.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">7.4</td>\
+                                <td style="text-align:left;">Others</td>\
+                                <td style="text-align:center;">' + printValue["SUxS8Rp9PbS.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["SUxS8Rp9PbS.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;">8</td>\
+                                <td style="text-align:left;background:#ADD8E6;">Duration of stay </td>\
+                                <td style="background:#ADD8E6;">Male</td>\
+                                <td style="background:#ADD8E6;">Female</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 8.1 </td>\
+                                <td style="text-align:left;"> < 7 days </td>\
+                                <td style="text-align:center;">' + printValue["wxEdqDKL5vT.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["wxEdqDKL5vT.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 8.2 </td>\
+                                <td style="text-align:left;"> 7-15 days </td>\
+                                <td style="text-align:center;">' + printValue["WT0pDwjsj2k.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["WT0pDwjsj2k.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 8.3</td>\
+                                <td style="text-align:left;"> >15 days </td>\
+                                <td style="text-align:center;">' + printValue["BlqIhTw8jhu.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["BlqIhTw8jhu.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;">9</td>\
+                                <td style=" background:#ADD8E6;text-align:left;">Bed Occupancy  </td>\
+                                <td style="background:#ADD8E6;">Male</td>\
+                                <td style="background:#ADD8E6;">Female</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 9.1 </td>\
+                                <td style="text-align:left;"> Total number of Inpatient days of care during the month </td>\
+                                <td style="text-align:center;">' + printValue["jCo4SPI6YDE.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["jCo4SPI6YDE.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;">10</td>\
+                                <td style="background:#ADD8E6;text-align:left;"> Weight gain  </td>\
+                                <td style="background:#ADD8E6;">Male</td>\
+                                <td style="background:#ADD8E6;">Female</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 10.1 </td>\
+                                <td style="text-align:left;"> Achieved target weight (15% weight gain)</td>\
+                                <td style="text-align:center;">' + printValue["jZHXFzoJlTT.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["jZHXFzoJlTT.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;">11</td>\
+                                <td style="background:#ADD8E6;text-align:left;">Monthly Output</td>\
+                                <td style="background:#ADD8E6;">Male</td>\
+                                <td style="background:#ADD8E6;">Female</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 11.1 </td>\
+                                <td style="text-align:left;">Discharge from NRC with target weight gain</td>\
+                                <td style="text-align:center;">' + printValue["OIAjWhQsG8O.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["OIAjWhQsG8O.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 11.2 </td>\
+                                <td style="text-align:left;">Number of children still under treatment in NRC </td>\
+                                <td style="text-align:center;">' + printValue["Wi8eQiFC4UO.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["Wi8eQiFC4UO.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">11.3</td>\
+                                <td style="text-align:left;">Number of cured children</td>\
+                                <td style="text-align:center;">' + printValue["SslNjh5fmyB.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["SslNjh5fmyB.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">11.4</td>\
+                                <td style="text-align:left;">Defaulter</td>\
+                                <td style="text-align:center;">' + printValue["lUdpoixEPr0.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["lUdpoixEPr0.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 11.5 </td>\
+                                <td style="text-align:left;">Non responders</td>\
+                                <td style="text-align:center;">' + printValue["kO9dX1wWwl7.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["kO9dX1wWwl7.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 11.6 </td>\
+                                <td style="text-align:left;">Deaths during stay in NRC</td>\
+                                <td style="text-align:center;">' + printValue["X6aASSyLPIm.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["X6aASSyLPIm.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">11.7</td>\
+                                <td style="text-align:left;">Children due for follow-up (in month)</td>\
+                                <td style="text-align:center;">' + printValue["lZpXw8BYvGs.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["lZpXw8BYvGs.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">11.8</td>\
+                                <td style="text-align:left;">Children followed-up during the month</td>\
+                                <td style="text-align:center;">' + printValue["FmDOUmFmycz.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["FmDOUmFmycz.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 11.9 </td>\
+                                <td style="text-align:left;">Number of children performed atleast one follow up</td>\
+                                <td style="text-align:center;">' + printValue["GiXVgZtaGUK.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["GiXVgZtaGUK.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 11.10 </td>\
+                                <td style="text-align:left;">Number of children completed 4 follow up </td>\
+                                <td style="text-align:center;">' + printValue["ayYssQKcs05.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["ayYssQKcs05.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">11.11</td>\
+                                <td style="text-align:left;">Number of children lost to follow up</td>\
+                                <td style="text-align:center;">' + printValue["NgrKBGDab0O.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["NgrKBGDab0O.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;">11.12</td>\
+                                <td style="text-align:left;">Deaths during follow up period (after discharge from NRC)</td>\
+                                <td style="text-align:center;">' + printValue["uEeBOLRDKiw.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["uEeBOLRDKiw.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 11.13 </td>\
+                                <td style="text-align:left;">Relapse</td>\
+                                <td style="text-align:center;">' + printValue["YakZlL9WlMf.RoZgLfY6SXU"] + '</td>\
+                                <td style="text-align:center;">' + printValue["YakZlL9WlMf.IEou6V291rA"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;"> 12 </td>\
+                                <td style="background:#ADD8E6;text-align:left;">Human Resources</td>\
+                                <td colspan="2" style="background:#ADD8E6;"></td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 12.1 </td>\
+                                <td style="text-align:left;">DPC</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["xUh7dTA0bxQ.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 12.2 </td>\
+                                <td style="text-align:left;">MO</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["p3xD0uYWgBE.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 12.3 </td>\
+                                <td style="text-align:left;">SN/ANM</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["nlGKJdfooV1.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 12.4 </td>\
+                                <td style="text-align:left;">Nutrition Counsellor / Feeding Demonstrator</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["SkhkyLWMu63.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 12.5 </td>\
+                                <td style="text-align:left;">Cook-cum-Caretaker</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["PZNy6ftKoe4.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 12.6 </td>\
+                                <td style="text-align:left;">Attendant/Caretaker</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["dccXzs87aZn.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 12.7 </td>\
+                                <td style="text-align:left;">Social Worker/CBC extender</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["AfrpvDjY2Y0.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="background:#ADD8E6;text-align:left;"> 13 </td>\
+                                <td style="background:#ADD8E6;text-align:left;">Training Status (Yes/No)</td>\
+                                <td colspan="2" style="background:#ADD8E6;"></td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 13.1 </td>\
+                                <td style="text-align:left;">DPC</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["MdguU1QRQBM.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 13.2 </td>\
+                                <td style="text-align:left;">MO</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["l4YKvZYwJOH.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 13.3 </td>\
+                                <td style="text-align:left;">SN/ANM</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["Xs6jPF7aCia.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 13.4 </td>\
+                                <td style="text-align:left;">Feeding Demonstrator</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["InpKeGMhHtP.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 13.5 </td>\
+                                <td style="text-align:left;">Social Worker/CBC extender</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["l6i4qik4Idx.HllvX50cXC0"] + '</td>\
+                            </tr>\
+                            <tr style="font-weight:800">\
+                                <td style="text-align:left;"> 13.6 </td>\
+                                <td style="text-align:left;">RPM</td>\
+                                <td colspan="2" style="text-align:center;">' + printValue["RnKd9FLIFgC.HllvX50cXC0"] + '</td>\
+                            </tr>'
+
+                            document.getElementById('tableBody').innerHTML = printTableBody;
+                            document.getElementById("loader").style.display = "none";
+                            document.getElementById("printing").style.display = "block"; 
+            }
+            
+
+        var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+           return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })() 
+</script>
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
+    
+
+
+

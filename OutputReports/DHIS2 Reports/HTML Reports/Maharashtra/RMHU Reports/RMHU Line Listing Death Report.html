@@ -1,0 +1,256 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'RMHU Line listing Death Report', 'RMHU Line listing Death Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; visibility:hidden">
+            <thead>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="10">Part L: Information on Deaths in the Hospital (Line listing Report)</th>
+                </tr>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: left;"
+                        colspan="5">
+                        Facility Name: <span id="selected-orgUnit"></span></th>
+
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: left;"
+                        colspan="5">
+                        Period: <span id="selected-monthYear"> </span></th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        S/N</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Name of Patient</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Age</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Sex</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Diagnosis</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Date of Admission</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Date of Death</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Place of Death</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Cause of Death</th>
+                    <th style="border: 1px solid black; background:#f2f2f2; text-align: center; font-weight: 600;">
+                        Remark</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+
+    document.getElementsByClassName("hideInPrint")["0"].style.display = "none"
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var orgUnit = dhis2.report.organisationUnitChildren;
+    var organisationUnitChildren = orgUnit.sort((a, b) => a.name.localeCompare(b.name));
+    var level = dhis2.report.organisationUnitHierarchy.length;
+
+    var orgUnitData = [];
+    var printTotalValue = [];
+    var totalCells = 33; //Number of Cells
+
+    for (var j = 6; j >= level; j--) {
+        for (var i = 0; i < totalCells; i++) {
+            printTotalValue[j + "totalValue" + i] = "";
+        }
+    }
+
+    var startMonth = location.href.split("&sd=")["1"].slice(0, 10);;
+    var endMonth = location.href.split("&ed=")["1"].slice(0, 10);
+    var monthArr = [startMonth, endMonth]
+    if (startMonth.split("-").join("") > endMonth.split("-").join("")) {
+        alert("Please select  dates correctly");
+    } else {
+        document.getElementById("selected-orgUnit").innerHTML = `${selectedOrgUnit.name}`
+        document.getElementById("selected-monthYear").innerHTML = `${monthArr["0"]} to ${monthArr["1"]}`
+
+        document.getElementById("dataTable").style.visibility = "hidden";
+        document.getElementById("tableBody").innerHTML = "";
+        $('#loader').show();
+        setTimeout(function () {
+            getData(monthArr);
+        }, 1000);
+    }
+
+
+    function getData(monthArr) {
+        var dataElementIds = ['ekgvlkhsLmd', 'svk5BvtnEv3', 'p9YGTPAFd4r', 'GnqOvPKnhXx', 'q4lv7Po06b6', 'FziycdTJFb7', 'PJQCF1nJXCt', 'i9Sfj7TYgyJ', 'gRmO4sqgjwR'];
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/events.json?paging=false&program=FXnDdCPpwN3&orgUnit=${selectedOrgUnit.id}&startDate=${monthArr["0"]}&endDate=${monthArr["1"]}`,
+            data: JSON,
+            success: function (data, status) {
+                var printValues = {};
+                var addRow = '';
+                var sno = 0;
+
+                data.events.forEach(event => {
+                    printValues = {};
+                    event.dataValues.forEach(dataValue => printValues[dataValue.dataElement] = dataValue.value)
+                    addRow += `<tr><td  style="font:bold;">${(++sno)}</td>`;
+                    dataElementIds.forEach(de => addRow += `<td style="font:bold;">${(printValues[de] ? printValues[de] : "")}</td>`);
+                    addRow += `</tr>`;
+                })                
+                document.getElementById('tableBody').innerHTML = addRow;
+                document.getElementById('dataTable').style.visibility = "visible";
+                document.getElementById('loader').style.display = "none";
+            }
+        });
+
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.22" id="1">
     <property name="createdBy">Eclipse BIRT Designer Version 4.3.0.v201306041519 Build &lt;3.7.0.v20130611-1045></property>
-
     <property name="units">in</property>
     <property name="iconFile">/templates/blank_report.gif</property>
     <property name="bidiLayoutOrientation">ltr</property>
@@ -10,6 +9,7 @@
         <scalar-parameter name="Start" id="8">
             <text-property name="promptText">Please Enter Start Date(dd-MM-yyyy)</text-property>
             <property name="valueType">static</property>
+            <property name="isRequired">true</property>
             <property name="dataType">date</property>
             <property name="distinct">true</property>
             <list-property name="selectionList"/>
@@ -23,6 +23,7 @@
         <scalar-parameter name="End" id="9">
             <text-property name="promptText">Please Enter End Date(dd-MM-yyyy)</text-property>
             <property name="valueType">static</property>
+            <property name="isRequired">true</property>
             <property name="dataType">date</property>
             <property name="distinct">true</property>
             <list-property name="selectionList"/>
@@ -60,6 +61,7 @@
     </data-sources>
     <data-sets>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="Data Set" id="10">
+            <property name="nullsOrdering">nulls lowest</property>
             <list-property name="computedColumns">
                 <structure>
                     <property name="name">totpatientLoad</property>
@@ -132,9 +134,7 @@
                 <structure>
                     <property name="name">param_1</property>
                     <property name="paramName">Start</property>
-                    <property name="nativeName"></property>
                     <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
                     <property name="position">1</property>
                     <property name="isInput">true</property>
                     <property name="isOutput">false</property>
@@ -142,9 +142,7 @@
                 <structure>
                     <property name="name">param_2</property>
                     <property name="paramName">End</property>
-                    <property name="nativeName"></property>
                     <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
                     <property name="position">2</property>
                     <property name="isInput">true</property>
                     <property name="isOutput">false</property>
@@ -152,9 +150,7 @@
                 <structure>
                     <property name="name">param_3</property>
                     <property name="paramName">Start</property>
-                    <property name="nativeName"></property>
                     <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
                     <property name="position">3</property>
                     <property name="isInput">true</property>
                     <property name="isOutput">false</property>
@@ -162,10 +158,24 @@
                 <structure>
                     <property name="name">param_4</property>
                     <property name="paramName">End</property>
-                    <property name="nativeName"></property>
                     <property name="dataType">date</property>
-                    <property name="nativeDataType">-1</property>
                     <property name="position">4</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">param_5</property>
+                    <property name="paramName">Start</property>
+                    <property name="dataType">date</property>
+                    <property name="position">5</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">param_6</property>
+                    <property name="paramName">End</property>
+                    <property name="dataType">date</property>
+                    <property name="position">6</property>
                     <property name="isInput">true</property>
                     <property name="isOutput">false</property>
                 </structure>
@@ -326,12 +336,51 @@ LEFT JOIN
 		0 'Processed' ,COUNT(opd.id) 'NonProcessed','b'
 		FROM opd_patient_queue opd
 		WHERE DATE(opd.created_on) BETWEEN ? AND ?
-		AND opd_concept_name <> 'NEGATIVE'
-		GROUP BY DATE(opd.created_on),patient_id,opd_concept_id
+		AND opd.opd_concept_name <> 'NEGATIVE' 
+		AND (opd.patient_id,opd.opd_concept_name) NOT IN
+		( SELECT patient_id,opdl.opd_concept_name FROM opd_patient_queue_log opdl WHERE 
+		   DATE(opdl.created_on) BETWEEN ? AND ?)
+		GROUP BY DATE(opd.created_on),opd.patient_id,opd.opd_concept_id
 	)a GROUP BY opd_concept_id, opd_queue_name
 )sag1
 ON sag.concept_id=sag1.concept_id
 ORDER BY sag.name]]></xml-property>
+            <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
+  <Version>2.0</Version>
+  <DataSetParameters>
+    <parameter>
+      <design:ParameterDefinition>
+        <design:inOutMode>In</design:inOutMode>
+        <design:attributes>
+          <design:identifier>
+            <design:name></design:name>
+            <design:position>5</design:position>
+          </design:identifier>
+          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
+          <design:precision>0</design:precision>
+          <design:scale>0</design:scale>
+          <design:nullability>Unknown</design:nullability>
+        </design:attributes>
+      </design:ParameterDefinition>
+    </parameter>
+    <parameter>
+      <design:ParameterDefinition>
+        <design:inOutMode>In</design:inOutMode>
+        <design:attributes>
+          <design:identifier>
+            <design:name></design:name>
+            <design:position>6</design:position>
+          </design:identifier>
+          <design:nativeDataTypeCode>-1</design:nativeDataTypeCode>
+          <design:precision>0</design:precision>
+          <design:scale>0</design:scale>
+          <design:nullability>Unknown</design:nullability>
+        </design:attributes>
+      </design:ParameterDefinition>
+    </parameter>
+  </DataSetParameters>
+</model:DesignValues>]]></xml-property>
         </oda-data-set>
     </data-sets>
     <styles>

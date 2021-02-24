@@ -475,7 +475,7 @@ GROUP BY cnn.`name`]]></xml-property>
 sum(a.Internal_referral) total_internal_referral,SUM(a.Processed)total_Processed,a.patient_name,a.patient_identifier,a.created_on AS Registration_time,
 a.Time_of_patient_screening_in_OPD,a.birth_date,a.Visit_Outcome FROM (
 SELECT opd.opd_concept_id,opd.opd_concept_name,opd.patient_name,opd.referral_concept_name,opd.patient_identifier,created_on,birth_date,
-ps.gender AS 'Gender',  CONCAT_WS(' ',pad.city_village,pad.county_district) AS Address,pa.value Category,
+ps.gender AS 'Gender',  CONCAT_WS(' ',pad.city_village,pad.county_district) AS Address,cn1.name as Category,
 eo.date_created 'Time_of_patient_screening_in_OPD',ob.value_text visit_outcome,
 CASE opd.referral_concept_name WHEN 'New Patient' THEN 1 ELSE 0 END 'Newpatient', 
 CASE opd.referral_concept_name WHEN 'Revisit' THEN 1 ELSE 0 END 'Revisit',
@@ -490,6 +490,7 @@ inner join encounter eo on opd.patient_id=eo.patient_id
 INNER JOIN obs ob ON eo.encounter_id = ob.encounter_id AND ob.voided=0
 INNER JOIN concept_name cn ON ob.concept_id = cn.concept_id AND cn.`name` LIKE 'Visit outcome'
 inner join person_attribute pa on pa.person_id = opd.patient_id
+INNER JOIN concept_name cn1 ON pa.value = cn1.concept_id
 WHERE date(created_on) BETWEEN ? AND ?
 AND opd_concept_name <> 'NEGATIVE'
 AND opd_concept_name LIKE ?

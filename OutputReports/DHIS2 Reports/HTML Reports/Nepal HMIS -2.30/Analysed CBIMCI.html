@@ -4,7 +4,8 @@ var directDownload=true;
 				var period = periods[0];
 				//var period = "LAST_MONTH";
 				var orgUnit = dhis2.report.organisationUnit;
-				var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+				var orgUnitChildrens = dhis2.report.organisationUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+				var rOrder = orgUnitChildrens.map(a=>a.id);
 
 				//----------------------------------------------------------------------------------------------------------------------------------
 				var ArrStringDEs = ["wYIS6bFRxTf;eHCrOwVcjXV;klE4tUqFhLw;VXrvSauVlPX;LXaMOHIscId;q99Ros4hH5O;ZdqY1g8WD8q;OS8aPGhYp4h",
@@ -24,19 +25,18 @@ var directDownload=true;
 				
 				
 				
-				var stringOrgGroups = "RVc3XoVoNRf;Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;mtNeiqIynwj;kGArzRsYYrO";
+				var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;mtNeiqIynwj;kGArzRsYYrO";
 				var url = window.location.href;
 				var params = url.split('=');
-				var gotOr=params[2];
-				var gotPeriod = gotOr.substring(0, 4); 
 				var gotOrg=params[3];
+				var gotPeriod=params[2];
 				//stringOrgGroups+=";"+gotOrg;
 
 				var arrOrgGroups = stringOrgGroups.split(";");
 				
 				
 				
-				var uidGroupSet = "VuilQBYZNIR";
+				var uidGroupSet = "Eq1bKUKYRMO";
 				var stt=0;
 				var load=1;
 				var iteration=-1;
@@ -81,77 +81,78 @@ var directDownload=true;
 				}
 
 //get period *************************************************************
-		var fourMonths=[];
+var fourMonths=[];
 
-		function getPeriod()
-		{
-			if(rtype>1)
-			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[params[4]-1]);
-			
-			else			
-			return getPeriodTitle(gotPeriod);
-		}
-		function getPeriodTitle(pr)
-		{
-			var year = pr.substring(0,4);
-			var month = pr.substring(4,6);
-			var strMonth="";
-			
-			if(month=="01" || month=="1")
-				strMonth="Baishakh";
-			else if(month=="02" || month=="2")
-				strMonth="Jestha";
-			else if(month=="03" || month=="3")
-				strMonth="Ashadh";
-			else if(month=="04" || month=="4")
-				strMonth="Shrawan";
-			else if(month=="05" || month=="5")
-				strMonth="Bhadra";
-			else if(month=="06" || month=="6")
-				strMonth="Ashwin";
-			else if(month=="07" || month=="7")
-				strMonth="Kartik";
-			else if(month=="08" || month=="8")
-				strMonth="Mangsir";
-			else if(month=="09" || month=="9")
-				strMonth="Poush";
-			else if(month=="10")
-				strMonth="Magh";
-			else if(month=="11")
-				strMonth="Falgun";
-			else if(month=="12")
-				strMonth="Chaitra";
-			
-			return strMonth + " " +year;
-		}
+function getPeriod()
+{
+	if(rtype>1)
+	return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[params[4]-1]);
+	
+	else			
+	return getPeriodTitle(gotPeriod);
+}
 
-		function generateFourMonths()
+function getPeriodTitle(pr)
+{
+	var year = pr.substring(0,4);
+	var month = pr.substring(4,6);
+	var strMonth="";
+	
+	if(month=="01" || month=="1")
+		strMonth="Baishakh";
+	else if(month=="02" || month=="2")
+		strMonth="Jestha";
+	else if(month=="03" || month=="3")
+		strMonth="Ashadh";
+	else if(month=="04" || month=="4")
+		strMonth="Shrawan";
+	else if(month=="05" || month=="5")
+		strMonth="Bhadra";
+	else if(month=="06" || month=="6")
+		strMonth="Ashwin";
+	else if(month=="07" || month=="7")
+		strMonth="Kartik";
+	else if(month=="08" || month=="8")
+		strMonth="Mangsir";
+	else if(month=="09" || month=="9")
+		strMonth="Poush";
+	else if(month=="10")
+		strMonth="Magh";
+	else if(month=="11")
+		strMonth="Falgun";
+	else if(month=="12")
+		strMonth="Chaitra";
+	
+	return strMonth + " " +year;
+}
+
+function generateFourMonths()
+{
+	var n=params[4];
+	gotPeriod = gotPeriod.substring(0,6);
+	var year = gotPeriod.substring(0,4);
+	var month = gotPeriod.substring(4,6);	
+	fourMonths[0]=gotPeriod;
+	gotPeriod+=";";
+	
+	for(var y=1; y<n; y++)
+	{
+		if(month<12)
 		{
-			var n=params[4];
-			gotPeriod = gotPeriod.substring(0,6);
-			var year = gotPeriod.substring(0,4);
-			var month = gotPeriod.substring(4,6);	
-			fourMonths[0]=gotPeriod;
-			gotPeriod+=";";
-			
-			for(var y=1; y<n; y++)
-			{
-				if(month<12)
-				{
-					month++;
-				}
-				else
-				{
-					month=1;
-					year++;
-				}
-				if(month<10)
-				month="0"+month;
-				fourMonths[y]=year+""+month;
-				gotPeriod+=fourMonths[y]+";";
-			}
-			
+			month++;
 		}
+		else
+		{
+			month=1;
+			year++;
+		}
+		if(month<10)
+		month="0"+month;
+		fourMonths[y]=year+""+month;
+		gotPeriod+=fourMonths[y]+";";
+	}
+	
+}
 //************************************************************************
 
 
@@ -170,21 +171,35 @@ var directDownload=true;
 
 //*********************************************************************************
 //********************************************************************************
-	function getJson()
-		{
-			for(var c=0; c<ArrStringDEs.length;c++)
-			stringDEs=stringDEs+ArrStringDEs[c]+";";
-							
-			arrayDEs=stringDEs.split(";");
-			
-			//getting json for org groups
-			$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
-				//alert(jsonGroup);
-				jsonGroup=json;
-				//sum(jsonGroup);
-				getParentJson();
-			});
-		}
+function getJson()
+					{
+						for(var c=0; c<ArrStringDEs.length;c++)
+						stringDEs=stringDEs+ArrStringDEs[c]+";";
+										
+						arrayDEs=stringDEs.split(";");
+						
+						// //getting json for org groups
+						// $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+						// 	//alert(jsonGroup);
+						// 	jsonGroup=json;
+						// 	//sum(jsonGroup);
+						// 	getParentJson();
+						// });
+
+						$.when(
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=Eq1bKUKYRMO:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=VuilQBYZNIR:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=xFgSXyUMalf:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+						
+						).done(function(geographicalArea, publicNonpublic, urbanRural){
+							var meta_data = [], rows = [];
+							meta_data = {"metaData": geographicalArea[0].metaData};
+							rows = [].concat(geographicalArea[0].rows).concat(publicNonpublic[0].rows).concat(urbanRural[0].rows)
+							jsonGroup = {"metaData":meta_data.metaData, "rows" : rows };
+						});
+						getParentJson();
+					}
+					
 		
 		function getParentJson()
 		{
@@ -205,15 +220,14 @@ var directDownload=true;
 					if(d<orgUnitChildrens.length)
 					{
 						if(0<orgUnitChildrens.length)
-						{					
-							var rOrder=["fNWuOzDCRSZ","SgKEcvFdUDb","pbVS1HW9NrY","TyDBQRJzkBw","z5ZOAH5rBFu"];
+						{	
 							var orguid=rOrder[d];
 							//alert(orguid);
 							$.get("../api/organisationUnits/"+orguid+".json",function(json)
 							{
 								
 								stringOrgChild(json);
-								if(i==4)
+								if(i == (orgUnitChildrens.length-1))
 								{
 									//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=ou:"+dIDs+"&filter=pe:"+period);
 									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=ou:"+dIDs+"&filter=pe:"+gotPeriod,function(json){
@@ -225,7 +239,7 @@ var directDownload=true;
 								}
 								i++;
 								
-								if(i<5)
+								if(i<orgUnitChildrens.length)
 									getAllDistricts(i);								
 							});
 						}								
@@ -260,7 +274,7 @@ var directDownload=true;
 			printChildren(jsonNepal,"Region");
 			printChildren(jsonDistricts,dCodes);
 		}
-		if(directDownload==true )
+		if(directDownload==true && iteration==2)
 				tablesToExcel(['datavalue1','datavalue2','datavalue3'], ['CBIMCI 1','CMIMCI 2','CBIMCI 3'], 'Analysed CBIMCI.xls');  
 	}
 //**********************************************************************************
@@ -1031,7 +1045,7 @@ $(document).ready(function () {
 		</style> 
 		<div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
 		<div id="cover" > </div>
-		<!--<input type="button" value="Download all" style="width:140px;" onclick="tablesToExcel(['datavalue1','datavalue2','datavalue3',], ['CBIMCI1','CBIMCI2','CBIMCI3',], 'Analysed CBIMCI.xls')" id="dwnAll"/>-->
+		<input type="button" value="Download all" style="width:140px;" onclick="tablesToExcel(['datavalue1','datavalue2','datavalue3',], ['CBIMCI1','CBIMCI2','CBIMCI3',], 'Analysed CBIMCI.xls')" id="dwnAll"/>
 		<input type="button" value="Reports Home" style="width:140px;" onclick='window.open("http://202.70.86.3:8080/hmisnepal/dhis-web-reporting/generateHtmlReport.action?uid=yz1OQ7Wvpam&", "_self")'/>
 		</br></br>
 		
@@ -1057,7 +1071,7 @@ $(document).ready(function () {
 				
 
  <tr height="20">
-    <td width="2224" height="20" colspan="11" bgcolor="#FFF0F8"  class="datavalue1"><div align="center"><strong>Analyzed Data:CBIMCI (Sheet 1 of 3)</strong></div></td>
+    <td width="2224" height="20" colspan="11" bgcolor="#FFF0F8" ><div align="center"><strong>Analyzed Data:CBIMCI (Sheet 1 of 3)</strong></div></td>
   </tr>
   <tr>
 					<td colspan="9" align="left" bgcolor="#FFF0F8"  class="all2 Pdatavalue2" style="border-color:#999999"><strong>Reporting Period </strong></td>
@@ -1115,7 +1129,7 @@ $(document).ready(function () {
 		<table id="datavalue2" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
 	
 <tr height="20">
-    <td width="3606" height="20" colspan="16" bgcolor="#FFF0F8" class="datavalue2" ><div align="center"><strong>Analyzed Data:CBIMCI (Sheet 2 of 3)</strong></div></td>
+    <td width="3606" height="20" colspan="16" bgcolor="#FFF0F8" ><div align="center"><strong>Analyzed Data:CBIMCI (Sheet 2 of 3)</strong></div></td>
   </tr>
   <tr>
 					<td colspan="9" align="left" bgcolor="#FFF0F8"  class="all2 Pdatavalue3" style="border-color:#999999"><strong>Reporting Period </strong></td>
@@ -1174,7 +1188,7 @@ $(document).ready(function () {
 
 		<table id="datavalue3" width="80%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
 		<tr height="20">
-    <td width="3149" height="20" colspan="15" bgcolor="#FFF0F8" class="datavalue3"><div align="center"><strong>Analyzed Data:CBIMCI (Sheet 3 of 3)</strong></div></td>
+    <td width="3149" height="20" colspan="15" bgcolor="#FFF0F8"><div align="center"><strong>Analyzed Data:CBIMCI (Sheet 3 of 3)</strong></div></td>
   </tr>
    <tr>
 					<td colspan="9" align="left" bgcolor="#FFF0F8"  class="all2 Pdatavalue1" style="border-color:#999999"><strong>Reporting Period </strong></td>

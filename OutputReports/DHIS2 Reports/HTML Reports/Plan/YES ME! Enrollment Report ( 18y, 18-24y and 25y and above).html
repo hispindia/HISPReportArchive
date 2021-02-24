@@ -1,0 +1,707 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+	integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+	table {
+		border-collapse: collapse;
+	}
+
+	thead>tr>td {
+		font-weight: bold;
+	}
+
+	tbody>tr>td {
+		font-weight: bold;
+	}
+
+	input[type=number]::-webkit-inner-spin-button,
+	input[type=number]::-webkit-outer-spin-button {
+		opacity: 1;
+	}
+
+	/* Center the loader  */
+	#loader {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		z-index: 1;
+		width: 150px;
+		height: 150px;
+		margin: -75px 0 0 -75px;
+		border: 16px solid #f3f3f3;
+		border-radius: 50%;
+		border-top: 16px solid #34B4DB;
+		width: 120px;
+		height: 120px;
+		-webkit-animation: spin 2s linear infinite;
+		animation: spin 2s linear infinite;
+	}
+
+	@-webkit-keyframes spin {
+		0% {
+			-webkit-transform: rotate(0deg);
+		}
+
+		100% {
+			-webkit-transform: rotate(360deg);
+		}
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* Add animation to "page content" */
+
+	.animate-bottom {
+		position: relative;
+		-webkit-animation-name: animatebottom;
+		-webkit-animation-duration: 1s;
+		animation-name: animatebottom;
+		animation-duration: 1s
+	}
+
+	@-webkit-keyframes animatebottom {
+		from {
+			bottom: -100px;
+			opacity: 0
+		}
+
+		to {
+			bottom: 0px;
+			opacity: 1
+		}
+	}
+
+	@keyframes animatebottom {
+		from {
+			bottom: -100px;
+			opacity: 0
+		}
+
+		to {
+			bottom: 0;
+			opacity: 1
+		}
+	}
+
+	#printing {
+
+		text-align: center;
+	}
+</style>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onClick="tableToExcel('dataTable', 'Enrollment Report', 'Enrollment Report_18y_18-24y_and_25y_and_above.xls')" alt="xls"><span
+	class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;Download As Excel
+</button>
+
+
+<a id="dlink" style="display:none;"></a>
+<div style="width: 50%; margin-left:25%;">
+	<table class="table table-borderless table-striped">
+		<tr style="border: 1px solid #DDDDDD;">
+			<td style="font-size: 15px;padding-top: 15px; text-align:left">
+				<strong>Start Date : </strong>
+			</td>
+			<td style="width: 60%;">
+				<input class="form-control" type="date" id="start-date">
+			</td>
+		</tr>
+		<tr>
+			<td style="font-size: 15px;padding-top: 15px; text-align:left">
+				<strong>End Date : </strong>
+			</td>
+			<td style="width: 60%;">
+				<input class="form-control" type="date" id="end-date">
+			</td>
+		</tr>
+		<tr>
+			<td style="font-size: 15px;padding-top: 15px; text-align:left">
+				<strong>Program Name: </strong>
+			</td>
+			<td style="width: 60%;">
+				<select class="form-control" id="prgName">
+				</select>
+			</td>
+		</tr>
+		<tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Donar Name:</strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="donName">
+                </select>
+            </td>
+        </tr>
+		<tr>
+			<td colspan="2"><button onClick="preSubmit()" class="btn btn-primary" id="tap">Submit</button></td>
+		</tr>
+	</table>
+</div>
+<div id="loader"></div>
+<div id="printing" style="display:none;" class="animate-bottom"></div>
+
+<table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+	style="border-collapse: collapse; text-align: center; visibility:hidden">
+			<thead>
+				<tr>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="8">Number of beneficiaries by donor</td>
+				</tr>
+				<tr>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="8" id="donorname"></td>
+				</tr>
+				<tr>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="1" rowspan="2">Org unit</span>
+					</td>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="3">Male</td>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="3">Female</td>
+
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="1" rowspan="2">Total</span>
+					</td>
+				</tr>
+				<tr>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="1">Less than 18</span>
+					</td>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="1">18-24</span>
+					</td>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="1">25 and above</span>
+					</td>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="1">Less than 18</span>
+					</td>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="1">18-24</span>
+					</td>
+					<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan="1">25 and above</span>
+					</td>
+				</tr>
+			</thead>
+			<tbody id="tbodyTable"></tbody>
+
+		</table>
+
+<script type="text/javascript">
+	$(document).ready(function () {
+
+		document.getElementById("loader").style.display = "none";
+		document.getElementById("dataTable").style.visibility = "hidden"
+
+	});
+
+	// load all program based on meta-attribute
+	(function myFunction2() {
+		var programName = [];
+
+		$.ajax({
+			async: false,
+			type: "GET",
+			url: "../api/programs.json?fields=id,name,code,attributeValues[attribute[id,name,code],value]&paging=false",
+			success: function (data) {
+				for (var w = 0; w < data.programs.length; w++) {
+					if (data.programs[w].attributeValues.length != 0) {
+						for (var w1 = 0; w1 < data.programs[w].attributeValues.length; w1++) {
+							if (data.programs[w].attributeValues[w1].attribute.code == 'Report_program' && data.programs[w].attributeValues[w1].value == "true") {
+
+								prgNm = data.programs[w].name;
+								prgId = data.programs[w].id;
+								programName.push({ "name": prgNm, "id": prgId });
+							}
+						}
+					}
+				}
+			}
+		});
+
+		var progName = document.getElementById("prgName");
+
+		var option = document.createElement("OPTION");
+		option.innerHTML = "Please select program name";
+		option.value = "Please select";
+		progName.options.add(option);
+		//Add the Options to the DropDownList.
+		for (var i = 0; i < programName.length; i++) {
+			var option = document.createElement("OPTION");
+
+			//Set Customer Name in Text part.
+			option.innerHTML = programName[i].name;
+
+			//Set CustomerId in Value part.
+			option.value = programName[i].id;
+
+			//Add the Option element to DropDownList.
+			progName.options.add(option);
+		}
+
+	})();
+
+	$(function () {
+		$("#prgName").change(function () {
+			var programId = $(this).val();
+			$("#donName option").remove();
+			myFunction(programId);
+		});
+	});
+
+	// for load donor based on program selection
+	function myFunction(programId) {
+		var doname = [];
+		$.ajax({
+			async: false,
+			type: "GET",
+			url: "../api/optionSets.json?fields=id,name,attributeValues,options[id,name,code]&paging=FALSE",
+			success: function (data) {
+				for (var w = 0; w < data.optionSets.length; w++) {
+					if (data.optionSets[w].attributeValues.length != 0) {
+						for (var w1 = 0; w1 < data.optionSets[w].attributeValues.length; w1++) {
+							if (data.optionSets[w].attributeValues[w1].value == programId) {
+								for (var i = 0; i < data.optionSets[w].options.length; i++) {
+									dname = data.optionSets[w].options[i];
+									doname.push(dname);
+								}
+							}
+						}
+					}
+				}
+				//console.log("doname" + doname);
+
+			}
+		});
+		var donName = document.getElementById("donName");
+
+		var option = document.createElement("OPTION");
+		option.innerHTML = "Please select donor name";
+		option.value = "Please select";
+		donName.options.add(option);
+		//Add the Options to the DropDownList.
+		for (var i = 0; i < doname.length; i++) {
+			var option = document.createElement("OPTION");
+
+			//Set Customer Name in Text part.
+			option.innerHTML = doname[i].name;
+
+			//Set CustomerId in Value part.
+			option.value = doname[i].name;
+
+			//Add the Option element to DropDownList.
+			donName.options.add(option);
+		}
+	}
+
+	// input validation
+	function preSubmit() {
+		
+		document.getElementById("dataTable").style.visibility = "hidden";
+		$('#loader').show();
+		
+		var e = document.getElementById("donName");
+		var strUser2 = e.selectedIndex;
+		var e2 = document.getElementById("prgName");
+		var strUser3 = e2.selectedIndex;
+		var startDat = document.getElementById("start-date").value;
+		var endDat = document.getElementById("end-date").value;
+		if (startDat == '' || startDat == undefined || startDat == null) {
+			alert("Please select a start date first");
+		}
+		else if (endDat == '' || endDat == undefined || endDat == null) {
+			alert("Please select a end date first");
+		}
+		else if (strUser3 == 0 || strUser3 == undefined || strUser3 == null) {
+			alert("Please select a program first");
+		}
+		/*else if(strUser2==0 || strUser2==undefined || strUser2 ==null)
+		{
+		alert("Please select a donor first");
+		}*/
+		else {
+			setTimeout(function () {
+			getValues();
+			}, 1000);
+
+		}
+	}
+
+
+	// report logic
+	function getValues() {
+		$('#tbodyTable').empty();
+
+		var startDat = "";
+		var endDat = "";
+		var orgid = "";
+		var row = '';
+		var count18_24_male_final = 0;
+		var count25_male_final = 0;
+		var count18_24_female_final = 0;
+		var count25female_final = 0;
+		var countLessThan18_male_final = 0;
+		var countLessThan18_female_final = 0;
+		var total_final = 0;
+		var programId = document.getElementById("prgName").value;
+
+		var orgUnit = dhis2.report.organisationUnit;
+		orgid = orgUnit.id;
+		orgName = orgUnit.name;
+		var orgUnitChildren = dhis2.report.organisationUnitChildren;
+		var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+		startDat = document.getElementById("start-date").value;
+		endDat = document.getElementById("end-date").value;
+		var donarName = document.getElementById("donName").value;
+		if( donarName === "Please select"){
+			document.getElementById("donorname").innerHTML = "All Donor";
+		}
+		else{
+			document.getElementById("donorname").innerHTML = donarName;
+		}
+		
+		if (orgUnitChildren.length != 0) {
+			for (var w = 0; w < orgUnitChildren.length; w++) {
+				$.ajax({
+					async: false,
+					type: "GET",
+					dataType: "json",
+					contentType: "application/json",
+					url:
+						"../api/enrollments.json?&programStartDate=" + startDat + "&programEndDate=" + endDat + "&program=" + programId + "&ou=" + orgUnitChildren[w].id + "&ouMode=DESCENDANTS&skipPaging=true",
+					success: function (datas) {
+						var count18_24_male = 0;
+						var count18_24_female = 0;
+						var count25_male = 0;
+						var count25female = 0;
+						var countLessThan18_male = 0;
+						var countLessThan18_female = 0;
+						var total = 0;
+
+						for (var i = 0; i < datas.enrollments.length; i++) {
+							if (datas.enrollments[i].status == 'ACTIVE' || datas.enrollments[i].status == 'COMPLETED') {
+
+								var trackEntutyInstanceid = datas.enrollments[i].trackedEntityInstance;
+								//console.log("tt " + trackEntutyInstanceid);
+								$.ajax({
+									async: false,
+									type: "GET",
+									dataType: "json",
+									contentType: "application/json",
+
+									url: "../api/trackedEntityInstances/" + trackEntutyInstanceid + ".json",
+
+									success: function (data) {
+										for (var j = 0; j < data.attributes.length; j++) {
+											if (data.attributes[j].code == "project_donor" || data.attributes[j].code == "project_donor_TZ") {
+												if (donarName == "Please select" || donarName == undefined) {
+													for (var k = 0; k < data.attributes.length; k++) {
+														if (data.attributes[k].displayName == "Gender") {
+
+															var genderValue = data.attributes[k].value;
+
+															if (genderValue == "Male") {
+																for (var l = 0; l < data.attributes.length; l++) {
+																	if (data.attributes[l].displayName == "Age") {
+																		var ageValueM = data.attributes[l].value;
+																	}
+																}
+																if (ageValueM < "18") {
+																	countLessThan18_male = countLessThan18_male + 1;
+																}
+																else if (ageValueM >= "18" && ageValueM <= "24") {
+																	count18_24_male = count18_24_male + 1;
+																}
+																else if (ageValueM >= "25") {
+																	count25_male = count25_male + 1;
+																}
+
+															}
+
+															else if (genderValue = "Female") {
+																for (var m = 0; m < data.attributes.length; m++) {
+																	if (data.attributes[m].displayName == "Age") {
+																		var ageValueF = data.attributes[m].value;
+																	}
+																}
+																if (ageValueF < "18") {
+																	countLessThan18_female = countLessThan18_female + 1;
+																}
+																else if (ageValueF >= "18" && ageValueF <= "24") {
+																	count18_24_female = count18_24_female + 1;
+																}
+																else if (ageValueF >= "25") {
+																	count25female = count25female + 1;
+																}
+															}
+														}
+													}
+												}
+												else {
+													if (donarName == data.attributes[j].value) {
+														for (var k = 0; k < data.attributes.length; k++) {
+															if (data.attributes[k].displayName == "Gender") {
+
+																var genderValue = data.attributes[k].value;
+
+																if (genderValue == "Male") {
+																	for (var l = 0; l < data.attributes.length; l++) {
+																		if (data.attributes[l].displayName == "Age") {
+																			var ageValueM = data.attributes[l].value;
+																		}
+																	}
+																	if (ageValueM < "18") {
+																		countLessThan18_male = countLessThan18_male + 1;
+																	}
+																	else if (ageValueM >= "18" && ageValueM <= "24") {
+																		count18_24_male = count18_24_male + 1;
+																	}
+																	else if (ageValueM >= "25") {
+																		count25_male = count25_male + 1;
+																	}
+
+																}
+
+																else if (genderValue = "Female") {
+																	for (var m = 0; m < data.attributes.length; m++) {
+																		if (data.attributes[m].displayName == "Age") {
+																			var ageValueF = data.attributes[m].value;
+																		}
+																	}
+																	if (ageValueF < "18") {
+																		countLessThan18_female = countLessThan18_female + 1;
+																	}
+																	else if (ageValueF >= "18" && ageValueF <= "24") {
+																		count18_24_female = count18_24_female + 1;
+																	}
+																	else if (ageValueF >= "25") {
+																		count25female = count25female + 1;
+																	}
+
+
+																}
+															}
+														}
+													}
+												}
+											}
+											//console.log("count18_24_male" + count18_24_male);
+											//console.log("count25_male" + count25_male);
+											//console.log("count18_24_female" + count18_24_female);
+											//console.log("count25female" + count25female);
+											//console.log("countLessThan18_male" + countLessThan18_male);
+											//console.log("countLessThan18_female" + countLessThan18_female);
+											total = count18_24_male + count25_male + count18_24_female + count25female + countLessThan18_male + countLessThan18_female;
+										}
+
+									}
+								})
+							}
+						}
+
+						var tabledata = '<tr>';
+						tabledata += ("<td>" + orgUnitChildren[w].name + "</td><td>" + countLessThan18_male + " </td><td>" + count18_24_male + " </td><td>" + count25_male + "</td><td>" + countLessThan18_female + "</td><td>" + count18_24_female + "</td><td>" + count25female + "</td><td>" + total + "</td></tr>")
+						document.getElementById("tbodyTable").innerHTML += tabledata;
+
+						count18_24_male_final += count18_24_male;
+						count25_male_final += count25_male;
+						count18_24_female_final += count18_24_female;
+						count25female_final += count25female;
+						countLessThan18_male_final += countLessThan18_male;
+						countLessThan18_female_final += countLessThan18_female;
+						total_final += total;
+					}
+				})
+			}
+		}
+		else {
+			$.ajax({
+				async: false,
+				type: "GET",
+				dataType: "json",
+				contentType: "application/json",
+				url:
+					"../api/enrollments.json?&programStartDate=" + startDat + "&programEndDate=" + endDat + "&program=" + programId + "&ou=" + orgid + "&ouMode=DESCENDANTS&skipPaging=true",
+				success: function (datas) {
+					var count18_24_male = 0;
+					var count18_24_female = 0;
+					var count25_male = 0;
+					var count25female = 0;
+					var countLessThan18_male = 0;
+					var countLessThan18_female = 0;
+					var total = 0;
+
+					for (var i = 0; i < datas.enrollments.length; i++) {
+						if (datas.enrollments[i].status == 'ACTIVE' || datas.enrollments[i].status == 'COMPLETED') {
+
+							var trackEntutyInstanceid = datas.enrollments[i].trackedEntityInstance;
+							console.log("tt " + trackEntutyInstanceid);
+							$.ajax({
+								async: false,
+								type: "GET",
+								dataType: "json",
+								contentType: "application/json",
+
+								url: "../api/trackedEntityInstances/" + trackEntutyInstanceid + ".json",
+
+								success: function (data) {
+									for (var j = 0; j < data.attributes.length; j++) {
+										if (data.attributes[j].code == "project_donor" || data.attributes[j].code == "project_donor_TZ") {
+											if (donarName == "Please select" || donarName == undefined) {
+												for (var k = 0; k < data.attributes.length; k++) {
+													if (data.attributes[k].displayName == "Gender") {
+
+														var genderValue = data.attributes[k].value;
+
+														if (genderValue == "Male") {
+															for (var l = 0; l < data.attributes.length; l++) {
+																if (data.attributes[l].displayName == "Age") {
+																	var ageValueM = data.attributes[l].value;
+																}
+															}
+															if (ageValueM < "18") {
+																countLessThan18_male = countLessThan18_male + 1;
+															}
+															else if (ageValueM >= "18" && ageValueM <= "24") {
+																count18_24_male = count18_24_male + 1;
+
+															}
+															else if (ageValueM >= "25") {
+																count25_male = count25_male + 1;
+															}
+
+														}
+
+														else if (genderValue = "Female") {
+															for (var m = 0; m < data.attributes.length; m++) {
+																if (data.attributes[m].displayName == "Age") {
+																	var ageValueF = data.attributes[m].value;
+																}
+															}
+															if (ageValueF < "18") {
+																countLessThan18_female = countLessThan18_female + 1;
+															}
+															else if (ageValueF >= "18" && ageValueF <= "24") {
+																count18_24_female = count18_24_female + 1;
+
+															}
+															else if (ageValueF >= "25") {
+																count25female = count25female + 1;
+															}
+
+
+														}
+													}
+												}
+											}
+											else {
+												if (donarName == data.attributes[j].value) {
+													for (var k = 0; k < data.attributes.length; k++) {
+														if (data.attributes[k].displayName == "Gender") {
+
+															var genderValue = data.attributes[k].value;
+
+															if (genderValue == "Male") {
+																for (var l = 0; l < data.attributes.length; l++) {
+																	if (data.attributes[l].displayName == "Age") {
+																		var ageValueM = data.attributes[l].value;
+																	}
+																}
+																if (ageValueM < "18") {
+																	countLessThan18_male = countLessThan18_male + 1;
+																}
+																else if (ageValueM >= "18" && ageValueM <= "24") {
+																	count18_24_male = count18_24_male + 1;
+
+																}
+																else if (ageValueM >= "25") {
+																	count25_male = count25_male + 1;
+
+																}
+
+															}
+
+															else if (genderValue = "Female") {
+																for (var m = 0; m < data.attributes.length; m++) {
+																	if (data.attributes[m].displayName == "Age") {
+																		var ageValueF = data.attributes[m].value;
+																	}
+																}
+																if (ageValueF < "18") {
+																	countLessThan18_female = countLessThan18_female + 1;
+																}
+																else if (ageValueF >= "18" && ageValueF <= "24") {
+																	count18_24_female = count18_24_female + 1;
+																}
+																else if (ageValueF >= "25") {
+																	count25female = count25female + 1;
+																}
+
+
+															}
+														}
+													}
+												}
+											}
+										}
+										//console.log("count18_24_male" + count18_24_male);
+										//console.log("count25_male" + count25_male);
+										//console.log("count18_24_female" + count18_24_female);
+										//console.log("count25female" + count25female);
+										//console.log("countLessThan18_male" + countLessThan18_male);
+										//console.log("countLessThan18_female" + countLessThan18_female);
+										total = count18_24_male + count25_male + count18_24_female + count25female + countLessThan18_male  + countLessThan18_female;
+									}
+
+								}
+							})
+						}
+					}
+
+					var tabledata = '<tr>';
+					tabledata += ("<td>" + orgName + "</td><td>" + countLessThan18_male + " </td><td>" + count18_24_male + " </td><td>" + count25_male + "</td><td>" + countLessThan18_female + "</td><td>" + count18_24_female + "</td><td>" + count25female + "</td><td>" + total + "</td></tr>")
+					document.getElementById("tbodyTable").innerHTML += tabledata;
+
+					count18_24_male_final += count18_24_male;
+					count25_male_final += count25_male;
+					count18_24_female_final += count18_24_female;
+					count25female_final += count25female;
+					countLessThan18_male_final += countLessThan18_male;
+					countLessThan18_female_final += countLessThan18_female;
+					total_final += total;
+				}
+			})
+		}
+		var tabledataTotal = '<tr>';
+		tabledataTotal += ("<td>Total</td><td>" + countLessThan18_male_final + " </td><td>" + count18_24_male_final + " </td><td>" + count25_male_final + "</td><td>" + countLessThan18_female_final + "</td><td>" + count18_24_female_final + "</td><td>" + count25female_final + "</td><td>" + total_final + "</td></tr>")
+		document.getElementById("tbodyTable").innerHTML += tabledataTotal;
+
+		document.getElementById("dataTable").style.visibility = "visible"
+		$('#loader').hide();
+	}
+
+	// export to Excel
+	function exportExcel() {
+		var a = document.createElement('a');
+		var data_type = 'data:application/vnd.ms-excel';
+		var table_div = document.getElementById('dataTable');
+		var table_html = table_div.outerHTML.replace(/ /g, '%20');
+		a.href = data_type + ', ' + table_html;
+		a.download = 'Yes Me! Aggregate Enrollment Report.xls';
+		a.click();
+	}
+
+	// export to Excel -- new method working
+	var tableToExcel = (function () {
+		var uri = 'data:application/vnd.ms-excel;base64,'
+			, template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+			, base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+			, format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+		return function (table, name, filename) {
+			if (!table.nodeType) table = document.getElementById(table)
+			var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+			document.getElementById("dlink").href = uri + base64(format(template, ctx));
+			document.getElementById("dlink").download = filename;
+			document.getElementById("dlink").click();
+		}
+	})()	
+</script>

@@ -4,7 +4,8 @@
 	var period = periods[0];
 	//var period = "LAST_MONTH";
 	var orgUnit = dhis2.report.organisationUnit;
-	var orgUnitChildrens = dhis2.report.organisationUnitChildren;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+	var rOrder = orgUnitChildrens.map(a=>a.id);
 
 	//----------------------------------------------------------------------------------------------------------------------------------
 	var ArrStringDEs = ["AFlVz6gyQBV;GaAyNyeNq6Z;a0dG7ih12DG;TkoLt9XedAM;xWpAuH8Wqql;lzSO3chNv6I;NJHQJPmUJKI;Kj8Yr5DmLuP;EIEPq5R3JNM;xnuRKnSsgoj;n92FFE1gzqh;EXPNptuuVE2;FJLuyu1umui",
@@ -16,9 +17,8 @@
 	var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;JM8keEP4z6r;mtNeiqIynwj;UcN4jZjv9Oo";
 	var url = window.location.href;
 	var params = url.split('=');
-  var gotOr=params[2];
-				var gotPeriod = gotOr.substring(0, 4); 
-				var gotOrg=params[3];
+	var gotPeriod = params[2];
+	var gotOrg=params[3];
 	var arrOrgGroups = stringOrgGroups.split(";");
 	var uidGroupSet = "VuilQBYZNIR";
 	var stt = 0;
@@ -145,20 +145,34 @@
 
 	//*********************************************************************************
 	//********************************************************************************
-	function getJson() {
-		for (var c = 0; c < ArrStringDEs.length; c++)
-			stringDEs = stringDEs + ArrStringDEs[c] + ";";
+	function getJson()
+					{
+						for(var c=0; c<ArrStringDEs.length;c++)
+						stringDEs=stringDEs+ArrStringDEs[c]+";";
+										
+						arrayDEs=stringDEs.split(";");
+						
+						// //getting json for org groups
+						// $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+						// 	//alert(jsonGroup);
+						// 	jsonGroup=json;
+						// 	//sum(jsonGroup);
+						// 	getParentJson();
+						// });
 
-		arrayDEs = stringDEs.split(";");
-
-		//getting json for org groups
-		$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=" + uidGroupSet + ":" + stringOrgGroups + "&filter=ou:" + orgUnit.id + "&filter=pe:" + gotPeriod + "", function (json) {
-			//alert(jsonGroup);
-			jsonGroup = json;
-			//sum(jsonGroup);
-			getParentJson();
-		});
-	}
+						$.when(
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=Eq1bKUKYRMO:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=VuilQBYZNIR:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=xFgSXyUMalf:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+						
+						).done(function(geographicalArea, publicNonpublic, urbanRural){
+							var meta_data = [], rows = [];
+							meta_data = {"metaData": geographicalArea[0].metaData};
+							rows = [].concat(geographicalArea[0].rows).concat(publicNonpublic[0].rows).concat(urbanRural[0].rows)
+							jsonGroup = {"metaData":meta_data.metaData, "rows" : rows };
+						});
+						getParentJson();
+					}
 
 	function getParentJson() {
 		var ouid = orgUnit.id;
@@ -175,13 +189,13 @@
 		if (orgUnit.id == "cCTQiGkKcTk") {
 			if (d < orgUnitChildrens.length) {
 				if (0 < orgUnitChildrens.length) {
-					var rOrder = ["fNWuOzDCRSZ", "SgKEcvFdUDb", "pbVS1HW9NrY", "TyDBQRJzkBw", "z5ZOAH5rBFu"];
-					var orguid = rOrder[d];
+					
+							var orguid=rOrder[d];
 					//alert(orguid);
 					$.get("../api/organisationUnits/" + orguid + ".json?fields=code,uuid,href,id,level,name,shortName,displayName,displayShortName,externalAccess,path,featureType,openingDate,coordinates,dimensionItem,parent[id,name,code,href],access,children[id,name,code],ancestors,users,parents", function (json) {
 
 						stringOrgChild(json);
-						if (i == 4) {
+						if (i ==  orgUnitChildrens.length-1) {
 							$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=ou:" + dIDs + "&filter=pe:" + gotPeriod, function (json) {
 
 								jsonDistricts = json;
@@ -191,7 +205,7 @@
 						}
 						i++;
 
-						if (i < 5)
+						if (i <  orgUnitChildrens.length)
 							getAllDistricts(i);
 					});
 				}

@@ -1,0 +1,456 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+crossorigin="anonymous">
+
+
+<style>
+        table {
+            border-collapse: collapse;
+        }
+
+        thead>tr>td {
+        font-weight: bold;
+        }
+        tbody>tr>td {
+        font-weight: bold;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button {  
+        opacity: 1;
+        }
+
+        /* Center the loader  */
+        #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+        }
+        
+        @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+        }
+        
+        @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+        }
+        /* Add animation to "page content" */
+        
+        .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+        }
+        
+        @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+        }
+        
+        @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+        }
+        
+        #printing {
+        
+        text-align: center;
+        }
+    </style>
+        
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span
+    class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', 'Gynaecology Performance Report', 'Gynaecology Performance Report.xls')"><span
+    class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+    <div id="loader"></div>
+    <div id="printing" class="animate-bottom">
+        <div id='state'>
+                <table  border="1"  id="dataTable"  class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
+                <thead id="tableHead">
+                    <tr style=" font-weight:400; text-align:center;">
+                        <td rowspan="3" style="border:1px solid black;background:#ADD8E6;">SN</td>
+                        <td rowspan="3" style="border:1px solid black;background:#ADD8E6;">District</td>
+                        <td colspan="5" style="border:1px solid black;background:#ADD8E6;">District Hospital</td>
+                        <td colspan="5"  style="border:1px solid black;background:#ADD8E6;">Sub- Divisional Hospitals</td>
+                        <td colspan="5"  style="border:1px solid black;background:#ADD8E6;">Total CHCs</td>
+                        <td colspan="5"  style="border:1px solid black;background:#ADD8E6;">Total PHCs</td>
+                        <td colspan="5"  rowspan="2" style="border:1px solid black;background:#ADD8E6;">Total Deliveries</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="border:1px solid black;background:#ADD8E6;">Deliveries</td>
+                        <td colspan="5" style="border:1px solid black;background:#ADD8E6;">Deliveries</td>
+                        <td colspan="5" style="border:1px solid black;background:#ADD8E6;">Deliveries</td>
+                        <td colspan="5" style="border:1px solid black;background:#ADD8E6;">Deliveries</td>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the previous month<br/> (<span class="lastMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">During the Month <br/>(<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Corresponding period of year<br/> (<span class="currentMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">percent increase or decrease </td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the previous month<br/> (<span class="lastMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">During the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Corresponding period of year<br/> (<span class="currentMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">percent increase or decrease</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the previous month<br/> (<span class="lastMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">During the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Corresponding period of year<br/> (<span class="currentMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">percent increase or decrease</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the previous<br/>  month (<span class="lastMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">During the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Corresponding period of year<br/> (<span class="currentMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">percent increase or decrease</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the previous<br/>  month (<span class="lastMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">During the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Upto the Month<br/> (<span class="month"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">Corresponding period of year<br/> (<span class="currentMonth"></span>)</td>
+                        <td style="border:1px solid black;background:#ADD8E6;">percent increase or decrease</td>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        var selectedDate = dhis2.report.periods[0];
+        var selectedOrgUnit = dhis2.report.organisationUnit;  
+        var orgUnit = dhis2.report.organisationUnitChildren;
+        var organisationUnitChildren = orgUnit.sort((a,b)=> a.name.localeCompare(b.name));
+        var level = dhis2.report.organisationUnitHierarchy.length;
+        var DHdeliveriesDataSet = [],  SDHdeliveriesDataSet = [],  CHCdeliveriesDataSet = [],  PHCdeliveriesDataSet = [];
+        let childrenId = organisationUnitChildren.map(child => child.id).join(";")
+        var year = parseInt(selectedDate.slice(0,4));
+        var month = parseInt(selectedDate.slice(4,6));
+        
+        let getYear = function (givenMonth) {
+            let arr = [],j=0;
+
+            //we take 4 because year start from april in this case
+            if(givenMonth==4) { 
+                givenMonth= 3;
+            }
+            if(givenMonth>4) {
+                for(let i= 4 ; i <= givenMonth; i++) {
+                   
+                    let str = i >= 10 ? i : "0" + i
+                    arr[j] = `${year-1}-${str}`;
+                    j++;
+                }
+            } else {
+                for(let i= 4 ; i <= 12; i++) {
+                    let str = i >= 10 ? i : "0" + i
+                    arr[j] = `${year-2}-${str}`;
+                    j++;
+                }
+                for(let k =1; k <= givenMonth; k++) {
+                    let str = "0"+k;
+                    arr[j] = `${year-1}-${str}`;
+                    j++;
+                }
+
+            }
+            return arr;
+        }
+        var thisYear = getYear(month).map(child=> {
+
+            let val = child.split("-");
+            let year = parseInt(val[0])+1;
+
+            if(month == 4) {
+                return ""; 
+            } else {
+                
+                return year+""+val[1];
+            }
+            });
+            var currentYear =(thisYear[0]=="") ? selectedDate : thisYear;
+            var correspondingPrevYear = getYear(month).map( child => child.split("-").join(""))
+            var totalYear = correspondingPrevYear.concat(currentYear).join(";");
+            var DeliveriescorrespondingPrevYear = correspondingPrevYear.join(";")
+            
+        for(var i = 0; i < 10; i++) {
+            document.getElementsByClassName("month")[i].innerHTML = months[month-1] +"-"+ year;
+        }
+        for(var i = 0; i < 5; i++) {
+
+            document.getElementsByClassName("lastMonth")[i].innerHTML = month-2 == 2 ? "April -"+ year : (months[(month-2 == -1) ? 11: month-2] +"-"+ year);
+            document.getElementsByClassName("currentMonth")[i].innerHTML = `Upto ${months[month-1]}-${year-1}`;
+        }
+        $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "../api/29/analytics.json?dimension=dx:mj8jBGG8R3F&dimension=IE5c49tpu23:Kn6u8kZPK51;KYUgRXlBkkt;WRdcX6VM62R;osS36zuoUei&dimension=ou:" + childrenId + "&filter=pe:" + DeliveriescorrespondingPrevYear + "&displayProperty=NAME&paging=false",
+                    data: JSON,
+                    success: function (data, status) {
+                    
+                    data.rows.forEach(child =>  {    
+                        //DH
+                        if(child["1"] == "KYUgRXlBkkt" ) {
+                            
+                            if(!DHdeliveriesDataSet[child["2"]]) {          
+                                    DHdeliveriesDataSet[child["2"]] = Number(child["3"]);                                
+                            }
+                        }
+                        //SDH
+                        if(child["1"] == "osS36zuoUei" ) {
+                            
+                            if(!SDHdeliveriesDataSet[child["1"]]) {
+                                    SDHdeliveriesDataSet[child["2"]] = Number(child["3"]);                                
+                            }
+
+                        }
+                        
+                        //CHC 
+                        if(child["1"] == "Kn6u8kZPK51" ) {
+                            if(!CHCdeliveriesDataSet[child["1"]]) {
+                                    CHCdeliveriesDataSet[child["2"]] = Number(child["3"]);                                
+                            }
+
+                        }
+                        
+                        //PHC
+                        if(child["1"] == "WRdcX6VM62R" ) {
+                            
+                            if(!PHCdeliveriesDataSet[child["1"]]) {
+                                    PHCdeliveriesDataSet[child["2"]] = Number(child["3"]);                                
+                            }
+
+                        }
+                    })
+
+                            
+                }
+            });
+         $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "../api/29/analytics.json?dimension=dx:mIeQV1vKl03&dimension=IE5c49tpu23:KYUgRXlBkkt;osS36zuoUei;Kn6u8kZPK51;WRdcX6VM62R&dimension=pe:" + totalYear + "&dimension=ou:" + selectedOrgUnit.id + ";LEVEL-" + (level+1) + "&displayProperty=NAME",
+                    data: JSON,
+                    success: function (data, status) {
+                            showData(data);
+                    }
+            });
+
+        function showData(data) {
+            let newData = [];
+            var printTableBody ='';
+            var printValue = [],globalTotal = [];
+            for(var i = 0; i < 27; i++) {
+                printValue["value"+i] = 0;
+                globalTotal["value"+i] = 0;
+            }
+            
+            organisationUnitChildren.forEach( (element,index0) => {
+                
+                printValue["value" + 0] = parseInt(index0+1);
+                printValue["value" + 1] = element.name;
+                data.rows.forEach(child => {
+                if (element.id == child["3"]) {
+                    //DH
+                    if(child["1"] == "KYUgRXlBkkt" ) {
+                        for(i = 0 ; i < currentYear.length-1; i++) {
+                            if(child["2"] == currentYear[i])  printValue["value" + 2] += parseInt(child["4"]);
+                        }
+
+                        if (child["2"] == selectedDate)  printValue["value" + 3] = parseInt(child["4"]);
+
+                        correspondingPrevYear.forEach(dateChild => {
+                            if (child["2"] ==  dateChild) printValue["value" + 5] += parseInt(child["4"]) ;                       
+                        })
+
+                    }
+                    //SDH
+                    if(child["1"] == "osS36zuoUei" ) {
+                        for(i = 0 ; i < currentYear.length-1; i++) {
+                            if(child["2"] == currentYear[i])  printValue["value" + 7] += parseInt(child["4"]);
+                        }
+
+                        if (child["2"] == selectedDate)  printValue["value" + 8] = parseInt(child["4"]);
+
+                        correspondingPrevYear.forEach(dateChild => {
+                            if (child["2"] ==  dateChild) printValue["value" + 10] += parseInt(child["4"]) ;                       
+                        })
+                        
+                        
+
+                    } 
+                    //CHC 
+                    if(child["1"] == "Kn6u8kZPK51" ) {
+                        for(i = 0 ; i < currentYear.length-1; i++) {
+                            if(child["2"] == currentYear[i])  printValue["value" + 12] += parseInt(child["4"]);
+                        }
+
+                        if (child["2"] == selectedDate)  printValue["value" + 13] = parseInt(child["4"]);
+                        
+                        correspondingPrevYear.forEach(dateChild => {
+                            if (child["2"] ==  dateChild) printValue["value" + 15] += parseInt(child["4"]) ;                       
+                        })
+                        
+
+                    }
+                    //PHC
+                    if(child["1"] == "WRdcX6VM62R" ) {
+                        for(i = 0 ; i < currentYear.length-1; i++) {
+                            if(child["2"] == currentYear[i])  printValue["value" + 17] += parseInt(child["4"]);
+                        }
+
+                        if (child["2"] == selectedDate)  printValue["value" + 18] = parseInt(child["4"]);
+
+                        correspondingPrevYear.forEach(dateChild => {
+                            if (child["2"] ==  dateChild) printValue["value" + 20] += parseInt(child["4"]) ;                       
+                        })
+                    }
+
+                }
+                
+            });
+                if(DHdeliveriesDataSet[element.id]) {
+                    printValue["value" + 5] = printValue["value" + 5] + DHdeliveriesDataSet[element.id];
+                }
+                if(SDHdeliveriesDataSet[element.id]) {
+                    printValue["value" + 10] = printValue["value" + 10] + SDHdeliveriesDataSet[element.id];
+                }
+                
+                if(CHCdeliveriesDataSet[element.id]) {
+                    printValue["value" + 15] = printValue["value" + 15] + CHCdeliveriesDataSet[element.id];                
+                }
+                
+                if(PHCdeliveriesDataSet[element.id]) {
+                    printValue["value" + 20] = printValue["value" + 20] + PHCdeliveriesDataSet[element.id];                
+                }
+            
+                printValue["value" + 4] = printValue["value" + 2] + printValue["value" + 3];
+                printValue["value" + 6 ] = ((printValue["value" + 4] - printValue["value" + 5])/printValue["value"+5])*100;
+                if(Number.isNaN(printValue["value" + 6]) || printValue["value" + 6] == Infinity) printValue["value" + 6] = 0;
+                else printValue["value" + 6 ] = printValue["value" + 6 ].toFixed(2);
+                printValue["value" + 9] = printValue["value" + 7] + printValue["value" + 8];
+                printValue["value" + 11] = ((printValue["value" + 9] - printValue["value" + 10])/printValue["value"+10])*100;
+                if(Number.isNaN(printValue["value" + 11]) || printValue["value" + 11] == Infinity) printValue["value" + 11] = 0;
+                else printValue["value" + 11 ] = printValue["value" + 11].toFixed(2);
+                printValue["value" + 14] = printValue["value" + 12] + printValue["value" + 13];
+                printValue["value" + 16] = ((printValue["value" + 14] - printValue["value" + 15])/printValue["value"+15])*100; 
+                if(Number.isNaN(printValue["value" + 16]) || printValue["value" + 16] == Infinity) printValue["value" + 16] = 0;
+                else printValue["value" + 16 ] = printValue["value" + 16 ].toFixed(2);                                            
+                printValue["value" + 19] = printValue["value" + 17] + printValue["value" + 18];
+                printValue["value" + 21] = ((printValue["value" + 19] - printValue["value" + 20])/printValue["value"+20])*100;
+                if(Number.isNaN(printValue["value" + 21]) || printValue["value" + 21] == Infinity) printValue["value" + 21] = 0;
+                else printValue["value" + 21] = printValue["value" + 21].toFixed(2);
+
+                printValue["value"+22] = printValue["value"+2]+printValue["value"+7]+printValue["value"+12]+printValue["value"+17];
+                printValue["value"+23] = printValue["value"+3]+printValue["value"+8]+printValue["value"+13]+printValue["value"+18];
+                printValue["value"+24] = printValue["value"+4]+printValue["value"+9]+printValue["value"+14]+printValue["value"+19];
+                printValue["value"+25] = printValue["value"+5]+printValue["value"+10]+printValue["value"+15]+printValue["value"+20];
+                printValue["value"+26] = printValue["value"+6]+printValue["value"+11]+printValue["value"+16]+printValue["value"+21];
+                printValue["value" + 26] = ((printValue["value" + 24] - printValue["value" + 25])/printValue["value"+25])*100;
+                if(Number.isNaN(printValue["value" + 26]) || printValue["value" + 26] == Infinity) printValue["value" + 26] = 0;
+                else printValue["value" + 26] = printValue["value" + 26].toFixed(2);
+                
+                printTableBody += '<tr style="font-weight:800; text-align:center;">'
+                for(let i=0; i<27;i++) {
+                    printTableBody += '<td>' + printValue["value"+i] + '</td>' 
+                    globalTotal["value" + i] += Number(printValue["value" + i] );
+                    printValue["value"+i] = 0;              
+                }
+                printTableBody += '</tr>';     
+            });
+                globalTotal["value" + 6 ] = ((globalTotal["value" + 4] - globalTotal["value" + 5])/globalTotal["value"+5])*100;
+                if(Number.isNaN(globalTotal["value" + 6]) || globalTotal["value" + 6] == Infinity) globalTotal["value" + 6] = 0;
+                else globalTotal["value" + 6 ] = globalTotal["value" + 6 ].toFixed(2);
+                
+                globalTotal["value" + 11] = ((globalTotal["value" + 9] - globalTotal["value" + 10])/globalTotal["value"+10])*100;
+                if(Number.isNaN(globalTotal["value" + 11]) || globalTotal["value" + 11] == Infinity) globalTotal["value" + 11] = 0;
+                else globalTotal["value" + 11 ] = globalTotal["value" + 11].toFixed(2);
+
+                 globalTotal["value" + 16] = ((globalTotal["value" + 14] - globalTotal["value" + 15])/globalTotal["value"+15])*100; 
+                if(Number.isNaN(globalTotal["value" + 16]) || globalTotal["value" + 16] == Infinity) globalTotal["value" + 16] = 0;
+                else globalTotal["value" + 16 ] = globalTotal["value" + 16 ].toFixed(2);                                            
+               
+                globalTotal["value" + 21] = ((globalTotal["value" + 19] - globalTotal["value" + 20])/globalTotal["value"+20])*100;
+                if(Number.isNaN(globalTotal["value" + 21]) || globalTotal["value" + 21] == Infinity) globalTotal["value" + 21] = 0;
+                else globalTotal["value" + 21] = globalTotal["value" + 21].toFixed(2);
+
+               globalTotal["value" + 26] = ((globalTotal["value" + 24] - globalTotal["value" + 25])/globalTotal["value"+25])*100;
+                if(Number.isNaN(globalTotal["value" + 26]) || globalTotal["value" + 26] == Infinity) globalTotal["value" + 26] = 0;
+                else globalTotal["value" + 26] = globalTotal["value" + 26].toFixed(2);
+                
+            printTableBody += '<tr><td colspan="2" style="border:1px solid black;background:#DCDCDC;">Total</td>';
+                                for(var i = 2; i < 27; i++) {
+                                    printTableBody += '<td style="border:1px solid black;background:#DCDCDC;">'+ globalTotal["value" + i] +'</td>';
+                                        
+                                }
+            printTableBody += '</tr>';
+            document.getElementById('tableBody').innerHTML = printTableBody;
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("printing").style.display = "block"; 
+        }
+                               
+     var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+           return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()    
+    
+</script>
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>

@@ -1,0 +1,571 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+crossorigin="anonymous">
+
+
+<style>
+        table {
+            border-collapse: collapse;
+        }
+
+        thead>tr>td {
+        font-weight: bold;
+        }
+        tbody>tr>td {
+        font-weight: bold;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button {  
+        opacity: 1;
+        }
+
+        /* Center the loader  */
+        #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+        }
+        
+        @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+        }
+        
+        @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+        }
+        /* Add animation to "page content" */
+        
+        .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+        }
+        
+        @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+        }
+        
+        @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+        }
+        
+        #printing {
+        
+        text-align: center;
+        }
+    </style>
+
+    <a id="dlink" style="display:none;"></a>
+    <button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span
+        class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+    </button>
+    
+    <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', ' Gynaecology Performance Report', 'Gynaecology Performance Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+    
+    
+        <div id="loader"></div>
+        <div id="printing" class="animate-bottom">
+            <div id='state'>
+                <table  border="1"   id="dataTable"   class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    <script>
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        var startDate = dhis2.report.date;
+        var date = dhis2.report.date.split("-");
+        var month = date["1"];
+        var headingValue1 = [   "District Name", "Name of Institution", 
+                                "Category", "Name of Gynecologists posted", 
+                                "Permanent duty",  "Deputed duty",  "Temporary duty", "Category (Regular/Contractual)",
+                                "Date of Joining","Posted against a sanctioned post", "Actual place of work",
+                                "Place of posting (where salary is drawn)"
+                            ];
+        var headingValueCummulative1 = ["Upto previous month", "During the Month", "Cumulative"];
+        var headingValueCummulative2 = ["Day Time", "Night Time", "Total"];
+        var headingValueCummulative3 = ["Normal", "Caesarian"];
+
+        var printHeading = '<tr style="font-weight:800; text-align:center;background:#DCDCDC;">\
+                            <td  colspan="27" style="border:1px solid black;background:#ADD8E6;"> Gynaecology Perfomance Report - ' +  months[month-1] + " " + date["0"] + '</td></tr><tr>'
+        var j = 0;
+                            for(var i = 0; i < headingValue1.length; i++) {
+                                printHeading += '<td rowspan="3" style="border:1px solid black;background:#ADD8E6;">'+headingValue1[i]+'</td>'
+                            }
+                           
+                            for(var i = 0; i < headingValueCummulative1.length; i++) {
+                                printHeading += '<td colspan="5" style="border:1px solid black;background:#ADD8E6;">' + headingValueCummulative1[i] + '</td>'
+                            }
+                            printHeading += '</tr>\
+                                            <tr style="font-weight:800; text-align:center;background:#DCDCDC;">'
+                            for(var i = 0; i < headingValueCummulative2.length*3; i++) {
+                                i%3==0?j=0:j++;
+                                var head = (j==2) ? '<td rowspan="2" style="border:1px solid black;background:#ADD8E6;">' + headingValueCummulative2[j]+ '</td>':'<td colspan="2" style="border:1px solid black;background:#ADD8E6;">' + headingValueCummulative2[j]+ '</td>'
+                                printHeading += head;
+                            }
+                            printHeading += '</tr>\
+                                            <tr style="font-weight:800; text-align:center;background:#DCDCDC;">'
+                            j=0;
+                            for(var i = 0; i < headingValueCummulative3.length*6; i++) {
+                                i%2==0 ? j = 0 : j++;
+                                printHeading += '<td style="border:1px solid black;background:#ADD8E6;">' + headingValueCummulative3[j] + '</td>'
+                            }
+                            printHeading += '</tr>'
+        document.getElementById("tableHead").innerHTML = printHeading;
+
+        
+        var lastMonthDates = ["31", "28", "31", "30", "31", "30", "31", "31",  "30", "31",  "30", "31" ]
+        var endDate = date["0"] + "-" + month + "-" + lastMonthDates[month-1];
+        
+        var previousStartDate = (month == 4) ? "" : month > 4 ? date["0"]+"-04-01" : (Number(date["0"])-1)+"-04-01" ;
+        var previousEndDate = (month == 4) ? "" : (month == 1) ? (date["0"]-1)+"-12-31" : date["0"] + "-0" + (date["1"]-1) + "-" + lastMonthDates[month-2];
+
+        var selectedOrgUnit = [dhis2.report.organisationUnit];  
+        var orgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+        var children = dhis2.report.organisationUnitChildren;
+        var orgUnitChildren = children.sort((a,b) => a.name.localeCompare(b.name));
+         
+        var childParentName = [], block = [], parentChildName = [], totalOrgUnit = [], gynaInfraStructureAndStaff = [];
+        var printValue = [], globalTotal = [], showTemporaryAndDeputed = [], showPermanent = [], showTotal = [];
+        var countPermanent = 0, countDeputed = 0, countTemporary = 0; totalCountPermanent = 0; totalCountDeputedAndTemporary = 0;
+        var  checkTotal = false;
+        var printTableBody = "";
+        
+        for(var i = 0; i < 27; i++) {
+            printValue["value"+i] = '';
+            globalTotal["value"+i] = '';
+            showPermanent["value"+i] = '';
+            showTemporaryAndDeputed["value"+i] = '';
+            showTotal["value"+i] = '';
+
+            if(i >= 12) {                
+                printValue["value"+i] = 0;
+                globalTotal["value"+i] = 0;
+                showPermanent["value"+i] = 0;
+                showTemporaryAndDeputed["value"+i] = 0;
+                showTotal["value"+i] = 0;
+            }
+            
+        }
+
+        //getting organisation unit name
+        $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/organisationUnits.json?paging=false",
+                data: JSON,
+                success: function (data, status) {
+                    data.organisationUnits.forEach(child => totalOrgUnit[child.id] = child.displayName);
+                }
+              });        
+
+        //to get the parent name i.e. Level 3  from SDH, DH, PHC etc
+        $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/sqlViews/LKCILcpyZW9/data.json?paging=false",
+                data: JSON,
+                success: function (data, status) {
+                    data.listGrid.rows.forEach( child => childParentName[child["19"]] = child["11"] );                   
+                }
+              });
+        
+        //names of belonging orgUnits in the blocks/groups(PHC, CHC, DH)   
+        $.when(
+                //CHC
+                $.get("../api/29/organisationUnitGroups/Kn6u8kZPK51.json?fields=name,organisationUnits[id,name]&paging=false"),
+                //PHC
+                $.get("../api/29/organisationUnitGroups/WRdcX6VM62R.json?fields=name,organisationUnits[id,name]&paging=false"),
+                //DH
+                $.get("../api/29/organisationUnitGroups/KYUgRXlBkkt.json?fields=name,organisationUnits[id,name]&paging=false"),
+                //SDH
+                $.get("../api/29/organisationUnitGroups/osS36zuoUei.json?fields=name,organisationUnits[id,name]&paging=false"),
+                //GM
+                $.get("../api/29/organisationUnitGroups/dbJheqOrIjH.json?fields=name,organisationUnits[id,name]&paging=false"),
+                  
+            ).done(function(chc,phc,dh,sdh, gm) {
+                block["CHC"] = chc["0"].organisationUnits, block["DH"] = dh["0"].organisationUnits, block["SDH"] = sdh["0"].organisationUnits, block["PHC"] = phc["0"].organisationUnits, block["GM"] = gm["0"].organisationUnits;
+   
+                getOrgUnitChildren();
+                
+                document.getElementById('tableBody').innerHTML = printTableBody;
+                document.getElementById("loader").style.display = "none";
+                document.getElementById("printing").style.display = "block"; 
+            });
+              
+
+
+        function getOrgUnitChildren() { 
+            if(orgUnitLevel == 2) {
+                passToGroup(orgUnitChildren);            
+
+            } else if( orgUnitLevel == 3) {                
+                passToGroup(selectedOrgUnit);
+            }
+        
+        }
+
+        function passToGroup(children) {
+            children.forEach( child  => {
+                    
+                    block["DH"].forEach( DHChild => {
+                        if(child.name == childParentName[DHChild.name]) {
+                            showData(DHChild,child.name, "DH")
+                        }
+                    })
+                    block["GM"].forEach( DHChild => {
+                        if(child.name == childParentName[DHChild.name]) {
+                            showData(DHChild,child.name, "GM")
+                        }
+                    })
+                    block["SDH"].forEach( SDHChild => {
+                        if(child.name == childParentName[SDHChild.name]) {
+                            showData(SDHChild, child.name, "SDH")
+                        }
+                    })                
+                    block["CHC"].forEach( CHCChild => {
+                        if(child.name == childParentName[CHCChild.name]) {
+                            showData(CHCChild, child.name, "CHC")
+                        }
+                    })
+                    block["PHC"].forEach( PHCChild => {
+                        if(child.name == childParentName[PHCChild.name]) {       
+                            showData(PHCChild, child.name, "PHC")
+                        }
+                    })
+                    if(checkTotal) {  
+                        globalTotal["value" + 4] = countPermanent; globalTotal["value" + 5] = countTemporary; globalTotal["value" + 6] = countDeputed;
+                        totalCountDeputedAndTemporary = totalCountDeputedAndTemporary + countDeputed + countTemporary;
+                        totalCountPermanent += countPermanent;                  
+                        printTableBody += '<tr style=" text-align:center;">\
+                                            <td colspan="2" style="text-align:center;"> ' + child.name + ' district Total </td>'
+                                            
+                                            for(var i = 2; i < 27; i++) {
+                                                printTableBody += '<td style="border:1px solid black;">'+ globalTotal["value" + i] +'</td>';
+                                                globalTotal["value" + i] = '';
+                                                if(i >= 12) {
+                                                    globalTotal["value" + i] = 0;
+                                                }
+                                            }
+                        printTableBody += '</tr>' 
+                        countPermanent = 0; countDeputed = 0; countTemporary = 0;
+                        checkTotal = false;
+                    }
+                })
+                showPermanent["value" + 4]  = totalCountPermanent; showTemporaryAndDeputed["value" + 5]  = totalCountDeputedAndTemporary;
+                showTotal["value" + 4] = totalCountPermanent + totalCountDeputedAndTemporary;
+                printTableBody += '<tr style="text-align:center;">\
+                                <td colspan="2" style="text-align:center"> Total ' + selectedOrgUnit["0"].name + ' (Permanent Duty)</td>'
+                                
+                                    for(var i = 2; i < 27; i++) {
+                                        printTableBody += '<td style="border:1px solid black;">'+ showPermanent["value" + i] +'</td>';
+                                        if(i >= 12) {
+                                            showTotal["value" + i] += Number(showPermanent["value" + i] );
+                                        }
+                                                                   
+                                    } 
+                printTableBody += '</tr> <tr>';             
+                printTableBody +='<td colspan="2" style="text-align:center"> Total ' + selectedOrgUnit["0"].name + ' (Deputed / Temporary Duty)</td>'
+                                    for(var i = 2; i < 27; i++) {
+                                        if(i != 5 && i != 6) { 
+                                            printTableBody += '<td style="border:1px solid black">'+ showTemporaryAndDeputed["value" + i] +'</td>';
+                                        }
+                                        else {
+                                            if(i == 6) {
+                                            continue;
+                                            }
+                                            printTableBody += '<td  colspan = "2" style="border:1px solid black;">'+ showTemporaryAndDeputed["value" + i] +'</td>';                                        
+                                        }
+                                        if(i >= 12) {
+                                            showTotal["value" + i] += Number(showTemporaryAndDeputed["value" + i] );
+                                        }
+                                                                   
+                                    } 
+                printTableBody += '</tr> <tr>'; 
+                printTableBody += '<td colspan="2" style=" text-align:center;"> Total ' + selectedOrgUnit["0"].name + ' (Permanent and Temporary Duty)</td>'
+                                    for(var i = 2; i < 27; i++) {
+                                        if(i != 5 && i != 6 && i != 4) { 
+                                            printTableBody += '<td style="border:1px solid black;">'+ showTotal["value" + i] +'</td>';
+                                        }
+                                        else {
+                                            if(i == 6 || i == 5) {
+                                            continue;
+                                            }
+                                            printTableBody += '<td  colspan = "3" style="border:1px solid black;">'+ showTotal["value" + i] +'</td>';                                        
+                                            
+                                        }
+                                    } 
+                printTableBody += '</tr>'; 
+        }
+        
+        function showData(orgUnitChild, orgUnit, partialBlock) {
+            var orgUnitName = [];
+            var teiId,eventCheck=false, teiCheck = false;
+            var checkPermanent = false, checkTemporary = false, checkDeputed = false;
+            
+            $.ajax({
+                type:"GET",
+                async: false,
+                url: "../api/events.json?program=JuZA8mxRZV2&startDate=" + startDate + "&endDate=" + endDate +"&orgUnit=" + orgUnitChild.id +"&paging=false",
+                data:JSON,
+                success: function (currentEvents) {
+                    
+                    if(currentEvents.events.length) {
+                            let previousDate = 0, j =-1, checkEvent = false, eventsArr = []
+                            currentEvents.events.forEach( events => {
+                            j++;
+                            if(!eventsArr[events.trackedEntityInstance]) {
+                            for(let i = j; i<currentEvents.events.length; i++) {
+                             
+                            if(i == currentEvents.events.length-1) {
+                                eventsArr[events.trackedEntityInstance] = 1;
+                            }
+                                if(events.trackedEntityInstance == currentEvents.events[i].trackedEntityInstance) {
+                                    
+                                    checkEvent = true; teiId = events.trackedEntityInstance
+                                    if(currentEvents.events[i].eventDate) {
+                                        eventDate = currentEvents.events[i].eventDate.split("-").join("");
+                                        latestEventDate = eventDate.split("T")["0"];                                
+                                    }
+                                    for(dataValue of currentEvents.events[i].dataValues) {
+                                        if(dataValue.dataElement == "UhLwkSyFQcS") {
+                                            printValue["value"+ 17] += Number(dataValue.value);
+                                        }
+                                        if(dataValue.dataElement == "HtDb9XAQD1K") {
+                                            printValue["value"+ 18] += Number(dataValue.value);
+                                        }
+                                        if(dataValue.dataElement == "GX99RIwDwoc") {
+                                            printValue["value"+ 19] += Number(dataValue.value);
+                                        }
+                                        if(dataValue.dataElement == "UUUsDXPOJCg") {
+                                            printValue["value"+ 20] += Number(dataValue.value);
+                                        }
+                                        if(dataValue.dataElement == "GnddIOlyQ5p" &&  previousDate < latestEventDate) {
+                                            previousDate = latestEventDate;
+                                            if(dataValue.value == "Permanent") {
+                                                printValue["value"+ 4] = dataValue.value;
+                                                if(printValue["value"+ 6] == "Deputed") {
+                                                    countDeputed -= 1;
+                                                    printValue["value"+ 6] = ""
+                                                }
+                                                if(printValue["value"+ 5] == "Temporary") {
+                                                    countTemporary -= 1;
+                                                    printValue["value"+ 5] = ""
+                                                }
+                                                if (!checkPermanent) countPermanent +=1;
+                                                checkPermanent = true;
+                                                
+                                            }
+                                            if(dataValue.value == "Temporary") {
+                                                printValue["value"+ 5] = dataValue.value;
+                                                if(printValue["value"+ 4] == "Permanent") {
+                                                    countPermanent -= 1;
+                                                    printValue["value"+ 4] = ""
+                                                }
+                                                if(printValue["value"+ 6] == "Deputed") {
+                                                    countDeputed-= 1;
+                                                    printValue["value"+ 6] = ""
+                                                }
+                                                if (!checkTemporary) countTemporary += 1;
+                                                checkTemporary = true;
+                                                
+                                            } 
+                                            if(dataValue.value == "Deputed") {
+                                                printValue["value"+ 6] = dataValue.value;
+                                                if(printValue["value"+ 4] == "Permanent") {
+                                                    countPermanent -= 1;
+                                                    printValue["value"+ 4] = ""
+                                                }
+                                                if(printValue["value"+ 5] == "Temporary") {
+                                                    countTemporary -= 1;
+                                                    printValue["value"+ 5] = ""
+                                                }
+                                                if (!checkDeputed) countDeputed += 1;
+                                                checkDeputed = true;
+                                                
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+                            }
+
+                            if(checkEvent) {  
+                                checkEvent = false;                                                  
+                                $.ajax({
+                                            type:"GET",
+                                            async:false,
+                                            url:"../api/29/trackedEntityInstances/"+teiId+".json?program=JuZA8mxRZV2&fields=trackedEntityInstance,attributes[attribute,value]&paging=false",
+                                            data:JSON,
+                                            success:function(datas) {
+                                                if(datas.attributes.length) {                                
+                                                    teiCheck = true; checkTotal= true;
+                                                        printValue["value"+0] =orgUnit;
+                                                        printValue["value"+1] = orgUnitChild.name;
+                                                        printValue["value"+2] = partialBlock;
+                                                    
+                                                        for(attributes of datas.attributes) {
+                                                            if(attributes.attribute == "rAyKMYRZ1CL") {
+                                                                printValue["value"+ 3] = attributes.value; //Name
+                                                            }
+                                                            
+                                                            if(attributes.attribute == "jtp42SbKRZQ") {                                        
+                                                                printValue["value"+ 7] = attributes.value; //category
+                                                            }
+                                                            
+                                                            if(attributes.attribute == "ZppKrSZBYNr") {                                     
+                                                                printValue["value"+ 8] = attributes.value; //date of joining
+                                                            }
+
+                                                            if(attributes.attribute == "z5GC4l6BL3f") {  
+                                                                let val = (attributes.value == "true") ? "Yes" : "No";                                    
+                                                                printValue["value"+ 9] = val; //Posted against a sanctioned post
+                                                            }
+                                                            
+                                                            if(attributes.attribute == "rHGecPvvqOL") {                                       
+                                                                printValue["value"+ 10] = totalOrgUnit[attributes.value]; //actual place
+                                                            }
+                                                            
+                                                            if(attributes.attribute == "WZhLmGnwmHc") {                                       
+                                                                printValue["value"+ 11] = totalOrgUnit[attributes.value]; //Place of posting (on paper)
+                                                            }
+                                                        }
+
+                                                    if(previousEndDate != "" && previousEndDate != "") {
+                                                        $.ajax({
+                                                            type:"GET",
+                                                            async: false,
+                                                            url: "../api/events.json?trackedEntityInstance=" + teiId + "&startDate=" + previousStartDate  + "&endDate=" + previousEndDate +"&orgUnit=" + orgUnitChild.id + "&paging=false",
+                                                            data:JSON,
+                                                            success: function (currentEvents) {
+                                                                if(currentEvents.events.length) {
+                                                                    for(let i = 0; i < currentEvents.events.length; i++) {
+                                                                        for(dataValue of currentEvents.events[i].dataValues) {
+                                                                            if(dataValue.dataElement == "UhLwkSyFQcS") {
+                                                                                printValue["value"+ 12] += Number(dataValue.value);
+                                                                            }
+                                                                            if(dataValue.dataElement == "HtDb9XAQD1K") {
+                                                                                printValue["value"+ 13] += Number(dataValue.value);
+                                                                            }
+                                                                            if(dataValue.dataElement == "GX99RIwDwoc") {
+                                                                                printValue["value"+ 14] += Number(dataValue.value);
+                                                                            }
+                                                                            if(dataValue.dataElement == "UUUsDXPOJCg") {
+                                                                                printValue["value"+ 15] += Number(dataValue.value);
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        })
+                                                    }
+                                                        
+                                                        if(teiCheck) {
+                                                            printValue["value"+ 16] = Number(printValue["value"+ 12]) + Number(printValue["value"+ 13]) + Number(printValue["value"+ 14]) + Number(printValue["value"+ 15]);
+                                                            printValue["value"+ 21] = Number(printValue["value"+ 17]) + Number(printValue["value"+ 18]) + Number(printValue["value"+ 19]) + Number(printValue["value"+ 20]);
+                                                            printValue["value"+ 22] = Number(printValue["value"+ 12]) + Number(printValue["value"+ 17]);
+                                                            printValue["value"+ 23] = Number(printValue["value"+ 13]) + Number(printValue["value"+ 18]);
+                                                            printValue["value"+ 24] = Number(printValue["value"+ 14]) + Number(printValue["value"+ 19]);
+                                                            printValue["value"+ 25] = Number(printValue["value"+ 15]) + Number(printValue["value"+ 20]);
+                                                            printValue["value"+ 26] = Number(printValue["value"+ 22]) + Number(printValue["value"+ 23]) +  Number(printValue["value"+ 24]) + Number(printValue["value"+ 25]);
+
+                                                            printTableBody += '<tr style="font-weight:400; text-align:center;">'
+                                                            for(var i = 0; i < 27; i++) {
+                                                                printTableBody += '<td style="border:1px solid black;">'+ printValue["value" + i] +'</td>';                                           
+                                                                
+                                                                if(i >= 12) {
+                                                                    globalTotal["value" + i] += Number(printValue["value" + i] );
+                                                                    if(checkPermanent) showPermanent["value" + i] += Number(printValue["value" + i] );
+                                                                    if(checkTemporary || checkDeputed) showTemporaryAndDeputed["value" + i] += Number(printValue["value" + i] );
+                                                                    printValue["value" + i] = 0;
+
+                                                                } else {
+                                                                    printValue["value" + i] = '';
+                                                                }
+                                                            }
+                                                            checkPermanent = false; checkTemporary = false;
+                                                            printTableBody += '</tr>'   
+                                                        }
+                                                    
+                                                }
+                                            }
+                                        });
+
+                            }
+                        });
+                        
+                    }
+                }
+            })
+
+                         
+        }
+        var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+           return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()    
+    
+
+    </script>
+
+    <!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>

@@ -1,0 +1,377 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>th {
+        font-weight: bold;
+        background-color: #eceeef;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Report Status', 'Report Status.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<div style="width: 50%; margin-left:25%;" id="dataSet-cointainer">
+    <table class="table table-borderless table-striped">
+
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Select Data Set : </strong>
+            </td>
+            <td style="width: 60%;">
+                <select id="data-set" class="form-control"></select>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; visibility:hidden">
+            <thead id="tableHead">
+                <tr  align="left" >
+                    <th colspan="3">Data Set: <span id="dataSet"></span></th>
+                </tr>
+                <tr>
+
+                    <th>Country Name</th>
+                    <th>Status</th>
+                    <th>No. of fields entered</th>
+
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+
+$('#dataSet-cointainer').hide();
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    // var selectedOrgUnit = dhis2.report.organisationUnit;
+    var selectedOrgUnit = "";
+    var orgUnit = dhis2.report.organisationUnitChildren;
+    var date = dhis2.report.date;
+    var level = dhis2.report.organisationUnitHierarchy.length;
+
+    var count = 0;
+
+    $.ajax({
+        type: "GET",
+        async: false,
+        //url: "../api/dataSets.json?paging=false",
+		url: "../api/me.json&paging=false",
+        data: JSON,
+        success: function (data, status) {
+           
+				selectedOrgUnit = data.organisationUnits["0"]
+				
+        }
+    });
+
+    $.ajax({
+        type: "GET",
+        async: false,
+        //url: "../api/dataSets.json?paging=false",
+		url: "../api/dataSets.json?fields=id,displayName,code,attributeValues[attribute[id,name,code],value]&paging=false",
+        data: JSON,
+        success: function (data, status) {
+            let options = ""
+            data.dataSets.forEach(dataSet => {
+				dataSet.attributeValues.forEach(dataSetAttriButeValue => {
+					 if (dataSetAttriButeValue.attribute.code === 'reporting_rate_status' && dataSetAttriButeValue.value === "true") {
+						options += "<option value=" + dataSet.id + ">" + dataSet.displayName + "</option>"
+					}
+				})
+				
+                //options += "<option value=" + dataSet.id + ">" + dataSet.displayName + "</option>"
+            })
+            document.getElementById("data-set").innerHTML = options
+            $('#loader').hide();
+            $('#dataSet-cointainer').show();
+        }
+    });
+
+function submitData() {
+
+var dataSetUid = document.getElementById("data-set").value;
+   document.getElementById("dataTable").style.visibility = "hidden";
+   document.getElementById("dataSet").innerHTML = $("#data-set option:selected").text();
+        document.getElementById("tableBody").innerHTML = "";
+        $('#loader').show();
+        setTimeout(function () {
+            getData(dataSetUid);
+        }, 1000);   
+
+
+    function getData() {
+
+
+
+        var orgUnitData = [];
+        let printTotal = [];
+         printTotal["1"] = 0;
+         printTotal["2"] = 0;
+
+
+        var getBetweenDates = function (selectedDate) {
+            var arr = [];
+            var date = selectedDate.split("-");
+            arr["0"] = date["0"] + "-01-01";
+            arr["1"] = date["0"] + "-12-31"
+
+            return arr;
+        }
+
+        //getting between dates
+        var smToEm = getBetweenDates(date);
+        //xK5wR6gwMtW testing
+        //InJThWZyR4o production
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/sqlViews/InJThWZyR4o/data.json?paging=false&var=dataSetUid:" + dataSetUid + "&var=startDate:" + smToEm[0] + "&var=endDate:" + smToEm[1],
+            data: JSON,
+            success: function (data, status) {
+                
+                data.listGrid.rows.forEach(data => {
+                    if (!orgUnitData[data["4"]]) {
+                        orgUnitData[data["4"]] = []
+                        orgUnitData[data["4"]] = data["5"];
+                    } else {
+                        orgUnitData[data["4"]] = data["5"];
+                    }
+                })
+                console.log(orgUnitData)
+            }
+        });
+
+        getData();
+
+        function getData() {
+            var url = '../api/organisationUnits/' + selectedOrgUnit.id + '.json?paging=false&fields=id,name,level,dataSets[id]';
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: '../api/organisationUnitLevels.json',
+                data: JSON,
+                success: function (data, status) {
+
+                    for (let i = 0; i < data.organisationUnitLevels.length; i++) {
+                        url += ',children[id,name,level,dataSets[id]';
+                    }
+                    url += ']';
+                }
+            });
+
+
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: url,
+                data: JSON,
+                success: function (data, status) {
+                    var levelColor = [];
+                    levelColor["1"] = "#89CFF0"; //State level
+                    levelColor["2"] = "#A0D6B4"; //Cricle level
+                    levelColor["4"] = "#B2BEB5"; //District level
+                    levelColor["6"] = "#FFCC99"; //Block level
+                    treeDown(data, levelColor);
+
+                    document.getElementById("dataTable").style.visibility = "visible";
+                    $('#loader').hide();
+                    document.getElementById("printing").style.display = "block";
+                }
+            });
+            function treeDown(arr, color) {
+                var key = arr;
+                var obj = {}
+
+                if (key.children.length && key.level <= 2) {
+                    key.children.sort((a, b) => a.name.localeCompare(b.name))
+                    for (let i = 0; i < key.children.length; i++) {
+                        treeDown(key.children[i], color);
+                    }
+                }
+
+
+                    obj["id"] = key.id;
+                    obj["name"] = key.name;
+                    obj["level"] = key.level;
+                    if (key.children.length) obj["color"] = color[key.level];
+                    runAPI(obj.id, obj.name, obj.color, obj.level);
+                
+            }
+
+
+            function runAPI(orgUnitId, orgUnit, levelColor, orgUnitLevel) {
+                var printValue = [];
+                var addRow = "";
+
+
+                printTotal["2"] += (orgUnitData[orgUnitId] >= 0) ? 1 : 0;
+
+
+                if (orgUnitLevel <= 2) {
+
+                        addRow = ""    
+                                       
+                            addRow += '<tr><td  style="font:bold;background:' + levelColor + ';" >' + orgUnit + ' Total </td><td style="font:bold;background:' + levelColor + ';">' + printTotal[orgUnitLevel] + '</td><td></td></tr>';
+                           
+                        
+                        printTotal["1"]  +=    Number(printTotal[orgUnitLevel])
+                     printTotal[orgUnitLevel] = 0;                
+
+                } else {
+                    addRow = '<tr><td  style="font:bold;text-align:left">' + orgUnit + '</td><td>' + (orgUnitData[orgUnitId] >=0 ? "Reported": "") + '</td><td>' + (orgUnitData[orgUnitId] == undefined ?"": orgUnitData[orgUnitId]) + '</td></tr>';
+                    
+                }
+                document.getElementById("tableBody").innerHTML += addRow;
+
+            }
+        }
+
+    }
+
+
+}
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+             
+             
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: $("#data-set option:selected").text() || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = $("#data-set option:selected").text() + ".xls";
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>

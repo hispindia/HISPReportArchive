@@ -1,0 +1,473 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+	integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+	table {
+		border-collapse: collapse;
+	}
+
+	thead>tr>td {
+		font-weight: bold;
+	}
+
+	tbody>tr>td {
+		font-weight: bold;
+	}
+
+	input[type=number]::-webkit-inner-spin-button,
+	input[type=number]::-webkit-outer-spin-button {
+		opacity: 1;
+	}
+
+	/* Center the loader  */
+	#loader {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		z-index: 1;
+		width: 150px;
+		height: 150px;
+		margin: -75px 0 0 -75px;
+		border: 16px solid #f3f3f3;
+		border-radius: 50%;
+		border-top: 16px solid #34B4DB;
+		width: 120px;
+		height: 120px;
+		-webkit-animation: spin 2s linear infinite;
+		animation: spin 2s linear infinite;
+	}
+
+	@-webkit-keyframes spin {
+		0% {
+			-webkit-transform: rotate(0deg);
+		}
+
+		100% {
+			-webkit-transform: rotate(360deg);
+		}
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* Add animation to "page content" */
+
+	.animate-bottom {
+		position: relative;
+		-webkit-animation-name: animatebottom;
+		-webkit-animation-duration: 1s;
+		animation-name: animatebottom;
+		animation-duration: 1s
+	}
+
+	@-webkit-keyframes animatebottom {
+		from {
+			bottom: -100px;
+			opacity: 0
+		}
+
+		to {
+			bottom: 0px;
+			opacity: 1
+		}
+	}
+
+	@keyframes animatebottom {
+		from {
+			bottom: -100px;
+			opacity: 0
+		}
+
+		to {
+			bottom: 0;
+			opacity: 1
+		}
+	}
+
+	#printing {
+
+		text-align: center;
+	}
+</style>
+
+
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+	onClick="tableToExcel('dataTable', 'Enrollment Report', 'Enrollment Count Based on USER Report.xls')"
+	alt="xls"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;Download As
+	Excel
+</button>
+
+<a id="dlink" style="display:none;"></a>
+<div style="width: 50%; margin-left:25%;">
+	<table class="table table-borderless table-striped">
+		<tr style="border: 1px solid #DDDDDD;">
+			<td style="font-size: 15px;padding-top: 15px; text-align:left">
+				<strong>Start Date : </strong>
+			</td>
+			<td style="width: 60%;">
+				<input class="form-control" type="date" id="start-date">
+			</td>
+		</tr>
+		<tr>
+			<td style="font-size: 15px;padding-top: 15px; text-align:left">
+				<strong>End Date : </strong>
+			</td>
+			<td style="width: 60%;">
+				<input class="form-control" type="date" id="end-date">
+			</td>
+		</tr>
+		<tr>
+			<td style="font-size: 15px;padding-top: 15px; text-align:left">
+				<strong>Program Name: </strong>
+			</td>
+			<td style="width: 60%;">
+				<select class="form-control" id="prgName">
+				</select>
+			</td>
+		</tr>
+		<!-- <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Donar Name:</strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="partner">
+                </select>
+            </td>
+        </tr> -->
+		<tr>
+			<td colspan="2"><button onClick="preSubmit()" class="btn btn-primary" id="tap">Submit</button></td>
+		</tr>
+	</table>
+</div>
+<div id="loader"></div>
+<div id="printing" style="display:none;" class="animate-bottom"></div>
+
+<table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+	style="border-collapse: collapse; text-align: center; visibility:hidden">
+	<thead>
+		<tr>
+			<td style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan='5'>User Wise
+				Enrollment Count</td>
+		</tr>
+		<tr id="tablerow">
+			<td id="orgcol" style="border:1px solid black;text-align:center;background-color:#ADD8E6" colspan='5'>
+				Organisation Unit path - <span id="orgpath"></span></td>
+		</tr>
+		<tr>
+			<td style="border:1px solid black;text-align:center;background-color:#ADD8E6">Parent</span></td>
+			<td style="border:1px solid black;text-align:center;background-color:#ADD8E6">Org unit</span></td>
+			<td style="border:1px solid black;text-align:center;background-color:#ADD8E6">First Name</td>
+			<td style="border:1px solid black;text-align:center;background-color:#ADD8E6">Last Name</td>
+			<td style="border:1px solid black;text-align:center;background-color:#ADD8E6">Count</td>
+		</tr>
+		
+	</thead>
+	<tbody id="tbodyTable"></tbody>
+</table>
+
+<script type="text/javascript">
+	var path = "";
+
+	var SqlViewIdall = 'iMHLD9KowZ0';
+	//var SqlViewIdall='nAdDnGLKo59';
+
+	$(document).ready(function () {
+
+		document.getElementById("loader").style.display = "none";
+
+		document.getElementById("dataTable").style.visibility = "hidden";
+
+	});
+
+	// load all program based on meta-attribute
+	(function myFunction2() {
+		var programName = [];
+
+		$.ajax({
+			async: false,
+			type: "GET",
+			url: "../api/programs.json?fields=id,name,code,attributeValues[attribute[id,name,code],value]&paging=false",
+			success: function (data) {
+				for (var w = 0; w < data.programs.length; w++) {
+					if (data.programs[w].attributeValues.length != 0) {
+						for (var w1 = 0; w1 < data.programs[w].attributeValues.length; w1++) {
+							if (data.programs[w].attributeValues[w1].attribute.code == 'Report_program' && data.programs[w].attributeValues[w1].value == "true") {
+
+								prgNm = data.programs[w].name;
+								prgId = data.programs[w].id;
+								programName.push({ "name": prgNm, "id": prgId });
+							}
+						}
+					}
+				}
+			}
+		});
+
+		var progName = document.getElementById("prgName");
+
+		var option = document.createElement("OPTION");
+		option.innerHTML = "Please select program name";
+		option.value = "Please select";
+		progName.options.add(option);
+		//Add the Options to the DropDownList.
+		for (var i = 0; i < programName.length; i++) {
+			var option = document.createElement("OPTION");
+
+			//Set Customer Name in Text part.
+			option.innerHTML = programName[i].name;
+
+			//Set CustomerId in Value part.
+			option.value = programName[i].id;
+
+			//Add the Option element to DropDownList.
+			progName.options.add(option);
+		}
+
+	})();
+
+
+	// input validation
+	function preSubmit() {
+        
+		document.getElementById("dataTable").style.visibility = "hidden";
+		$('#loader').show();
+		
+		$("#dataTable").load;
+		var e2 = document.getElementById("prgName");
+		var strUser3 = e2.selectedIndex;
+		var startDat = document.getElementById("start-date").value;
+		var endDat = document.getElementById("end-date").value;
+		if (startDat == '' || startDat == undefined || startDat == null) {
+			alert("Please select a start date first");
+		}
+		else if (endDat == '' || endDat == undefined || endDat == null) {
+			alert("Please select a end date first");
+		}
+		else if (strUser3 == 0 || strUser3 == undefined || strUser3 == null) {
+			alert("Please select a program first");
+		}
+
+		else {
+			setTimeout(function () {
+			getValues();
+			}, 1000);
+
+		}
+	}
+
+	// report logic
+	function getValues() {
+		$('#tbodyTable').empty();
+		$("#orgcol thead tr td").text('');
+		//	$('#tablerow').empty();
+
+		var startDat = "";
+		var endDat = "";
+		var orgid = "";
+		var row = '';
+		var count18_24_male_final = 0;
+		var count25_male_final = 0;
+		var count18_24_female_final = 0;
+		var count25female_final = 0;
+		var total_final = 0;
+		var programId = document.getElementById("prgName").value;
+
+		var orgUnit = dhis2.report.organisationUnit;
+		orgid = orgUnit.id;
+
+		level = orgUnit.level;
+		console.log("level = " + level);
+		orgName = orgUnit.name;
+		var orgUnitChildren = dhis2.report.organisationUnitChildren;
+		var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+		startDat = document.getElementById("start-date").value;
+		endDat = document.getElementById("end-date").value;
+
+
+		//if (orgUnitChildren.length != 0) {
+		//for (var w = 0; w < orgUnitChildren.length; w++) {
+
+		$.ajax({
+			type: "GET",
+			dataType: "json",
+			async: false,
+			contentType: "application/json",
+			url: '../api/organisationUnits/' + orgid + '.json?fields=id,name,children[id,name],parent[id,name,parent[id,name,parent[id,name,parent[id,name]]]&paging=false',
+
+			success: function (data4, status) {
+
+				for (var j = 0; j < data4.length; j++);
+				{
+					var l4, l3, l2, l1;
+					if (programId == 'y6lXVg8TdOj') {
+						var l4, l3, l2, l1;
+						if (data4.parent) {
+							l4 = data4.parent.name;
+							if (!data4.parent.parent) {
+								l3 = data4.parent.parent.name;
+
+								if (data4.parent.parent.parent) {
+									l2 = data4.parent.parent.parent.name;
+
+									if (data4.parent.parent.parent.parent) {
+										l1 = data4.parent.parent.parent.parent.name;
+									}
+									else {
+										l1 = "";
+									}
+								}
+								else {
+									l2 = "";
+									l1 = "";
+								}
+							}
+							else {
+								l3 = "";
+								l2 = "";
+								l1 = "";
+							}
+						}
+						else {
+							l4 = "";
+							l3 = "";
+							l2 = "";
+							l1 = "";
+						}
+
+
+						path = l1  ? l1 + '/' : "";
+						path += l2  ? l2 + '/' : "";
+						path += l3  ? l3 + '/' : "";
+						path += l4  ? l4 + '/' : "";
+						path += orgName;
+						document.getElementById("orgpath").innerHTML = path;
+					}
+					else {
+						if (data4.parent) {
+							l4 = data4.parent.name;
+							if (data4.parent.parent) {
+								l3 = data4.parent.parent.name;
+
+								if (data4.parent.parent.parent) {
+									l2 = data4.parent.parent.parent.name;
+								}
+								else {
+									l2 = "";
+								}
+							}
+							else {
+								l3 = "";
+								l2 = "";
+							}
+						}
+						else {
+							l4 = "";
+							l3 = "";
+							l2 = "";
+						}
+
+						//var l4 = data4.parent.name;
+						//var l3 = data4.parent.parent.name;
+						//var l2 = data4.parent.parent.parent.name;
+						
+						path = l2  ? l2 + '/' : "";
+						path += l3  ? l3 + '/' : "";
+						path += l4  ? l4 + '/' : "";
+						path += orgName;
+						document.getElementById("orgpath").innerHTML = path;
+
+					}
+				}
+
+				$.ajax(
+					{
+						type: "GET",
+						url: '../api/sqlViews/' + SqlViewIdall + '/data.json?var=programId:' + programId + '&var=orgUnitId:' + orgid + '&var=startDat:' + startDat + '&var=endDate:' + endDat + '&paging=false',
+						data: JSON,
+						async: false,
+						success: function (data1, status) {
+
+							console.log(data1);
+
+							if (data1.listGrid.rows.length == 0) {
+								$('#loader').hide();
+							}
+
+							else {
+								for (var i = 0; i < data1.listGrid.rows.length; i++) {
+
+									var userinfoid = data1.listGrid.rows[i];
+									var userInfoId = userinfoid[0];
+
+									var firstname = data1.listGrid.rows[i];
+									var fname = firstname[1];
+									console.log("fname = " + fname);
+
+									var lastname = data1.listGrid.rows[i];
+									var lastName = lastname[2];
+
+									var orgname = data1.listGrid.rows[i];
+									var orgNamee = orgname[3];
+
+									var parentname = data1.listGrid.rows[i];
+									var parentName = orgname[4];
+
+									var count = data1.listGrid.rows[i];
+									var Count = count[6];
+
+									var tabledata = '<tr>';
+									tabledata += ("<td>" + parentName + "</td><td>" + orgNamee + " </td><td>" + fname + "</td><td>" + lastName + "</td><td>" + Count + "</td></tr>")
+									document.getElementById("tbodyTable").innerHTML += tabledata;
+
+								}
+
+							}
+						}
+
+					}, 1000);
+
+			}
+		})
+
+		document.getElementById("dataTable").style.visibility = "visible"
+		$('#loader').hide();
+	}
+
+
+	// export to Excel
+	function exportExcel() {
+		var a = document.createElement('a');
+		var data_type = 'data:application/vnd.ms-excel';
+		var table_div = document.getElementById('dataTable');
+		var table_html = table_div.outerHTML.replace(/ /g, '%20');
+		a.href = data_type + ', ' + table_html;
+		a.download = 'Yes Me! Aggregate Enrollment Report.xls';
+		a.click();
+	}
+
+	// export to Excel -- new method working
+	var tableToExcel = (function () {
+		var uri = 'data:application/vnd.ms-excel;base64,'
+			, template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+			, base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+			, format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+		return function (table, name, filename) {
+			if (!table.nodeType) table = document.getElementById(table)
+			var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+			document.getElementById("dlink").href = uri + base64(format(template, ctx));
+			document.getElementById("dlink").download = filename;
+			document.getElementById("dlink").click();
+		}
+	})()
+
+</script>

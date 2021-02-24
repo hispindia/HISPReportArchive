@@ -1694,7 +1694,7 @@ from
 				case when dataelementid = 1630822 and categoryoptioncomboid =  1625670 then sag2.value end a403,
 				case when dataelementid = 1630809 and categoryoptioncomboid =  1625671 then sag2.value end a404,
 				case when dataelementid = 1630809 and categoryoptioncomboid =  1625669 then sag2.value end a405,
-				case when dataelementid = 1630809 and categoryoptioncomboid =  1625669 then sag2.value end a406,
+				case when dataelementid = 1630809 and categoryoptioncomboid =  1625668 then sag2.value end a406,
 				case when dataelementid = 1630809 and categoryoptioncomboid =  1625673 then sag2.value end a407,
 				case when dataelementid = 1630809 and categoryoptioncomboid =  1625672 then sag2.value end a408,
 				case when dataelementid = 1630809 and categoryoptioncomboid =  1625670 then sag2.value end a409,

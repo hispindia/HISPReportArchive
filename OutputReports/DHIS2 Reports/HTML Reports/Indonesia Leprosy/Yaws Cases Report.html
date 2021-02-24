@@ -1,0 +1,119 @@
+<table id="buttonTable">
+        <tr>
+            <td>   
+                <button id="btnExport" onclick="tableToExcel('tableData', 'yaws','yaws_' + province.name + '_' + period+' .xls')">
+                    Downlaod Excel </button>
+            </td>
+        </tr>
+        <a id="dlink" style="display:none;"></a>
+    </table>
+<div id="printing">
+<table id="tableData" style="border-collapse: collapse; width: 100%;  padding: 10px;" cellpadding="10" border="1">
+</table>
+</div>
+<script>
+ var IdArr = [
+ "j9LslaOD7H0.fQVJ61pGRVO",
+ "j9LslaOD7H0.aMhHMMHfpAM",
+ "j9LslaOD7H0.tDvWgRwYrGR",
+ "dKa3raLUcs7.HllvX50cXC0"
+ ];
+ var printValue = [];
+	for (let i = 0; i < IdArr.length; i++) {
+		printValue[IdArr[i]] = "";
+    }
+var value;
+var dataJsonObj;
+var province = dhis2.report.organisationUnit;
+var urls = window.location.href;
+var params = urls.split('=');
+var ou = params[3];
+var period = params[2].substr(0, 6);
+var year = period.substr(0,4);
+var month = period.substr(4,2);
+var selectedMonth;
+if(month == "01") { selectedMonth = "January"}
+if(month == "02") { selectedMonth = "February"}
+if(month == "03") { selectedMonth = "March"}
+if(month == "04") { selectedMonth = "April"}
+if(month == "05") { selectedMonth = "May"}
+if(month == "06") { selectedMonth = "June"}
+if(month == "07") { selectedMonth = "July"}
+if(month == "08") { selectedMonth = "Auguest"}
+if(month == "09") { selectedMonth = "September"}
+if(month == "10") { selectedMonth = "October"}
+if(month == "11") { selectedMonth = "November"}
+if(month == "12") { selectedMonth = "December"}
+console.log('here is url',ou, urls, period );
+apiCall();
+	function apiCall() {
+    var url = "../api/dataValueSets.json?dataSet=cvrk8KgcQjK&orgUnit="+ ou +"&period="+ period;
+    $.get(url, function (json){
+			dataJsonObj = json;
+             value = dataJsonObj.dataValues;
+            console.log('here is  value', value, dataJsonObj);
+            if(value != undefined ) {
+                value.forEach(element => {
+				dataElementId = element.dataElement;
+				categoryOptionComboId = element.categoryOptionCombo;
+				var joinId = dataElementId.concat('.',categoryOptionComboId);
+				for ( let i=0; i<=IdArr.length; i++) {
+						if(IdArr[i] === joinId) {
+						printValue[IdArr[i]]=element.value;
+					}
+                }
+             })
+         }
+    
+    document.getElementById("tableData").innerHTML ='<tr>\
+        <td colspan="2" style="background-color: #FFFFCC; border:1px solid black; text-align: center;";><b> <h2>Yaws Cases Report - Monthly</h2></b></td>\
+        </tr>\
+        <tr>\
+            <td colspan="1" style="border:1px solid black; padding: 20px 5px 20px 5px;" bgcolor="#FFFFCC"><b>Health Service Center Name:</b>\
+            <span style="border:1px solid black; background-color: white; text-align: center; padding: 10px 5px 10px 5px;"><b>'+ province.name +'</b>&nbsp; &nbsp; &nbsp; &nbsp;</span>\</td>\
+            <td colspan="1" style="border:1px solid black; padding: 20px 5px 20px 5px;" bgcolor="#FFFFCC">Period:\
+            <span style="border:1px solid black; background-color: white; text-align: center; padding: 10px 20px 10px 20px;"><b>'+ selectedMonth +' '+ year +'</b></span>\
+            </td>\
+        </tr>\
+        <tr >\
+            <td colspan="1" style="background-color: #FFFFCC; border:1px solid black; text-align: center; font-weight: bold;"; >Indicator</td>\
+            <td colspan="1" style="background-color: #FFFFCC;  border:1px solid black; text-align: center; font-weight: bold;">Value</td>\
+        </tr>\
+        <tr>\
+            <td colspan="1" style="background-color: #FFFFCC; border:1px solid black; font-weight: bold;">Number Of Health Center Sent Monthly Report</td>\
+            <td colspan="1" style="text-align: center; border:1px solid black; font-weight: bold;">'+ printValue["dKa3raLUcs7.HllvX50cXC0"] +'</td>\
+        </tr>\
+        <tr>\
+            <td colspan="1" style="background-color: #FFFFCC; border:1px solid black;  font-weight: bold;">Number Of Yaws Suspect</td>\
+            <td colspan="1" style="text-align: center; border:1px solid black; font-weight: bold;">'+ printValue["j9LslaOD7H0.tDvWgRwYrGR"] +'</td>\
+        </tr>\
+        <tr>\
+            <td colspan="1" style="background-color: #FFFFCC;  font-weight: bold;">Number Of Suspect Confirmed By RDT </td>\
+            <td colspan="1" style=" text-align: center; border:1px solid black; font-weight: bold;">'+ printValue["j9LslaOD7H0.aMhHMMHfpAM"] +'</td>\
+        </tr>\
+        <tr>\
+            <td colspan="1" style="background-color: #FFFFCC; border:1px solid black;  font-weight: bold;">Number Of RDT (+)</td>\
+            <td colspan="1" style=" text-align: center; border:1px solid black; font-weight: bold;">'+ printValue["j9LslaOD7H0.fQVJ61pGRVO"] +'</td>\
+        </tr>'
+     })
+    }
+</script>
+<script>
+        var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,'
+                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+            return function (table, name, filename) {
+                // if (!table.nodeType) 
+                table = document.getElementById(table);
+                // table1 = document.getElementById(table[1]);
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+                document.getElementById("dlink").href = uri + base64(format(template, ctx));
+                document.getElementById("dlink").download = filename;
+                document.getElementById("dlink").click();
+            }
+        })()
+</script>
+
+

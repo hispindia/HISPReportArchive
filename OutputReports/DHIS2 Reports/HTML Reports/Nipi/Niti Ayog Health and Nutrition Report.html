@@ -1,0 +1,365 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<!-- <button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button> -->
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;position:fixed;z-index:1" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Niti Ayog Health and Nutrition Report', 'Niti Ayog Health and Nutrition Report')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<br/>
+<div style="width: 50%; margin-left:25%;">
+    <table class="table table-borderless table-striped">
+
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Start Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="month" id="start-month">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>End Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="month" id="end-month">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; display:none">
+            <colgroup>
+                <col style="width:5%">
+                <col style="width:60%">
+                <col style="width:10%">
+                <col style="width:12%">
+                <col style="width:13%">                
+              </colgroup>
+            <thead>
+                <tr>
+                    <td style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="5">NITI Aayog <br /> TRANSFORMATION OF ASPIRATIONAL DISTRICTS</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;"
+                        colspan="3">State: <span id="selected-state"></span></th>
+
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;"
+                        colspan="2">Year: <span id="selected-year"> </span></th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;"
+                        colspan="3">District: <span id="selected-district"></span></th>
+
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;"
+                        colspan="2">From Month: <span id="selected-monthFirst"> </span></th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;"
+                        colspan="3">Block: <span id="selected-block"></span></th>
+
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;"
+                        colspan="2">To Month: <span id="selected-monthSecond"> </span></th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; font-weight: 600;border:1px solid black;"
+                        colspan="5">Theme: Health and Nutrition</span></th>
+                </tr>
+                <tr>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:left">
+                        S.No.</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Indicator</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Benchmarks</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Annual Targets</th>
+                    <th
+                        style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                        Monthly Status</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+    var selectedOrgunitHierarchy = dhis2.report.organisationUnitHierarchy;
+    if(selectedOrgunitHierarchy.length == 2) document.getElementById("selected-state").innerHTML = selectedOrgunit.name;
+    else if(selectedOrgunitHierarchy.length == 3) {
+        document.getElementById("selected-state").innerHTML = selectedOrgunitHierarchy["1"].name;
+        document.getElementById("selected-district").innerHTML = selectedOrgunit.name;
+    }
+    else if(selectedOrgunitHierarchy.length == 4) {
+        document.getElementById("selected-state").innerHTML = selectedOrgunitHierarchy["2"].name;
+        document.getElementById("selected-district").innerHTML = selectedOrgunitHierarchy["1"].name;
+        document.getElementById("selected-block").innerHTML = selectedOrgunit.name;
+    }
+
+    function submitData() {
+        document.getElementById("dataTable").style.display = "none";
+        document.getElementById("loader").style.display = "block";
+
+        var startMonth = document.getElementById("start-month").value;
+        var endMonth = document.getElementById("end-month").value;
+        var month = [startMonth, endMonth];
+
+        const isFinancialYear = (months) => {
+            let year = Number(months["0"].split("-")["0"]);
+            let month = Number(months["0"].split("-")["1"]) < 4 ? --year : year;
+            var periods = [`${year}-04`, `${year}-05`,`${year}-06`,`${year}-07`,`${year}-08`,`${year}-09`,`${year}-10`,`${year}-11`,`${year}-12`,`${(year+1)}-01`,`${(year+1)}-02`,`${(year+1)}-03`];
+            let sd = periods.includes(months["0"]);
+            let ed = periods.includes(months["1"]);
+            if(sd && ed) return true;
+            return false;
+        }
+        if ((new Date(startMonth) > new Date(endMonth)) || !isFinancialYear(month)) {
+            alert("Invalid dates! Please select in-between the Financial Year.");
+            document.getElementById("loader").style.display = "none";
+            return;
+        } else {
+            document.getElementById("selected-year").innerHTML = (Number(month["0"].split("-")["1"]) < 4 ?  (`${month["0"].split("-")["0"]-1} - ${Number(month["0"].split("-")["0"])}`): (`${month["0"].split("-")["0"]} - ${Number(month["0"].split("-")["0"])+1}`));
+            document.getElementById("selected-monthFirst").innerHTML = `${months[Number(month["0"].split("-")["1"]-1)]}, ${month["0"].split("-")["0"]}`;
+            document.getElementById("selected-monthSecond").innerHTML = `${months[Number(month["1"].split("-")["1"]-1)]}, ${month["1"].split("-")["0"]}`;
+            setTimeout(function () {
+                getData(month, selectedOrgunit);
+            }, 1000);
+        }
+    }
+
+
+    function getData(month, selectedOrgunit) {
+
+
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+            return arr;
+        }
+        //getting between dates
+        var swToEw = getBetweenDates(month["0"], month["1"]);
+
+        var dataElement = [
+            ["1.1", "Percentage of pregnant women receiving 4 or more antenatal care check-ups to the total no. of pregnant women registered for antenatal care", "SSNT4QALR7y", "nQ3dq4sG4YU", "Z11IFdx7PYf"],
+            ["1.2", "Percentage of ANC registered within the first trimester against Total ANC Registration", "ypc6I2jXwuf", "lRcofSnsgTz", "myVo5zh1JbD"],
+            ["1.3", "Percentage of pregnant women (PWs) registered for ANCs to total estimated pregnancies", "dQSMKcwslUf", "AZ8ckDDoLYh", "EQPSsodv2zi"],
+            ["2", "Percentage of pregnant women regularly taking Supplementary Nutrition under the ICDS programme", "S3lpnYddKer", "dPHAhWgqhyy", "XQfigIvaFF2"],
+            ["3.1", "Percentage of Pregnant women having severe anaemia treated, against PW having severe anaemia tested cases", "WIaKyspalZk", "ZG3lfJJ6kOj", "J9oguLqSbCv"],
+            ["3.2", "Percentage of pregnant women tested for Haemoglobin 4 or more times in respective ANCs to total ANC registration", "AAwtV9VJRBc", "eKWdN84kVFT", "SrmKCw5BqIH"],
+            ["4.1", "Sex Ratio at birth", "ZXP8Z8rMZiD", "YhwXrZOfxv7", "kVr0KJQIkko"],
+            ["4.2", "Percentage of institutional deliveries to total estimated deliveries", "mYOcNEtEyHa", "YXgnDzSwTaX", "vb7do4gNmCc"],
+            ["5", "Percentage of deliveries at home attended by an SBA (Skilled Birth Attendance) trained health worker to total home deliveries", "j3fz3c5MnoM", "NXmIYaPOZ7s", "b13GVpX9y7z"],
+            ["6.1", "Percentage of newborns breastfed within one hour of birth", "LIa0jsirw0Z", "LpDWesXkQE4", "u47r2qBOWTg"],
+            ["6.2", "Percentage of low birth weight babies (less than 2500g)", "UuTQXeBNuV2", "UfOw5FQ9PBq", "wD5xRM3mpxK"],
+            ["6.3", "Percentage of live babies weighed at birth", "jxbTQ0bULN7", "SZ9LUfTJjf6", "dzyqWn5K3iV"],
+            ["7", "Percentage of underweight children under 6 years", "L8lf90ikq5n", "PP1jp8zgzaY", "O68R7xdKNw6"],
+            ["8.1", "Percentage of stunted children under 6 years", "Z39Lu1njIZc", "dQpVrWpxirN", "oP0tfVT3pmx"],
+            ["8.2", "Percentage of children under 5 years with Diarrhoea treated with ORS", "hKae31dpZpX", "Q3ukAf3LGft", "pXMCBKbt41o"],
+            ["8.3", "Percentage of children under 5 years with Diarrhoea treated with Zinc", "powJW7mCPQn", "HNXkZrcfSYV", "DFhY5aobZyN"],
+            ["8.4", "Percentage of children under 5 years with Acute Respiratory Infections (ARI) taken to a health facility in the last 2 weeks", "aOwTLrUKlMR", "av3DHwOzviq", "rerdGXk8XDM"],
+            ["9.1", "Percentage of Severe Acute Malnourishment (SAM) in children under 6 years to total children under 6 years", "XT3YHCMwlJR", "iS5YyaNhRHV", "R1Qv0KaPa3z"],
+            ["9.2", "Percentage of Moderate Acute Malnutrition (MAM) in children under 6 years to total children under 6 years", "uCbt36PcRf8", "qM6pDq49eXq", "Afh2WPFIkmo"],
+            ["10.1", "Percentage of Breastfeeding children receiving adequate diet (6-23 months)", "vhZN7LUcwAj", "dD9on1GlK1Y", "jfNWI1HWyof"],
+            ["10.2", "Non-breastfeeding children receiving adequate diet (6-23 months)", "ywzymDO4KoA", "OdONKyskb9U", "u5Ve07hreAB"],
+            ["11", "Percentage of children fully immunized (9-11 months) (BCG+ DPT3 + OPV3 + Measles1)", "Ewj4OISUbCi", "rQ79XGdgq79", "f9Pbf9xvR8a"],
+            ["12.1", "Tuberculosis (TB) case notification rate (Public and Private Institutions) as against estimated cases", "H7IO38NPMoy", "Uv2QbeApvOG", "Xoz643W7kjK"],
+            ["12.2", "TB treatment success rate among notified TB patients (public and private)", "Np6igd1pmby", "WFkxdbiL8vc", "h4bT9K13OIt"],
+            ["13.1", "Proportion of sub-centres/PHCs converted into Health & Wellness Centres (HWCs)", "LgvxdTUYaQZ", "V5Foh1uU82C", "dXRqYN27uqw"],
+            ["13.2", "Percentage of Primary Health Centers compliant to Indian Public Health Standards", "lvXa5DYBhyM", "FmOyoAqDUsW", "LHacf7ev325"],
+            ["13.3", "Proportion of functional FRUs (First Referral Units) against the norm of 1 per 500,000 population (1 per 300,000 in hilly areas)", "jeByeYWPIf3", "pvBbG8c0xuZ", "n2X7e61KIeC"],
+            ["13.4", "Proportion of specialist services available in district hospitals against IPHS norms", "reIsaKSpZRO", "XVK0Y3PnGsU", "RKX6oGOteWL"],
+            ["13.5", "Percentage of Anganwadis/UPHCs reported to have conducted at least one Village Health Sanitation & Nutrition day / Urban Health Sanitation & Nutrition day outreach in the last one month", "Aek7FnAsqu0", "ol3FzMrc8US", "yITEV8o2nBQ"],
+            ["13.6", "Proportion of Anganwadis with own buildings", "mYdhomx96xA", "lUC1zI5twEy", "oduZkGGEaC2"],
+            ["13.7", "Percentage of First Referral Units (FRU) with labour rooms and obstetrics OT NQAS certified (meet LaQShya quidelines)", "evZpBQg2Myg", "z3k2rfs2Uj7", "dAHsA0mNqFX"],
+        ];
+        var dEMonthlyStatus = dataElement.map(value => value["4"]);
+
+        var printTotal = [];
+        var columnLength = 3
+        for (let i = 0; i < dataElement.length; i++) {
+            printTotal[i] = [];
+            for (let j = 0; j < columnLength; j++) {
+                printTotal[i][j] = 0;
+            }
+        }
+        var dataValuePeriod =  (month["0"].split("-")["1"] >= 4) ? (month["0"].split("-")["0"]) : (Number(month["0"].split("-")["0"])-1);
+        $.when(
+            $.get(`../../dataValueSets.json?dataSet=ruF6WDXDWAM&orgUnit=${selectedOrgunit.id}&period=${dataValuePeriod}04&paging=false`),
+            $.get(`../../analytics.json?dimension=dx:${dEMonthlyStatus.join(";")}&dimension=ou:${selectedOrgunit.id}&filter=pe:${swToEw.join(";")}&displayProperty=NAME&outputIdScheme=UID&paging=false`)
+        ).done(function (response1, response2) {
+            let dataValues = {};
+            let monthlyStatus = {};
+            var tableRow = ""
+
+            if(response1["0"].dataValues) response1["0"].dataValues.forEach(dataValue => dataValues[dataValue.dataElement] = dataValue.value);
+            if(response2["0"].rows.length) response2["0"].rows.forEach(row => dataValues[row["0"]] = row["2"]);
+  
+
+            dataElement.forEach(de => {
+                tableRow += `<tr><td style="border:1px solid black; text-align:left;font-weight:600;" >${de["0"]}</td>
+                        <td style="border:1px solid black; text-align:left;font-weight:600;" >${de["1"]}</td>
+                        <td style="border:1px solid black;font-weight:400;" >${(dataValues[de["2"]] ? Number(dataValues[de["2"]]) : "")}</td>
+                        <td style="border:1px solid black;font-weight:400;" >${(dataValues[de["3"]] ? Number(dataValues[de["3"]]) : "")}</td>
+                        <td style="border:1px solid black;font-weight:400;" >${(dataValues[de["4"]] ? Number(dataValues[de["4"]]) : "")}</td>`;
+            })
+
+            document.getElementById("tableBody").innerHTML = tableRow;
+            document.getElementById("dataTable").style.display = "block";
+            document.getElementById("loader").style.display = "none";
+        })
+
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename + "-" + (selectedOrgunit.name);
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    // function printContent(el) {
+    //     var restorepage = document.body.innerHTML;
+    //     var printcontent = document.getElementById(el).innerHTML;
+    //     document.body.innerHTML = printcontent;
+    //     window.print();
+    //     document.body.innerHTML = restorepage;
+    // }
+
+</script>

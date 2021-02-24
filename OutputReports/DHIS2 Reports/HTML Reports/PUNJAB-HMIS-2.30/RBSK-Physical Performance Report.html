@@ -1,0 +1,316 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+crossorigin="anonymous">
+
+
+<style>
+        table {
+            border-collapse: collapse;
+        }
+
+        thead>tr>td {
+        font-weight: bold;
+        }
+        tbody>tr>td {
+        font-weight: bold;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button {  
+        opacity: 1;
+        }
+
+        /* Center the loader  */
+        #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+        }
+        
+        @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+        }
+        
+        @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+        }
+        /* Add animation to "page content" */
+        
+        .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+        }
+        
+        @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+        }
+        
+        @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+        }
+        
+        #printing {
+        
+        text-align: center;
+        }
+    </style>
+        
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="printContent('printing')"><span
+    class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp; Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('dataTable', 'Physical RBSK Report', 'Physical RBSK Report.xls')"><span
+    class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+    <div id="loader"></div>
+    <div id="printing" class="animate-bottom">
+        <div id='state'>
+            <table>
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        var selectedDate = dhis2.report.periods[0];
+        var selectedOrgUnit = dhis2.report.organisationUnit;     
+
+        //to show month and year
+        var getMonthYear = function(getDate){
+            var year = getDate.substring(4,6);
+            var month = getDate.substring(0,4);
+            var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+           
+            return  months[year-1] +" "+ month ;
+        }
+
+        var colspanValueHeading = 59;  //for adjusting header's colspan 
+        var headingValue1 = ["Identified cases", "Screened cases", "Confirmed cases", "Referred cases", "Services availed-Medical", "Services availed-Surgical", "Services availed-Early intervention"];
+        var headingValue2 = ["0-6 weeks", "6wks-3yrs", "3-6 years", "6-18 years"];
+        var headingValue3 = ["Male", "Female"];
+        var printHeading = '<tr style=" font-weight:400; text-align:center;"><td colspan="'+colspanValueHeading+'" style="border:1px solid black;background:#ADD8E6;"> PHYSICAL PROGRESS REPORT OF RBSK - '+getMonthYear(selectedDate)+'</td></tr>\
+                            <tr style=" font-weight:400; text-align:center;"><td colspan="'+colspanValueHeading+'" style="border:1px solid black;background:#ADD8E6;">Screened children Referred, confirmed & Services availed at CHC, SDH & DH and tertiary level of 4D under RBSK  </td></tr>\
+                           <tr style=" font-weight:800; text-align:center;">\
+                            <td style="border:1px solid black;background:#ADD8E6;">Sno</td>\
+                            <td style="border:1px solid black;background:#ADD8E6;">Faciity name</td>\
+                            <td style="border:1px solid black;background:#ADD8E6;">Number of children with selected health conditions</td>'
+                            let j = -1;
+                            for(let i = 0; i < colspanValueHeading-3; i++) {
+                                
+                                if(i%8 == 0) {
+                                    j==8 ? j=0: j++;
+                                    printHeading += '<td colspan="8"  style="border:1px solid black;background:#ADD8E6;">'+ headingValue1[j]+'</td>';
+                                }
+                            }
+                            j = -1;
+                            printHeading += '</tr>\
+                                            <tr style=" font-weight:800; text-align:center;">\
+                                            <td rowspan = "3"  style="border:1px solid black;background:#ADD8E6;"></td>\
+                                            <td rowspan = "3"  style="border:1px solid black;background:#ADD8E6;"></td>\
+                                            <td rowspan = "3"  style="border:1px solid black;background:#ADD8E6;"></td>'
+                            for(let i = 0; i < colspanValueHeading-3; i++) {
+                               if(i%2 == 0) {
+                                    j==3 ? j=0 : j++;
+                                    printHeading += '<td colspan="2" style="border:1px solid black;background:#ADD8E6;">'+ headingValue2[j]+'</td>';                                   
+                               }
+                                   
+                                
+                            }
+                            j = 0;
+                            printHeading += '</tr>\
+                                            <tr style=" font-weight:800; text-align:center;">'
+                            for(let i = 0; i < colspanValueHeading-3; i++) { 
+                                
+                                i%2 == 0 ? j=0 : j=1;                            
+                                printHeading += '<td style="border:1px solid black;background:#ADD8E6;">'+ headingValue3[j]+'</td>';
+                            }
+                            document.getElementById("tableHead").innerHTML = printHeading;
+
+                            var TotalDefectsAtBirth = "";
+                            var NeuralTubeDefect = "TthjTLkmBcc;Y8jHFq0TBAB;Pjj144MBdMl;qdPzVQsexsJ;b4qKZgSBR1L;fQjFakY0j3P;BXpFtBDjxZr;pyHbwXCKncJ;YisJkgfKUo9;RkpO31kHQJx;Az6D59AZxpB;fQjFakY0j3P;ENkHOdhp19Z;os6R1VwQqXF;vwTvECkvQbp;ZgRr5qBNv8f;gkiiChXpAMu;lpBtK3YjxLD";
+                            var DownSyndrome = "Fn4Fj5WVQgM;aecgdOxMKJs;UfMQUKvP4yv;OJtfB8ENcIZ;kBNdjMJVcnq;t7xU0YWb1Pm;gIuGiCaGMAm;VRsAt7O0gKo;B9ElnkFmYtN;Uypuppz6uhl;nrD1scwbkA1;ML1iEnGyep1;Tqk3ZPbspBq;BPwc5DJxbdq;vyvhNA4HZMR;TFq4kLMXhYe;KUdh46TOWnu;zv3IAyaULWy";
+                            var CleftLipPalate = "";
+                            var ClubFoot = "";
+                            var DevelopmentalDysplasiaOfTheHip = "";
+                            var CongenitalCataract = "";
+                            var CongenitalDeafness = "";
+                            var CongenitalHeartDiseases = "";
+                            var RetinopathyOfPrematurity = "";
+                            var TotalDeficiences = "";
+                            var SevereAnaemia = "sdvFfPDTrbb;ZMBRRWYQtuf;SlqXNjiO4Ao;qgWPUmT4Dc7;HRqt2cHxX9q;aAKy6QQVnW8;tTkNOESsoqm;k4ZNDilDdOB;MqjPbzJlmjO;fZws3N8QJev;MqjPbzJlmjO;Ze9ynRv742r;F2QRQ7DX1ag;W6P644f5tbK;IC3Sl6QeMXf;Yhy8rKotcsx;TGwBLqKDZks;X2UXNa77gac";
+                            var VitaminADeficiency = "";
+                            var VitaminDDeficiency = "";
+                            var ASAM = "";
+                            var BSevereThinning = "";
+                            var CObesity = "";
+                            var Goitre  = "";
+                            var TotalChildhoodDiseases = "";
+                            var SkinConditions = "VIcI3A9ClaD;d6Q03ptxu6y;KWqC2EAh4Vi;d36W0P3Zj3O;q1MPp9B6VZu;KCP8C9i8sDm;VL77duYEbcR;ZAJ3JA3ZmV3;FlKwKEGKrhn;MWgp1iloyLR;z4Vd042JA8m;x1BEV13ywVc;nmmAdsztcq0;kayuHW3ZLh5;jiUWFKxOPDE;KXvqVXEcdAR;zpYJlMGp3wu;sMXV9t96DWE";
+                            var OtitisMedia = "";
+                            var RheumaticHeartDisease = "";
+                            var ReactiveAirwayDisease = "";
+                            var DentalConditions  = "";
+                            var ConvulsiveDisorders  = "";
+                            var TotalDevelopmentalDelaysAndDisabilities = "";
+                            var VisionImpairment = "";
+                            var HearingImpairment = "Wep8UUEfr5k;aariA4y8OQD;enLWFWWEA21;DUtu9yeL6z6;ubMwlhv7THl;xhVkOXwJcEB;sSw4rbZ2V5j;bpK56C6a1k6;wZEm7rWHEhQ;Q6qbXFqJ55a;aQv15A7jcbO;UFR1nxJgWkG;Q784GVujbUf;sdKD4IwbuTl;EFXRF1PfHgL;u1ZfSAThJwq;syF4cbZGM7X;t9vcL5fpY7s";
+                            var NeuroMotorImpairment = "";
+                            var MotorDelay = "";
+                            var CognitiveDelay = "";
+                            var LanguageDelay = "";
+                            var BehaviourDisorder  = "";
+                            var LearningDisorder = "";
+                            var AttentionDeficitHyperactivityDisorder = "";
+                            var Thalessemia = ";t0MCiUsxbwj;F02MiZZkyx5;QNJjiD8PXrf;PlGF17Y3v1W;bSeg3uOpPGb;a9OGuivIyPN;h8NnzAMChq4;U9dRDUCiHPL;U9dRDUCiHPL;BV8UmaEMZ0p;BV8UmaEMZ0p;OB42FmjL51S;CPOpAzjXVQX;UKk0sXhmhqH;Oo7rodf6i1N;GVrGQqnCdnQ;ojgH82s0kqK";
+
+                            
+                            var dimensionValues = [];
+                                
+                                dimensionValues["0"] = TotalDefectsAtBirth.split(";"),
+                                dimensionValues["1"] = NeuralTubeDefect.split(";"),
+                                dimensionValues["2"] = DownSyndrome.split(";"),
+                                dimensionValues["3"] = CleftLipPalate.split(";"),
+                                dimensionValues["4"] = ClubFoot.split(";"),
+                                dimensionValues["5"] = DevelopmentalDysplasiaOfTheHip.split(";")
+                                dimensionValues["6"] = CongenitalCataract.split(";")
+                                dimensionValues["7"] = CongenitalDeafness.split(";")
+                                dimensionValues["8"] = CongenitalHeartDiseases.split(";")
+                                dimensionValues["9"] = RetinopathyOfPrematurity.split(";")
+                                dimensionValues["10"] = TotalDeficiences.split(";")
+                                dimensionValues["11"] = SevereAnaemia.split(";")
+                                dimensionValues["12"] = VitaminADeficiency.split(";")
+                                dimensionValues["13"] = VitaminDDeficiency.split(";")
+                                dimensionValues["14"] = ASAM.split(";")
+                                dimensionValues["15"] = BSevereThinning.split(";")
+                                dimensionValues["16"] = CObesity.split(";")
+                                dimensionValues["17"] = Goitre.split(";")
+                                dimensionValues["18"] = TotalChildhoodDiseases.split(";")
+                                dimensionValues["19"] = SkinConditions.split(";")
+                                dimensionValues["20"] = OtitisMedia.split(";")
+                                dimensionValues["21"] = RheumaticHeartDisease.split(";")
+                                dimensionValues["22"] = ReactiveAirwayDisease.split(";")
+                                dimensionValues["23"] = DentalConditions.split(";")
+                                dimensionValues["24"] = ConvulsiveDisorders.split(";")
+                                dimensionValues["25"] = TotalDevelopmentalDelaysAndDisabilities.split(";")
+                                dimensionValues["26"] = VisionImpairment.split(";")
+                                dimensionValues["27"] = HearingImpairment.split(";")
+                                dimensionValues["28"] = NeuroMotorImpairment.split(";")
+                                dimensionValues["29"] = MotorDelay.split(";")
+                                dimensionValues["30"] = CognitiveDelay.split(";")
+                                dimensionValues["31"] = LanguageDelay.split(";")
+                                dimensionValues["32"] = BehaviourDisorder.split(";")
+                                dimensionValues["33"] = LearningDisorder.split(";")
+                                dimensionValues["34"] = AttentionDeficitHyperactivityDisorder.split(";")
+                                dimensionValues["35"] = Thalessemia.split(";")
+
+                            var dimension = dimensionValues.map(child=> child.join(";")).join(";");
+
+                            var indicatorNames = [
+                                                    "Total defects at birth", "Neural tube defect", "Down’s Syndrome", "Cleft Lip & Palate",
+                                                    "Club foot", "Developmental dysplasia of the hip", "Congenital cataract", "Congenital deafness", 
+                                                    "Congenital heart diseases", "Retinopathy of Prematurity", "Total deficiences", "Severe Anaemia",
+                                                    "Vitamin A deficiency (Bitot spot)", "Vitamin D Deficiency, (Rickets)", "(A) SAM", "(B) Severe Thinning", 
+                                                    "(C) Obesity", "Goitre ", "Total childhood diseases", "Skin conditions", "Otitis Media", "Rheumatic heart disease",
+                                                    "Reactive airway disease", "Dental conditions ", "Convulsive disorders", "Total developmental delays and disabilities",
+                                                    "Vision impairment", "Hearing impairment", "Neuro motor impairment", "Motor delay ", "Cognitive delay", 
+                                                    "Language  delay", "Behaviour disorder (Autism)", "Learning disorder", "Attention deficit hyperactivity disorder ", 
+                                                    "Thalessemia"
+                                                ];
+                            //call to get the data from the api
+                             $.ajax({
+                                        type: "GET",
+                                        async: false,
+                                        url: "../api/analytics?dimension=dx:" + dimension + "&filter=pe:" + selectedDate + "&filter=ou:" + selectedOrgUnit.id,
+                                        data: JSON,
+                                        success: function (data, status) {
+                                            finalValue(data);
+                                        }
+                                    });
+
+                            function finalValue(data) {
+                                var printTableBody = '';
+                                var rows = data.rows;
+                                var value = [], printValue = [], globalTotal = [];
+                                
+                                for(var i = 0; i < colspanValueHeading-3; i++) {
+                                    printValue["value"+i] = "";
+                                    globalTotal["value"+i] = 0;
+                                }
+
+                                rows.forEach(function(child) {
+                                    value[child[0]] = child[1]
+                                })
+
+
+                                dimensionValues.forEach(function(dimension,index0) {
+                                    if(dimension.length>1) {
+                                        dimension.forEach(function(child,index1) {
+                                             
+                                            printValue["value" + index1] = Number(value[child]);
+                                            if(child == "") printValue["value" + index1] = 0;
+                                        });
+                                    }
+                                        printTableBody += '<tr style="font-weight:800; text-align:center;">\
+                                                            <td style="border:1px solid black;background:#ADD8E6;">'+ Number(index0+1) +'</td>'
+                                        printTableBody +=   Number(index0+1) == 1 ? '<td rowspan="36" style="border:1px solid black;background:#ADD8E6;">'+selectedOrgUnit.name+'</td>':''
+                                        printTableBody +=   '<td style="border:1px solid black;background:#ADD8E6;">'+indicatorNames[index0]+'</td>'
+
+                                    for(var i = 0; i < colspanValueHeading-3; i++) {
+                                        printTableBody += '<td style="border:1px solid black;background:#ADD8E6;">'+ printValue["value" + i] +'</td>';
+                                        globalTotal["value" + i] += Number(printValue["value" + i] );
+                                        printValue["value" + i] = "";
+                                    }
+                                    printTableBody += '</tr>'
+                                });
+                                printTableBody += '<tr><td colspan="3" style="border:1px solid black;background:#ADD8E6;">Global Total</td>';
+                                for(var i = 0; i < colspanValueHeading-3; i++) {
+                                    printTableBody += '<td style="border:1px solid black;background:#ADD8E6;">'+ globalTotal["value" + i] +'</td>';
+                                        
+                                }
+                                printTableBody += '</tr>';
+                                document.getElementById('tableBody').innerHTML = printTableBody;
+                                document.getElementById("loader").style.display = "none";
+                                document.getElementById("printing").style.display = "block"; 
+                            }
+    </script>
+
+
