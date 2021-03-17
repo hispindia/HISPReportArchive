@@ -1,0 +1,1408 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;position:fixed;z-index:1"
+    id="btnExport" onclick="tablesToExcel(
+        [ ['HIVCasesAgeSex', 'HIVCasesModeTrans', 'CD4Counts'], ['HIVDeathCasesAgeSex'], 'HIVTesting',
+        'HIVSpecialSurverys', ['HIVAS', 'HIVASPopulationSize'], ['HIVSTISurvelliance', 'HIVSTDSyndrome',
+        'HIVSTDSyphilis'], ['HIVResultHB', 'HIVResultHC']], 
+        [
+        '1. HIV Cases', '2. Death Cases', '3. HIV Testing', '4.HIV Special Surveys', '5. Advanced Surveillance',
+        '6. STI Surveillance', '7. Hepatitis Case Reporting'
+        ],
+         'HIV Annual Report.xls', 'Excel')"><span class="glyphicon glyphicon-download-alt"
+        style="font-size: 15px;"></span>Download As Excel</button>
+
+<br />
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state' style="display: none;">
+        <!-- HIV cases by age and sex -->
+        <table border="1" id="HIVCasesAgeSex" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; visibility: visible;">
+            <thead>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; border:1px solid black; font-weight: 600;"
+                        colspan="6">Newly reported HIV cases during this year</th>
+                    <th style="text-align: center; border:1px solid black; font-weight: 600;" colspan="3"><span
+                            id="hivCasesNew"></span></th>
+                </tr>
+                <tr>
+                    <td colspan="9"></td>
+                </tr>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="9">HIV cases by age and sex</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black; font-weight: 600;"
+                        rowspan="2">Age (Year)</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="4">During this year
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="4">Cumulative total
+                    </th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Male
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Female</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Unknown</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Total
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Male
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Female</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Unknown</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Total
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVCasesAgeSex"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="9" style="text-align: left;">
+                        * Countries that do not have disaggregated data for 0-4 and 5-14 years, pls. report on age group
+                        0-14
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <table border="1" id="HIVCasesModeTrans" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="7">HIV cases by probable mode of transmission</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="2">Probable mode of
+                        transmission</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="3">During this year
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="3">Cumulative total
+                    </th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Male
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Female</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Total
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Male
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Female</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Total
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVCasesModeTrans"></tbody>
+        </table>
+        <table border="1" id="CD4Counts" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="4">CD4 Counts</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Number of HIV cases with CD4
+                        Cell Counts</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Completeness of CD4 Count</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Number of patients with &gt;500
+                        CD4 cells/mm3 blood</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Proportion (%) of patients with
+                        CD4 counts &gt;500 cells/mm3 blood, out of all patients with reported CD4 counts</th>
+                </tr>
+            </thead>
+            <tbody id="tb-CD4Counts"></tbody>
+        </table>
+
+        <!-- AIDS death cases by age and sex -->
+        <table border="1" id="HIVDeathCasesAgeSex" class="table  table-hover text-center" cellspacing="6"
+            cellpadding="4" style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; border:1px solid black; font-weight: 600;"
+                        colspan="6">AIDS death cases during this year</th>
+                    <th style="text-align: center; border:1px solid black; font-weight: 600;" colspan="3"><span
+                            id="aidsDeathCases"></span></th>
+                </tr>
+                <tr>
+                    <td colspan="9"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="9">AIDS death cases by age and sex</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="2">Age (Year)</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="4">During this year
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="4">Cumulative total
+                    </th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Male
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Female</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Unknown</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Total
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Male
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Female</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Unknown</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Total
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVDeathCasesAgeSex"></tbody>
+        </table>
+        <table border="1" id="HIVTesting" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+                <tr>
+                    <td style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="4">HIV Testing</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">GROUP
+                        TESTED</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        NUMBER TESTED</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        NUMBER POSITIVE</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        PERCENTAGE</th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVTesting"></tbody>
+        </table>
+
+        <!-- Special Surveys -->
+        <table border="1" id="HIVSpecialSurverys" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="7">Special Surveys</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Survey population</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">
+                        Sample size</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Number positive</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Prevalence (%) </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Survey sampling methodology*
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Location</th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVSpecialSurverys"></tbody>
+        </table>
+        <!-- Advance Surveillance -->
+        <table border="1" id="HIVAS" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: left; border:1px solid black; font-weight: 600;"
+                        colspan="1">Year of last Mode of Transmission Analysis</th>
+                    <th style="text-align: center; border:1px solid black; font-weight: 600;" colspan="2"><span
+                            id="asTa"></span></th>
+                </tr>
+                <tr>
+                    <th colspan="3"></th>
+                </tr>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="3">Advanced surveillance</th>
+                </tr>
+                <tr>
+                    <td colspan="3"></td>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Adult
+                        risk group or risk
+                        behaviour </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">% new
+                        infections</th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVAS"></tbody>
+        </table>
+        <table border="1" id="HIVASPopulationSize" class="table  table-hover text-center" cellspacing="6"
+            cellpadding="4" style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Population</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">N
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        National or subnational</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">
+                        Methods used in size estimates
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">Year
+                        of PSE</th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVASPopulationSize"></tbody>
+        </table>
+
+        <table border="1" id="HIVSTISurvelliance" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                        colspan="8">STI Surveillance</th>
+                </tr>
+                <tr>
+                    <td colspan="8"></td>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="3">Etiological
+                        laboratory diagnosis</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="7">Number of STI cases
+                        (etiological laboratory diagnosis) by sex and by age group</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">Male</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">Female</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">Unknown Sex</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="2">Total</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">0 -24
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">25+
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">0 -24
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">25+
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">0 -24
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">25+
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVSTISurvelliance"></tbody>
+        </table>
+        <table border="1" id="HIVSTDSyndrome" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="8">STD's Syndromic</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="2"></th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="3">Male</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="3">Female</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="2">Total</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">0 -
+                        14</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">15-24
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">25+
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">0 -
+                        14</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">15-24
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">25+
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVSTDSyndrome"></tbody>
+        </table>
+        <table border="1" id="HIVSTDSyphilis" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="5">Results of serological tests for syphilis</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="2">Person Tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">During this period
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">Cumulative this year
+                    </th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        +ve</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        +ve</th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVSTDSyphilis"></tbody>
+        </table>
+        <table border="1" id="HIVResultHB" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;">
+            <thead>
+                <tr>
+                    <td style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center; "
+                        colspan="5">Hepatitis Case</th>
+                </tr>
+                <tr>
+                    <td colspan="5"></td>
+                </tr>
+
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="5">Results of
+                        serological tests for Hepatitis B</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="2">Person Tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">During this period
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">Cumulative this year
+                    </th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        +ve</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        +ve</th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVResultHB"></tbody>
+        </table>
+        <table border="1" id="HIVResultHC" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center; border:1px solid black;  visibility: hideden;">
+            <thead>
+
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="5">Results of
+                        serological tests for Hepatitis C</th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        rowspan="2">Person Tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">During this period
+                    </th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;"
+                        colspan="2">Cumulative this year
+                    </th>
+                </tr>
+                <tr>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        +ve</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        tested</th>
+                    <th style="background:#f2f2f2; text-align: center; border:1px solid black;  font-weight: 600;">No.
+                        +ve</th>
+                </tr>
+            </thead>
+            <tbody id="tb-HIVResultHC"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgunit = dhis2.report.organisationUnit;
+    var orgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    var organisationUnitChildren = dhis2.report.organisationUnitChildren;
+    var selectedPeriod = dhis2.report.periods[0];
+    var orgUnits = [];
+    if (orgUnitLevel == 1) orgUnits = organisationUnitChildren.map(ou => ou.id);
+    else orgUnits = [selectedOrgunit.id];
+
+    document.getElementById("loader").style.display = "block";
+    getData(selectedOrgunit);
+
+    function getData(months) {
+
+        var dataElement = [
+            [
+                ['0-4', '05- 14', '(0-14)*', '15-24', '25+', 'Unknown'],
+                ['Heterosexual', 'Homosexual/bisexual', 'Blood & Blood product', 'Injecting drug use', 'Mother to child', 'Unknown'],
+            ],
+            [
+                ['0-14', '15+', 'Unknown', 'Total'],
+            ],
+            [
+                [
+                    'Sex workers', 'Men who have sex with men', 'Transgender people', 'Injecting drug users',
+                    'Prisoners', 'STI patients', 'TB patients', 'Pregnant women', 'Clients of voluntary counseling and testing services',
+                    'Military men', 'Blood donors', 'In-migrants', 'Out-migrants', 'Premarital couples', 'Truck Drivers', 'Sexual Contact',
+                    'Symptomatic Patients', 'other (specify)', 'other (specify)', 'other (specify)'
+                ]
+            ],
+            [
+                [
+                    'STI patients', 'TB patients', 'ANC attendees', 'Sex workers', 'Men who have sex with men',
+                    'Injecting drug users', 'Prisoners', 'other (specify)', 'other (specify)', 'other (specify)',
+                ]
+            ],
+            [
+                [
+                    'Injecting Drug Use (IDU)', 'Partners of IDU', 'Sex workers', 'Clients of sex workers',
+                    'Partners of Clients of sex workers', 'Men who have sex with men (MSM)', 'Female partners of MSM',
+                    'Casual heterosexual sex (CHS)', 'Partners of people having CHS', 'Low-risk heterosexual sex',
+                    'No risk behaviour', 'Medical injections', 'Blood transfusions', 'Other (specify)', 'Other (specify)', 'Other (specify)'
+
+                ],
+                [
+                    'Sex workers', 'Injecting drug users', 'Men who have sex with men', 'Prisoners',
+                    'Other (please specify)', 'Other (please specify)'
+                ],
+            ],
+            [
+                ['Syphilis', 'Chancroid', 'HSV-2', 'Gonorrhea', 'Chlamyida', 'Trichomoniasis', 'All other STDs'],
+                ['Urethral Discharge', 'Genital ulcer'],
+                ['Blood donors', 'Pregnant women', 'STD patients', 'Others']
+            ],
+            [
+                ['Blood donors', 'Pregnant women', 'STD patients', 'Injecting drug users', 'Others'],
+                ['Blood donors', 'Pregnant women', 'STD patients', 'Injecting drug users', 'Others']
+            ]
+        ];
+
+        var deHIVCasesModeTrans = [
+            "hV8RqkAcUx8", "ctG9l4EtKlY",
+            "TKhlwme6n5V", "Kcd9wMVgyDV",
+            "UtlrTOdw88a", "MKjwoyTvmEw",
+            "Ye7yhILC3qw", "WNtWTRL6rd2",
+            "whpk6tEDLmn", "LARAdIAdPNc",
+            "FsIOlHeZCBJ", "ng4iSsBJCqW"
+        ]
+
+        var deHIVTesting = [
+            "TetgxFCqiwz", "MlZRcTOHTJ1", "PlKEih4fsKP",
+            "iyaJqAFtZRF", "DVV4CQ2Ii0i", "x4vALAd4Z3K",
+            "mMyNWdVUQGO", "EpXYk8XPqKs", "tB7Wfywc5sj",
+            "XjebXGTBPUH", "kix9SF8ncVf", "haWChoDzQet",
+            "Choo3z0D5gV", "reoNAZjQSkE", "NNo4M6LXhYL",
+            "tdAYUTCNi5a", "OP69AxjHSDn", "hE5fFrZ0QdY",
+            "rM7tRSDzw0p", "C1qAQv2eDJN", "vMbXlPhUhfy",
+            "l7EbkdUr7WF", "ipoG4lG2ofw", "UvOrs6v5isB",
+            "QESbgQfJsSw", "caWpfoBuqV6", "rtvDcxjiquv",
+            "nWZTrQYPefR", "owD9E9jjK1h", "uH1fQUswexy",
+            "jOWYkaYffGR", "jsnnohztOaW", "akIfe4fZNv9",
+            "cfQYu7C888a", "Pd256TwZyv6", "UC93AhAvBh1",
+            "d1JaCOmiGYr", "BHQyNo4rOMm", "W0VjWsrM3Ti",
+            "Fr8NMgaJZbP", "JpU45nQbOQo", "ct96nCfSpLC",
+            "teZGs9FrZx1", "u23TBVm0eMq", "wxiC8EAVcXJ",
+            "y3lNK2TXnDg", "t818vBxtcKq", "MfrGA2WmOSQ",
+            "kzUQKHfVSZz", "BIEOtRbzvDg", "oU34ntb8rYR",
+            "vSWIxNT09yX", "xX0hC7wPwRw", "noId",
+            "ZDqIc4npRTa", "gSig1Nl09xJ", "noId",
+            "cTdDoxSlMWa", "Ivob8fYB1BB", "noId"
+
+        ]
+
+        var deHIVSpecialSurverys = [
+            "VNX2gHcBYs1", "oRJoOA6RGpQ", "Rc3Nd9e87eQ", "ZYV4n3WXttX", "iVsIAVjTeA1",
+            "DpyiUMSZrLT", "ledeBRqLYYH", "EZRshcEsIBu", "Pl3oAQOzi52", "LcuLB6AwaWR",
+            "IHVcGOdNdyv", "EKg7m46KdJ2", "Tp7YaMosFZL", "PNQz8qUNSy8", "DsHxvmXUmzE",
+            "o4Numj0nDYL", "t7b5evclwIw", "HapDXlRhLaH", "bi1F8VxpCn9", "C4vu98RXpEi",
+            "UVSFkzufeX1", "sD8EJOnPUON", "VvDBZRWA7lK", "lFi20uvi8lE", "vewxKgRh2wX",
+            "LN2Yoi7qgx4", "sxu2ZRuDsgk", "IoHB06jTVjr", "KV5N0NxwDav", "ZYaKl8U7EQD",
+            "XumKAzLc28w", "GUpl0f05hxC", "ZGFmFTrCRUw", "Y2bqq4Zxjer", "y3NpMH9HRiv",
+
+            "Bu8Fqmmnxmh", "AJb8OtWCpMc", "lSNKtVYdKyp", "cxZQw85SVWH", "QcZvh12dqhP",
+            "GnPptLCXHVV", "KvtvV4JlLtE", "Zad6idhxPY6", "HpU0lSrMMQ0", "tGCRvQknu4k",
+            "X1boGH7pKvj", "ROXuU7AUajA", "phr8DIRwSOX", "aLRt8iQCbQB", "cLOndP4t9Mx",
+            "WNvJp3qsQt9", "zw4r2RKbVR5", "MWwglacDrG0"
+        ]
+
+        var deHIVAS = [
+            "RJ4FHh6Xrer", "wItWxyMBjgl", "WddSiiNfDKw", "xuF0221yCWP", "vlf3sCS0R1J", "yFZKPIUtz83",
+            "YsQjhazoH1o", "B2HoPzW2m0W", "H2ayV8iYdxq", "K4Qpltc5J9c", "Yf6r7wIuwGu", "CUoqcxMdT4A",
+            "OKHSPjheFTj", "muQHwRCE1OJ", "WBLc8vo8iIV", "gwjHfSTUMa6", "jVi2PfKkBYA", "aBDIXSUldtB",
+            "YWmJdI0grbI"
+        ]
+
+        var deHIVASPopulationSize = [
+            "q5hmsisVhzZ", "LzuaQgZsCuq", "f8yi27Zfqwg", "q3WdLSWjMZU",
+            "AzmmuS0SAM4", "IvjSy07Qs0G", "uYErZJXxLGU", "oppEGrbf2F7",
+            "U4OXwXPKilw", "htZnNA582B1", "hDWZhiRAQ6e", "bczCEiCRI8O",
+            "l4R3t56MA1c", "a4pAKcEis0p", "rYAeVMVDLRj", "NdJRPdKgGDz",
+            "eINHArPitF1", "FMhuJc86DOW", "JGu6FR6plpJ", "uTTztiwPklQ",
+            "xq7lyRaPckE", "MbysBsEEMG2", "EKflA8Yx11X", "LXMqD0f2IGW"
+        ]
+
+        var deHIVSTISurvelliance = [
+            "J363luvKEVP", "qJAyhusm8VS", "YrOosiXtrJd", "sPleLC1Fjp0",
+            "oDsnvk6ElyW", "kdfWPmVdy0S", "h7AelZg84tg"
+        ]
+
+        var deHIVSTDSyndrome = ["eyHhWF9tSPb", "E7ZCWoPHpHv"]
+
+        var deHIVSTDSyphilis = [
+            "uNgyLMebT8Q.Unyz1kBrzFB", "dXWdIKUmRjH.Unyz1kBrzFB", "iVgPLA7AZ1l.Unyz1kBrzFB",
+            "omecgaC2BUW.Unyz1kBrzFB", "QAdT4zWqwaE.Unyz1kBrzFB", "oRt4b5Rau0E.Unyz1kBrzFB",
+            "AihSs7UBdr2.Unyz1kBrzFB", "u8XQJhGbgUN.Unyz1kBrzFB", "tQWFforuhTc.Unyz1kBrzFB",
+            "syYC9eG28PB.Unyz1kBrzFB", "iTyqCSLEYRs.Unyz1kBrzFB", "HgyCDTm2Lke.Unyz1kBrzFB",
+            "CPi9gyswkMd.Unyz1kBrzFB", "cyR7fDMIusB.Unyz1kBrzFB", "FPtsnHPdH7w.Unyz1kBrzFB",
+            "F85AN2JxHvM.Unyz1kBrzFB"
+        ]
+
+        var deHIVResultHB = [
+            "z2hmdoR1ZIv", "pQdphIzz1ox", "nqW4YDuRqhY", "sGcg0qd3aNa",
+            "YNZcaj9hu74", "x55hzZgph18", "hKaJHafddef", "ElDco9oZdWm",
+            "RXCxRxkb8uS", "smCr01h0mLv", "UhOF1ZEfJIg", "H07drrHrICK",
+            "YEs5L118nIO", "SzFKS5Xlnxt", "hBWrbRiAsjx", "b0aq9afYbEU",
+            "jhoPrfiN18x", "FO2TH8NjqAb", "XDGoZFd3LLc", "aeSDSuy5fi9"
+        ]
+
+        var deHIVResultHC = [
+            "K56y49ysORn", "AN1OEugPRt0", "fhttY8vKvVW", "f9i6mS3JrMM",
+            "Ocu0ezzRZXL", "HWdvFPbli8t", "tR9Zg24kNkO", "yO0E97uX3WB",
+            "sEFi8PGX3kC", "uJ2Zi5E0WGD", "an40wB552vA", "echPMCfkoQ4",
+            "xCwAuliiOer", "mAbI41wnddz", "KoyqOnDIKOB", "dvEItITQrzd",
+            "Ee3LJOaJEox", "VA9eTtikNDy", "JR40nd0PCuK", "ZBFNHQkZOwd"
+        ]
+
+        var de3Tabs = ["uBMJ0accgJe", "fMyYWxzPflf", "mW5mlfakUmY"]
+
+        var printTotal = [];
+        var columnLength = 3
+        for (let i = 0; i < dataElement.length; i++) {
+            printTotal[i] = [];
+            for (let j = 0; j < columnLength; j++) {
+                printTotal[i][j] = 0;
+            }
+        }
+
+        $.when(
+            $.get(`../api/analytics.json?dimension=dx:uBMJ0accgJe;dVYNULGOOeW&dimension=lhpQ165RZeH:dkkSeMwdDWP;tlwx5zWKsBj;ZQOq3BQ6Srq&dimension=bQHWpNhKTWy:NFQMWJeXOmi;gu5ROlWpB4Y;AXNFdxKMoCR;C4OQGKHmfBF;FRAYPjepNnK&dimension=ou:${orgUnits.join(';')}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:VA8tQe5Mi65;sFghbaX1tXb&dimension=lhpQ165RZeH:dkkSeMwdDWP;tlwx5zWKsBj;ZQOq3BQ6Srq&dimension=ou:${orgUnits.join(';')}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:Nd3dzqAd7bG.Unyz1kBrzFB;GDPTo9vPL7C;OIevTdFzb3V.Unyz1kBrzFB;n0qTOHmbjgm&dimension=pe:${selectedPeriod}&filter=ou:${selectedOrgunit.id}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:fMyYWxzPflf;VliY9Hbas8Z&dimension=lhpQ165RZeH:dkkSeMwdDWP;tlwx5zWKsBj;ZQOq3BQ6Srq&dimension=sJk47YTegnh:VD197rC3woG;sBsDHGWwVHT;FRAYPjepNnK&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${deHIVTesting.join(';')}&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${deHIVSpecialSurverys.join(';')}&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${deHIVAS.join(';')}&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${deHIVASPopulationSize.join(';')}&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=lhpQ165RZeH:dkkSeMwdDWP;tlwx5zWKsBj;ZQOq3BQ6Srq&dimension=D4mRaEDMgU0:awFBbzYrY53;AXNFdxKMoCR&dimension=dx:J363luvKEVP;qJAyhusm8VS;YrOosiXtrJd;sPleLC1Fjp0;oDsnvk6ElyW;kdfWPmVdy0S;h7AelZg84tg&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=lhpQ165RZeH:dkkSeMwdDWP;tlwx5zWKsBj&dimension=UdGTJ9Ycyyo:sBsDHGWwVHT;gu5ROlWpB4Y;AXNFdxKMoCR&dimension=dx:eyHhWF9tSPb;E7ZCWoPHpHv&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${deHIVSTDSyphilis.join(';')}&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${deHIVResultHB.join(';')}&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${deHIVResultHC.join(';')}&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/analytics.json?dimension=dx:${de3Tabs.join(';')}&filter=ou:${selectedOrgunit.id}&filter=pe:${selectedPeriod}&displayProperty=NAME&paging=false`),
+            $.get(`../api/29/analytics.json?filter=pe:${selectedPeriod}&dimension=lhpQ165RZeH:dkkSeMwdDWP;tlwx5zWKsBj&dimension=dx:hV8RqkAcUx8;ctG9l4EtKlY;TKhlwme6n5V;Kcd9wMVgyDV;UtlrTOdw88a;MKjwoyTvmEw;Ye7yhILC3qw;WNtWTRL6rd2;whpk6tEDLmn;LARAdIAdPNc;FsIOlHeZCBJ;ng4iSsBJCqW&filter=ou:${selectedOrgunit.id}&displayProperty=NAME&paging=false`),
+
+        ).done(function (resHIVCasesAgeSex, resHIVCasesAgeSex14, resCD4Counts, resHIVDeathCasesAgeSex, resHIVTesting, resHIVSpecialSurverys, resHIVAS, resHIVASPopulationSize, resHIVSTISurvelliance, resHIVSTDSyndrome, resHIVSTDSyphilis, resHIVResultHB, resHIVResultHC, res3Tabs, resHIVCasesModeTrans) {
+
+            var data3Tabs = {}
+            res3Tabs[0].rows.forEach(row => data3Tabs[row[0]] = row[1]);
+
+            document.getElementById('hivCasesNew').innerHTML = (data3Tabs[de3Tabs[0]] ? Number(data3Tabs[de3Tabs[0]]) : "");
+            document.getElementById('aidsDeathCases').innerHTML = (data3Tabs[de3Tabs[1]] ? Number(data3Tabs[de3Tabs[1]]) : "");
+            document.getElementById('asTa').innerHTML = (data3Tabs[de3Tabs[2]] ? Number(data3Tabs[de3Tabs[2]]) : "");
+
+            //First Tab
+            var ageGroup = ["NFQMWJeXOmi", "C4OQGKHmfBF", "upto14", "gu5ROlWpB4Y", "AXNFdxKMoCR", "FRAYPjepNnK"];
+            var colName = ["uBMJ0accgJe", "dVYNULGOOeW"];
+            var genderGroup = ["dkkSeMwdDWP", "tlwx5zWKsBj", "ZQOq3BQ6Srq"];
+            var dataHIVCasesAgeSex = {};
+
+            if (orgUnitLevel == 1) {
+                let hasValue = {};
+                let id = { VA8tQe5Mi65: "uBMJ0accgJe", sFghbaX1tXb: "dVYNULGOOeW" }
+                debugger
+                resHIVCasesAgeSex[0].rows.forEach(data => {
+                    hasValue[data[3]] = true;
+                    if (!dataHIVCasesAgeSex[data[2]]) dataHIVCasesAgeSex[data[2]] = [];
+                    if(!dataHIVCasesAgeSex[data[2]][`${data[0]}-${data[1]}`]) dataHIVCasesAgeSex[data[2]][`${data[0]}-${data[1]}`] = 0
+                    dataHIVCasesAgeSex[data[2]][`${data[0]}-${data[1]}`] += Number(data[4]);
+                })
+
+                resHIVCasesAgeSex14[0].rows.forEach(data => {
+                    if(!hasValue[data[2]]) {
+                        if (!dataHIVCasesAgeSex["upto14"]) dataHIVCasesAgeSex["upto14"] = [];
+                        if(!dataHIVCasesAgeSex["upto14"][`${id[data[0]]}-${data[1]}`]) dataHIVCasesAgeSex["upto14"][`${id[data[0]]}-${data[1]}`] = 0;
+                        dataHIVCasesAgeSex["upto14"][`${id[data[0]]}-${data[1]}`] += Number(data[3]);
+                    }
+                })
+                debugger
+
+            } else {
+                resHIVCasesAgeSex[0].rows.forEach(data => {
+                    if (!dataHIVCasesAgeSex[data[2]]) dataHIVCasesAgeSex[data[2]] = [];
+                    dataHIVCasesAgeSex[data[2]][`${data[0]}-${data[1]}`] = Number(data[4]);
+                })
+
+                resHIVCasesAgeSex14[0].rows.forEach(data => {
+                    let id = { VA8tQe5Mi65: "uBMJ0accgJe", sFghbaX1tXb: "dVYNULGOOeW" }
+                    if (!dataHIVCasesAgeSex["upto14"]) dataHIVCasesAgeSex["upto14"] = [];
+                    dataHIVCasesAgeSex["upto14"][`${id[data[0]]}-${data[1]}`] = Number(data[3]);
+                })  
+            }
+
+            var tableRow = '';
+            var totalColValue = 0;
+            var totalValue = []
+            var count = 0;
+            ageGroup.forEach((age, index) => {
+                totalColValue = 0;
+                count = 0;
+
+                tableRow += `<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${dataElement[0][0][index]}</td>`
+
+                colName.forEach((col) => {
+                    genderGroup.forEach(gender => {
+                        if (!totalValue[count]) totalValue[count] = 0;
+                        let value = dataHIVCasesAgeSex[age] ? (dataHIVCasesAgeSex[age][`${col}-${gender}`] ? dataHIVCasesAgeSex[age][`${col}-${gender}`] : "") : ""
+                        totalColValue += Number(value);
+
+                        tableRow += `<td style="border:1px solid black; font-weight:600;" >${value}</td>`
+                        totalValue[count] += Number(value);
+                        count++;
+
+                    })
+                    tableRow += `<td style="border:1px solid black; font-weight:600;" >${totalColValue}</td>`
+                    totalColValue = 0;
+                })
+                tableRow += '</tr>'
+            })
+
+
+            tableRow += '<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >Total</td>'
+            totalValue.forEach((val, index) => {
+                tableRow += `<td style="border:1px solid black; font-weight:600;">${val}</td>`;
+                if ((index + 1) % 3 == 0) tableRow += `<td style="border:1px solid black; font-weight:600;">${totalValue[index] + totalValue[index - 1] + totalValue[index - 2]}</td>`
+
+            });
+            tableRow += '</tr>'
+
+            document.getElementById("tb-HIVCasesAgeSex").innerHTML = tableRow;
+
+            //Second Table
+            var dataHIVCasesModeTrans = {}
+            debugger
+            resHIVCasesModeTrans[0].rows.forEach(data => {
+                if (!dataHIVCasesModeTrans[data[0]]) dataHIVCasesModeTrans[data[0]] = [];
+                dataHIVCasesModeTrans[data[0]][data[1]] = Number(data[2]);
+            })
+
+
+            genderGroup = ["dkkSeMwdDWP", "tlwx5zWKsBj"]
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = []
+            count = 0;
+            var deIndex = 0;
+            debugger
+            dataElement[0][1].forEach(de => {
+                totalColValue = 0;
+                count = 0;
+
+                tableRow += `<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>`
+                debugger
+                ["", ""].forEach(() => {
+                    debugger
+                    genderGroup.forEach(gender => {
+                        debugger
+                        if (!totalValue[count]) totalValue[count] = 0;
+                        let value = dataHIVCasesModeTrans[deHIVCasesModeTrans[deIndex]] ? (dataHIVCasesModeTrans[deHIVCasesModeTrans[deIndex]][gender] ? dataHIVCasesModeTrans[deHIVCasesModeTrans[deIndex]][gender] : "") : ""
+
+                        tableRow += `<td style="border:1px solid black; font-weight:600;" >${value}</td>`
+                        totalValue[count] += Number(value);
+                        totalColValue += Number(value);
+                        count++;
+
+                    })
+                    tableRow += `<td style="border:1px solid black; font-weight:600;" >${totalColValue}</td>`
+                    totalColValue = 0;
+                    deIndex++
+                })
+                tableRow += '</tr>'
+            })
+
+
+            tableRow += '<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >Total</td>'
+            totalValue.forEach((val, index) => {
+                tableRow += `<td style="border:1px solid black; font-weight:600;">${val}</td>`;
+                if ((index + 1) % 2 == 0) tableRow += `<td style="border:1px solid black; font-weight:600;">${totalValue[index] + totalValue[index - 1]}</td>`
+
+            });
+            tableRow += '</tr>'
+
+            document.getElementById("tb-HIVCasesModeTrans").innerHTML = tableRow;
+
+
+            // Third Table
+            dataCD4Counts = {};
+            resCD4Counts[0].rows.forEach(data => {
+                dataCD4Counts[data[0]] = Number(data[2]);
+            })
+
+            tableRow = ''
+            tableRow += `<tr>
+                <td style="border:1px solid black; text-align:center;" >${(dataCD4Counts["Nd3dzqAd7bG.Unyz1kBrzFB"] ? dataCD4Counts["Nd3dzqAd7bG.Unyz1kBrzFB"] : "")}</td>
+                <td style="border:1px solid black; text-align:center;" >${(dataCD4Counts["GDPTo9vPL7C"] ? dataCD4Counts["GDPTo9vPL7C"] : "")}</td>
+                <td style="border:1px solid black; text-align:center;" >${(dataCD4Counts["OIevTdFzb3V.Unyz1kBrzFB"] ? dataCD4Counts["OIevTdFzb3V.Unyz1kBrzFB"] : "")}</td>
+                <td style="border:1px solid black; text-align:center;" >${(dataCD4Counts["n0qTOHmbjgm"] ? dataCD4Counts["n0qTOHmbjgm"] : "")}</td>
+                </tr>`
+            document.getElementById("tb-CD4Counts").innerHTML = tableRow;
+
+            //Tab2 table2
+            ageGroup = ["sBsDHGWwVHT", "VD197rC3woG", "FRAYPjepNnK"];
+            colName = ["fMyYWxzPflf", "VliY9Hbas8Z"];
+            genderGroup = ["dkkSeMwdDWP", "tlwx5zWKsBj", "ZQOq3BQ6Srq"];
+            var dataHIVDeathCasesAgeSex = {};
+
+            resHIVDeathCasesAgeSex[0].rows.forEach(data => {
+                if (!dataHIVDeathCasesAgeSex[data[2]]) dataHIVDeathCasesAgeSex[data[2]] = [];
+                dataHIVDeathCasesAgeSex[data[2]][`${data[0]}-${data[1]}`] = Number(data[3]);
+            })
+
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [];
+            count = 0;
+            ageGroup.forEach((age, index) => {
+                totalColValue = 0;
+                count = 0;
+
+                tableRow += `<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${dataElement[1][0][index]}</td>`
+
+                colName.forEach((col) => {
+                    genderGroup.forEach(gender => {
+                        if (!totalValue[count]) totalValue[count] = 0;
+                        let value = dataHIVDeathCasesAgeSex[age] ? (dataHIVDeathCasesAgeSex[age][`${col}-${gender}`] ? dataHIVDeathCasesAgeSex[age][`${col}-${gender}`] : "") : ""
+                        totalColValue += Number(value);
+
+                        tableRow += `<td style="border:1px solid black; font-weight:600;" >${value}</td>`
+                        totalValue[count] += Number(value);
+                        count++;
+
+                    })
+                    tableRow += `<td style="border:1px solid black; font-weight:600;" >${totalColValue}</td>`
+                    totalColValue = 0;
+                })
+                tableRow += '</tr>'
+            })
+
+            tableRow += '<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >Total</td>'
+            totalValue.forEach((val, index) => {
+                tableRow += `<td style="border:1px solid black; font-weight:600;">${val}</td>`;
+                if ((index + 1) % 3 == 0) tableRow += `<td style="border:1px solid black; font-weight:600;">${totalValue[index] + totalValue[index - 1] + totalValue[index - 2]}</td>`
+
+            });
+            tableRow += '</tr>'
+            document.getElementById("tb-HIVDeathCasesAgeSex").innerHTML = tableRow;
+
+            //Tab 3 HIV Testing
+            var dataHIVTesting = {};
+            resHIVTesting[0].rows.forEach(data => {
+                dataHIVTesting[data[0]] = Number(data[1]);
+            })
+
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [];
+            count = 0;
+            dataElement[2][0].forEach(de => {
+                let valueFirst = (dataHIVTesting[deHIVTesting[count]] ? dataHIVTesting[deHIVTesting[count]] : "");
+                count++;
+                let valueSecond = (dataHIVTesting[deHIVTesting[count]] ? dataHIVTesting[deHIVTesting[count]] : "");
+                count++;
+                let valueThird = (dataHIVTesting[deHIVTesting[count]] ? dataHIVTesting[deHIVTesting[count]] : "");
+                count++;
+
+                tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFirst}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSecond}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueThird}</td>
+                    </tr>`
+            })
+            document.getElementById("tb-HIVTesting").innerHTML = tableRow;
+
+            //Tab 4
+            var dataHIVSpecialSurverys = {};
+            resHIVSpecialSurverys[0].rows.forEach(data => {
+                dataHIVSpecialSurverys[data[0]] = data[1];
+            })
+
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [];
+            count = 0;
+            dataElement[3][0].forEach((de, index) => {
+                let valueFirst = (dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] ? Number(dataHIVSpecialSurverys[deHIVSpecialSurverys[count]]) : "");
+                count++;
+                let valueSecond = (dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] ? Number(dataHIVSpecialSurverys[deHIVSpecialSurverys[count]]) : "");
+                count++;
+                let valueThird = (dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] ? Number(dataHIVSpecialSurverys[deHIVSpecialSurverys[count]]) : "");
+                count++;
+                if (index >= 7) {
+                    let valueFourth = (dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] ? Number(dataHIVSpecialSurverys[deHIVSpecialSurverys[count]]) : "");
+                    count++;
+                    let valueFifth = (dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] ? dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] : "");
+                    count++;
+                    let valueSixth = (dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] ? Number(dataHIVSpecialSurverys[deHIVSpecialSurverys[count]]) : "");
+                    count++;
+                    tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFirst}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSecond}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueThird}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFourth}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFifth}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSixth}</td>
+                    </tr>`
+
+                } else {
+                    let valueFourth = (dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] ? dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] : "");
+                    count++;
+                    let valueFifth = (dataHIVSpecialSurverys[deHIVSpecialSurverys[count]] ? Number(dataHIVSpecialSurverys[deHIVSpecialSurverys[count]]) : "");
+                    count++;
+                    tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" colspan="2" >${valueFirst}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSecond}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueThird}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFourth}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFifth}</td>
+                    </tr>`
+                }
+
+            })
+            document.getElementById("tb-HIVSpecialSurverys").innerHTML = tableRow;
+
+            //Tab 5 Table 2
+            var dataHIVAS = {};
+            resHIVAS[0].rows.forEach(data => {
+                dataHIVAS[data[0]] = Number(data[1]);
+            })
+
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [];
+            count = 0;
+            dataElement[4][0].forEach((de, index) => {
+                let valueFirst = (dataHIVAS[deHIVAS[count]] ? dataHIVAS[deHIVAS[count]] : "")
+                count++;
+                if (index >= 13) {
+                    let valueSecond = (dataHIVAS[deHIVAS[count]] ? dataHIVAS[deHIVAS[count]] : "")
+                    count++;
+                    tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFirst}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSecond}</td>
+                    </tr>`
+
+                } else {
+                    tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" colspan="2" >${valueFirst}</td>
+                    </tr>`
+                }
+            })
+            document.getElementById("tb-HIVAS").innerHTML = tableRow;
+
+            //Tab 5 Table 3
+            var dataHIVASPopulationSize = {};
+            resHIVASPopulationSize[0].rows.forEach(data => {
+                dataHIVASPopulationSize[data[0]] = Number(data[1]);
+            })
+
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [];
+            count = 0;
+            dataElement[4][1].forEach(de => {
+                let valueFirst = (dataHIVASPopulationSize[deHIVASPopulationSize[count]] ? dataHIVASPopulationSize[deHIVASPopulationSize[count]] : "")
+                count++;
+                let valueSecond = (dataHIVASPopulationSize[deHIVASPopulationSize[count]] ? dataHIVASPopulationSize[deHIVASPopulationSize[count]] : "")
+                count++;
+                let valueThird = (dataHIVASPopulationSize[deHIVASPopulationSize[count]] ? dataHIVASPopulationSize[deHIVASPopulationSize[count]] : "")
+                count++;
+                let valueFourth = (dataHIVASPopulationSize[deHIVASPopulationSize[count]] ? dataHIVASPopulationSize[deHIVASPopulationSize[count]] : "")
+                count++;
+
+                tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFirst}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSecond}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueThird}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFourth}</td>
+                    </tr>`
+            })
+            document.getElementById("tb-HIVASPopulationSize").innerHTML = tableRow;
+
+            var dataHIVSTISurvelliance = {}
+
+            genderGroup = ["dkkSeMwdDWP", "tlwx5zWKsBj", "ZQOq3BQ6Srq"];
+            ageGroup = ["awFBbzYrY53", "AXNFdxKMoCR"];
+
+            resHIVSTISurvelliance[0].rows.forEach(data => {
+                if (!dataHIVSTISurvelliance[data[0]]) dataHIVSTISurvelliance[data[0]] = [];
+                dataHIVSTISurvelliance[data[0]][`${data[1]}-${data[2]}`] = Number(data[3]);
+
+            })
+
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [];
+            count = 0;
+            dataElement[5][0].forEach((de, index) => {
+                totalColValue = 0;
+                count = 0;
+
+                tableRow += `<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${dataElement[5][0][index]}</td>`
+
+                genderGroup.forEach((gender) => {
+                    ageGroup.forEach(age => {
+                        if (!totalValue[count]) totalValue[count] = 0;
+                        let value = dataHIVSTISurvelliance[deHIVSTISurvelliance[index]] && dataHIVSTISurvelliance[deHIVSTISurvelliance[index]][`${gender}-${age}`] ? Number(dataHIVSTISurvelliance[deHIVSTISurvelliance[index]][`${gender}-${age}`]) : ""
+                        totalColValue += Number(value);
+
+                        tableRow += `<td style="border:1px solid black; font-weight:600;" >${value}</td>`
+                        totalValue[count] += Number(value);
+                        count++;
+
+                    })
+                })
+                tableRow += `<td style="border:1px solid black; font-weight:600;" >${totalColValue}</td>`
+                totalColValue = 0;
+                tableRow += '</tr>'
+            })
+
+            count = 0;
+            tableRow += '<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >Total</td>'
+            totalValue.forEach((val, index) => {
+                tableRow += `<td style="border:1px solid black; font-weight:600;">${val}</td>`
+                count += Number(val);
+            });
+            tableRow += `<td style="border:1px solid black; font-weight:600;">${count}</td></tr>`
+
+            document.getElementById("tb-HIVSTISurvelliance").innerHTML = tableRow;
+
+            var dataHIVSTDSyndrome = {}
+
+            genderGroup = ["dkkSeMwdDWP", "tlwx5zWKsBj"];
+            ageGroup = ["sBsDHGWwVHT", "gu5ROlWpB4Y", "AXNFdxKMoCR"];
+
+            resHIVSTDSyndrome[0].rows.forEach(data => {
+                if (!dataHIVSTDSyndrome[data[0]]) dataHIVSTDSyndrome[data[0]] = [];
+                dataHIVSTDSyndrome[data[0]][`${data[1]}-${data[2]}`] = Number(data[3]);
+
+            })
+
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [];
+            count = 0;
+            dataElement[5][1].forEach((de, index) => {
+                totalColValue = 0;
+                count = 0;
+
+                tableRow += `<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${dataElement[5][1][index]}</td>`
+
+                genderGroup.forEach((gender) => {
+                    ageGroup.forEach(age => {
+                        if (!totalValue[count]) totalValue[count] = 0;
+                        let value = dataHIVSTDSyndrome[deHIVSTDSyndrome[index]] && dataHIVSTDSyndrome[deHIVSTDSyndrome[index]][`${gender}-${age}`] ? dataHIVSTDSyndrome[deHIVSTDSyndrome[index]][`${gender}-${age}`] : "";
+                        totalColValue += Number(value);
+
+                        tableRow += `<td style="border:1px solid black; font-weight:600;" >${value}</td>`
+                        totalValue[count] += Number(value);
+                        count++;
+
+                    })
+                })
+                tableRow += `<td style="border:1px solid black; font-weight:600;" >${totalColValue}</td>`
+                totalColValue = 0;
+                tableRow += '</tr>'
+            })
+
+            count = 0;
+            tableRow += '<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >Total</td>'
+            totalValue.forEach((val, index) => {
+                tableRow += `<td style="border:1px solid black; font-weight:600;">${val}</td>`
+                count += Number(val);
+            });
+            tableRow += `<td style="border:1px solid black; font-weight:600;">${count}</td></tr>`
+
+            document.getElementById("tb-HIVSTDSyndrome").innerHTML = tableRow;
+
+            var dataHIVSTDSyphilis = {};
+            resHIVSTDSyphilis[0].rows.forEach(data => {
+                dataHIVSTDSyphilis[data[0]] = Number(data[1]);
+            })
+
+            var countTotal = 0;
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [0, 0, 0, 0];
+            count = 0;
+
+            dataElement[5][2].forEach(de => {
+                let valueFirst = (dataHIVSTDSyphilis[deHIVSTDSyphilis[count]] ? dataHIVSTDSyphilis[deHIVSTDSyphilis[count]] : "");
+                count++;
+                let valueSecond = (dataHIVSTDSyphilis[deHIVSTDSyphilis[count]] ? dataHIVSTDSyphilis[deHIVSTDSyphilis[count]] : "");
+                count++;
+                let valueThird = (dataHIVSTDSyphilis[deHIVSTDSyphilis[count]] ? dataHIVSTDSyphilis[deHIVSTDSyphilis[count]] : "");
+                count++;
+                let valueFourth = (dataHIVSTDSyphilis[deHIVSTDSyphilis[count]] ? dataHIVSTDSyphilis[deHIVSTDSyphilis[count]] : "");
+                count++;
+
+                totalValue[countTotal++] += Number(valueFirst);
+                totalValue[countTotal++] += Number(valueSecond);
+                totalValue[countTotal++] += Number(valueThird);
+                totalValue[countTotal++] += Number(valueFourth);
+                countTotal = 0;
+
+                tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFirst}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSecond}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueThird}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFourth}</td>
+                    </tr>`
+            })
+            tableRow += '<tr><td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >Total</td>'
+            totalValue.forEach((val, index) => {
+                tableRow += `<td style="border:1px solid black; font-weight:600;">${val}</td>`
+            });
+            document.getElementById("tb-HIVSTDSyphilis").innerHTML = tableRow;
+
+            var dataHIVResultHB = {};
+            resHIVResultHB[0].rows.forEach(data => {
+                dataHIVResultHB[data[0]] = Number(data[1]);
+            })
+            debugger;
+
+            var countTotal = 0;
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [0, 0, 0, 0];
+            count = 0;
+
+            dataElement[6][0].forEach(de => {
+                let valueFirst = (dataHIVResultHB[deHIVResultHB[count]] ? Number(dataHIVResultHB[deHIVResultHB[count]]) : "");
+                count++;
+                let valueSecond = (dataHIVResultHB[deHIVResultHB[count]] ? Number(dataHIVResultHB[deHIVResultHB[count]]) : "");
+                count++;
+                let valueThird = (dataHIVResultHB[deHIVResultHB[count]] ? Number(dataHIVResultHB[deHIVResultHB[count]]) : "");
+                count++;
+                let valueFourth = (dataHIVResultHB[deHIVResultHB[count]] ? Number(dataHIVResultHB[deHIVResultHB[count]]) : "");
+                count++;
+
+                totalValue[countTotal++] += Number(valueFirst);
+                totalValue[countTotal++] += Number(valueSecond);
+                totalValue[countTotal++] += Number(valueThird);
+                totalValue[countTotal++] += Number(valueFourth);
+                countTotal = 0;
+
+                tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFirst}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSecond}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueThird}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFourth}</td>
+                    </tr>`
+            })
+            tableRow += '<tr><td style="border:1px solid black; text-align:center;font-weight:600;background:#f2f2f2" >Total</td>'
+            totalValue.forEach((val, index) => {
+                tableRow += `<td style="border:1px solid black; font-weight:600;">${val}</td>`
+            });
+            document.getElementById("tb-HIVResultHB").innerHTML = tableRow;
+
+            var dataHIVResultHC = {};
+            resHIVResultHC[0].rows.forEach(data => {
+                dataHIVResultHC[data[0]] = Number(data[1]);
+            })
+
+            var countTotal = 0;
+            tableRow = '';
+            totalColValue = 0;
+            totalValue = [0, 0, 0, 0];
+            count = 0;
+
+            dataElement[6][1].forEach(de => {
+                let valueFirst = (dataHIVResultHC[deHIVResultHC[count]] ? dataHIVResultHC[deHIVResultHC[count]] : "");
+                count++;
+                let valueSecond = (dataHIVResultHC[deHIVResultHC[count]] ? dataHIVResultHC[deHIVResultHC[count]] : "");
+                count++;
+                let valueThird = (dataHIVResultHC[deHIVResultHC[count]] ? dataHIVResultHC[deHIVResultHC[count]] : "");
+                count++;
+                let valueFourth = (dataHIVResultHC[deHIVResultHC[count]] ? dataHIVResultHC[deHIVResultHC[count]] : "");
+                count++;
+
+                totalValue[countTotal++] += Number(valueFirst);
+                totalValue[countTotal++] += Number(valueSecond);
+                totalValue[countTotal++] += Number(valueThird);
+                totalValue[countTotal++] += Number(valueFourth);
+                countTotal = 0;
+
+                tableRow += `<tr>
+                    <td style="border:1px solid black; text-align:left;font-weight:600;background:#f2f2f2" >${de}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFirst}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueSecond}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueThird}</td>
+                    <td style="border:1px solid black; text-align:center;font-weight:600;" >${valueFourth}</td>
+                    </tr>`
+            })
+            tableRow += '<tr><td style="border:1px solid black; text-align:center;font-weight:600;background:#f2f2f2" >Total</td>'
+            totalValue.forEach((val, index) => {
+                tableRow += `<td style="border:1px solid black; font-weight:600;">${val}</td>`
+            });
+            document.getElementById("tb-HIVResultHC").innerHTML = tableRow;
+
+            document.getElementById("state").style.display = "block";
+            document.getElementById("loader").style.display = "none";
+
+        })
+
+    }
+
+
+    var tablesToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+                + '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>Axel Richter</Author><Created>{created}</Created></DocumentProperties>'
+                + '<Styles>'
+                + '<Style ss:ID="Currency"><NumberFormat ss:Format="Currency"></NumberFormat></Style>'
+                + '<Style ss:ID="Date"><NumberFormat ss:Format="Medium Date"></NumberFormat></Style>'
+                + '</Styles>'
+                + '{worksheets}</Workbook>'
+            , tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table>{rows}</Table></Worksheet>'
+            , tmplCellXML = '<Cell{attributeStyleID}{attributeFormula}><Data ss:Type="{nameType}">{data}</Data></Cell>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (tables, wsnames, wbname, appname) {
+            var ctx = "";
+            var workbookXML = "";
+            var worksheetsXML = "";
+            var rowsXML = "";
+
+            for (var i = 0; i < tables.length; i++) {
+                if (Array.isArray(tables[i])) {
+                    console.log(i)
+                    for (var l = 0; l < tables[i].length; l++) {
+                        if (!tables[i][l].nodeType) tables[i][l] = document.getElementById(tables[i][l]);
+                        for (var j = 0; j < tables[i][l].rows.length; j++) {
+                            rowsXML += '<Row>'
+                            for (var k = 0; k < tables[i][l].rows[j].cells.length; k++) {
+                                var dataType = tables[i][l].rows[j].cells[k].getAttribute("data-type");
+                                var dataStyle = tables[i][l].rows[j].cells[k].getAttribute("data-style");
+                                var dataValue = tables[i][l].rows[j].cells[k].getAttribute("data-value");
+                                dataValue = (dataValue) ? dataValue : tables[i][l].rows[j].cells[k].innerHTML;
+                                var dataFormula = tables[i][l].rows[j].cells[k].getAttribute("data-formula");
+                                dataFormula = (dataFormula) ? dataFormula : (appname == 'Calc' && dataType == 'DateTime') ? dataValue : null;
+                                ctx = {
+                                    attributeStyleID: (dataStyle == 'Currency' || dataStyle == 'Date') ? ' ss:StyleID="' + dataStyle + '"' : ''
+                                    , nameType: (dataType == 'Number' || dataType == 'DateTime' || dataType == 'Boolean' || dataType == 'Error') ? dataType : 'String'
+                                    , data: (dataFormula) ? '' : dataValue
+                                    , attributeFormula: (dataFormula) ? ' ss:Formula="' + dataFormula + '"' : ''
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                            rowsXML += '</Row>'
+                        }
+                    }
+                } else {
+                    if (!tables[i].nodeType) tables[i] = document.getElementById(tables[i]);
+                    console.log(i)
+                    for (var j = 0; j < tables[i].rows.length; j++) {
+                        rowsXML += '<Row>'
+                        for (var k = 0; k < tables[i].rows[j].cells.length; k++) {
+                            var dataType = tables[i].rows[j].cells[k].getAttribute("data-type");
+                            var dataStyle = tables[i].rows[j].cells[k].getAttribute("data-style");
+                            var dataValue = tables[i].rows[j].cells[k].getAttribute("data-value");
+                            dataValue = (dataValue) ? dataValue : tables[i].rows[j].cells[k].innerHTML;
+                            var dataFormula = tables[i].rows[j].cells[k].getAttribute("data-formula");
+                            dataFormula = (dataFormula) ? dataFormula : (appname == 'Calc' && dataType == 'DateTime') ? dataValue : null;
+                            ctx = {
+                                attributeStyleID: (dataStyle == 'Currency' || dataStyle == 'Date') ? ' ss:StyleID="' + dataStyle + '"' : ''
+                                , nameType: (dataType == 'Number' || dataType == 'DateTime' || dataType == 'Boolean' || dataType == 'Error') ? dataType : 'String'
+                                , data: (dataFormula) ? '' : dataValue
+                                , attributeFormula: (dataFormula) ? ' ss:Formula="' + dataFormula + '"' : ''
+                            };
+                            rowsXML += format(tmplCellXML, ctx);
+                        }
+                        rowsXML += '</Row>'
+                    }
+
+                }
+                ctx = { rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i };
+                worksheetsXML += format(tmplWorksheetXML, ctx);
+                rowsXML = "";
+            }
+
+            ctx = { created: (new Date()).getTime(), worksheets: worksheetsXML };
+            workbookXML = format(tmplWorkbookXML, ctx);
+            console.log(workbookXML);
+            var link = document.createElement("A");
+            link.href = uri + base64(workbookXML);
+            link.download = wbname || 'Workbook.xls';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    })();
+
+</script>
