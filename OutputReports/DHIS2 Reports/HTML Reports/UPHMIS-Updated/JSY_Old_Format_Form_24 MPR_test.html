@@ -1,0 +1,1929 @@
+<script type="text/javascript" src="../dhis-web-commons/bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="../dhis-web-commons/bootstrap/css/bootstrap.min.css" />
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
+
+<!--&lt;!&ndash; Excel exporting script &ndash;&gt;-->
+<script type="text/javascript">
+    function convert(dataURI) {
+        // convert base64 to raw binary data held in a string
+        // doesn't handle URLEncoded DataURIs
+        var byteString;
+        if (dataURI.split(',')[0].indexOf('base64') >= 0)
+            byteString = atob(dataURI.split(',')[1]);
+        else
+            byteString = unescape(dataURI.split(',')[1]);
+        // separate out the mime component
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+        // write the bytes of the string to an ArrayBuffer
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+
+        // write the ArrayBuffer to a blob, and you're done
+        return new Blob([ab], {
+            type: mimeString
+        });
+    }
+
+    var tablesToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,',
+            tmplWorkbookXML =
+            '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+            '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>ThaiND</Author><Created>{created}</Created></DocumentProperties>' +
+            '<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:Size="8"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s26"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s23"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="0"/></Borders><Font ss:Bold="1"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s24"><Alignment ss:Horizontal="Left" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s28"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s29"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style></Styles>' +
+            '{worksheets}</Workbook>',
+            tmplWorksheetXML =
+            '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/><Column ss:AutoFitWidth="0" ss:Width="100"/>{rows}</Table></Worksheet>',
+            tmplCellXML =
+            '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>',
+            base64 = function (s) {
+                return window.btoa(unescape(encodeURIComponent(s)))
+            },
+            format = function (s, c) {
+                return s.replace(/{(\w+)}/g, function (m, p) {
+                    return c[p];
+                })
+            }
+
+        return function (tables, wsnames, wbname) {
+            var ctx = "";
+            var workbookXML = "";
+            var worksheetsXML = "";
+            var rowsXML = "";
+
+            for (var i = 0; i < tables.length; i++) {
+
+                if (!tables[i].nodeType)
+                    tables[i] = document.getElementById(tables[i]);
+
+                for (var j = 0; j < tables[i].rows.length; j++) {
+                    rowsXML += '<Row>';
+                    for (var k = 0; k < tables[i].rows[j].cells.length; k++) {
+
+                        var cols = tables[i].rows[j].cells[k].getAttribute("colspan");
+                        var rws =  tables[i].rows[j].cells[k].getAttribute("rowspan");
+                        var styl = tables[i].rows[j].cells[k].getAttribute("bgcolor");
+                        var styl2 = tables[i].rows[j].getAttribute("bgcolor");
+                        var cls = tables[i].rows[j].cells[k].getAttribute("class");
+                        var algn = tables[i].rows[j].cells[k].getAttribute("align");
+                        var cls2 = tables[i].rows[j].getAttribute("class");
+
+                        var dataType = 'String';
+                        var dataValue = tables[i].rows[j].cells[k].innerHTML;
+                        var typeD = "";
+                        var parsed = parseInt(dataValue);
+
+                        if (parsed == dataValue) {
+                            typeD = "Number";
+                        } else {
+                            typeD = "String";
+                        }
+                        var n;
+                        if (cls) {
+                            n = cls.indexOf("value");
+                        }
+
+                        if (cls == "all2" || n >= 0) {
+                            if (cols) {
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: cols - 1,
+                                    sid: "s23",
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                            /*else if(rws)
+                             {
+                             ctx = {data: dataValue, mrg: rws-1, sid:"s23",dtype:typeD};
+                             rowsXML += format(tmplCellXML, ctx);
+                             }*/
+                            else {
+
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: 0,
+                                    sid: "s23",
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                        } else if (cls2 == "ylw") {
+                            if (k == 1 && j > 3)
+                                var cl = "s22";
+                            else
+                                var cl = "s26";
+
+                            if (cols) {
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: cols - 1,
+                                    sid: cl,
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                            /*else if(rws)
+                             {
+                             ctx = {data: dataValue, mrg: rws-1, sid:"s23",dtype:typeD};
+                             rowsXML += format(tmplCellXML, ctx);
+                             }*/
+                            else {
+
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: 0,
+                                    sid: cl,
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                        } else if (cls2 == "gray") {
+                            if (k == 1 && j > 3)
+                                var cl = "s28";
+                            else
+                                var cl = "s29";
+
+                            if (cols) {
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: cols - 1,
+                                    sid: cl,
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                            /*else if(rws)
+                             {
+                             ctx = {data: dataValue, mrg: rws-1, sid:"s23",dtype:typeD};
+                             rowsXML += format(tmplCellXML, ctx);
+                             }*/
+                            else {
+
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: 0,
+                                    sid: cl,
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                        } else if (styl2) {
+                            if (k == 1 && j > 3)
+                                var cl = "s22";
+                            else
+                                var cl = "s26";
+
+                            if (cols) {
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: cols - 1,
+                                    sid: cl,
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                            /*else if(rws)
+                             {
+                             ctx = {data: dataValue, mrg: rws-1, sid:"s23",dtype:typeD};
+                             rowsXML += format(tmplCellXML, ctx);
+                             }*/
+                            else {
+
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: 0,
+                                    sid: cl,
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                        } else if (styl) {
+                            if (cols) {
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: cols - 1,
+                                    sid: "s21",
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                            /*else if(rws)
+                             {
+                             ctx = {data: dataValue, mrg: rws-1, sid:"s23",dtype:typeD};
+                             rowsXML += format(tmplCellXML, ctx);
+                             }*/
+                            else {
+                                ctx = {
+                                    data: dataValue,
+                                    mrg: 0,
+                                    sid: "s21",
+                                    dtype: typeD
+                                };
+                                rowsXML += format(tmplCellXML, ctx);
+                            }
+                        } else {
+                            if (cols) {
+                                if (algn == "left") {
+                                    ctx = {
+                                        data: dataValue,
+                                        mrg: cols - 1,
+                                        sid: "s24",
+                                        dtype: typeD
+                                    };
+                                    rowsXML += format(tmplCellXML, ctx);
+                                } else {
+                                    ctx = {
+                                        data: dataValue,
+                                        mrg: cols - 1,
+                                        sid: "Default",
+                                        dtype: typeD
+                                    };
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                            }
+                            /*if(rws)
+                             {
+                             if(algn=="left")
+                             {
+                             ctx = {data: dataValue, mrg: rws-1, sid:"s24",dtype:typeD};
+                             rowsXML += format(tmplCellXML, ctx);
+                             }
+                             else
+                             {
+                             ctx = {data: dataValue, mrg: rws-1, sid:"Default",dtype:typeD};
+                             rowsXML += format(tmplCellXML, ctx);
+                             }
+                             }*/
+                            else {
+                                if (algn == "left") {
+                                    ctx = {
+                                        data: dataValue,
+                                        mrg: 0,
+                                        sid: "s24",
+                                        dtype: typeD
+                                    };
+                                    rowsXML += format(tmplCellXML, ctx);
+                                } else {
+                                    ctx = {
+                                        data: dataValue,
+                                        mrg: 0,
+                                        sid: "Default",
+                                        dtype: typeD
+                                    };
+                                    rowsXML += format(tmplCellXML, ctx);
+                                }
+                            }
+
+                        }
+                    }
+                    rowsXML += '</Row>'
+                }
+                ctx = {
+                    rows: rowsXML,
+                    nameWS: wsnames[i] || 'Sheet' + i
+                };
+                worksheetsXML += format(tmplWorksheetXML, ctx);
+                rowsXML = "";
+            }
+
+            ctx = {
+                created: (new Date()).getTime(),
+                worksheets: worksheetsXML
+            };
+            workbookXML = format(tmplWorkbookXML, ctx);
+
+            console.log(workbookXML);
+
+            var blobUrl = URL.createObjectURL(convert(uri + base64(workbookXML)));
+            var link = document.createElement("A");
+            link.href = blobUrl;
+            link.download = wbname || 'Workbook.xls';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    })();
+</script>
+
+<!-- Main Script -->
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    var parent_orgunit = dhis2.report.organisationUnitHierarchy[1].name;
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotOrgUnit = params[3];
+    var gotPeriod = params[2].toString().substring(0, 6);
+    var displayYear = params[2].toString().substring(0, 4);
+    var displaymonth = params[2].toString().substring(4, 6);
+    var dissec;
+    var ix;
+    var test;
+    var previousDisplayYear;
+    if (displaymonth >= 4) {
+        previousDisplayYear = displayYear;
+        dissec = 1 + parseInt(displayYear);
+
+    } else {
+        previousDisplayYear = displayYear - 1;
+        dissec = displayYear;
+
+    }
+
+
+    var dataJSONArray = [];
+    var dataJSONArrayGr = [];
+    var dataJSONArrayGr2 = [];
+    var dataJSONArrayGr3 = [];
+    var dataJSONArrayGr4 = [];
+    var selectedTABID = "";
+
+    var district_Array = [];
+    var division_Array = [];
+    var SC_Array = [];
+    var CHC_Array = [];
+    var PHC_Array = [];
+    var DH_Array = [];
+
+    var orgUnitGroupSetUID = "it8XJJWbnD6";
+    var orgUnitGroups = [{
+            name: "Public Id",
+            id: "mgnmdIRKpzA"
+        },
+        {
+            name: "Private Id",
+            id: "CWAnGUWGpZG"
+        },
+
+    ];
+    var orgUnitGroupUIDs = "";
+    var orgUnitGroupSetUID2 = "ODRLLr5WNjR";
+    var orgUnitGroups2 = [{
+            name: "Rural",
+            id: "XGKcGWfendv"
+        },
+        {
+            name: "Urban",
+            id: "yIKlvvB6eCS"
+        },
+
+    ];
+    var orgUnitGroupUIDs2 = "";
+    var orgUnitGroupSetUID3 = "FmDv7glZ1V0";
+    var orgUnitGroups3 = [
+
+        {
+            name: "Urban/public",
+            id: "GzoWi2qnJbI"
+        },
+
+    ];
+    var orgUnitGroupUIDs3 = "";
+
+    /******************************************************************************** UID Array *************************************************************/
+    var tableDx = [
+
+
+        "qioMyIHlk8H-XWymQoxKxQA-val", "iSCASlHAFmA-Ti9FJqkSK6J-val", "vaX8Eq1PJnW-Ti9FJqkSK6J-val",
+        "QNm9lJKlPMd-Ti9FJqkSK6J-val",
+
+        "aRueVYr35yM-Ti9FJqkSK6J-val",
+
+
+        "AMd9w1N6g4i-iRNhRMvoSCx-val", "AMd9w1N6g4i-wb51FJHqHxp-val", "CMPcYkXha3p-iRNhRMvoSCx-val",
+        "CMPcYkXha3p-wb51FJHqHxp-val",
+
+        "ixBYYYjxXPP-Ti9FJqkSK6J-val", "iq79Esv2oDH-Ti9FJqkSK6J-val",
+        "KEfGq62R2nB-Ti9FJqkSK6J-val",
+
+        "vaX8Eq1PJnW-Ti9FJqkSK6J-val",
+
+        "zVEJ83IAH9j-Ti9FJqkSK6J-val", "FIaGENXR3c5-Ti9FJqkSK6J-val",
+
+        "WjxN3ZJyeFb-Ti9FJqkSK6J-val", "lZaulMzHAbG-Ti9FJqkSK6J-val", "WVDcKyTJuI1-Ti9FJqkSK6J-val",
+
+    ];
+
+    var tableDx1 = ["aRueVYr35yM-Ti9FJqkSK6J-val"];
+    var tableDx2 = ["ixBYYYjxXPP-Ti9FJqkSK6J-val", "iSCASlHAFmA-Ti9FJqkSK6J-val", "aRueVYr35yM-Ti9FJqkSK6J-val",
+        "tN6dkfe6JLE-aRNxGm8EkXJ-val", "iSCASlHAFmA-Ti9FJqkSK6J-val", "aRueVYr35yM-Ti9FJqkSK6J-val",
+    ];
+    var tableDx3 = ["iSCASlHAFmA-Ti9FJqkSK6J-val", "aRueVYr35yM-Ti9FJqkSK6J-val", "iSCASlHAFmA-Ti9FJqkSK6J-val",
+        "aRueVYr35yM-Ti9FJqkSK6J-val"
+    ];
+
+    /***************************************************** Tab ID Array ****************************************************************************************************/
+    var tabIDs = ['CM24_tab', 'HM_3B_OPDIPDBED_OCCUPANCY_tab'];
+
+    var tableIDs = ['CM24_table', 'HM_3B_OPDIPDBED_OCCUPANCY_table'];
+
+
+
+    jQuery(document).ready(function () {
+        $(".hideInPrint").hide();
+        showLoad();
+
+        $.each(orgUnitChildren, function (i, val) {
+            division_Array.push([val.id, val.name]);
+        });
+
+        division_Array.sort(arraySorting);
+
+        document.getElementById('title1').innerHTML = orgUnit.name;
+        $('#front_periodID2').append(getPeriod(gotPeriod));
+        $('#yearDisplay2').append(previousDisplayYear + "-" + getPeriod(dissec));
+
+
+        //$('#front_periodID3').append(getPeriod(gotPeriod));
+        //$('#yearDisplay3').append(previousDisplayYear+"-"+ getPeriod(dissec));
+
+
+
+        /* $("#btnExport").click(function (e) {
+              tablesToExcel([ 'CM24_table', 'HM_3B_OPDIPDBED_OCCUPANCY_table'/*, 'RMNCH_table', 'Utilization_table'],
+                      [ 'CM24', 'HM 3B (OPD IPD BED OCCUPANCY)', 'Status of RMNCH', 'Utilization Report'], 'MPR.xls');
+              e.preventDefault();
+          }); */
+        showLoad();
+        // if (selOrgUnitLevel == 2) {
+            $.each(tabIDs, function (i, item) {
+                $("#" + item).fadeOut();
+                $("#" + item).hide();
+            });
+            $(".orgUnit_tr_Class").append("<td>" + orgUnit.name + "</td>");
+            $(".period_tr_Class").append("<td>" + orgUnit.name + "</td>");
+            loadData();
+        // } else {
+        //     $.each(tabIDs, function (i, item) {
+        //         $("#" + item).fadeOut();
+        //         $("#" + item).hide();
+        //     });
+        //     alert("Please select the State");
+        //     window.history.back();
+        // }
+    });
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    function loadData() {
+        var orgUnits_URL = "../api/organisationUnits.json?level=4&fields=[id,name,path]&paging=false";
+        var CHC_URL = "../api/organisationUnitGroups/gBerHA2rUH0.json?fields=organisationUnits[id,name,path]";
+        var PHC_URL = "../api/organisationUnitGroups/nIVbiyAyRrb.json?fields=organisationUnits[id,name,path]";
+        var SC_URL = "../api/organisationUnitGroups/JRLIvJzK4H0.json?fields=organisationUnits[id,name,path]";
+        var DH_URL = "../api/organisationUnitGroups/UBuxUMmdz1U.json?fields=organisationUnits[id,name,path]";
+
+        var URLs = [];
+        var ajaxReq = [];
+
+        URLs.push(orgUnits_URL);
+        URLs.push(CHC_URL);
+        URLs.push(PHC_URL);
+        URLs.push(SC_URL);
+        URLs.push(DH_URL);
+
+        for (i = 0; i < URLs.length; i++) {
+            ajaxReq.push($.ajax(URLs[i]));
+        }
+
+        $.when.apply($, ajaxReq).done(function () {
+            console.log(arguments); //it is an array like object which can be looped*/
+            $.each(arguments, function (i, data) {
+                if (i == 0) {
+                    $.each(data[0].organisationUnits, function (i, item) {
+                        var divisionID = item.path.split("/")[3];
+                        district_Array.push([item.id, item.name, divisionID]);
+                    });
+                    district_Array.sort(arraySorting);
+                } else if (i == 1) {
+                    $.each(data[0].organisationUnits, function (i, item) {
+                        if (item.path.split("/").length == 7) {
+                            var districtID = item.path.split("/")[4];
+                            CHC_Array.push([item.id, item.name, districtID]);
+                        }
+                    });
+                    CHC_Array.sort(arraySorting);
+                } else if (i == 2) {
+                    $.each(data[0].organisationUnits, function (i, item) {
+                        if (item.path.split("/").length == 7) {
+                            var districtID = item.path.split("/")[4];
+                            PHC_Array.push([item.id, item.name, districtID]);
+                        }
+                    });
+                    PHC_Array.sort(arraySorting);
+                } else if (i == 3) {
+                    $.each(data[0].organisationUnits, function (i, item) {
+                        if (item.path.split("/").length == 7) {
+                            var districtID = item.path.split("/")[4];
+                            SC_Array.push([item.id, item.name, districtID]);
+                        }
+                    });
+                    SC_Array.sort(arraySorting);
+                } else if (i == 4) {
+                    $.each(data[0].organisationUnits, function (i, item) {
+                        if (item.path.split("/").length == 7) {
+                            var districtID = item.path.split("/")[4];
+                            DH_Array.push([item.id, item.name, districtID]);
+                        }
+                    });
+                    DH_Array.sort(arraySorting);
+                }
+            });
+            loadTables();
+        });
+    }
+
+    function getPeriods() {
+        var periodArray = [];
+        var year = parseInt(gotPeriod.substring(0, 4));
+        var mnth = parseInt(gotPeriod.substring(4, 6));
+
+        if (mnth > 3) {
+            for (var i = 4; i <= mnth; i++) {
+                if (i < 10) {
+                    periodArray.push(year.toString() + "0" + i);
+                } else {
+                    periodArray.push(year.toString() + i);
+                }
+            }
+        }
+
+        if (mnth <= 3) {
+            for (var i = 4; i <= 12; i++) {
+                if (i < 10) {
+                    periodArray.push((year - 1).toString() + "0" + i);
+                } else {
+                    periodArray.push((year - 1).toString() + i);
+                }
+            }
+
+            for (var i = 1; i <= mnth; i++) {
+                if (i < 10) {
+                    periodArray.push(year.toString() + "0" + i);
+                } else {
+                    periodArray.push(year.toString() + i);
+                }
+            }
+
+        }
+        return periodArray;
+    }
+    // api/analytics calls
+    
+    function loadTables() {
+        var deUIDs = "";
+        var deUIDs1 = "";
+        var deUIDs2 = "";
+        var deUIDs3 = "";
+        var periodArray = getPeriods();
+        var periodStr = "";
+
+        $.each(periodArray, function (i, pe) {
+            periodStr += pe + ";";
+        });
+
+        $.each(tableDx, function () {
+            deUIDs += this.split("-")[0] + ";";
+        });
+        $.each(tableDx1, function () {
+            deUIDs1 += this.split("-")[0] + ";";
+        });
+        $.each(tableDx2, function () {
+            deUIDs2 += this.split("-")[0] + ";";
+        });
+        $.each(tableDx3, function () {
+            deUIDs3 += this.split("-")[0] + ";";
+        });
+
+        $.each(orgUnitGroups, function () {
+            orgUnitGroupUIDs += this.id + ";";
+        });
+
+        $.each(orgUnitGroups2, function () {
+            orgUnitGroupUIDs2 += this.id + ";";
+        });
+        $.each(orgUnitGroups3, function () {
+            orgUnitGroupUIDs3 += this.id + ";";
+        });
+
+        var orgUnitsStr = "";
+        $.each(district_Array, function (i, ou) {
+            orgUnitsStr += ou[0] + ";";
+        });
+        var analyticsURL = "../api/analytics.json?dimension=dx:" + deUIDs + "&dimension=co&dimension=ou:" + orgUnitsStr +
+            "&dimension=pe:" + periodStr + "&skipMeta=true";
+        var analyticsURL1 = "../api/analytics.json?dimension=dx:" + deUIDs1 + "&dimension=" + orgUnitGroupSetUID + ":" +
+            orgUnitGroupUIDs + "&dimension=co&dimension=ou:" + orgUnitsStr + "&dimension=pe:" + periodStr +
+            "&skipMeta=true";
+        var analyticsURL2 = "../api/analytics.json?dimension=dx:" + deUIDs2 + "&dimension=" + orgUnitGroupSetUID2 + ":" +
+            orgUnitGroupUIDs2 + "&dimension=co&dimension=ou:" + orgUnitsStr + "&dimension=pe:" + periodStr +
+            "&skipMeta=true";
+        var analyticsURL3 = "../api/analytics.json?dimension=dx:atK6VqkQQTh&dimension=" + orgUnitGroupSetUID + ":" +
+            orgUnitGroupUIDs + "&dimension=ou:" + orgUnitsStr + "&dimension=pe:" + periodStr + "&skipMeta=true";
+        var analyticsURL4 = "../api/analytics.json?dimension=dx:" + deUIDs3 + "&dimension=" + orgUnitGroupSetUID3 + ":" +
+            orgUnitGroupUIDs3 + "&dimension=co&dimension=ou:" + orgUnitsStr + "&dimension=pe:" + periodStr +
+            "&skipMeta=true";
+
+        $.get(analyticsURL, function (json) {
+            $.each(json.rows, function (j, rowData) {
+                dataJSONArray.push([rowData[0], rowData[1], rowData[2], rowData[3], rowData[4]]);
+            });
+
+            $.get(analyticsURL1, function (json1) {
+                $.each(json1.rows, function (j, rowData) {
+                    dataJSONArrayGr.push([rowData[0], rowData[1], rowData[2], rowData[3],
+                        rowData[4], rowData[5]
+                    ]);
+                });
+
+                $.get(analyticsURL2, function (json2) {
+                    $.each(json2.rows, function (j, rowData) {
+                        dataJSONArrayGr2.push([rowData[0], rowData[1], rowData[2],
+                            rowData[3], rowData[4], rowData[5]
+                        ]);
+                    });
+                    $.get(analyticsURL3, function (json3) {
+                        $.each(json3.rows, function (j, rowData) {
+                            dataJSONArrayGr3.push([rowData[0], rowData[1],
+                                rowData[2], rowData[3], rowData[4]
+                            ]);
+                        });
+                        $.get(analyticsURL4, function (json4) {
+                            $.each(json4.rows, function (j, rowData) {
+                                dataJSONArrayGr4.push([rowData[0],
+                                    rowData[1], rowData[2],
+                                    rowData[3], rowData[4],
+                                    rowData[5]
+                                ]);
+                            });
+
+                            $.each(tabIDs, function (i, item) {
+                                switch (item) {
+
+                                    case "HM_3B_OPDIPDBED_OCCUPANCY_tab":
+                                        {
+                                            draw_HM_3B_OPDIPDBED_OCCUPANCY_tab(
+                                                item);
+                                            break;
+                                        }
+                                    case "CM24_tab":
+                                        {
+                                            showLoad();
+                                            draw_CM24_tab(item);
+                                            break;
+
+                                        }
+
+                                }
+
+                            });
+                            $.each(tableIDs, function (idx, tableID) {
+                                $("#" + tableID).addClass(
+                                    'table table-bordered table-condensed table-hover table-striped'
+                                );
+                            });
+                            $("table > thead > tr > td").css('vertical-align',
+                                'middle');
+                            $("table > tbody > tr > td").css('vertical-align',
+                                'middle');
+                            $("table > thead > tr > td").css("border",
+                                "1px solid #f1f1f1");
+                            $("#" + $("select").find(':selected').attr('rel')).fadeIn();
+
+                            $("select").change(function () {
+                                var selectedID = $("select").find(
+                                    ':selected').attr('rel');
+                                $.each(tabIDs, function (i, item) {
+                                    $("#" + item).fadeOut();
+                                    $("#" + item).hide();
+                                });
+                                $("#" + selectedID).fadeIn();
+                                hideLoad();
+                            });
+                        });
+                    });
+                });
+            });
+
+
+
+
+        });
+    }
+
+
+
+    // function for getting cell values
+    function getCellValue(de, cocID, ou, pe) {
+        var result = 0;
+
+        for (var i = 0; i < dataJSONArray.length; i++) {
+            if (dataJSONArray[i][0] == de && dataJSONArray[i][1] == cocID && dataJSONArray[i][2] == ou && dataJSONArray[
+                    i][3] == pe && dataJSONArray[i][4] != null) {
+
+                //console.log(dataJSONArray[i][0]+"ggg"+dataJSONArray[i][1] +"i-2value" + dataJSONArray[i][2] + "i-3" + dataJSONArray[i][3] + "i-4" + dataJSONArray[i][4]);
+                result = dataJSONArray[i][4];
+                break;
+            }
+
+
+        }
+        return result;
+    }
+
+    function getCellValue3(de, ou, pe, oug) {
+        var result = 0;
+
+        for (var i = 0; i < dataJSONArrayGr3.length; i++) {
+            if (dataJSONArrayGr3[i][0] == de && dataJSONArrayGr3[i][1] == oug && dataJSONArrayGr3[i][2] == ou &&
+                dataJSONArrayGr3[i][3] == pe && dataJSONArrayGr3[i][4] != null) {
+
+                //console.log(dataJSONArray[i][0]+"ggg"+dataJSONArray[i][1] +"i-2value" + dataJSONArray[i][2] + "i-3" + dataJSONArray[i][3] + "i-4" + dataJSONArray[i][4]);
+                result = dataJSONArrayGr3[i][4];
+                break;
+            }
+
+
+        }
+        return result;
+    }
+
+    function draw_HM_3B_OPDIPDBED_OCCUPANCY_tab(selectedTabID) {
+        showLoad();
+        $("#" + selectedTabID + "le > tbody").html("");
+        var lastYearPeriod = (parseInt(gotPeriod.substring(0, 4)) - 1).toString() + gotPeriod.substring(4, 6);
+        var lastYearPE_Str = " - " + getPeriod(lastYearPeriod);
+        var thisYearPE_Str = " - " + getPeriod(gotPeriod);
+        var year = gotPeriod.substring(0, 4);
+        var month = gotPeriod.substring(4, 6);
+        var noofdays = function daysInMonth(month, year) {
+
+            return new Date(year, month, 0).getDate();
+        }
+
+        $("#bed_lastYearID").append(lastYearPE_Str);
+        $("#bed_thisYearID").append(thisYearPE_Str);
+        $("#OPD_lastYearID").append(lastYearPE_Str);
+        $("#OPD_thisYearID").append(thisYearPE_Str);
+        $("#IPD_lastYearID").append(lastYearPE_Str);
+        $("#IPD_thisYearID").append(thisYearPE_Str);
+        var htmlReport = "";
+        var sNo = 0;
+        $.each(division_Array, function (idx, division) {
+            var flagDivision = false;
+            $.each(district_Array, function (i, district) {
+                if (district[2] == division[0]) {
+                    htmlReport += "<tr>";
+                    htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+                    if (flagDivision == false) {
+                        htmlReport += "<td>" + division[1] + "</td>";
+                        flagDivision = true;
+                    } else {
+                        htmlReport += "<td>&nbsp;</td>";
+                    }
+
+                    var val_OPD_lastYear = 0,
+                        val_OPD_thisYear = 0,
+                        val_IPD_lastYear = 0,
+                        val_IPD_thisYear = 0,
+                        total_beds_lastYear = 0,
+                        total_beds_thisYear = 0,
+                        total_bed_days_lastYear = 0,
+                        total_bed_days_thisYear = 0,
+                        total_bed_rate_lastYear = 0,
+                        total_bed_rate_thisYear = 0,
+                        bed_occ_lastYear = 0,
+                        bed_occ_thisYear = 0;
+
+                    val_OPD_thisYear = parseInt(getCellValue("iSCASlHAFmA", "Ti9FJqkSK6J", district[0],
+                        gotPeriod));
+                    val_OPD_lastYear = parseInt(getCellValue("iSCASlHAFmA", "Ti9FJqkSK6J", district[0],
+                        lastYearPeriod));
+                    val_IPD_thisYear += parseInt(getCellValue("AMd9w1N6g4i", "iRNhRMvoSCx", district[0],
+                        gotPeriod));
+                    val_IPD_thisYear += parseInt(getCellValue("AMd9w1N6g4i", "wb51FJHqHxp", district[0],
+                        gotPeriod));
+                    val_IPD_thisYear += parseInt(getCellValue("CMPcYkXha3p", "iRNhRMvoSCx", district[0],
+                        gotPeriod));
+                    val_IPD_thisYear += parseInt(getCellValue("CMPcYkXha3p", "wb51FJHqHxp", district[0],
+                        gotPeriod));
+
+                    val_IPD_lastYear += parseInt(getCellValue("AMd9w1N6g4i", "iRNhRMvoSCx", district[0],
+                        lastYearPeriod));
+                    val_IPD_lastYear += parseInt(getCellValue("AMd9w1N6g4i", "wb51FJHqHxp", district[0],
+                        lastYearPeriod));
+                    val_IPD_lastYear += parseInt(getCellValue("CMPcYkXha3p", "iRNhRMvoSCx", district[0],
+                        lastYearPeriod));
+                    val_IPD_lastYear += parseInt(getCellValue("CMPcYkXha3p", "wb51FJHqHxp", district[0],
+                        lastYearPeriod));
+                    total_beds_thisYear = parseInt(getCellValue("QNm9lJKlPMd", "Ti9FJqkSK6J", district[
+                        0], gotPeriod));
+                    total_beds_lastYear = parseInt(getCellValue("QNm9lJKlPMd", "Ti9FJqkSK6J", district[
+                        0], lastYearPeriod));
+
+                    total_bed_days_thisYear = total_beds_thisYear * noofdays(month, year);
+                    total_bed_days_lastYear = total_beds_lastYear * noofdays(month, year);
+                    bed_occupancy = parseInt(getCellValue("vaX8Eq1PJnW", "Ti9FJqkSK6J", district[0],
+                        gotPeriod));
+                    bed_occupancy_lastyear = parseInt(getCellValue("vaX8Eq1PJnW", "Ti9FJqkSK6J",
+                        district[0], lastYearPeriod));
+                    if (total_bed_days_lastYear != 0) {
+                        total_bed_rate_lastYear = (bed_occupancy_lastyear / total_bed_days_lastYear) *
+                            100;
+                    }
+                    if (total_bed_days_thisYear != 0) {
+                        total_bed_rate_thisYear = (bed_occupancy / total_bed_days_thisYear) * 100;
+                    }
+                    htmlReport += "<td>" + district[1] + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + val_OPD_lastYear + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + val_OPD_thisYear + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + val_IPD_lastYear + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + val_IPD_thisYear + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + total_beds_lastYear + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + total_bed_days_lastYear +
+                        "</td>";
+
+                    htmlReport += "<td style='text-align: center;'>" + bed_occupancy_lastyear + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + total_bed_rate_lastYear +
+                        "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + total_beds_thisYear + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + total_bed_days_thisYear +
+                        "</td>";
+
+                    htmlReport += "<td style='text-align: center;'>" + bed_occupancy + "</td>";
+                    htmlReport += "<td style='text-align: center;'>" + parseInt(total_bed_rate_thisYear) +
+                        "</td>";
+                    htmlReport += "</tr>";
+                    sNo++;
+                }
+            });
+        });
+        $("#" + selectedTabID + "le > tbody").append(htmlReport);
+        hideLoad();
+        $("#" + selectedTabID).fadeIn();
+    }
+
+    function draw_CM24_tab(selectedTabID) {
+        showLoad();
+        var htmlReport = "";
+        var periodArray = getPeriodsFromApr(gotPeriod);
+        var sNo = 0;
+        $.each(district_Array, function (idx, district) {
+            var scCount = 0;
+            // var rowValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            var rowValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0];
+            rowValues[9] = parseInt(rowValues[9]) + parseInt(getCellValue("FIaGENXR3c5", "Ti9FJqkSK6J",
+                district[0], gotPeriod));
+            $.each(periodArray, function (i, pe) {
+                rowValues[2] = parseInt(rowValues[2]) + parseInt(getCellValue("WjxN3ZJyeFb",
+                    "Ti9FJqkSK6J", district[0], pe));
+                var mnth_ = parseInt(gotPeriod.substring(4, 6));
+                rowValues[24]=parseInt((parseInt(rowValues[2])/12)*mnth_);
+                rowValues[11] = parseInt(rowValues[11]) + parseInt(getCellValue2("ixBYYYjxXPP",
+                    "Ti9FJqkSK6J", district[0], pe, orgUnitGroups2[0].id));
+                rowValues[12] = parseInt(rowValues[12]) + parseInt(getCellValue2("ixBYYYjxXPP",
+                    "Ti9FJqkSK6J", district[0], pe, orgUnitGroups2[1].id));
+                rowValues[14] = parseInt(rowValues[14]) + parseInt(getCellValue("iq79Esv2oDH",
+                    "Ti9FJqkSK6J", district[0], pe));
+                rowValues[15] = parseInt(rowValues[15]) + parseInt(getCellValue("iq79Esv2oDH",
+                    "Ti9FJqkSK6J", district[0], pe));
+                rowValues[16] = parseInt(rowValues[16]) + parseInt(getCellValue("zVEJ83IAH9j",
+                    "Ti9FJqkSK6J", district[0], pe));
+                rowValues[17] = parseInt(rowValues[17]) + parseInt(getCellValue("zVEJ83IAH9j",
+                    "Ti9FJqkSK6J", district[0], pe));
+
+                // rowValues[19] = parseInt(rowValues[19]) + parseInt(getCellValue("zVEJ83IAH9j", "Ti9FJqkSK6J", district[0], pe));
+                rowValues[20] = parseInt(rowValues[20]) + parseInt(getCellValue("KEfGq62R2nB",
+                    "Ti9FJqkSK6J", district[0], pe));
+                rowValues[20] = parseInt(rowValues[20]) + parseInt(getCellValue("lZaulMzHAbG",
+                    "Ti9FJqkSK6J", district[0], pe));
+                rowValues[3] = parseInt(rowValues[3]) + parseInt(getCellValue1("aRueVYr35yM",
+                    "Ti9FJqkSK6J", district[0], pe, orgUnitGroups[0].id));
+
+
+                rowValues[4] = parseInt(rowValues[4]) + parseInt(getCellValue1("aRueVYr35yM",
+                    "Ti9FJqkSK6J", district[0], pe, orgUnitGroups[1].id));
+            });
+            $.each(SC_Array, function (i, sc) {
+                if (sc[2] == district[0]) {
+                    scCount++;
+                }
+            });
+            rowValues[6] = parseInt(rowValues[3]) + parseInt(rowValues[4]) + parseInt(rowValues[5]);
+            if (parseInt(rowValues[2]) != 0) {
+                rowValues[7] = (parseInt(rowValues[6]) / parseInt(rowValues[2])) * 100;
+            }
+            rowValues[8] = scCount;
+            rowValues[9] = scCount;
+            if (parseInt(rowValues[9]) != 0) {
+                rowValues[10] = (parseInt(rowValues[9]) / parseInt(rowValues[8])) * 100;
+            }
+            if (parseInt(rowValues[6]) != 0) {
+                rowValues[13] = ((parseInt(rowValues[11]) + (parseInt(rowValues[12])) / rowValues[3])) * 100;
+            }
+
+            htmlReport += "<tr>";
+            htmlReport += "<td style='text-align: center;'>" + (sNo + 1) + "</td>";
+            htmlReport += "<td>" + district[1] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[2] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[24] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[3] + "</td>";
+
+            htmlReport += "<td style='text-align: center;'>" + rowValues[4] + "</td>";
+            htmlReport += "<td>&nbsp;</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[6] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[7].toFixed(0) + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[8] + "</td>";
+
+            htmlReport += "<td style='text-align: center;'>" + rowValues[9] + "</td>";
+
+            htmlReport += "<td style='text-align: center;'>" + rowValues[10].toFixed(0) + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[11] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[12] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[13].toFixed(0) + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[14] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[15] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[16] + "</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[17] + "</td>";
+            htmlReport += "<td>&nbsp;</td>";
+            htmlReport += "<td>&nbsp;</td>";
+            htmlReport += "<td style='text-align: center;'>" + rowValues[20] + "</td>";
+            htmlReport += "<td>&nbsp;</td>";
+
+            htmlReport += "</tr>";
+            sNo++;
+        });
+        $("#" + selectedTabID + "le > tbody").append(htmlReport);
+        hideLoad();
+        $("#" + selectedTabID).fadeIn();
+    }
+
+    function getCellValue1(de, cocID, ou, pe, oug) {
+        var result = 0;
+
+        for (var i = 0; i < dataJSONArrayGr.length; i++) {
+            if (dataJSONArrayGr[i][0] == de && dataJSONArrayGr[i][1] == cocID && dataJSONArrayGr[i][2] == oug &&
+                dataJSONArrayGr[i][3] == ou && dataJSONArrayGr[i][4] == pe && dataJSONArrayGr[i][5] != null) {
+                // console.log(dataJSONArrayGr[i][0]+"ggg"+dataJSONArrayGr[i][1] +"i-2value" + dataJSONArrayGr[i][2] + "i-3" + dataJSONArrayGr[i][3] + "i-4" + dataJSONArrayGr[i][4] + "i-5" + dataJSONArrayGr[i][5]);
+                result = dataJSONArrayGr[i][5];
+                break;
+            }
+
+        }
+        return result;
+    }
+
+
+    function getPeriodsFromAprtolast(pe1) {
+        var periodArray1 = [];
+        var year = pe1.substring(0, 4);
+        var length = parseInt(pe1.substring(4, 6));
+        if (length > 3) {
+            for (var i = 4; i <= length - 1; i++) {
+                if (i < 10) {
+                    periodArray1.push(year + "0" + i);
+                } else {
+                    periodArray1.push(year + i);
+                }
+            }
+        } else if (length <= 3) {
+            var lastYear = (parseInt(year) - 1).toString();
+
+            for (var i = 1; i <= length - 1; i++) {
+                periodArray1.push(year + "0" + i);
+            }
+
+            for (var i = 4; i <= 12; i++) {
+                if (i < 10) {
+                    periodArray1.push(lastYear + "0" + i);
+                } else {
+                    periodArray1.push(lastYear + i);
+                }
+            }
+        }
+        return periodArray1;
+    }
+
+    function getPeriodsFromApr(pe) {
+        var periodArray = [];
+        var year = pe.substring(0, 4);
+        var length = parseInt(pe.substring(4, 6));
+        if (length > 3) {
+            for (var i = 4; i <= length; i++) {
+                if (i < 10) {
+                    periodArray.push(year + "0" + i);
+                } else {
+                    periodArray.push(year + i);
+                }
+            }
+        } else if (length <= 3) {
+            var lastYear = (parseInt(year) - 1).toString();
+
+            for (var i = 1; i <= length; i++) {
+                periodArray.push(year + "0" + i);
+            }
+
+            for (var i = 4; i <= 12; i++) {
+                if (i < 10) {
+                    periodArray.push(lastYear + "0" + i);
+                } else {
+                    periodArray.push(lastYear + i);
+                }
+            }
+        }
+        return periodArray;
+    }
+
+    // function to convert periods to more visible info
+    function getPeriod(pr) {
+        var year = pr.toString().substring(0, 4);
+        var month = pr.toString().substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1") strMonth = "January";
+        else if (month == "02" || month == "2") strMonth = "February";
+        else if (month == "03" || month == "3") strMonth = "March";
+        else if (month == "04" || month == "4") strMonth = "April";
+        else if (month == "05" || month == "5") strMonth = "May";
+        else if (month == "06" || month == "6") strMonth = "June";
+        else if (month == "07" || month == "7") strMonth = "July";
+        else if (month == "08" || month == "8") strMonth = "August";
+        else if (month == "09" || month == "9") strMonth = "September";
+        else if (month == "10") strMonth = "October";
+        else if (month == "11") strMonth = "November";
+        else if (month == "12") strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+
+
+
+
+    // function to hide loading animation
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+
+    function showLoad() {
+        document.getElementById("cover").style.display = "block";
+        document.getElementById("loads").style.display = "block";
+        //document.getElementById("loading").style.display="visible";
+        document.getElementsByTagName("body")[0].style.overflow = "visible";
+        //alert( "inside showload method" );
+
+    }
+</script>
+<script type="text/javascript">
+    function fnExcelReport() {
+        var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'>";
+        var textRange;
+        var j = 0;
+
+        // tab1 = document.getElementById('CM25_table');
+        tab = document.getElementById('CM24_table');
+
+
+        for (j = 0; j < tab.rows.length; j++) {
+            tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab1.rows.length; j++) {
+            tab_text = tab_text + tab1.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab2.rows.length; j++) {
+            tab_text = tab_text + tab2.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab3.rows.length; j++) {
+            tab_text = tab_text + tab3.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab4.rows.length; j++) {
+            tab_text = tab_text + tab4.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab5.rows.length; j++) {
+            tab_text = tab_text + tab5.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab6.rows.length; j++) {
+            tab_text = tab_text + tab6.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab7.rows.length; j++) {
+            tab_text = tab_text + tab7.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab8.rows.length; j++) {
+            tab_text = tab_text + tab8.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab9.rows.length; j++) {
+            tab_text = tab_text + tab9.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab10.rows.length; j++) {
+            tab_text = tab_text + tab10.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab11.rows.length; j++) {
+            tab_text = tab_text + tab11.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab12.rows.length; j++) {
+            tab_text = tab_text + tab12.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab13.rows.length; j++) {
+            tab_text = tab_text + tab13.rows[j].innerHTML + "</tr>";
+
+        }
+
+        for (j = 0; j < tab14.rows.length; j++) {
+            tab_text = tab_text + tab14.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab15.rows.length; j++) {
+            tab_text = tab_text + tab15.rows[j].innerHTML + "</tr>";
+
+        }
+
+        for (j = 0; j < tab16.rows.length; j++) {
+            tab_text = tab_text + tab16.rows[j].innerHTML + "</tr>";
+
+        }
+        for (j = 0; j < tab17.rows.length; j++) {
+            tab_text = tab_text + tab17.rows[j].innerHTML + "</tr>";
+
+        }
+
+        tab_text = tab_text + "</table>";
+        tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, ""); //remove if u want links in your table
+        tab_text = tab_text.replace(/<img[^>]*>/gi, ""); // remove if u want images in your table
+        tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
+
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE");
+
+        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) // If Internet Explorer
+        {
+            txtArea1.document.open("txt/html", "replace");
+            txtArea1.document.write(tab_text);
+            txtArea1.document.close();
+            txtArea1.focus();
+            sa = txtArea1.document.execCommand("SaveAs", true, "MPR State.xls");
+        } else //other browser not tested on IE 11
+            sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+
+        return (sa);
+    }
+
+    function getCellValue2(de, cocID, ou, pe, oug) {
+        var result = 0;
+
+        for (var i = 0; i < dataJSONArrayGr2.length; i++) {
+            if (dataJSONArrayGr2[i][0] == de && dataJSONArrayGr2[i][1] == cocID && dataJSONArrayGr2[i][2] == oug &&
+                dataJSONArrayGr2[i][3] == ou && dataJSONArrayGr2[i][4] == pe && dataJSONArrayGr2[i][5] != null) {
+
+                result = dataJSONArrayGr2[i][5];
+                break;
+            }
+
+        }
+        return result;
+    }
+
+    function fnExcelReport1() {
+        var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'>";
+        var textRange;
+        var j = 0;
+        tab = document.getElementById('HM_3B_OPDIPDBED_OCCUPANCY_table');
+
+
+        for (j = 0; j < tab.rows.length; j++) {
+            tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+
+        }
+
+
+
+
+
+
+        tab_text = tab_text + "</table>";
+        tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, ""); //remove if u want links in your table
+        tab_text = tab_text.replace(/<img[^>]*>/gi, ""); // remove if u want images in your table
+        tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
+
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE");
+
+        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) // If Internet Explorer
+        {
+            txtArea1.document.open("txt/html", "replace");
+            txtArea1.document.write(tab_text);
+            txtArea1.document.close();
+            txtArea1.focus();
+            sa = txtArea1.document.execCommand("SaveAs", true, "MPR State.xls");
+        } else //other browser not tested on IE 11
+            sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+
+        return (sa);
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,',
+            template =
+            '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>',
+            base64 = function (s) {
+                return window.btoa(unescape(encodeURIComponent(s)))
+            },
+            format = function (s, c) {
+                return s.replace(/{(\w+)}/g, function (m, p) {
+                    return c[p];
+                })
+            }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = {
+                worksheet: name || 'Worksheet',
+                table: table.innerHTML
+            }
+
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+
+        }
+    })()
+</script>
+<style type="text/css">
+    ul.tabs {
+        margin: 0;
+        padding: 0;
+        float: left;
+        list-style: none;
+        height: 32px;
+        border-bottom: 1px solid #999999;
+        border-left: 1px solid #999999;
+        width: 100%;
+        height: auto;
+    }
+
+    ul.tabs li {
+        float: left;
+        margin: 0;
+        cursor: pointer;
+        padding: 0px 21px;
+        height: 32px;
+        line-height: 16px;
+        border: 1px solid #999999;
+        border-left: none;
+        font-weight: bold;
+        background: #EEEEEE;
+        overflow: hidden;
+        position: relative;
+        width: auto;
+    }
+
+    ul.tabs li:hover {
+        background: #CCCCCC;
+    }
+
+    ul.tabs li.active {
+        background: #FFFFFF;
+        border-bottom: 1px solid #FFFFFF;
+    }
+
+    .tab_container {
+        clear: both;
+        float: left;
+        width: 100%;
+        background: #FFFFFF;
+    }
+
+    .tab_content {
+        padding: 0;
+        font-size: 1.2em;
+        display: none;
+    }
+
+    #container {
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .vtext {
+        min-width: 40px;
+    }
+
+    .borders {
+        border-bottom-color: #999999;
+    }
+
+    .rightborder {
+        border-right-color: #999999;
+    }
+
+    .all {
+        font-weight: bolder;
+        padding: 4px 5px;
+    }
+
+    .all td {
+        padding: 3px 5px;
+    }
+
+    .all2 {
+        font-weight: bolder;
+        padding: 4px 5px;
+        background: #fff;
+        border: 0;
+    }
+
+    #cover {
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 5;
+        width: 100%;
+        height: 100%;
+    }
+
+    #loads {
+        height: 100px;
+        width: 500px;
+        position: fixed;
+        z-index: 10;
+        margin: 0 auto;
+        top: 50%;
+        left: 50%;
+        margin-top: -50px;
+        margin-left: -250px;
+        background: #999;
+        border: 5px solid #cccccc;
+        text-align: center;
+        border-radius: 5px;
+    }
+
+    .loading {
+        width: 400px;
+        font-size: 20px;
+        font-family: verdana;
+        font-weight: bolder;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin: 0 auto;
+        margin-top: -8px;
+        margin-left: -200px;
+    }
+
+    #front {
+        background-color: #1D5288;
+    }
+</style>
+<a id="dlink" style="display:none;"></a>
+<div id="loads">
+    <p class="loading" align="center">Reports Loading... Please Wait...</p>
+</div>
+<div id="cover"></div>
+<br/>
+<p>&nbsp;&nbsp;
+    <button type="button" id="btnBack" class="btn btn-primary btn-sm" style="vertical-align: middle;" onclick="location.href='../api/apps/Report-App/index.html#/generate-report'">
+        <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+    </button>
+    <!--<input  type="button"  onclick="printContent('printing');" value="Print"/>-->
+    <!--<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;"
+            id="btnExport"><span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp;
+        Download As Excel
+    </button>-->
+
+    <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport" onclick="tableToExcel('CM24_tab', 'name', 'form-24 State Report.xls')">
+        <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span> &nbsp; Download As Excel
+    </button>
+
+</p>
+
+<br/>
+
+<br/>
+<form>
+    <div id="print">
+
+        <div id="CM24_tab">
+            <p>
+                <table id="CM24_table" border="1" cellspacing="6" cellpadding="4" width="100%" style="border-collapse:collapse; font-family: Arial, Helvetica, sans-serif">
+                    <thead>
+                        <tr style="background-color: #d1d1d1;font-weight: bold;">
+                            <td colspan="11" style="text-align: left;">
+                                <span style="font-size:14px;" style="  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+  transform: rotate(-90deg);
+
+  /* also accepts left, right, top, bottom coordinates; not required, but a good idea for styling */
+  -webkit-transform-origin: 50% 50%;
+  -moz-transform-origin: 50% 50%;
+  -ms-transform-origin: 50% 50%;
+  -o-transform-origin: 50% 50%;
+  transform-origin: 50% 50%;
+
+  /* Should be unset in IE9+ I think. */
+  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);">
+                                    <strong>&#2360;&#2370;&#2340;&#2381;&#2352; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;:- 74</strong>
+                                </span>
+                            </td>
+                            <td colspan="11" style="text-align: right;">
+                                <span style="font-size:14px;">
+                                    <strong>&#2346;&#2381;&#2352;&#2346;&#2340;&#2381;&#2352; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;&#2307;-24
+                                    </strong>
+                                </span>
+                            </td>
+
+                        </tr>
+                        <tr style="background-color: #c1c1c1;">
+                            <td colspan="22" style="text-align: center;">
+                                <span style="font-size:14px;">
+                                    <strong>&#2352;&#2366;&#2359;&#2381;&#2335;&#2381;&#2352;&#2368;&#2351; &#2360;&#2381;&#2357;&#2366;&#2360;&#2381;&#2341;&#2381;&#2351;
+                                        &#2350;&#2367;&#2358;&#2344;
+                                    </strong>
+                                </span>
+                            </td>
+
+                        </tr>
+                        <tr style="background-color: #d1d1d1;font-weight: bold;">
+                            <td colspan="22" style="text-align: center;">
+                                <span style="font-size:14px;">
+                                    <strong>(&#2332;&#2344;&#2344;&#2368; &#2360;&#2369;&#2352;&#2325;&#2381;&#2359;&#2366; &#2351;&#2379;&#2332;&#2344;&#2366;)
+                                    </strong>
+                                </span>
+                            </td>
+
+                        </tr>
+                        <tr style="background-color: #d1d1d1;font-weight: bold;">
+                            <td colspan="22" style="text-align: center;">
+                                <span style="font-size:14px;">
+                                    <strong>(&#2344;&#2379;&#2337;&#2354; &#2357;&#2367;&#2349;&#2366;&#2327;- &#2330;&#2367;&#2325;&#2367;&#2340;&#2381;&#2360;&#2366;
+                                        &#2360;&#2381;&#2357;&#2366;&#2360;&#2381;&#2341;&#2381;&#2351; &#2319;&#2357;&#2306;
+                                        &#2346;&#2352;&#2367;&#2357;&#2366;&#2352; &#2325;&#2354;&#2381;&#2351;&#2366;&#2339;)
+                                    </strong>
+                                </span>
+                            </td>
+
+                        </tr>
+
+
+                        <tr style="background-color: #d1d1d1;font-weight: bold;">
+                            <td colspan="2" style="text-align: right;">
+                                <span style="font-size:14px;">
+                                    <strong>प्रदेश का नाम:-</strong>
+                                </span>
+                            </td>
+                            <td colspan="2" style="text-align: left;">
+                                <span style="font-size:14px;" id="title1">
+                                    <strong></strong>
+                                </span>
+                            </td>
+                            <td colspan="4" style="text-align: right;" id="front_periodID2">
+                                <span style="font-size:14px;">
+                                    <strong>&#2346;&#2381;&#2352;&#2327;&#2340;&#2367; &#2350;&#2366;&#2361;:-
+                                    </strong>
+                                </span>
+                            </td>
+                            <td colspan="5" style="text-align: left;">
+                                <span id="front_periodID1"></span>
+                            </td>
+                            <td colspan="5" style="text-align: right;">
+                                <span style="font-size:14px;">
+                                    <strong>&#2357;&#2352;&#2381;&#2359;</strong>
+                                </span>
+                            </td>
+                            <td colspan="4" style="text-align: left;">
+                                <span style="font-size:14px;" id="yearDisplay2">
+                                    <strong></strong>
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        <tr style="background-color: #d1d1d1;font-weight: bold;">
+                            <td colspan="22" style="text-align: right;">
+                                <span style="font-size:14px;">
+                                    <strong>(&#2311;&#2325;&#2366;&#2312;- &#2343;&#2344;&#2352;&#2366;&#2358;&#2367; &#2354;&#2366;&#2326;
+                                        &#2352;&#2370;0 /&#2360;&#2306;&#2326;&#2381;&#2351;&#2366; &#2350;&#2375;&#2306;)</strong>
+                                </span>
+                            </td>
+
+                        </tr>
+
+
+                        <tr style="background-color: #d1d1d1;font-weight: bold;">
+                            <td class="vericaltext" style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2325;&#2381;&#2352;0 &#2360;&#2306;0
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2332;&#2344;&#2346;&#2342; &#2325;&#2366; &#2344;&#2366;&#2350;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2357;&#2352;&#2381;&#2359; &#2350;&#2375;&#2306; &#2325;&#2369;&#2354; &#2360;&#2306;&#2349;&#2366;&#2357;&#2367;&#2340;
+                                        &#2346;&#2381;&#2352;&#2360;&#2357;
+                                    </strong>
+                                </span>
+                            </td>
+                            <!--Column for monthly ela -->
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2360;&#2306;&#2349;&#2366;&#2357;&#2367;&#2340; &#2346;&#2381;&#2352;&#2360;&#2357;&#2379; &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2360;&#2352;&#2325;&#2366;&#2352;&#2368; &#2360;&#2381;&#2357;&#2366;&#2360;&#2381;&#2341;&#2381;&#2351;
+                                        &#2311;&#2325;&#2366;&#2312;&#2351;&#2379;&#2306; &#2350;&#2375;&#2306; &#2361;&#2369;&#2319;
+                                        &#2346;&#2381;&#2352;&#2360;&#2357;&#2379;&#2306; &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2346;&#2381;&#2352;&#2366;&#2343;&#2367;&#2325;&#2371;&#2340;
+                                        &#2344;&#2367;&#2332;&#2368; &#2330;&#2367;&#2325;&#2367;&#2340;&#2381;&#2360;&#2366;&#2354;&#2351;&#2379;&#2306;
+                                        &#2350;&#2375;&#2306; &#2361;&#2369;&#2319; &#2346;&#2381;&#2352;&#2360;&#2357;&#2379;&#2306;
+                                        &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2327;&#2376;&#2352; &#2346;&#2381;&#2352;&#2366;&#2343;&#2367;&#2325;&#2371;&#2340;
+                                        &#2344;&#2367;&#2332;&#2368; &#2330;&#2367;&#2325;&#2367;&#2340;&#2381;&#2360;&#2366;&#2354;&#2351;&#2379;&#2306;
+                                        &#2350;&#2375;&#2306; &#2361;&#2369;&#2319; &#2346;&#2381;&#2352;&#2360;&#2357;&#2379;&#2306;
+                                        &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;" font color="red">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2325;&#2369;&#2354; &#2360;&#2306;&#2360;&#2381;&#2341;&#2366;&#2327;&#2340;
+                                        &#2346;&#2381;&#2352;&#2360;&#2357;&#2379;&#2306; &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;
+                                        (3$4$5)
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2313;&#2346;&#2354;&#2348;&#2381;&#2343;&#2367; &#2346;&#2381;&#2352;&#2340;&#2367;&#2358;&#2340;
+                                        (6/2)</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2325;&#2369;&#2354; &#2360;&#2381;&#2357;&#2366;&#2360;&#2381;&#2341;&#2381;&#2351;
+                                        &#2313;&#2346;&#2325;&#2375;&#2344;&#2381;&#2342;&#2381;&#2352;
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2346;&#2381;&#2352;&#2366;&#2343;&#2367;&#2325;&#2371;&#2340; &#2360;&#2381;&#2357;&#2366;&#2360;&#2381;&#2341;&#2381;&#2351;
+                                        &#2313;&#2346;&#2325;&#2375;&#2344;&#2381;&#2342;&#2381;&#2352;
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2346;&#2381;&#2352;&#2366;&#2343;&#2367;&#2325;&#2371;&#2340; &#2313;&#2346;&#2325;&#2375;&#2344;&#2381;&#2342;&#2381;&#2352;&#2379;&#2306;
+                                        &#2325;&#2366; &#2346;&#2381;&#2352;&#2340;&#2367;&#2358;&#2340; (9/8)</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2352;&#2370;0 1400/-&#2325;&#2368; &#2342;&#2352; &#2360;&#2375; &#2349;&#2369;&#2327;&#2340;&#2366;&#2344;
+                                        &#2325;&#2367;&#2319; &#2327;&#2319; &#2354;&#2366;&#2349;&#2366;&#2352;&#2381;&#2341;&#2367;&#2351;&#2379;&#2306;
+                                        &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2352;&#2370;0 1000/-&#2325;&#2368; &#2342;&#2352; &#2360;&#2375; &#2349;&#2369;&#2327;&#2340;&#2366;&#2344;
+                                        &#2325;&#2367;&#2319; &#2327;&#2319; &#2354;&#2366;&#2349;&#2366;&#2352;&#2381;&#2341;&#2367;&#2351;&#2379;&#2306;
+                                        &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2349;&#2369;&#2327;&#2340;&#2366;&#2344; &#2325;&#2367;&#2351;&#2375; &#2327;&#2351;&#2375;
+                                        &#2354;&#2366;&#2349;&#2366;&#2352;&#2381;&#2341;&#2367;&#2351;&#2379;&#2306; &#2325;&#2366;
+                                        &#2346;&#2381;&#2352;&#2340;&#2367;&#2358;&#2340; (11$12)/3
+                                    </strong>
+                                </span>
+                            </td>
+
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2310;&#2358;&#2366; &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;
+                                        &#2332;&#2367;&#2344;&#2381;&#2361;&#2375;&#2306; &#2349;&#2369;&#2327;&#2340;&#2366;&#2344;
+                                        &#2325;&#2367;&#2351;&#2366; &#2332;&#2366;&#2344;&#2366; &#2341;&#2366;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2310;&#2358;&#2366; &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;
+                                        &#2332;&#2367;&#2344;&#2381;&#2361;&#2375;&#2306; &#2349;&#2369;&#2327;&#2340;&#2366;&#2344;
+                                        &#2325;&#2367;&#2351;&#2366; &#2327;&#2351;&#2366;
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2328;&#2352;&#2375;&#2354;&#2370; (&#2348;&#2368;0
+                                        &#2346;&#2368;0 &#2319;&#2354;0) &#2354;&#2366;&#2349;&#2366;&#2352;&#2381;&#2341;&#2367;&#2351;&#2379;&#2306;
+                                        &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;
+                                    </strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2325;&#2366;&#2354;&#2350; 18 &#2325;&#2375; &#2360;&#2366;&#2346;&#2375;&#2325;&#2381;&#2359;
+                                        &#2349;&#2369;&#2327;&#2340;&#2366;&#2344; &#2325;&#2367;&#2351;&#2375; &#2327;&#2351;&#2375;
+                                        &#2354;&#2366;&#2349;&#2366;&#2352;&#2381;&#2341;&#2367;&#2351;&#2379;&#2306; &#2325;&#2368;
+                                        &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="3">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2340;&#2371; &#2350;&#2371;&#2340;&#2381;&#2351;&#2369; &#2325;&#2366;
+                                        &#2310;&#2373;&#2337;&#2367;&#2335;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1" rowspan="2">
+                                <span style="font-size:12px;">
+                                    <strong>&#2309;&#2349;&#2381;&#2351;&#2369;&#2325;&#2381;&#2340;&#2367;</strong>
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        <tr style="background-color: #d1d1d1;font-weight: bold;">
+                            <td style="height: 40px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>&#2350;&#2366;&#2361; &#2340;&#2325; &#2360;&#2306;&#2349;&#2366;&#2357;&#2367;&#2340;
+                                        &#2350;&#2366;&#2340;&#2371; &#2350;&#2371;&#2340;&#2381;&#2351;&#2369; &#2325;&#2368;
+                                        &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>&#2357;&#2366;&#2360;&#2381;&#2340;&#2357; &#2350;&#2375;&#2306; &#2352;&#2367;&#2352;&#2381;&#2346;&#2379;&#2335;
+                                        &#2325;&#2368; &#2327;&#2351;&#2368; &#2350;&#2366;&#2340;&#2371; &#2350;&#2371;&#2340;&#2381;&#2351;&#2369;
+                                        &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;</strong>
+                                </span>
+                            </td>
+                            <td style="height: 40px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>&#2360;&#2381;&#2357;&#2306;&#2351; &#2330;&#2367;&#2325;&#2367;&#2340;&#2381;&#2360;&#2366;&#2343;&#2367;&#2325;&#2366;&#2352;&#2368;
+                                        &#2342;&#2381;&#2357;&#2366;&#2352;&#2366; &#2325;&#2367;&#2351;&#2375; &#2327;&#2351;&#2375;
+                                        &#2310;&#2373;&#2337;&#2367;&#2335; &#2325;&#2368; &#2360;&#2306;&#2326;&#2381;&#2351;&#2366;</strong>
+                                </span>
+                            </td>
+
+                        </tr>
+
+
+                        <tr height="25">
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>1</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong></strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>2</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>3</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>4</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>5</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>6</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>7</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>8</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>9</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>10</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>11</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>12</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>13</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>14</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>15</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>16</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>17</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>18</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>19</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>20</strong>
+                                </span>
+                            </td>
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>21</strong>
+                                </span>
+                            </td>
+
+                            <td bgcolor="#E6E9ED" style="height: 20px;" width="54" align="center" colspan="1">
+                                <span style="font-size:12px;">
+                                    <strong>22</strong>
+                                </span>
+                            </td>
+
+
+                        </tr>
+
+
+                    </thead>
+
+                    <tbody>
+
+
+                    </tbody>
+                </table>
+
+            </p>
+
+        </div>
+        <div id="HM_3B_OPDIPDBED_OCCUPANCY_tab">
+            <p>
+
+                <table style="display:none;" id="HM_3B_OPDIPDBED_OCCUPANCY_table" border="1" cellspacing="6" cellpadding="4" width="100%"
+                    style="border-collapse: collapse; font: Arial, Helvetica, sans-serif;">
+                    <thead>
+                        <tr>
+                            <td colspan="15" style="text-align: center; font-size: 15px;" height="40px">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td bgcolor="#c1c1c1" colspan="15" style="text-align: center; font-size: 15px;" height="40px">
+                                <b>MONTHLY FORMAT HM 3B (OPD/IPD/BED OCCUPANCY)</b>
+                            </td>
+                        </tr>
+                        <tr bgcolor="#d1d1d1" style="text-align: center; font-size: 14px; font-weight: bold;">
+                            <td bgcolor="#d1d1d1" rowspan="2">SL NO</td>
+                            <td bgcolor="#d1d1d1" rowspan="2">Block</td>
+                            <td bgcolor="#d1d1d1" rowspan="2">Name of facility</td>
+                            <td bgcolor="#d1d1d1" colspan="2">OPD</td>
+                            <td bgcolor="#d1d1d1" colspan="2">IPD</td>
+                            <td bgcolor="#d1d1d1" id="bed_lastYearID" colspan="4" bgcolor="#99CCFF" style="color: #FF0000;">Bed occupancy
+                            </td>
+                            <td bgcolor="#d1d1d1" id="bed_thisYearID" colspan="4" bgcolor="#CC99FF" style="color: #0066CC;">Bed occupancy
+                            </td>
+                        </tr>
+                        <tr bgcolor="#d1d1d1" style="text-align: center; font-size: 14px; font-weight: bold;">
+                            <td id="OPD_lastYearID" bgcolor="#99CC00">TOTAL OPD </td>
+                            <td id="OPD_thisYearID" bgcolor="#008000">TOTAL OPD </td>
+                            <td id="IPD_lastYearID" bgcolor="#FFFF00">TOTAL IPD </td>
+                            <td id="IPD_thisYearID" bgcolor="#FF9900">TOTAL IPD </td>
+                            <td bgcolor="#d1d1d1">Total number of beds</td>
+                            <td bgcolor="#d1d1d1">Total bed days available= (BEDS X no. of days in month)</td>
+                            <td bgcolor="#d1d1d1">Bed occupancy= (total of last column of indoor register)</td>
+                            <td bgcolor="#d1d1d1">Bed occupancy rate =(B/A) X100</td>
+                            <td bgcolor="#d1d1d1">Total number of beds</td>
+                            <td bgcolor="#d1d1d1">Total bed days available= (BEDS X no. of days in month)</td>
+                            <td bgcolor="#d1d1d1">Bed occupancy= (total of last column of indoor register)</td>
+                            <td bgcolor="#d1d1d1">Bed occupancy rate =(B/A) X100</td>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    </tbody>
+
+                    <tfoot>
+
+                    </tfoot>
+                </table>
+            </p>
+        </div>
+
+
+
+
+
+    </div>
+</form>
