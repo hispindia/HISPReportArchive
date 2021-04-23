@@ -1,0 +1,581 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('state')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+<!-- <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;position:fixed;z-index:1"
+    id="btnExport"
+    onclick="tableToExcel('state', 'Monthly Malaria Disease Specific Report', 'Monthly Malaria Disease Specific Report')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button> -->
+
+<br />
+<div style="width: 50%; margin-left:25%;">
+    <table class="table table-borderless table-striped">
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Category: </strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="report-category" onchange="fetchOrgUnits(this)"></select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>District: </strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="js-example-basic-multiple" id="report-district" multiple="multiple"></select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong> Start Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="month" id="start-month">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong> End Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="month" id="end-month">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+
+
+<div id="loader" style="display: none"></div>
+<div id='state' style="visibility: hidden;">
+    <table border="1" class="table table-hover text-center" cellspacing="6" cellpadding="4"
+        style="border-collapse: collapse; text-align: center;width: 100%;">
+        <colgroup>
+            <col width="30%" />
+            <col width="7%" />
+            <col width="7%" />
+            <col width="7%" />
+            <col width="7%" />
+            <col width="7%" />
+            <col width="7%" />
+            <col width="7%" />
+            <col width="7%" />
+            <col width="7%" />
+            <col width="7%" />
+        </colgroup>
+        <tr>
+            <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                colspan="12">Monthly Malaria Disease Specific Report</th>
+        </tr>
+        <!-- <tr>
+                <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                    colspan="6">OrgUnit: <span id="selected-state"></span></th>
+
+                <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                    colspan="6">Period: <span id="selected-month"> </span></th>
+            </tr> -->
+        <tr>
+            <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                rowspan="2" colspan="2">
+                Indicators</th>
+            <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                rowspan="2">
+                Total</th>
+            <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                colspan="4">
+                Age Group</th>
+            <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                colspan="2">
+                Sex</th>
+            <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                rowspan="2">
+                pregnant <br /> Women</th>
+            <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                colspan="2">
+                Detection Type</th>
+        </tr>
+        <tr>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                &lt;1 yr.</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                1-4 yr.</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                5-14 yr.</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                15+ yr.</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Male</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Female</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                ACD</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                PCD</th>
+
+        </tr>
+        <tr>
+            <th style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                colspan="12">Diagnosis</th>
+        </tr>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    var categoryOrgUnits = [];
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    document.getElementById("state").style.visibility = "hidden";
+
+    fetch('../api/organisationUnitGroupSets/C3a1y2dIBDq.json?fields=organisationUnitGroups[id,name]&paging=false')
+        .then(response => response.json())
+        .then(response => {
+            var categoryOptions = response.organisationUnitGroups.map(ouGroup => `<option value="${ouGroup.id}">${ouGroup.name}</option>`)
+            fetchOrgUnits({ value: response.organisationUnitGroups[0].id })
+            document.getElementById('report-category').innerHTML = categoryOptions;
+        });
+
+
+    async function fetchOrgUnits(event) {
+        var response = await (await fetch(`../api/organisationUnitGroups/${event.value}.json?fields=organisationUnits[id,name]&paging=false`)).json()
+        categoryOrgUnits = response.organisationUnits.map(ou => {
+            return { id: ou.id, name: ou.name }
+        })
+
+        categoryOrgUnits.sort((a, b) => a.name.localeCompare(b.name));
+        var districtOptions = categoryOrgUnits.map(ou => `<option value="${ou.id}">${ou.name}</option>`)
+        document.getElementById('report-district').innerHTML = districtOptions;
+        $('.js-example-basic-multiple').select2();
+    }
+
+    function submitData() {
+        var data = {
+            district: $('#report-district').val(),
+            startMonth: document.getElementById('start-month').value,
+            endMonth: document.getElementById('end-month').value,
+        }
+
+        document.getElementById("state").style.visibility = "hidden";
+        document.getElementById("loader").style.display = "block";
+        if (!data.startMonth || !data.endMonth || new Date(data.startMonth) > new Date(data.endMonth)) {
+            alert("Please Select months correctly!")
+            document.getElementById("loader").style.display = "none";
+            return;
+        }
+        setTimeout(function () {
+            getData(data);
+        }, 1000);
+    }
+
+
+    async function getData(data) {
+
+        var dataElement = [
+            [
+                ['A. No. of blood slides taken', "DMOXopWJxnd", "keXBqAu9VjT.Xoqiwvg7ypz", "keXBqAu9VjT.m5OJNmqIwgd", "keXBqAu9VjT.d2aH8pReFmN", "keXBqAu9VjT.XUt6gVe5fYE", "e99xXIaQuRz.odRQXcEAZmL", "e99xXIaQuRz.OYeHnjQd4Zj", "p4scuRndPan.HllvX50cXC0", "ifLEeSE0D0D.uuYmtn8tUVL", "ifLEeSE0D0D.inbqDZWrX70"],
+                ['B. Total No. of blood slide +ve (i +ii + iii)', "Q82ZvESVPnL", "nsvQfrJUPd8", "TJHPnjpEE6L", "jJYeapcAouy", "go2JpCI2AGU", "H4h2KjD2fnP", "jBDxuSOd5s9", "ALY2HEovEOv", "LFMn4fB58Kz", "pVz3wqZ6v6h"],
+                ['(i) No. of +ve P. vivax (Pv)', "ElhoxIoYNhT", "LerRPcbZmus.Xoqiwvg7ypz", "LerRPcbZmus.m5OJNmqIwgd", "LerRPcbZmus.d2aH8pReFmN", "LerRPcbZmus.XUt6gVe5fYE", "au2HInENeeF.odRQXcEAZmL", "au2HInENeeF.OYeHnjQd4Zj", "YS1lxVelTQM.HllvX50cXC0", "Mxeh5BxFeOv.uuYmtn8tUVL", "Mxeh5BxFeOv.inbqDZWrX70"],
+                ['(ii) No. of +ve P. falciparum (Pf)', "Xq1khGp6ENm", "qo7SMPFNFUR.Xoqiwvg7ypz", "qo7SMPFNFUR.m5OJNmqIwgd", "qo7SMPFNFUR.d2aH8pReFmN", "qo7SMPFNFUR.XUt6gVe5fYE", "RFjlW1zKW0M.odRQXcEAZmL", "RFjlW1zKW0M.OYeHnjQd4Zj", "Sx6kys4a0U9.HllvX50cXC0", "PuotCHLTqiF.uuYmtn8tUVL", "PuotCHLTqiF.inbqDZWrX70"],
+                ['(iii) No. of +ve Mixed (Pv+Pf)', "SIkIsfFVbJJ", "c4vDN8hW6fP.Xoqiwvg7ypz", "c4vDN8hW6fP.m5OJNmqIwgd", "c4vDN8hW6fP.d2aH8pReFmN", "c4vDN8hW6fP.XUt6gVe5fYE", "EyDugn1IchH.odRQXcEAZmL", "EyDugn1IchH.OYeHnjQd4Zj", "eFWNdr01Hap.HllvX50cXC0", "FkJFYvJk1uP.uuYmtn8tUVL", "FkJFYvJk1uP.inbqDZWrX70"],
+                ['C. No. of RDT taken', "SLs1YEczE8T", "whdOBHWqusU.Xoqiwvg7ypz", "whdOBHWqusU.m5OJNmqIwgd", "whdOBHWqusU.d2aH8pReFmN", "whdOBHWqusU.XUt6gVe5fYE", "cNudZSoqT8a.odRQXcEAZmL", "cNudZSoqT8a.OYeHnjQd4Zj", "sM28G70yl6v.HllvX50cXC0", "Vfk9qvDBvZO.uuYmtn8tUVL", "Vfk9qvDBvZO.inbqDZWrX70"],
+                ['D. Total No. of RDT +ve', "yQFUy5CYLxz", "AZFCyrK7mLb", "F8Won142Gks", "O7vhZABJ8Gt", "l0KODeSaeRc", "w2Vvgv87QXu", "dm5vIy4ozPa", "D0uyW1fwOwD", "wQXZ1Mn4YuR", "twvCVLp60qN"],
+                ['(i) No. of RDT +ve P. vivax (Pv)', "p7g5OvQqZXK", "LrAPoPs7qBA.Xoqiwvg7ypz", "LrAPoPs7qBA.m5OJNmqIwgd", "LrAPoPs7qBA.d2aH8pReFmN", "LrAPoPs7qBA.XUt6gVe5fYE", "TADR0yeDU6z.odRQXcEAZmL", "TADR0yeDU6z.OYeHnjQd4Zj", "XPhihd086CC.HllvX50cXC0", "eJDVMhVt8HK.uuYmtn8tUVL", "eJDVMhVt8HK.inbqDZWrX70"],
+                ['(ii) No. ofRDT+ve P. falciparum (Pf)', "ecjnrI1sIFY", "mQg01AIXBt5.Xoqiwvg7ypz", "mQg01AIXBt5.m5OJNmqIwgd", "mQg01AIXBt5.d2aH8pReFmN", "mQg01AIXBt5.XUt6gVe5fYE", "cP5VtoqREUo.odRQXcEAZmL", "cP5VtoqREUo.OYeHnjQd4Zj", "vNq5W36uvHp.HllvX50cXC0", "uttfEuc5i5h.uuYmtn8tUVL", "uttfEuc5i5h.inbqDZWrX70"],
+                ['(iii) No. of RDT+ve Mixed (Pv+Pf)', "PyAtjxNlXTw", "wWFbUjVnETl.Xoqiwvg7ypz", "wWFbUjVnETl.m5OJNmqIwgd", "wWFbUjVnETl.d2aH8pReFmN", "wWFbUjVnETl.XUt6gVe5fYE", "yTyXHkljstZ.odRQXcEAZmL", "yTyXHkljstZ.OYeHnjQd4Zj", "fe0dEGXtN8z.HllvX50cXC0", "U1vJpY47k9h.uuYmtn8tUVL", "U1vJpY47k9h.inbqDZWrX70"],
+                ['Total test done (A+ C)', "Oz2hoJeEcUL", "PYiYjgg2oKE", "OJtM5qzBeKV", "VrlQcdgMOfK", "UCDN7GjuHCI", "BKvFo2916Mn", "yOZnOCFGmjx", "U5X4eVs2dPH", "UuHFNzngsiF", "WutIx5rxpai"],
+                ['Total test +ve (B + D)', "uflk2WpvPA8", "WLx2vgXagAJ", "fa5JLFKttyqd", "hAiVpxFpFzn", "W4umrIeuLAD", "vFPNfZQ2K8X", "ePjJ8SJuB6X", "buP2tarJOkl", "DY6xy9TuSpH", "z9tqK5NNzDv"]
+            ],
+            [
+                ['No. of cases diagnosed', "M1MlEMVAUTe", "hGtsYPuakmp", "U8a3UDVJ7p1", "K6cGSJTNckx", "xGNNP83e4cF", "qMC4SFIACce", "GnCRz5Y32DY", "MGTZvd3lmB1"],
+                ['No. of cases treated', "unJUlLljpCy", "hKW2ZlvjihR.Xoqiwvg7ypz", "hKW2ZlvjihR.m5OJNmqIwgd", "hKW2ZlvjihR.d2aH8pReFmN", "hKW2ZlvjihR.XUt6gVe5fYE", "zkx5ewxrptc.odRQXcEAZmL", "zkx5ewxrptc.OYeHnjQd4Zj", "CskV1MIYPNO.HllvX50cXC0"],
+                ['No. of cases referred', "lcF0SJ3Q7dU", "ICU14Xbegn5.Xoqiwvg7ypz", "ICU14Xbegn5.m5OJNmqIwgd", "ICU14Xbegn5.d2aH8pReFmN", "ICU14Xbegn5.XUt6gVe5fYE", "Im4474d6KJY.odRQXcEAZmL", "Im4474d6KJY.OYeHnjQd4Zj", "e7pRGJnRcKh.HllvX50cXC0"],
+                ['No. of cases diagnosed', "vxUcPhLwebD", "MqH622wsBwn", "pEA0X7OWABd", "upjJPqA1qzi", "V4ZwfpcFUig", "LvWzVTObwbn", "V5IumsSpgbN", "VCrIBi5uc7u"],
+                ['No. of cases treated', "K2ZUMalOPDM", "bqM0QqrTERS.Xoqiwvg7ypz", "bqM0QqrTERS.m5OJNmqIwgd", "bqM0QqrTERS.d2aH8pReFmN", "bqM0QqrTERS.XUt6gVe5fYE", "FOYUqc6L4tZ.odRQXcEAZmL.val", "FOYUqc6L4tZ.OYeHnjQd4Zj", "fNNvvuFZoyC.HllvX50cXC0"],
+                ['No. of cases referred', "JY08uj2gH51", "Yj4qUH6im5c.Xoqiwvg7ypz", "Yj4qUH6im5c.m5OJNmqIwgd", "Yj4qUH6im5c.d2aH8pReFmN", "Yj4qUH6im5c.XUt6gVe5fYE", "PHv13i9MaRX.odRQXcEAZmL", "PHv13i9MaRX.OYeHnjQd4Zj", "nO4B8yJql4j.HllvX50cXC0"],
+                ['No. of deaths', "nP2cNraQfEU", "NQu4YCFP1dj.Xoqiwvg7ypz", "NQu4YCFP1dj.m5OJNmqIwgd", "NQu4YCFP1dj.d2aH8pReFmN", "NQu4YCFP1dj.XUt6gVe5fYE", "H46EbN665I2.odRQXcEAZmL", "H46EbN665I2.OYeHnjQd4Zj", "wcpsmSZMK8Q.HllvX50cXC0"],
+                ['No.of cases diagnosed', "YORPV5FTzhz", "ounY1JBbgjP", "IzUzSPVFDoG", "pbXtSp4FfiI", "jmMynrAa7fx", "BV62xUCRZqK", "cabyDHM9kp6", "eO7P9qCrFte"],
+                ['No. of cases treated', "GcYUIvhxYxK", "XxpkO7iScg6.Xoqiwvg7ypz", "XxpkO7iScg6.m5OJNmqIwgd", "XxpkO7iScg6.d2aH8pReFmN", "XxpkO7iScg6.XUt6gVe5fYE", "mOsrz6wSb52.odRQXcEAZmL", "mOsrz6wSb52.OYeHnjQd4Zj", "saIh3YHKOjB.HllvX50cXC0"],
+                ['No. of cases referred', "R9yFQmoDiU5", "NEWnz2GnO0y.Xoqiwvg7ypz", "NEWnz2GnO0y.m5OJNmqIwgd", "NEWnz2GnO0y.d2aH8pReFmN", "NEWnz2GnO0y.XUt6gVe5fYE", "gEXAoEhXw03.odRQXcEAZmL", "gEXAoEhXw03.OYeHnjQd4Zj", "skDrkQZMiQ7.HllvX50cXC0"],
+                ['Total no. of cases diagnosed', "V7R5enqT3SG", "YHCqH2YiRBL", "JTTNNOYywLx", "p6DYwhj4OZv", "YhT8CqNtrtS", "bq9JK3NdLwY", "bZ633E4br7m", "XDuSRANbyp6"],
+                ['Total no. of cases treated', "WN9VLX2oV5m", "egfhZ0dJazd", "G4QxKz4JfV5", "dgpQyGOCSaQ", "AvomBzegfxf", "jMdjLl7ywjZ", "ZpBfQQaYOYQ", "OHOWvyBCkOg"],
+                ['Total no. of cases referred', "kHpNtmPUbHy", "APEBjDim46Q", "ZVhMPbWio8e", "f6FnQSeh0pp", "He9c8djD0Cy", "oNqemSgMHbh", "H46xYlGT7zy", "gp1ry4uzmIW"],
+                ['Total no. of deaths', "evq0J1nak9r", "qjRj6pfOtUS", "ayS1s46EQne", "VaenzRMMnek", "GO5n0GmsqIH", "VgAS1sz1r0C", "cueviIhRwNm", "eHdyR3566U6"],
+
+            ],
+            [
+                "Mr3l6DcKu3w.RpSl0BZj9Xl", "Mr3l6DcKu3w.LS2MCuutXaw", "PH3Vn5UgZJr.IdA8e3f5p97", "PH3Vn5UgZJr.Ju5WrTGIhhF", "PH3Vn5UgZJr.XQTqwPD49iQ", "PH3Vn5UgZJr.ld38u6NRUKY", "PH3Vn5UgZJr.RXMd7wk6S2i", "PH3Vn5UgZJr.P7kHZ4cILWA", "PH3Vn5UgZJr.TfBz4joRcap",
+                "PH3Vn5UgZJr.KSf0QMv1zTe", "qEPhMtxqS97.VeXQ3ldldin", "qEPhMtxqS97.Q6qU1rwusAQ", "qEPhMtxqS97.K4z1oWDXaaI", "pPUHnYPSBKp.HllvX50cXC0", "j6UjUuXbccd.HllvX50cXC0", "f1WW4GkYKyV.HllvX50cXC0", "qUP5NtaxE1A.HllvX50cXC0", "vYvfwttw8Ln.HllvX50cXC0"
+            ],
+            [
+                "kGgaNQwKwQK.HllvX50cXC0", "la6RMORO94c.HllvX50cXC0", "KpVKF1XSsvU.HllvX50cXC0", "HxpLj865bqt.HllvX50cXC0",
+                "QgDKXyZKeNa.HllvX50cXC0", "qDFigWDqF1S.HllvX50cXC0", "gxGzUPIOSaj.HllvX50cXC0", "Qfpe6EkueNs.HllvX50cXC0",
+                "o7w1u16tr7i.HllvX50cXC0", "xY6cmjT9QvC.HllvX50cXC0", "SUrGwqE5JeW.HllvX50cXC0", "Z2wsj1pa4A7.HllvX50cXC0",
+                "TzVoo2HE0eZ.HllvX50cXC0", "Yyo98q1zP7G.HllvX50cXC0", "DaBVBMqpM9O.HllvX50cXC0", "oPbDIgN8Ou6.HllvX50cXC0"
+            ]
+        ];
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+            return arr;
+        }
+        data.periods = getBetweenDates(data.startMonth, data.endMonth);
+
+        var dataValues = {};
+        var orgUnits = data.district;
+
+        let dataElementId = [];
+        dataElement[0].forEach((arr, index) => arr.map((de, index) => dataElementId.push((index != 0) ? de : "")));
+        dataElement[1].forEach((arr, index) => arr.map((de, index) => dataElementId.push((index != 0) ? de : "")));
+        dataElementId = [...dataElementId, ...dataElement[2], ...dataElement[3]];
+
+        for (let orgUnitId of orgUnits) {
+            let response = await (await fetch(`../api/analytics.json?dimension=dx:${dataElementId.join(";")}&filter=pe:${data.periods.join(";")}&dimension=ou:${orgUnitId}&displayProperty=NAME`)).json()
+
+            if (response.rows) {
+                response.rows.forEach(row => {
+                    if (!dataValues[row[0]]) dataValues[row[0]] = Number(row[2]);
+                    else dataValues[row[0]] += Number(row[2]);
+                });
+            }
+        }
+
+        // for (let orgUnit of orgUnits) {
+        //     if (orgUnit) {
+        //         for (let period of data.periods) {
+        //             let response = await (await fetch(`../api/dataValueSets.json?dataSet=eVRVFmvmdFI&orgUnit=${orgUnit.id}&period=${period}`)).json();
+        //             if (response.dataValues) response.dataValues.forEach(dataValue => {
+        //                 if (dataValue.categoryOptionCombo && dataValue.dataElement) de = dataValue.dataElement + "-" + dataValue.categoryOptionCombo;
+        //                 else de = dataValue.dataElement;
+        //                 if (!dataValues[de]) dataValues[de] = Number(dataValue.value);
+        //                 else dataValues[de] += Number(dataValue.value);
+        //             });
+        //         }
+        //     }
+        // }
+
+        console.log(dataValues)
+        var tableRow = "";
+        dataElement.forEach((table, index) => {
+            if (index == 0) {
+                table.forEach(row => {
+                    debugger;
+                    tableRow += '<tr>';
+                    row.forEach((de, index) => tableRow += (index == 0 ? `<td colspan="2" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${de}</td>` : `<td style="border:1px solid black; text-align:left;font-weight:600;" >${(dataValues[de] ? dataValues[de] : "")}</td>`));
+                    tableRow += '</tr>';
+                });
+            }
+            else if (index == 1) {
+                let columnFirst = ['Uncomplicated Malaria (UM)', 'Severe Malaria (SM)', 'Vivax Malaria (VM)', 'Total Malaria Cases(UM+SM +VM)'];
+                let count = 0;
+                tableRow += `<tr>
+                                <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                                colspan="12">Diagnosis</td>
+                            </tr>`;
+                table.forEach((row, i) => {
+                    tableRow += '<tr>';
+                    if (i == 0 || i == 7) tableRow += `<td rowspan="3" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${columnFirst[count++]}</td>`;
+                    else if (i == 3 || i == 10) tableRow += `<td rowspan="4" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${columnFirst[count++]}</td>`;
+                    row.forEach((de, index) => tableRow += (index == 0 ? `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${de}</td>` : `<td style="border:1px solid black; text-align:left;font-weight:600;" >${(dataValues[de] ? dataValues[de] : "")}</td>`));
+
+                    if (i == 0) tableRow += `<td colspan="2" rowspan="14" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;"></td>`;
+                    tableRow += '</tr>';
+                });
+            }
+            else if (index == 2) {
+                tableRow += `<tr> <td colspan="12"></td> </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                                colspan="12">Prevention, BCC and Training</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                                rowspan="13" colspan="5">LLIN</td>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            rowspan="10" colspan="2">No. of LLIN Distribution (Mass)</td>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="2">Pregnant women</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[0]] ? dataValues[table[0]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="2">School Children</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[1]] ? dataValues[table[1]] : '')}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            rowspan="8">Others</td>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            >Army/ BGP/ Police</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[2]] ? dataValues[table[2]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            >Jhum cultivators/Forest goers</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[3]] ? dataValues[table[3]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            >New settlements</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[4]] ? dataValues[table[4]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            >Patients in new area</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[5]] ? dataValues[table[5]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            >Seasonal workers</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[6]] ? dataValues[table[6]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            >New family</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[7]] ? dataValues[table[7]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            >Replacement of lost/ damaged LLINs</td>
+                            <td style="border:1px solid black; font-weight:600; text-align:center"
+                            colspan="3">${(dataValues[table[8]] ? dataValues[table[8]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            >UHC/ Sadar hospital</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[9]] ? dataValues[table[9]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            rowspan="3" colspan="2">No. of LLIN Distribution (Continuous)</td>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="2">Migrants/ refugees/ IDPs</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[10]] ? dataValues[table[10]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="2">Prisoners</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[11]] ? dataValues[table[11]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="2">Other population groups</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[12]] ? dataValues[table[12]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="5">ITN</td>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="4">No. of NetsTreated / Re-Treated</td>
+                            <td style="border:1px solid black; font-weight:600; text-align:center"
+                            colspan="3">${(dataValues[table[13]] ? dataValues[table[13]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            rowspan="2" colspan="5">BCC</td>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="4">No. of orientation session conducted</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[14]] ? dataValues[table[14]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="4">No. of Participants attended</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[15]] ? dataValues[table[15]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            rowspan="2" colspan="5">Advocacy Workshop</td>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="4">No. of workshop conducted</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[16]] ? dataValues[table[16]] : "")}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center"
+                            colspan="4">No. of Participants attended</td>
+                            <td style="border:1px solid black; font-weight:600;text-align:center"
+                            colspan="3">${(dataValues[table[17]] ? dataValues[table[17]] : "")}</td>
+                        </tr>
+                        `;
+            }
+            else if (index == 3) {
+                tableRow += `<tr><td colspan="12"></td></tr><tr><td colspan="4" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;"></td>
+                    <td colspan="2" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">Name of the Training</td>
+                    <td colspan="2" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">No. of Training conducted</td>
+                    <td colspan="2" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">No. of Participants called up</td>
+                    <td colspan="2" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">No. of Participants attendance</td>
+                    </tr>
+                    <tr><td rowspan="4" colspan="4" style="border:1px solid black; text-align:left;font-weight:600;">Training</td>`;
+                table.forEach((row, index) => {
+                    tableRow += `<td colspan="2" style="border:1px solid black; text-align:left;font-weight:600;">${(dataValues[row] ? dataValues[row] : "")}</td>`
+                    if ((index + 1) % 4 == 0) tableRow += `</tr><tr>`
+                });
+                tableRow += '</tr>';
+            }
+
+        })
+
+        document.getElementById("tableBody").innerHTML = tableRow;
+        document.getElementById("state").style.visibility = "visible";
+        document.getElementById("loader").style.display = "none";
+
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            debugger
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>
