@@ -1,0 +1,309 @@
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+    <style>
+        .btn-group {
+            width: 100%;
+        }
+
+        .multiselect {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a id="dlink" style="display:block;"></a>
+
+    <div style="width: 40%; margin-left:30%;">
+        <table class="table table-borderless table-striped" style="text-align: center;">
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="font-size: 15px;padding-top: 15px;">OrgUnit :</td>
+                <td>
+                    <select id="multiple-checkboxes" multiple="multiple" class="form-control">
+                    </select>
+                </td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="font-size: 15px;padding-top: 15px;">Group :</td>
+                <td><select id="orgUnit-group" class="form-control">
+                    </select>
+                </td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="font-size: 15px;padding-top: 15px;">Start Month :</td>
+                <td><input type="month" id="start-month" class="form-control" name="month" placeholder="Month Year">
+                </td>
+            </tr>
+
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="font-size: 15px;padding-top: 15px;">End Month :</td>
+                <td><input type="month" id="end-month" class="form-control" name="month" placeholder="Month Year"></td>
+            </tr>
+
+            <tr style="border: 1px solid #DDDDDD;">
+                <td><button onClick="submitValues()" class="btn" id="tap">Submit</button></td>
+                <td style="text-align: right">
+                    <img src="https://img.icons8.com/color/35/000000/ms-excel.png"
+                        onmouseover="this.style.cursor='pointer'"
+                        onClick="tableToExcel('dataTable', 'IPES Report', 'IPES Report.xls')" alt="xls">
+                    <img src="https://img.icons8.com/ultraviolet/35/000000/print.png" alt="print"
+                        onmouseover="this.style.cursor='pointer'" onclick="printContent('#printData')">
+                </td>
+            </tr>
+            <tr id="loader" style="display:none">
+                <td>
+                    <h2>Loading...</h2>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="printData">
+        <table class="table table-bordered reportTable" id="dataTable" style="width:98%;display:none" align="center">
+            <thead>
+                <tr style="text-align:left; color:white">
+                    <td style="background: rgb(39, 102, 150);" colspan="5">
+                        Name of the Facility: &nbsp;<span id="ouName"></span>
+                    </td>
+                    <td style="background: rgb(39, 102, 150);" colspan="6">
+                        Period: &nbsp;<span id="selected-dates"></span>
+                    </td>
+                </tr>
+
+                <tr style="background:#f2f2f2">
+                    <td style="text-align:center;"> S.No.</td>
+                    <td style="text-align:center;"> Facility Name</td>
+                    <td style="text-align:center;"> IPES1:Counselling</td>
+                    <td style="text-align:center;"> IPES2: Contraception </td>
+                    <td style="text-align:center;"> IPES3: Safe Abortion Care </td>
+                    <td style="text-align:center;"> IPES4: STIs/RTIs </td>
+                    <td style="text-align:center;"> IPES5: HIV </td>
+                    <td style="text-align:center;"> IPES6: Gynaecology </td>
+                    <td style="text-align:center;"> IPES7: Prenatal Care </td>
+                    <td style="text-align:center;"> IPES8: Gender-Based Violence </td>
+                    <td style="text-align:center;"> IPES Total Score </td>
+                </tr>
+            </thead>
+
+            <tbody id="tableBody" style="background:#FBFAFA">
+
+            </tbody>
+
+        </table>
+    </div>
+    <script>
+        var objOrgUnit = {};
+        var orgUnitChildOptions = '';
+        var orgUnitChildrens = [];
+        var OUChannels = [];
+        orgUnitChildrens = dhis2.report.organisationUnitChildren;
+        orgUnitChildrens = orgUnitChildrens.sort((a, b) => a.name.localeCompare(b.name));
+        orgUnitChildrens = orgUnitChildrens.map(ou => {
+            orgUnitChildOptions += `<option value=${ou.id}>${ou.name}</option>`;
+            objOrgUnit[ou.id] = ou.name;
+            return ou.id;
+        })
+        debugger;
+        document.getElementById('multiple-checkboxes').innerHTML = orgUnitChildOptions;
+
+        var selectedOrgUnit = dhis2.report.organisationUnit;
+        document.querySelector("#ouName").innerHTML = selectedOrgUnit.name;
+        $.ajax({
+            async: false,
+            type: "GET",
+            url: "../api/organisationUnitGroupSets/KynUfFIGber.json?fields=organisationUnitGroups[id,name]&paging=false",
+            success: function (data) {
+                OUChannels = data.organisationUnitGroups;
+                var optionsGroup = `<option value="not-selected">ALL</option>`;
+                data.organisationUnitGroups.forEach(orgUnit => {
+                    optionsGroup += `<option value=${orgUnit.id}>${orgUnit.name}</option>`
+                })
+                document.getElementById('orgUnit-group').innerHTML = optionsGroup;
+            }
+        });
+
+        var printTotalValue = [];
+        for (let j = 0; j < 9; j++) {
+            printTotalValue[j] = 0;
+        }
+
+
+        function submitValues() {
+
+            var startDate = document.getElementById('start-month').value;
+            var endDate = document.getElementById('end-month').value;
+
+            document.querySelector("#selected-dates").innerHTML = `${startDate} to ${endDate}`
+
+            if (new Date(startDate) > new Date(endDate) || !startDate || !endDate) {
+                alert("Please select dates correctly");
+                return;
+            }
+
+            document.querySelector("#loader").style.display = "";
+            document.querySelector(".reportTable").style.display = "none";
+            setTimeout(() => getData(startDate, endDate), 1000);
+        }
+
+        async function getData(startDate, endDate) {
+            var resGroupOrgUnit, arrGroupOrgUnit = true;
+            var chosenOrgUnitChildren = $('#multiple-checkboxes').val();
+            var chosenGroup = document.getElementById('orgUnit-group').value;
+            if (chosenOrgUnitChildren) {
+                if (chosenGroup == "not-selected") {
+                    let channelOU = [];
+                    arrGroupOrgUnit = [];
+                    for(let i = 0; i<OUChannels.length; i++) {
+                        resGroupOrgUnit = await(await fetch(`../api/organisationUnitGroups/${OUChannels[i].id}.json?fields=organisationUnits[id,name]`)).json();
+                        channelOU = resGroupOrgUnit.organisationUnits.map(orgUnit => orgUnit.id);
+                        arrGroupOrgUnit = [...arrGroupOrgUnit, ...channelOU];
+                    }
+                }
+                else {
+                    resGroupOrgUnit = await (await fetch(`../api/organisationUnitGroups/${chosenGroup}.json?fields=organisationUnits[id,name]`)).json();
+                    arrGroupOrgUnit = resGroupOrgUnit.organisationUnits.map(orgUnit => orgUnit.id);
+                }
+                debugger;
+                orgUnitChildrens = await orgUnitChildren(selectedOrgUnit);
+            } else {
+                if (chosenGroup == "not-selected") {
+                    orgUnitChildrens = dhis2.report.organisationUnitChildren;
+                    orgUnitChildrens = orgUnitChildrens.sort((a, b) => a.name.localeCompare(b.name));
+                    orgUnitChildrens = orgUnitChildrens.map(ou => {
+                        orgUnitChildOptions += `<option value=${ou.id}>${ou.name}</option>`;
+                        objOrgUnit[ou.id] = ou.name;
+                        return ou.id;
+                    })
+                } else {
+                    chosenOrgUnitChildren = orgUnitChildrens;
+                    resGroupOrgUnit = await (await fetch(`../api/organisationUnitGroups/${chosenGroup}.json?fields=organisationUnits[id,name]`)).json();
+                    arrGroupOrgUnit = resGroupOrgUnit.organisationUnits.map(orgUnit => orgUnit.id);
+                    orgUnitChildrens = await orgUnitChildren(selectedOrgUnit);
+                }
+            }
+
+            async function orgUnitChildren(selectedOrgUnit) {
+                debugger;
+                var orgUnitChildren = [];
+                var url = '../api/organisationUnits/' + selectedOrgUnit.id + '.json?paging=false&fields=id,name,level,dataSets[id]';
+
+                let response = await fetch('../api/organisationUnitLevels.json');
+                var orgUnitLevel = await response.json();
+
+                for (let i = 0; i < orgUnitLevel.organisationUnitLevels.length; i++) url += ',children[id,name,level,dataSets[id]';
+                url += ']';
+
+                response = await fetch(url);
+                var data = await response.json();
+
+                for (let j = 0; j < data.children.length; j++) {
+                    let key = data.children[j]
+                    if (chosenOrgUnitChildren.includes(key.id)) treeDown(key);
+                }
+
+                function treeDown(arr) {
+                    var key = arr;
+                    if (key.children.length) for (let i = 0; i < key.children.length; i++)  treeDown(key.children[i]);
+                    if (arrGroupOrgUnit.includes(key.id)) {
+                        orgUnitChildren.push(key.id);
+                        objOrgUnit[key.id] = key.name;
+                    }
+                }
+                return orgUnitChildren;
+            }
+
+            var getBetweenDates = function (startDate, endDate) {
+                var arr = [], lastDay, start, end;
+                var startYear = startDate.split("-");
+                var endYear = endDate.split("-");
+
+                for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+
+                    startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                    endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                    for (var j = startMonth; j <= endMonth; j++) {
+                        let month = j < 10 ? i + "0" + j : i + "" + j;
+                        arr.push(month);
+                    }
+                }
+
+                return arr;
+            }
+
+            //getting between dates
+            var smToEm = getBetweenDates(startDate, endDate);
+
+            //Initializing and defining Variables
+            var dataElementIds = ["p4bYoSVYazb", "ua2yZFsT5ab", "P8rO0Oi4Bfm", "JKoacINcS8g", "cj35jJrHR0K", "SzhY3fhE1nQ", "cf9WPr3KEEQ", "H1lI6vVCUQc"];
+
+            let responseFirst = await (await fetch(`../api/analytics.json?dimension=dx:${dataElementIds.join(';')}&dimension=ou:${orgUnitChildrens.join(";")}&filter=pe:${smToEm.join(';')}&displayProperty=NAME&paging=false`)).json();
+
+            dataResponseFirst = [];
+            responseFirst.rows.forEach(row => {
+                if (!dataResponseFirst[row[1]]) dataResponseFirst[row[1]] = {};
+                dataResponseFirst[row[1]][row[0]] = Number(row[2]);
+            })
+
+            var printTable = '';
+            var totalValue = 0;
+            debugger;
+            orgUnitChildrens.forEach((ou, index) => {
+                if (dataResponseFirst[ou]) {
+                    printTable += `<tr><td>${(index + 1)}</td><td>${objOrgUnit[ou]}</td>`;
+                    dataElementIds.forEach(de => {
+                        let value = dataResponseFirst[ou][de] ? dataResponseFirst[ou][de] : 0;
+                        printTable += `<td>${value}</td>`
+                        totalValue += value;
+                    })
+
+                    printTable += `<td>${totalValue}</td></tr>`;
+                    totalValue = 0;
+                } else {
+                    printTable += `<tr><td>${(index + 1)}</td><td>${objOrgUnit[ou]}</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
+                }
+            })
+
+            document.querySelector("#tableBody").innerHTML = printTable;
+            document.querySelector("#loader").style.display = "none";
+            document.querySelector(".reportTable").style.display = "block";
+
+        }
+
+        var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,'
+                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+            return function (table, name, filename) {
+                if (!table.nodeType) table = document.getElementById(table)
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+                document.getElementById("dlink").href = uri + base64(format(template, ctx));
+                document.getElementById("dlink").download = filename;
+                document.getElementById("dlink").click();
+            }
+        })()
+
+        function printContent(el) {
+            var restorePage = document.body.innerHTML;
+            var table = document.querySelector(el).innerHTML;
+            document.body.innerHTML = table;
+            window.print();
+            document.body.innerHTML = restorePage;
+        }
+
+        $(document).ready(function () {
+            $('#multiple-checkboxes').multiselect({
+                includeSelectAllOption: true,
+                nonSelectedText: dhis2.report.organisationUnit.name
+            });
+        });
+    </script>
+</body>
