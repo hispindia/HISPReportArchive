@@ -1,0 +1,2430 @@
+<script type="text/javascript" src="javascript/DownloadAsExcel.js"></script>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/3/w3.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+<script>
+    function genScreenshot() {
+        var doc = new jsPDF({
+            orientation: 'p',
+            unit: 'em',
+            format: [60, 280]
+        });
+        doc.internal.scaleFactor = 2.25;
+        doc.addHTML($('#printing'),2,2, function () {
+            doc.save('MDT Year Repot.pdf');
+            location.reload();
+        });
+    }
+
+</script>
+
+<script>
+    var periods = dhis2.report.periods;
+    var period = periods[0];
+    var orgUnit = dhis2.report.organisationUnit;
+    var orgUnitChildren = dhis2.report.organisationUnitChildren;
+    var selectedOrgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+
+    function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+
+    var orgUnitChildrenUIds = "";
+    var orgUnitChildrenArray = [];
+    var no_of_orgUnitChildren = 0;
+    var periodsStr = "";
+    var url = window.location.href;
+    var params = url.split('=');
+    var gotPeriod = params[2];
+    var periodstr, periodstr2;
+    var trIDsArray = [];
+    var deUIDsArray = [];
+    var deUIDsStr = "";
+    var periodArray = [];
+    var urlParams = url.split('&');
+    var sdParam = "";
+    var edParam = "";
+    var idq1, idq2, idq3, idq4;
+    var ccq1, ccq2, ccq3, ccq4;
+    $.each(orgUnitChildren, function (i) {
+        orgUnitChildrenArray.push([orgUnitChildren[i].id, orgUnitChildren[i].name]);
+        no_of_orgUnitChildren++;
+    });
+
+    orgUnitChildrenArray.sort(arraySorting);
+
+    var submit = function () {
+
+        periodstr = document.getElementById("selection").value;
+        periodstr2 = parseInt(periodstr) + 1;
+        periodstr3 = periodstr2.toString();
+        periodstr4 = periodstr3.substring(2, 4);
+
+
+        periodstr22 = parseInt(periodstr) + 2;
+        periodstr33 = periodstr22.toString();
+
+
+        if (selectedOrgUnitLevel == 1 || selectedOrgUnitLevel == 2) {
+            alert("Please Select Country level");
+            window.history.back();
+        }
+
+        else if (selectedOrgUnitLevel == 3) {
+            $(".hideInPrint").hide();
+            $("#btnExport").click(function (e) {
+                window.open('data:application/vnd.ms-excel,' + encodeURIComponent($('#printing').html()));
+                e.preventDefault();
+            });
+            //  document.getElementById('orgUnitID').innerHTML = orgUnit.name;
+            // document.getElementById('periodID').innerHTML = periodstr + "-" + periodstr4;
+            document.getElementById('periodId1').innerHTML = periodstr33;
+            document.getElementById('periodId2').innerHTML = periodstr3;
+            document.getElementById('periodId22').innerHTML = periodstr3;
+            document.getElementById('periodId222').innerHTML = periodstr3;
+            document.getElementById('periodId2222').innerHTML = periodstr3;
+            document.getElementById('periodId7').innerHTML = periodstr3;
+            document.getElementById('periodId77').innerHTML = periodstr3;
+            document.getElementById('periodId777').innerHTML = periodstr3;
+            document.getElementById('periodId7777').innerHTML = periodstr3;
+            var x = 0;
+            x = parseInt(getPeriod(gotPeriod));
+            var previousYear = x - 1;
+
+            document.getElementById('periodId3').innerHTML = periodstr;
+            document.getElementById('periodId33').innerHTML = periodstr;
+            document.getElementById('periodId333').innerHTML = periodstr;
+            document.getElementById('periodId3333').innerHTML = periodstr;
+            document.getElementById('periodId4').innerHTML = periodstr;
+            document.getElementById('periodId44').innerHTML = periodstr;
+            document.getElementById('periodId444').innerHTML = periodstr;
+            document.getElementById('periodId4444').innerHTML = periodstr;
+
+            document.getElementById('orgUnitid').innerHTML = orgUnit.name;
+            document.getElementById('orgUnitid1').innerHTML = orgUnit.name;
+            document.getElementById('orgUnitid2').innerHTML = orgUnit.name;
+            document.getElementById('orgUnitid3').innerHTML = orgUnit.name;
+            $.each(orgUnitChildrenArray, function (i, childOrgUnit) {
+                orgUnitChildrenUIds += childOrgUnit[0] + ";";
+            });
+
+            $("#dataTable > tbody").find("td").each(function (i, td) {
+
+                if (td.id.search("_") == -1) {
+                    if (td.id.search("-") > -1) {
+                        if ($.inArray(td.id.split('-')[0], deUIDsArray) == -1) {
+                            deUIDsArray.push(td.id.split('-')[0]);
+                        }
+                        trIDsArray.push(td.id);
+                    }
+                } else {
+                    var ids = td.id.split('_');
+                    $.each(ids, function (j, uid) {
+                        if ($.inArray(uid.split('-')[0], deUIDsArray) == -1) {
+                            deUIDsArray.push(uid.split('-')[0]);
+                        }
+                    });
+                    trIDsArray.push(td.id);
+                }
+
+
+
+            });
+
+            $.each(deUIDsArray, function (i, item) {
+                deUIDsStr += item + ";";
+            });
+
+            $.each(urlParams, function (i, item) {
+                if (item.split("=")[0] == "pe") {
+                    sdParam = item.split("=")[1];
+                }
+                else if (item.split("=")[0] == "ed") {
+                    edParam = item.split("=")[1];
+                }
+            });
+            edParam = edParam.substring(0, 4) + '-' + edParam.substring(4, 7);
+            edParam = edParam.replace(/-/g, "");
+            console.log(edParam);
+
+
+            generateMonthlyPeriods(sdParam, edParam);
+
+        }
+        loadDataQ1();
+        loadDataQ2();
+        loadDataQ3();
+        loadDataQ4();
+        loadDataf();
+    };
+
+    // Data for final Table
+    function loadDataf() {
+        $.get("../api/26/dataValueSets.json?dataSet=t8GCvXrCqz8&period=" + periodstr + "&orgUnit=" + orgUnit.id, function (json) {
+
+            for (var i = 0; i < json.dataValues.length; i++) {
+                id = json.dataValues[i].dataElement;
+                cc = json.dataValues[i].categoryOptionCombo;
+                loadData1(json, id, cc, i, 0);
+
+            }
+            sumIds();
+        });
+    }
+
+
+    var ids = document.getElementsByClassName('data');
+
+    var loadData1 = function (json, id, cc, i, z) {
+        var len = ids.length;
+        if (z >= len) {
+            return;
+        }
+        else {
+            var uid = ids[z].id;
+            var uid1 = uid.split('-')[0];
+            var uid2 = uid.split('-')[1];
+            if (uid1 == id && uid2 == cc) {
+                document.getElementsByClassName('data')[z].innerText = json.dataValues[i].value;
+                console.log("done");
+            }
+            else {
+                loadData1(json, id, cc, i, z + 1);
+            }
+        }
+
+    };
+
+    var sumIds = function () {
+        var sum = document.getElementsByClassName('datasum');
+        console.log(sum.length);
+        for (var k = 0; k < sum.length; k++) {
+            var sumId = sum[k].id
+            var sum1 = sumId.split('_');
+            var summ = 0;
+            for (var hh = 0; hh < sum1.length; hh++) {
+
+
+                for (var h = 0; h < ids.length; h++) {
+                    if (ids[h].id == sum1[hh]) {
+                        console.log(ids[h].innerHTML);
+                        if (ids[h].innerHTML == "" || ids[h].innerHTML == "&nbsp;") { ids[h].innerHTML = 0; }
+
+                        summ = summ + parseInt(ids[h].innerHTML);
+                    }
+                }
+
+            }
+            document.getElementsByClassName('datasum')[k].innerHTML = summ;
+        }
+        hideLoad();
+    };
+
+
+    // function for load table data quarter 1
+    function loadDataQ1() {
+        $.get("../api/26/dataValueSets.json?dataSet=PuAYTXsYhwt&period=" + periodstr + "Q3&orgUnit=" + orgUnit.id, function (json1) {
+            document.getElementsByClassName('dateQ1')[0].innerHTML = " July- September : " + periodstr ;
+            if (json1.dataValues == undefined) {
+                // document.getElementById("covers").style.display = "block";
+                // document.getElementById("load").style.display = "block";
+                // document.getElementById("cover").style.display = "none";
+                // document.getElementById("loads").style.display = "none";
+                // document.getElementById('nodata').innerHTML = " 1st Quarter of selected financial year ";
+            }
+            else {
+                for (var i = 0; i < json1.dataValues.length; i++) {
+                    idq1 = json1.dataValues[i].dataElement;
+                    ccq1 = json1.dataValues[i].categoryOptionCombo;
+                    loadDataQ11(json1, idq1, ccq1, i, 0);
+                }
+                sumIdsQ1();
+
+                // document.getElementById("covers").style.display = "none";
+                // document.getElementById("load").style.display = "none";
+            }
+        });
+
+
+
+
+    }
+
+    var idsQ1 = document.getElementsByClassName('dataQ1');
+
+    var loadDataQ11 = function (json1, idq1, ccq1, i, z) {
+        var lenq1 = idsQ1.length;
+        if (z >= lenq1) {
+            return;
+        }
+        else {
+            var q1uid = idsQ1[z].id;
+            var iuidQ1 = q1uid.split('-')[0];
+            var cuidQ1 = q1uid.split('-')[1];
+            if (iuidQ1 == idq1 && cuidQ1 == ccq1) {
+                document.getElementsByClassName('dataQ1')[z].innerText = json1.dataValues[i].value;
+                console.log("done");
+            }
+            else {
+                loadDataQ11(json1, idq1, ccq1, i, z + 1);
+            }
+        }
+
+    };
+
+
+    var sumIdsQ1 = function () {
+        var sumQ1 = document.getElementsByClassName('datasumQ1');
+        for (var k = 0; k < sumQ1.length; k++) {
+            var sumIdq1 = sumQ1[k].id
+            var sumq1 = sumIdq1.split('_');
+            var summq1 = 0;
+            for (var hh = 0; hh < sumq1.length; hh++) {
+
+                for (var h = 0; h < idsQ1.length; h++) {
+                    if (idsQ1[h].id == sumq1[hh]) {
+                        if (idsQ1[h].innerHTML == "" || idsQ1[h].innerHTML == "&nbsp;") { idsQ1[h].innerHTML = 0; }
+
+                        summq1 = summq1 + parseInt(idsQ1[h].innerHTML);
+                    }
+                }
+
+            }
+            document.getElementsByClassName('datasumQ1')[k].innerHTML = summq1;
+        }
+        hideLoad();
+    };
+
+
+    // function for load table data quarter 2
+    function loadDataQ2() {
+        $.get("../api/26/dataValueSets.json?dataSet=PuAYTXsYhwt&period=" + periodstr + "Q4&orgUnit=" + orgUnit.id, function (json2) {
+            document.getElementsByClassName('dateQ2')[0].innerHTML =  "  October-December : " + periodstr ;
+            if (json2.dataValues == undefined) {
+                // document.getElementById("covers").style.display = "block";
+                // document.getElementById("load").style.display = "block";
+                // document.getElementById("cover").style.display = "none";
+                // document.getElementById("loads").style.display = "none";
+                // document.getElementById('nodata').innerHTML = " 2nd Quarter of selected financial year ";
+            }
+            else {
+                for (var j = 0; j < json2.dataValues.length; j++) {
+                    idq2 = json2.dataValues[j].dataElement;
+                    ccq2 = json2.dataValues[j].categoryOptionCombo;
+                    loadDataQ22(json2, idq2, ccq2, j, 0);
+                }
+                sumIdsQ2();
+                // document.getElementById("covers").style.display = "none";
+                // document.getElementById("load").style.display = "none";
+
+            }
+        });
+
+    }
+
+    var idsQ2 = document.getElementsByClassName('dataQ2');
+
+    var loadDataQ22 = function (json2, idq2, ccq2, j, zz) {
+        var lenq2 = idsQ2.length;
+        if (zz >= lenq2) {
+            return;
+        }
+        else {
+            var q2uid = idsQ2[zz].id;
+            var iuidQ2 = q2uid.split('-')[0];
+            var cuidQ2 = q2uid.split('-')[1];
+            if (iuidQ2 == idq2 && cuidQ2 == ccq2) {
+                document.getElementsByClassName('dataQ2')[zz].innerText = json2.dataValues[j].value;
+                console.log("done");
+            }
+            else {
+                loadDataQ22(json2, idq2, ccq2, j, zz + 1);
+            }
+        }
+
+    };
+
+
+    var sumIdsQ2 = function () {
+        var sumQ2 = document.getElementsByClassName('datasumQ2');
+        for (var kk = 0; kk < sumQ2.length; kk++) {
+            var sumIdq2 = sumQ2[kk].id
+            var sumq2 = sumIdq2.split('_');
+            var summq2 = 0;
+            for (var p = 0; p < sumq2.length; p++) {
+
+                for (var pp = 0; pp < idsQ2.length; pp++) {
+                    if (idsQ2[pp].id == sumq2[p]) {
+                        if (idsQ2[pp].innerHTML == "" || idsQ2[pp].innerHTML == "&nbsp;") { idsQ2[pp].innerHTML = 0; }
+
+                        summq2 = summq2 + parseInt(idsQ2[pp].innerHTML);
+                    }
+                }
+
+            }
+            document.getElementsByClassName('datasumQ2')[kk].innerHTML = summq2;
+        }
+        hideLoad();
+    };
+
+
+    // function for load table data quarter 3
+    function loadDataQ3() {
+        $.get("../api/26/dataValueSets.json?dataSet=PuAYTXsYhwt&period=" + periodstr3 + "Q1&orgUnit=" + orgUnit.id, function (json3) {
+            document.getElementsByClassName('dateQ3')[0].innerHTML = " January-March : " +  periodstr3 ;
+            if (json3.dataValues == undefined) {
+                // document.getElementById("covers").style.display = "block";
+                // document.getElementById("load").style.display = "block";
+                // document.getElementById("cover").style.display = "none";
+                // document.getElementById("loads").style.display = "none";
+                // document.getElementById('nodata').innerHTML = " 3rd Quarter of selected financial year ";
+            }
+            else {
+                for (var jj = 0; jj < json3.dataValues.length; jj++) {
+                    idq3 = json3.dataValues[jj].dataElement;
+                    ccq3 = json3.dataValues[jj].categoryOptionCombo;
+                    loadDataQ33(json3, idq3, ccq3, jj, 0);
+                }
+                sumIdsQ3();
+                // document.getElementById("covers").style.display = "none";
+                // document.getElementById("load").style.display = "none";
+
+            }
+        });
+
+    }
+
+    var idsQ3 = document.getElementsByClassName('dataQ3');
+
+    var loadDataQ33 = function (json3, idq3, ccq3, jj, zzz) {
+        var lenq3 = idsQ3.length;
+        if (zzz >= lenq3) {
+            return;
+        }
+        else {
+            var q3uid = idsQ3[zzz].id;
+            var iuidQ3 = q3uid.split('-')[0];
+            var cuidQ3 = q3uid.split('-')[1];
+            if (iuidQ3 == idq3 && cuidQ3 == ccq3) {
+                document.getElementsByClassName('dataQ3')[zzz].innerText = json3.dataValues[jj].value;
+            }
+            else {
+                loadDataQ33(json3, idq3, ccq3, jj, zzz + 1);
+            }
+        }
+
+    };
+
+
+    var sumIdsQ3 = function () {
+        var sumQ3 = document.getElementsByClassName('datasumQ3');
+        for (var nn = 0; nn < sumQ3.length; nn++) {
+            var sumIdq3 = sumQ3[nn].id
+            var sumq3 = sumIdq3.split('_');
+            var summq3 = 0;
+            for (var f = 0; f < sumq3.length; f++) {
+                for (var ff = 0; ff < idsQ3.length; ff++) {
+                    if (idsQ3[ff].id == sumq3[f]) {
+                        if (idsQ3[ff].innerHTML == "" || idsQ3[ff].innerHTML == "&nbsp;") { idsQ3[ff].innerHTML = 0; }
+
+                        summq3 = summq3 + parseInt(idsQ3[ff].innerHTML);
+                    }
+                }
+
+            }
+            document.getElementsByClassName('datasumQ3')[nn].innerHTML = summq3;
+        }
+        hideLoad();
+    };
+
+
+    // function for load table data quarter 4
+    function loadDataQ4() {
+        $.get("../api/26/dataValueSets.json?dataSet=PuAYTXsYhwt&period=" + periodstr3 + "Q2&orgUnit=" + orgUnit.id, function (json4) {
+            document.getElementsByClassName('dateQ4')[0].innerHTML = " April-June : " + periodstr3 ;
+            if (json4.dataValues == undefined) {
+                // document.getElementById("covers").style.display = "block";
+                // document.getElementById("load").style.display = "block";
+                // document.getElementById("cover").style.display = "none";
+                // document.getElementById("loads").style.display = "none";
+                // document.getElementById('nodata').innerHTML = " 4th Quarter of selected financial year ";
+            }
+            else {
+                for (var t = 0; t < json4.dataValues.length; t++) {
+                    idq4 = json4.dataValues[t].dataElement;
+                    ccq4 = json4.dataValues[t].categoryOptionCombo;
+                    loadDataQ44(json4, idq4, ccq4, t, 0);
+                }
+                sumIdsQ4();
+                // document.getElementById("covers").style.display = "none";
+                // document.getElementById("load").style.display = "none";
+            }
+        });
+
+    }
+
+    var idsQ4 = document.getElementsByClassName('dataQ4');
+
+    var loadDataQ44 = function (json4, idq4, ccq4, t, v) {
+        var lenq4 = idsQ4.length;
+        if (v >= lenq4) {
+            return;
+        }
+        else {
+            var q4uid = idsQ4[v].id;
+            var iuidQ4 = q4uid.split('-')[0];
+            var cuidQ4 = q4uid.split('-')[1];
+            if (iuidQ4 == idq4 && cuidQ4 == ccq4) {
+                document.getElementsByClassName('dataQ4')[v].innerText = json4.dataValues[t].value;
+            }
+            else {
+                loadDataQ44(json4, idq4, ccq4, t, v + 1);
+            }
+        }
+
+    };
+
+
+    var sumIdsQ4 = function () {
+        var sumQ4 = document.getElementsByClassName('datasumQ4');
+        for (var g = 0; g < sumQ4.length; g++) {
+            var sumIdq4 = sumQ4[g].id
+            var sumq4 = sumIdq4.split('_');
+            var summq4 = 0;
+            for (var m = 0; m < sumq4.length; m++) {
+                for (var mm = 0; mm < idsQ4.length; mm++) {
+                    if (idsQ4[mm].id == sumq4[m]) {
+                        if (idsQ4[mm].innerHTML == "" || idsQ4[mm].innerHTML == "&nbsp;") { idsQ4[mm].innerHTML = 0; }
+
+                        summq4 = summq4 + parseInt(idsQ4[mm].innerHTML);
+                    }
+                }
+
+            }
+            document.getElementsByClassName('datasumQ4')[g].innerHTML = summq4;
+        }
+        hideLoad();
+    };
+
+
+
+    function generateMonthlyPeriods(sD, eD) {
+        var sDate = new Date(parseInt(sD.substring(0, 4)), parseInt(sD.substring(4, 6) - 1));
+        sDate.setDate(1);
+        var eDate = new Date(parseInt(eD.substring(0, 4)), parseInt(eD.substring(4, 6)));
+
+        while (sDate < eDate) {
+            var month = sDate.getMonth() + 1;
+            month = (month) > 9 ? month : "0" + month;
+
+            var dhisDate = sDate.getFullYear() + "" + month;
+            periodsStr = (periodsStr == "") ? dhisDate : (periodsStr + ";" + dhisDate);
+
+            periodArray.push(dhisDate);
+
+            sDate.setMonth(sDate.getMonth() + 1);
+        }
+    }
+    // function to convert periods to more visible info
+    function getPeriod(pr) {
+        var year = pr.substring(0, 4);
+        var month = pr.substring(4, 6);
+        var strMonth = "";
+
+        if (month == "01" || month == "1") strMonth = "January";
+        else if (month == "02" || month == "2") strMonth = "February";
+        else if (month == "03" || month == "3") strMonth = "March";
+        else if (month == "04" || month == "4") strMonth = "April";
+        else if (month == "05" || month == "5") strMonth = "May";
+        else if (month == "06" || month == "6") strMonth = "June";
+        else if (month == "07" || month == "7") strMonth = "July";
+        else if (month == "08" || month == "8") strMonth = "August";
+        else if (month == "09" || month == "9") strMonth = "September";
+        else if (month == "10") strMonth = "October";
+        else if (month == "11") strMonth = "November";
+        else if (month == "12") strMonth = "December";
+
+        return strMonth + " " + year;
+    }
+
+    // function to hide loading animation
+
+    function hideLoad() {
+        document.getElementById("cover").style.display = "none";
+        document.getElementById("loads").style.display = "none";
+        document.getElementsByTagName("body")[0].style.overflow = "scroll";
+    }
+
+    var closeit = function () {
+        document.getElementById('load').style.display = "none";
+        document.getElementById('covers').style.display = "none";
+    }
+
+</script>
+
+
+<!-- script for printing ******************************************************************-->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
+
+<p><span style="font-size:12px;">
+            <style>
+                td {
+                    padding: 5px 10px;
+                    font: Arial, Helvetica, sans-serif;
+                }
+
+
+
+                #cover {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                    display:none;
+                }
+
+                #loads {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                    display:none;
+                }
+
+#covers {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 5;
+                    width: 100%;
+                    height: 100%;
+                    display: none;
+                }
+
+                #load {
+                    height: 100px;
+                    width: 500px;
+                    position: fixed;
+                    z-index: 10;
+                    margin: 0 auto;
+                    top: 50%;
+                    left: 50%;
+                    margin-top: -50px;
+                    margin-left: -250px;
+                    background: #999;
+                    border: 5px solid #cccccc;
+                    text-align: center;
+                    border-radius: 5px;
+                    display: none;
+                }
+                .loading {
+                    width: 400px;
+                    font-size: 20px;
+                    font-family: verdana;
+                    font-weight: bolder;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: 0 auto;
+                    margin-top: -8px;
+                    margin-left: -200px;
+                }
+
+              #close{
+                  position:absolute;
+                  right:5px;
+                  top:5px;
+                  cursor:pointer;
+              }
+                #printing{
+                  margin: 80px;
+                  background: #fff;
+              }
+              #state{
+                  margin: 80px;
+                  background: #fff;
+              }
+           
+            </style>
+
+    <div id="loads"><p class="loading" align="center">Report is loading... Wait for a while...</p></div>
+<div id="cover"></div>
+
+
+<!--
+<div id="load"><p class="loading" align="center">There is no data in </p><br><br><br><p id="nodata"></p>
+<button id="close" onclick="closeit()">close</button>
+</div>
+<div id="covers"></div>
+
+</span></p>-->
+
+
+<table id="buttonTable">
+    <tr>
+        <td>
+            <input type="button" id="btnBack" value=" Goto Report Selection Page" onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'"
+            /></td>
+        <td> <button><a href="javascript:genScreenshot()"> Download PDF</a> </button> </td>
+        <td> <button onclick = "window.print()">Print</button> </td>
+    </tr>
+
+
+    <tr>
+        <td width="60px">Select Year :</td>
+        <td width="200px"><select id="selection" style="width:150px">
+            <option value="2017">2017</option>
+            <option value="2016">2016</option>
+        </select></td>
+        <td><button id="mainSubmit" onclick="submit()">Submit</button></td>
+    </tr>
+
+</table>
+
+<br/>
+
+<div id='printing'>
+    <div id='state'>
+        <table id='dataTable' cellsapcing='6' cellpadding='4' border='1' width='80%' style='border-collapse: collapse; font-size: 14px;'
+            class="w3-table-all w3-hoverable">
+
+
+            <tbody>
+
+
+
+                <thead>
+
+                    <tr>
+                        <td rowspan="3"  width="235">
+                            <img src="https://139.162.61.147/image/who.jpg" style="height: 140px;" />
+                        </td>
+                        <td style="font-weight: bold; background:#FFFFcc" width="83" colspan="5">WORLD HEALTH ORGANIZATION</td>
+                        <td style="font-weight: bold; background:#FFFFcc" colspan="3" width="610">Quarterly Report</td>
+                        <td style="font-weight: bold; background:#FFFFcc" colspan="2" width="402" class="dateQ1">&nbsp;</td>
+                    </tr>
+                    <tr style="font-weight: bold; background:#FFFFcc">
+                        <td colspan="10">LEPROSY ELIMINATION PROJECT</td>
+                    </tr>
+                    <tr style="font-weight: bold; background:#FFFFcc">
+                        <td colspan="5">CH-1211 GENEVA 27 SWITZERLAND.&nbsp; DIRECT FAX: (+41) 22 791 4777</td>
+                        <td>COUNTRY:</td>
+                        <td colspan="3" id="orgUnitid">&nbsp;</td>
+                    </tr>
+                    <tr height="25" style="text-align: center; font-weight: bold; background:#FFFFcc"></tr>
+
+                    <!--<tr>
+                        <td style="background: #FFFFcc">Stock For the Quarter  -</td>
+                        <td class="dateQ1"></td>
+                    </tr>-->
+                    <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td rowspan="3" colspan="1" width="318">REGION/STATE OR PROVINCE</td>
+                        <td rowspan="3"  colspan="1" width="249">DISTRICT</td>
+                        <td colspan="4" width="929">PATIENTS STILL UNDER TREATMENT AT END OF REPORTING PERIOD <sup>1</sup></td>
+                        <td colspan="2" width="394">NEW CASES DETECTED DURING THIS PERIOD <sup>2</sup></td>
+                        <td colspan="2" width="402">CURED &amp; RELEASED FROM TREATMENT DURING THIS PERIOD</td>
+                    </tr>
+                    <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td colspan="2">MB CASES</td>
+                        <td colspan="2">PB CASES</td>
+                        <td>MB</td>
+                        <td>PB</td>
+                        <td>MB</td>
+                        <td>PB</td>
+                    </tr>
+                    <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td>ADULT</td>
+                        <td>CHILD</td>
+                        <td>ADULT</td>
+                        <td>CHILD</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                </thead>
+
+
+                <tr>
+                    <td id="tUEueL0JiYX-Eq9wI9w4xnv" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-Eq9wI9w4xnv" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-yxVP9FHk9tl" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-DlzAT6jK5zM" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-yxVP9FHk9tl" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-DlzAT6jK5zM" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-Eq9wI9w4xnv" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-Eq9wI9w4xnv" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-Eq9wI9w4xnv" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-Eq9wI9w4xnv" class="dataQ1">&nbsp;</td>
+                </tr>
+
+                <tr>
+                    <td id="tUEueL0JiYX-RN5nVVOe2UZ" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-RN5nVVOe2UZ" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-a1zth0s4m8A" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-e0rDEuJHqe1" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-a1zth0s4m8A" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-e0rDEuJHqe1" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-RN5nVVOe2UZ" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-RN5nVVOe2UZ" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-RN5nVVOe2UZ" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-RN5nVVOe2UZ" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-BDvGBnQxjFv" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-BDvGBnQxjFv" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-kn4huKj7uoQ" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-JDfLRMQ3LCs" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-kn4huKj7uoQ" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-JDfLRMQ3LCs" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-BDvGBnQxjFv" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-BDvGBnQxjFv" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-BDvGBnQxjFv" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-BDvGBnQxjFv" class="dataQ1">&nbsp;</td>
+                </tr>
+
+                <tr>
+                    <td id="tUEueL0JiYX-XkxA1xgfQQ4" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-XkxA1xgfQQ4" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-lbcHLQG1ZLP" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-GFjZKTcZGVj" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-lbcHLQG1ZLP" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-GFjZKTcZGVj" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-XkxA1xgfQQ4" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-XkxA1xgfQQ4" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-XkxA1xgfQQ4" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-XkxA1xgfQQ4" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-bq9UjjeNV6y" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-bq9UjjeNV6y" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-SP8ppSPcNqx" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-AopZwBb4MWu" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-SP8ppSPcNqx" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-AopZwBb4MWu" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-bq9UjjeNV6y" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-bq9UjjeNV6y" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-bq9UjjeNV6y" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-bq9UjjeNV6y" class="dataQ1">&nbsp;</td>
+
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-YwOArfyF6Co" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-YwOArfyF6Co" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-tD3qDIVNMUy" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-wJmeXMaFXoZ" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-tD3qDIVNMUy" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-wJmeXMaFXoZ" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-YwOArfyF6Co" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-YwOArfyF6Co" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-YwOArfyF6Co" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-YwOArfyF6Co" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-DJNHr6vnLBW" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-DJNHr6vnLBW" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-KHOuqQS0QyE" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-EndSwMqplW6" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-KHOuqQS0QyE" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-EndSwMqplW6" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-DJNHr6vnLBW" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-DJNHr6vnLBW" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-DJNHr6vnLBW" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-DJNHr6vnLBW" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-aRISAHAJhSh" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-aRISAHAJhSh" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-IN1uKTkbYGs" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-ABxMTF7kBeg" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-IN1uKTkbYGs" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-ABxMTF7kBeg" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-aRISAHAJhSh" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-aRISAHAJhSh" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-aRISAHAJhSh" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-aRISAHAJhSh" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-p3tf317O2in" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-p3tf317O2in" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-mYBINHPQn9o" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-y80KZnB8g7i" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-mYBINHPQn9o" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-y80KZnB8g7i" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-p3tf317O2in" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-p3tf317O2in" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-p3tf317O2in" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-p3tf317O2in" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-dmwjnp8rFKg" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-dmwjnp8rFKg" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-eFDTYvzbVnB" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-PPS4SQPorJI" class="data">&nbsp;</td>
+                    <td id="UbUmjohzUgc-eFDTYvzbVnB" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-PPS4SQPorJI" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-dmwjnp8rFKg" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-dmwjnp8rFKg" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-dmwjnp8rFKg" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-dmwjnp8rFKg" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-h6mCL7tKfaD" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-h6mCL7tKfaD" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-VfiCEs6lK02" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-M2nfO1VAGaF" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-VfiCEs6lK02" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-M2nfO1VAGaF" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-h6mCL7tKfaD" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-h6mCL7tKfaD" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-h6mCL7tKfaD" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-h6mCL7tKfaD" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-AUbIdF8G06Y" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-AUbIdF8G06Y" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-mv4rmqzjVjg" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-qN2JFwqbimW" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-mv4rmqzjVjg" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-qN2JFwqbimW" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-AUbIdF8G06Y" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-AUbIdF8G06Y" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-AUbIdF8G06Y" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-AUbIdF8G06Y" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-gCU2gEDLgsY" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-gCU2gEDLgsY" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-dUWWIebGpmu" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-vHslmvc2Q2N" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-dUWWIebGpmu" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-vHslmvc2Q2N" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-gCU2gEDLgsY" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-gCU2gEDLgsY" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-gCU2gEDLgsY" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-gCU2gEDLgsY" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-aDXiFSmwAvn" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-aDXiFSmwAvn" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-foq0AArteyi" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-zko4JY3QUGI" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-foq0AArteyi" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-zko4JY3QUGI" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-aDXiFSmwAvn" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-aDXiFSmwAvn" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-aDXiFSmwAvn" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-aDXiFSmwAvn" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-bTFINH3rzSY" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-bTFINH3rzSY" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-ijGHugXIeOD" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-hcyqMJQbpHQ" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-ijGHugXIeOD" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-hcyqMJQbpHQ" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-bTFINH3rzSY" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-bTFINH3rzSY" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-bTFINH3rzSY" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-bTFINH3rzSY" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-gaUrf7FvdFY" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-gaUrf7FvdFY" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-TPcwT72MFk9" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-VCDmXBriiwm" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-TPcwT72MFk9" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-VCDmXBriiwm" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-gaUrf7FvdFY" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-gaUrf7FvdFY" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-gaUrf7FvdFY" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-gaUrf7FvdFY" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-CIDpsRfK1ym" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-CIDpsRfK1ym" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-ci5mJyugIef" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-mG0BO9IXgCU" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-ci5mJyugIef" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-mG0BO9IXgCU" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-CIDpsRfK1ym" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-CIDpsRfK1ym" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-CIDpsRfK1ym" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-CIDpsRfK1ym" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-mutTl55EYdf" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-mutTl55EYdf" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-EFvt90PZ0oq" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-otWOGy8HyMc" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-EFvt90PZ0oq" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-otWOGy8HyMc" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-mutTl55EYdf" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-mutTl55EYdf" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-mutTl55EYdf" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-mutTl55EYdf" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-aVguxyjsQ3b" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-aVguxyjsQ3b" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-NWaEVizgxjW" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-Z0HJRzI9dff" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-NWaEVizgxjW" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-Z0HJRzI9dff" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-aVguxyjsQ3b" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-aVguxyjsQ3b" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-aVguxyjsQ3b" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-aVguxyjsQ3b" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-CGL5jiozJ4k" class="dataQ1">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-CGL5jiozJ4k" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-Ee5XbG1VIy9" class="dataQ1">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-tIaeeWWHHM4" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-Ee5XbG1VIy9" class="dataQ1">&nbsp;</td>
+                    <td id="UbUmjohzUgc-tIaeeWWHHM4" class="dataQ1">&nbsp;</td>
+                    <td id="q9N1vywzuat-CGL5jiozJ4k" class="dataQ1">&nbsp;</td>
+                    <td id="hXuFZooxbFF-CGL5jiozJ4k" class="dataQ1">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-CGL5jiozJ4k" class="dataQ1">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-CGL5jiozJ4k" class="dataQ1">&nbsp;</td>
+                </tr>
+                <tr style="background: #FFFFcc; font-weight: bold;">
+                    <td colspan="2">Total: </td>
+                    <td id="vSNOi1DxrUc-yxVP9FHk9tl_vSNOi1DxrUc-a1zth0s4m8A_vSNOi1DxrUc-kn4huKj7uoQ_vSNOi1DxrUc-lbcHLQG1ZLP_vSNOi1DxrUc-SP8ppSPcNqx_vSNOi1DxrUc-tD3qDIVNMUy_vSNOi1DxrUc-KHOuqQS0QyE_vSNOi1DxrUc-IN1uKTkbYGs_vSNOi1DxrUc-mYBINHPQn9o_vSNOi1DxrUc-eFDTYvzbVnB_vSNOi1DxrUc-VfiCEs6lK02_vSNOi1DxrUc-mv4rmqzjVjg_vSNOi1DxrUc-dUWWIebGpmu_vSNOi1DxrUc-foq0AArteyi_vSNOi1DxrUc-ijGHugXIeOD_vSNOi1DxrUc-TPcwT72MFk9_vSNOi1DxrUc-ci5mJyugIef_vSNOi1DxrUc-EFvt90PZ0oq_vSNOi1DxrUc-NWaEVizgxjW_vSNOi1DxrUc-Ee5XbG1VIy9"
+                        class='datasumQ1'>&nbsp;</td>
+                    <td id="vSNOi1DxrUc-DlzAT6jK5zM_vSNOi1DxrUc-e0rDEuJHqe1_vSNOi1DxrUc-JDfLRMQ3LCs_vSNOi1DxrUc-GFjZKTcZGVj_vSNOi1DxrUc-AopZwBb4MWu_vSNOi1DxrUc-wJmeXMaFXoZ_vSNOi1DxrUc-EndSwMqplW6_vSNOi1DxrUc-ABxMTF7kBeg_vSNOi1DxrUc-y80KZnB8g7i_vSNOi1DxrUc-PPS4SQPorJI_vSNOi1DxrUc-M2nfO1VAGaF_vSNOi1DxrUc-qN2JFwqbimW_vSNOi1DxrUc-vHslmvc2Q2N_vSNOi1DxrUc-zko4JY3QUGI_vSNOi1DxrUc-hcyqMJQbpHQ_vSNOi1DxrUc-VCDmXBriiwm_vSNOi1DxrUc-mG0BO9IXgCU_vSNOi1DxrUc-otWOGy8HyMc_vSNOi1DxrUc-Z0HJRzI9dff_vSNOi1DxrUc-tIaeeWWHHM4"
+                        class='datasumQ1'>&nbsp;</td>
+                    <td id="UbUmjohzUgc-yxVP9FHk9tl_UbUmjohzUgc-a1zth0s4m8A_UbUmjohzUgc-kn4huKj7uoQ_UbUmjohzUgc-lbcHLQG1ZLP_UbUmjohzUgc-SP8ppSPcNqx_UbUmjohzUgc-tD3qDIVNMUy_UbUmjohzUgc-KHOuqQS0QyE_UbUmjohzUgc-IN1uKTkbYGs_UbUmjohzUgc-mYBINHPQn9o_UbUmjohzUgc-eFDTYvzbVnB_UbUmjohzUgc-VfiCEs6lK02_UbUmjohzUgc-mv4rmqzjVjg_UbUmjohzUgc-dUWWIebGpmu_UbUmjohzUgc-foq0AArteyi_UbUmjohzUgc-ijGHugXIeOD_UbUmjohzUgc-TPcwT72MFk9_UbUmjohzUgc-ci5mJyugIef_UbUmjohzUgc-EFvt90PZ0oq_UbUmjohzUgc-NWaEVizgxjW_UbUmjohzUgc-Ee5XbG1VIy9"
+                        class='datasumQ1'>&nbsp;</td>
+                    <td id="UbUmjohzUgc-DlzAT6jK5zM_UbUmjohzUgc-e0rDEuJHqe1_UbUmjohzUgc-JDfLRMQ3LCs_UbUmjohzUgc-GFjZKTcZGVj_UbUmjohzUgc-AopZwBb4MWu_UbUmjohzUgc-wJmeXMaFXoZ_UbUmjohzUgc-EndSwMqplW6_UbUmjohzUgc-ABxMTF7kBeg_UbUmjohzUgc-y80KZnB8g7i_UbUmjohzUgc-PPS4SQPorJI_UbUmjohzUgc-M2nfO1VAGaF_UbUmjohzUgc-qN2JFwqbimW_UbUmjohzUgc-vHslmvc2Q2N_UbUmjohzUgc-zko4JY3QUGI_UbUmjohzUgc-hcyqMJQbpHQ_UbUmjohzUgc-VCDmXBriiwm_UbUmjohzUgc-mG0BO9IXgCU_UbUmjohzUgc-otWOGy8HyMc_UbUmjohzUgc-Z0HJRzI9dff_UbUmjohzUgc-tIaeeWWHHM4"
+                        class='datasumQ1'>&nbsp;</td>
+                    <td id="q9N1vywzuat-Eq9wI9w4xnv_q9N1vywzuat-RN5nVVOe2UZ_q9N1vywzuat-BDvGBnQxjFv_q9N1vywzuat-XkxA1xgfQQ4_q9N1vywzuat-bq9UjjeNV6y_q9N1vywzuat-YwOArfyF6Co_q9N1vywzuat-DJNHr6vnLBW_q9N1vywzuat-aRISAHAJhSh_q9N1vywzuat-p3tf317O2in_q9N1vywzuat-dmwjnp8rFKg_q9N1vywzuat-h6mCL7tKfaD_q9N1vywzuat-AUbIdF8G06Y_q9N1vywzuat-gCU2gEDLgsY_q9N1vywzuat-aDXiFSmwAvn_q9N1vywzuat-bTFINH3rzSY_q9N1vywzuat-gaUrf7FvdFY_q9N1vywzuat-CIDpsRfK1ym_q9N1vywzuat-mutTl55EYdf_q9N1vywzuat-aVguxyjsQ3b_q9N1vywzuat-CGL5jiozJ4k"
+                        class='datasumQ1'>&nbsp;</td>
+                    <td id="hXuFZooxbFF-Eq9wI9w4xnv_hXuFZooxbFF-RN5nVVOe2UZ_hXuFZooxbFF-BDvGBnQxjFv_hXuFZooxbFF-XkxA1xgfQQ4_hXuFZooxbFF-bq9UjjeNV6y_hXuFZooxbFF-YwOArfyF6Co_hXuFZooxbFF-DJNHr6vnLBW_hXuFZooxbFF-aRISAHAJhSh_hXuFZooxbFF-p3tf317O2in_hXuFZooxbFF-dmwjnp8rFKg_hXuFZooxbFF-h6mCL7tKfaD_hXuFZooxbFF-AUbIdF8G06Y_hXuFZooxbFF-gCU2gEDLgsY_hXuFZooxbFF-aDXiFSmwAvn_hXuFZooxbFF-bTFINH3rzSY_hXuFZooxbFF-gaUrf7FvdFY_hXuFZooxbFF-CIDpsRfK1ym_hXuFZooxbFF-mutTl55EYdf_hXuFZooxbFF-aVguxyjsQ3b_hXuFZooxbFF-CGL5jiozJ4k"
+                        class='datasumQ1'>&nbsp;</td>
+                    <td id="UGVIcfIvsfs-Eq9wI9w4xnv_UGVIcfIvsfs-RN5nVVOe2UZ_UGVIcfIvsfs-BDvGBnQxjFv_UGVIcfIvsfs-XkxA1xgfQQ4_UGVIcfIvsfs-bq9UjjeNV6y_UGVIcfIvsfs-YwOArfyF6Co_UGVIcfIvsfs-DJNHr6vnLBW_UGVIcfIvsfs-aRISAHAJhSh_UGVIcfIvsfs-p3tf317O2in_UGVIcfIvsfs-dmwjnp8rFKg_UGVIcfIvsfs-h6mCL7tKfaD_UGVIcfIvsfs-AUbIdF8G06Y_UGVIcfIvsfs-gCU2gEDLgsY_UGVIcfIvsfs-aDXiFSmwAvn_UGVIcfIvsfs-bTFINH3rzSY_UGVIcfIvsfs-gaUrf7FvdFY_UGVIcfIvsfs-CIDpsRfK1ym_UGVIcfIvsfs-mutTl55EYdf_UGVIcfIvsfs-aVguxyjsQ3b_UGVIcfIvsfs-CGL5jiozJ4k"
+                        class='datasumQ1'>&nbsp;</td>
+                    <td id="xe8jm9NlMNN-Eq9wI9w4xnv_xe8jm9NlMNN-RN5nVVOe2UZ_xe8jm9NlMNN-BDvGBnQxjFv_xe8jm9NlMNN-XkxA1xgfQQ4_xe8jm9NlMNN-bq9UjjeNV6y_xe8jm9NlMNN-YwOArfyF6Co_xe8jm9NlMNN-DJNHr6vnLBW_xe8jm9NlMNN-aRISAHAJhSh_xe8jm9NlMNN-p3tf317O2in_xe8jm9NlMNN-dmwjnp8rFKg_xe8jm9NlMNN-h6mCL7tKfaD_xe8jm9NlMNN-AUbIdF8G06Y_xe8jm9NlMNN-gCU2gEDLgsY_xe8jm9NlMNN-aDXiFSmwAvn_xe8jm9NlMNN-bTFINH3rzSY_xe8jm9NlMNN-gaUrf7FvdFY_xe8jm9NlMNN-CIDpsRfK1ym_xe8jm9NlMNN-mutTl55EYdf_xe8jm9NlMNN-aVguxyjsQ3b_xe8jm9NlMNN-CGL5jiozJ4k"
+                        class='datasumQ1'>&nbsp;</td>
+                </tr>
+
+                <tr rowspan="10" height="25"></tr>
+                <tr rowspan="10" height="25"></tr>
+
+                <!--Annual Table-->
+
+                <tr height="20" style="text-align: center; font-weight: bold; background:#FFFFcc">
+                    <td colspan="2">BLISTER STOCK LEVELS *</td>
+                    <td>MB ADULT</td>
+                    <td>MB CHILD</td>
+                    <td>PB ADULT</td>
+                    <td>MB ADULT</td>
+                </tr>
+                <tr height="20">
+                    <td height="50" colspan="2" bgcolor="#FFFFcc">CENTRAL LEVEL STOCKS</td>
+                    <td id="L7hh1YhgC9r-L4l8bjmXAOw" class="data">&nbsp;</td>
+                    <td id="L7hh1YhgC9r-FguxPzk0zgd" class="data">&nbsp;</td>
+                    <td id="iPq97RFrzOM-L4l8bjmXAOw" class="data">&nbsp;</td>
+                    <td id="iPq97RFrzOM-FguxPzk0zgd" class="data">&nbsp;</td>
+                </tr>
+                <tr height="20">
+                    <td height="50" colspan="2" bgcolor="#FFFFcc">REGIONAL LEVEL STOCKS</td>
+                    <td id="G7tRDnxDLu1-L4l8bjmXAOw" class="data">&nbsp;</td>
+                    <td id="G7tRDnxDLu1-FguxPzk0zgd" class="data">&nbsp;</td>
+                    <td id="v37Or4BVtAp-L4l8bjmXAOw" class="data">&nbsp;</td>
+                    <td id="v37Or4BVtAp-FguxPzk0zgd" class="data">&nbsp;</td>
+                </tr>
+                <tr height="20">
+                    <td height="50" colspan="2" bgcolor="#FFFFcc">DISTRICT LEVEL STOCKS</td>
+                    <td id="hUpNI5ioZ63-L4l8bjmXAOw" class="data">&nbsp;</td>
+                    <td id="hUpNI5ioZ63-FguxPzk0zgd" class="data">&nbsp;</td>
+                    <td id="AvMSN2UQsy6-L4l8bjmXAOw" class="data">&nbsp;</td>
+                    <td id="AvMSN2UQsy6-FguxPzk0zgd" class="data">&nbsp;</td>
+                </tr>
+
+                <tr style="text-align: center; background:#FFFFcc; font-weight: bold;">
+                    <td height="20" colspan="2" bgcolor="#FFFFcc">Total blister stocks:</td>
+                    <td id="L7hh1YhgC9r-L4l8bjmXAOw_G7tRDnxDLu1-L4l8bjmXAOw_hUpNI5ioZ63-L4l8bjmXAOw" class='datasum'>&nbsp;</td>
+                    <td id="L7hh1YhgC9r-FguxPzk0zgd_G7tRDnxDLu1-FguxPzk0zgd_hUpNI5ioZ63-FguxPzk0zgd" class='datasum'>&nbsp;</td>
+                    <td id="iPq97RFrzOM-L4l8bjmXAOw_v37Or4BVtAp-L4l8bjmXAOw_AvMSN2UQsy6-L4l8bjmXAOw" class='datasum'>&nbsp;</td>
+                    <td id="iPq97RFrzOM-FguxPzk0zgd_v37Or4BVtAp-FguxPzk0zgd_AvMSN2UQsy6-FguxPzk0zgd" class='datasum'>&nbsp;</td>
+                </tr>
+
+                <tr rowspan="10" height="25"></tr>
+                <tr rowspan="10" height="25"></tr>
+                <!--End Of annual table -->
+
+
+                <!--table footer-->
+                <tr style="background: #FFFFcc; border: none;">
+                    <td style="border: none;" width="235" colspan="6">Notes:</td>
+                    <td style="background: #FFF; border: none;" width="196" colspan="4">Signed:_______________________________</td>
+                </tr>
+                <tr style="background: #FFFFcc; border: none;">
+                    <td style=" border: none;" colspan="6">1) All cases still registered &nbsp;for treatment at end of reporting period should be included.</td>
+                    <td colspan="4" style="background: #FFF; border: none;text-align:center;">National Programme Manager</td>
+
+                </tr>
+                <tr style="background: #FFFFcc;border: none;">
+                    <td style="border: none;" colspan="6">2) All new cases detected during the reporting period should be included&nbsp;</td>
+                </tr>
+                <tr style="background: #FFFFcc;border: none;">
+                    <td colspan="6" style="border: none;">3) Please return this form with the Annual Request form for a supply of MDT in <span id="periodId1">&nbsp;</span></td>
+                    <td colspan="4" style="background: #FFF; border: none; text-align: center">Date: _________________</td>
+
+                </tr>
+                <tr height="25">
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">DISTRIBUTION BY EMAIL TO:&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">1) WHO Country Office 2) WHO HQ&nbsp; to esind@who.int or by fax to&nbsp; (+41) 22 791 4777&nbsp; and
+                        3) National Programme Manager file.</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">Please use this form as a template for quarterly reports July-September <span id="periodId3"></span>,
+                        October-December <span id="periodId4"></span>, and January-March
+                        <span id="periodId2"></span>, April-June <span id="periodId7">
+                        </td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+<!--Annual Table End-->
+
+
+                <tr rowspan="10" height="25"></tr>
+                <tr rowspan="10" height="25"></tr>
+
+
+
+
+
+<thead>
+
+                    <tr>
+                        <td rowspan="3" width="235">
+                            <img src="https://139.162.61.147/image/who.jpg" style="height: 140px;" />
+                        </td>
+                        <td style="font-weight: bold; background:#FFFFcc" width="83" colspan="5"></td>
+                        <td style="font-weight: bold; background:#FFFFcc" colspan="3" width="610">Quarterly Report</td>
+                        <td style="font-weight: bold; background:#FFFFcc" colspan="2" width="402" class="dateQ2">&nbsp;</td>
+                    </tr>
+                    <tr style="font-weight: bold; background:#FFFFcc">
+                        <td colspan="10"></td>
+                    </tr>
+                    <tr style="font-weight: bold; background:#FFFFcc">
+                        <td colspan="5"></td>
+                        <td>COUNTRY:</td>
+                        <td colspan="3" id="orgUnitid1">&nbsp;</td>
+                    </tr>
+                    <tr height="25" style="text-align: center; font-weight: bold; background:#FFFFcc"></tr>
+
+                 
+                </thead>
+
+
+
+
+
+                <!--table quarter  2-->
+
+                <!--<tr>
+                    <td style="background: #FFFFcc">Stock For the Quarter  -</td>
+                    <td class="dateQ2"></td>
+                </tr>-->
+                <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                    <td rowspan="3" width="318">REGION/STATE OR PROVINCE</td>
+                    <td rowspan="3" width="249">DISTRICT</td>
+                    <td colspan="4" width="929">PATIENTS STILL UNDER TREATMENT AT END OF REPORTING PERIOD <sup>1</sup></td>
+                    <td colspan="2" width="394">NEW CASES DETECTED DURING THIS PERIOD <sup>2</sup></td>
+                    <td colspan="2" width="402">CURED &amp; RELEASED FROM TREATMENT DURING THIS PERIOD</td>
+                </tr>
+                <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                    <td colspan="2">MB CASES</td>
+                    <td colspan="2">PB CASES</td>
+                    <td>MB</td>
+                    <td>PB</td>
+                    <td>MB</td>
+                    <td>PB</td>
+                </tr>
+                <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                    <td>ADULT</td>
+                    <td>CHILD</td>
+                    <td>ADULT</td>
+                    <td>CHILD</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                </thead>
+
+
+                <tr>
+                    <td id="tUEueL0JiYX-Eq9wI9w4xnv" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-Eq9wI9w4xnv" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-yxVP9FHk9tl" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-DlzAT6jK5zM" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-yxVP9FHk9tl" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-DlzAT6jK5zM" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-Eq9wI9w4xnv" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-Eq9wI9w4xnv" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-Eq9wI9w4xnv" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-Eq9wI9w4xnv" class="dataQ2">&nbsp;</td>
+                </tr>
+
+                <tr>
+                    <td id="tUEueL0JiYX-RN5nVVOe2UZ" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-RN5nVVOe2UZ" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-a1zth0s4m8A" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-e0rDEuJHqe1" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-a1zth0s4m8A" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-e0rDEuJHqe1" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-RN5nVVOe2UZ" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-RN5nVVOe2UZ" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-RN5nVVOe2UZ" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-RN5nVVOe2UZ" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-BDvGBnQxjFv" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-BDvGBnQxjFv" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-kn4huKj7uoQ" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-JDfLRMQ3LCs" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-kn4huKj7uoQ" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-JDfLRMQ3LCs" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-BDvGBnQxjFv" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-BDvGBnQxjFv" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-BDvGBnQxjFv" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-BDvGBnQxjFv" class="dataQ2">&nbsp;</td>
+                </tr>
+
+                <tr>
+                    <td id="tUEueL0JiYX-XkxA1xgfQQ4" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-XkxA1xgfQQ4" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-lbcHLQG1ZLP" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-GFjZKTcZGVj" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-lbcHLQG1ZLP" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-GFjZKTcZGVj" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-XkxA1xgfQQ4" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-XkxA1xgfQQ4" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-XkxA1xgfQQ4" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-XkxA1xgfQQ4" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-bq9UjjeNV6y" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-bq9UjjeNV6y" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-SP8ppSPcNqx" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-AopZwBb4MWu" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-SP8ppSPcNqx" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-AopZwBb4MWu" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-bq9UjjeNV6y" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-bq9UjjeNV6y" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-bq9UjjeNV6y" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-bq9UjjeNV6y" class="dataQ2">&nbsp;</td>
+
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-YwOArfyF6Co" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-YwOArfyF6Co" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-tD3qDIVNMUy" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-wJmeXMaFXoZ" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-tD3qDIVNMUy" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-wJmeXMaFXoZ" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-YwOArfyF6Co" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-YwOArfyF6Co" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-YwOArfyF6Co" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-YwOArfyF6Co" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-DJNHr6vnLBW" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-DJNHr6vnLBW" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-KHOuqQS0QyE" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-EndSwMqplW6" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-KHOuqQS0QyE" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-EndSwMqplW6" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-DJNHr6vnLBW" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-DJNHr6vnLBW" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-DJNHr6vnLBW" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-DJNHr6vnLBW" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-aRISAHAJhSh" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-aRISAHAJhSh" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-IN1uKTkbYGs" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-ABxMTF7kBeg" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-IN1uKTkbYGs" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-ABxMTF7kBeg" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-aRISAHAJhSh" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-aRISAHAJhSh" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-aRISAHAJhSh" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-aRISAHAJhSh" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-p3tf317O2in" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-p3tf317O2in" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-mYBINHPQn9o" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-y80KZnB8g7i" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-mYBINHPQn9o" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-y80KZnB8g7i" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-p3tf317O2in" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-p3tf317O2in" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-p3tf317O2in" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-p3tf317O2in" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-dmwjnp8rFKg" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-dmwjnp8rFKg" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-eFDTYvzbVnB" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-PPS4SQPorJI" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-dmwjnp8rFKg" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-dmwjnp8rFKg" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-dmwjnp8rFKg" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-dmwjnp8rFKg" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-h6mCL7tKfaD" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-h6mCL7tKfaD" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-VfiCEs6lK02" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-M2nfO1VAGaF" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-VfiCEs6lK02" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-M2nfO1VAGaF" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-h6mCL7tKfaD" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-h6mCL7tKfaD" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-h6mCL7tKfaD" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-h6mCL7tKfaD" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-AUbIdF8G06Y" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-AUbIdF8G06Y" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-mv4rmqzjVjg" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-qN2JFwqbimW" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-mv4rmqzjVjg" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-qN2JFwqbimW" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-AUbIdF8G06Y" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-AUbIdF8G06Y" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-AUbIdF8G06Y" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-AUbIdF8G06Y" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-gCU2gEDLgsY" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-gCU2gEDLgsY" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-dUWWIebGpmu" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-vHslmvc2Q2N" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-dUWWIebGpmu" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-vHslmvc2Q2N" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-gCU2gEDLgsY" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-gCU2gEDLgsY" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-gCU2gEDLgsY" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-gCU2gEDLgsY" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-aDXiFSmwAvn" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-aDXiFSmwAvn" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-foq0AArteyi" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-zko4JY3QUGI" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-foq0AArteyi" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-zko4JY3QUGI" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-aDXiFSmwAvn" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-aDXiFSmwAvn" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-aDXiFSmwAvn" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-aDXiFSmwAvn" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-bTFINH3rzSY" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-bTFINH3rzSY" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-ijGHugXIeOD" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-hcyqMJQbpHQ" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-ijGHugXIeOD" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-hcyqMJQbpHQ" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-bTFINH3rzSY" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-bTFINH3rzSY" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-bTFINH3rzSY" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-bTFINH3rzSY" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-gaUrf7FvdFY" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-gaUrf7FvdFY" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-TPcwT72MFk9" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-VCDmXBriiwm" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-TPcwT72MFk9" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-VCDmXBriiwm" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-gaUrf7FvdFY" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-gaUrf7FvdFY" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-gaUrf7FvdFY" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-gaUrf7FvdFY" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-CIDpsRfK1ym" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-CIDpsRfK1ym" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-ci5mJyugIef" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-mG0BO9IXgCU" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-ci5mJyugIef" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-mG0BO9IXgCU" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-CIDpsRfK1ym" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-CIDpsRfK1ym" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-CIDpsRfK1ym" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-CIDpsRfK1ym" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-mutTl55EYdf" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-mutTl55EYdf" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-EFvt90PZ0oq" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-otWOGy8HyMc" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-EFvt90PZ0oq" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-otWOGy8HyMc" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-mutTl55EYdf" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-mutTl55EYdf" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-mutTl55EYdf" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-mutTl55EYdf" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-aVguxyjsQ3b" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-aVguxyjsQ3b" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-NWaEVizgxjW" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-Z0HJRzI9dff" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-NWaEVizgxjW" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-Z0HJRzI9dff" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-aVguxyjsQ3b" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-aVguxyjsQ3b" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-aVguxyjsQ3b" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-aVguxyjsQ3b" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-CGL5jiozJ4k" class="dataQ2">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-CGL5jiozJ4k" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-Ee5XbG1VIy9" class="dataQ2">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-tIaeeWWHHM4" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-Ee5XbG1VIy9" class="dataQ2">&nbsp;</td>
+                    <td id="UbUmjohzUgc-tIaeeWWHHM4" class="dataQ2">&nbsp;</td>
+                    <td id="q9N1vywzuat-CGL5jiozJ4k" class="dataQ2">&nbsp;</td>
+                    <td id="hXuFZooxbFF-CGL5jiozJ4k" class="dataQ2">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-CGL5jiozJ4k" class="dataQ2">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-CGL5jiozJ4k" class="dataQ2">&nbsp;</td>
+                </tr>
+                <tr style="background: #FFFFcc; font-weight: bold;">
+                    <td colspan="2">Total: </td>
+                    <td id="vSNOi1DxrUc-yxVP9FHk9tl_vSNOi1DxrUc-a1zth0s4m8A_vSNOi1DxrUc-kn4huKj7uoQ_vSNOi1DxrUc-lbcHLQG1ZLP_vSNOi1DxrUc-SP8ppSPcNqx_vSNOi1DxrUc-tD3qDIVNMUy_vSNOi1DxrUc-KHOuqQS0QyE_vSNOi1DxrUc-IN1uKTkbYGs_vSNOi1DxrUc-mYBINHPQn9o_vSNOi1DxrUc-eFDTYvzbVnB_vSNOi1DxrUc-VfiCEs6lK02_vSNOi1DxrUc-mv4rmqzjVjg_vSNOi1DxrUc-dUWWIebGpmu_vSNOi1DxrUc-foq0AArteyi_vSNOi1DxrUc-ijGHugXIeOD_vSNOi1DxrUc-TPcwT72MFk9_vSNOi1DxrUc-ci5mJyugIef_vSNOi1DxrUc-EFvt90PZ0oq_vSNOi1DxrUc-NWaEVizgxjW_vSNOi1DxrUc-Ee5XbG1VIy9"
+                        class='datasumQ2'>&nbsp;</td>
+                    <td id="vSNOi1DxrUc-DlzAT6jK5zM_vSNOi1DxrUc-e0rDEuJHqe1_vSNOi1DxrUc-JDfLRMQ3LCs_vSNOi1DxrUc-GFjZKTcZGVj_vSNOi1DxrUc-AopZwBb4MWu_vSNOi1DxrUc-wJmeXMaFXoZ_vSNOi1DxrUc-EndSwMqplW6_vSNOi1DxrUc-ABxMTF7kBeg_vSNOi1DxrUc-y80KZnB8g7i_vSNOi1DxrUc-PPS4SQPorJI_vSNOi1DxrUc-M2nfO1VAGaF_vSNOi1DxrUc-qN2JFwqbimW_vSNOi1DxrUc-vHslmvc2Q2N_vSNOi1DxrUc-zko4JY3QUGI_vSNOi1DxrUc-hcyqMJQbpHQ_vSNOi1DxrUc-VCDmXBriiwm_vSNOi1DxrUc-mG0BO9IXgCU_vSNOi1DxrUc-otWOGy8HyMc_vSNOi1DxrUc-Z0HJRzI9dff_vSNOi1DxrUc-tIaeeWWHHM4"
+                        class='datasumQ2'>&nbsp;</td>
+                    <td id="UbUmjohzUgc-yxVP9FHk9tl_UbUmjohzUgc-a1zth0s4m8A_UbUmjohzUgc-kn4huKj7uoQ_UbUmjohzUgc-lbcHLQG1ZLP_UbUmjohzUgc-SP8ppSPcNqx_UbUmjohzUgc-tD3qDIVNMUy_UbUmjohzUgc-KHOuqQS0QyE_UbUmjohzUgc-IN1uKTkbYGs_UbUmjohzUgc-mYBINHPQn9o_UbUmjohzUgc-eFDTYvzbVnB_UbUmjohzUgc-VfiCEs6lK02_UbUmjohzUgc-mv4rmqzjVjg_UbUmjohzUgc-dUWWIebGpmu_UbUmjohzUgc-foq0AArteyi_UbUmjohzUgc-ijGHugXIeOD_UbUmjohzUgc-TPcwT72MFk9_UbUmjohzUgc-ci5mJyugIef_UbUmjohzUgc-EFvt90PZ0oq_UbUmjohzUgc-NWaEVizgxjW_UbUmjohzUgc-Ee5XbG1VIy9"
+                        class='datasumQ2'>&nbsp;</td>
+                    <td id="UbUmjohzUgc-DlzAT6jK5zM_UbUmjohzUgc-e0rDEuJHqe1_UbUmjohzUgc-JDfLRMQ3LCs_UbUmjohzUgc-GFjZKTcZGVj_UbUmjohzUgc-AopZwBb4MWu_UbUmjohzUgc-wJmeXMaFXoZ_UbUmjohzUgc-EndSwMqplW6_UbUmjohzUgc-ABxMTF7kBeg_UbUmjohzUgc-y80KZnB8g7i_UbUmjohzUgc-PPS4SQPorJI_UbUmjohzUgc-M2nfO1VAGaF_UbUmjohzUgc-qN2JFwqbimW_UbUmjohzUgc-vHslmvc2Q2N_UbUmjohzUgc-zko4JY3QUGI_UbUmjohzUgc-hcyqMJQbpHQ_UbUmjohzUgc-VCDmXBriiwm_UbUmjohzUgc-mG0BO9IXgCU_UbUmjohzUgc-otWOGy8HyMc_UbUmjohzUgc-Z0HJRzI9dff_UbUmjohzUgc-tIaeeWWHHM4"
+                        class='datasumQ2'>&nbsp;</td>
+                    <td id="q9N1vywzuat-Eq9wI9w4xnv_q9N1vywzuat-RN5nVVOe2UZ_q9N1vywzuat-BDvGBnQxjFv_q9N1vywzuat-XkxA1xgfQQ4_q9N1vywzuat-bq9UjjeNV6y_q9N1vywzuat-YwOArfyF6Co_q9N1vywzuat-DJNHr6vnLBW_q9N1vywzuat-aRISAHAJhSh_q9N1vywzuat-p3tf317O2in_q9N1vywzuat-dmwjnp8rFKg_q9N1vywzuat-h6mCL7tKfaD_q9N1vywzuat-AUbIdF8G06Y_q9N1vywzuat-gCU2gEDLgsY_q9N1vywzuat-aDXiFSmwAvn_q9N1vywzuat-bTFINH3rzSY_q9N1vywzuat-gaUrf7FvdFY_q9N1vywzuat-CIDpsRfK1ym_q9N1vywzuat-mutTl55EYdf_q9N1vywzuat-aVguxyjsQ3b_q9N1vywzuat-CGL5jiozJ4k"
+                        class='datasumQ2'>&nbsp;</td>
+                    <td id="hXuFZooxbFF-Eq9wI9w4xnv_hXuFZooxbFF-RN5nVVOe2UZ_hXuFZooxbFF-BDvGBnQxjFv_hXuFZooxbFF-XkxA1xgfQQ4_hXuFZooxbFF-bq9UjjeNV6y_hXuFZooxbFF-YwOArfyF6Co_hXuFZooxbFF-DJNHr6vnLBW_hXuFZooxbFF-aRISAHAJhSh_hXuFZooxbFF-p3tf317O2in_hXuFZooxbFF-dmwjnp8rFKg_hXuFZooxbFF-h6mCL7tKfaD_hXuFZooxbFF-AUbIdF8G06Y_hXuFZooxbFF-gCU2gEDLgsY_hXuFZooxbFF-aDXiFSmwAvn_hXuFZooxbFF-bTFINH3rzSY_hXuFZooxbFF-gaUrf7FvdFY_hXuFZooxbFF-CIDpsRfK1ym_hXuFZooxbFF-mutTl55EYdf_hXuFZooxbFF-aVguxyjsQ3b_hXuFZooxbFF-CGL5jiozJ4k"
+                        class='datasumQ2'>&nbsp;</td>
+                    <td id="UGVIcfIvsfs-Eq9wI9w4xnv_UGVIcfIvsfs-RN5nVVOe2UZ_UGVIcfIvsfs-BDvGBnQxjFv_UGVIcfIvsfs-XkxA1xgfQQ4_UGVIcfIvsfs-bq9UjjeNV6y_UGVIcfIvsfs-YwOArfyF6Co_UGVIcfIvsfs-DJNHr6vnLBW_UGVIcfIvsfs-aRISAHAJhSh_UGVIcfIvsfs-p3tf317O2in_UGVIcfIvsfs-dmwjnp8rFKg_UGVIcfIvsfs-h6mCL7tKfaD_UGVIcfIvsfs-AUbIdF8G06Y_UGVIcfIvsfs-gCU2gEDLgsY_UGVIcfIvsfs-aDXiFSmwAvn_UGVIcfIvsfs-bTFINH3rzSY_UGVIcfIvsfs-gaUrf7FvdFY_UGVIcfIvsfs-CIDpsRfK1ym_UGVIcfIvsfs-mutTl55EYdf_UGVIcfIvsfs-aVguxyjsQ3b_UGVIcfIvsfs-CGL5jiozJ4k"
+                        class='datasumQ2'>&nbsp;</td>
+                    <td id="xe8jm9NlMNN-Eq9wI9w4xnv_xe8jm9NlMNN-RN5nVVOe2UZ_xe8jm9NlMNN-BDvGBnQxjFv_xe8jm9NlMNN-XkxA1xgfQQ4_xe8jm9NlMNN-bq9UjjeNV6y_xe8jm9NlMNN-YwOArfyF6Co_xe8jm9NlMNN-DJNHr6vnLBW_xe8jm9NlMNN-aRISAHAJhSh_xe8jm9NlMNN-p3tf317O2in_xe8jm9NlMNN-dmwjnp8rFKg_xe8jm9NlMNN-h6mCL7tKfaD_xe8jm9NlMNN-AUbIdF8G06Y_xe8jm9NlMNN-gCU2gEDLgsY_xe8jm9NlMNN-aDXiFSmwAvn_xe8jm9NlMNN-bTFINH3rzSY_xe8jm9NlMNN-gaUrf7FvdFY_xe8jm9NlMNN-CIDpsRfK1ym_xe8jm9NlMNN-mutTl55EYdf_xe8jm9NlMNN-aVguxyjsQ3b_xe8jm9NlMNN-CGL5jiozJ4k"
+                        class='datasumQ2'>&nbsp;</td>
+                </tr>
+
+  <tr rowspan="10" height="25"></tr>
+                <tr rowspan="10" height="25"></tr>
+
+
+                    <!--Annual Table-->
+
+                    <tr height="20" style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td colspan="2">BLISTER STOCK LEVELS *</td>
+                        <td>MB ADULT</td>
+                        <td>MB CHILD</td>
+                        <td>PB ADULT</td>
+                        <td>MB ADULT</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">CENTRAL LEVEL STOCKS</td>
+                        <td id="L7hh1YhgC9r-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="L7hh1YhgC9r-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="iPq97RFrzOM-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="iPq97RFrzOM-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">REGIONAL LEVEL STOCKS</td>
+                        <td id="G7tRDnxDLu1-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="G7tRDnxDLu1-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="v37Or4BVtAp-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="v37Or4BVtAp-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">DISTRICT LEVEL STOCKS</td>
+                        <td id="hUpNI5ioZ63-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="hUpNI5ioZ63-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="AvMSN2UQsy6-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="AvMSN2UQsy6-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+
+                    <tr style="text-align: center; background:#FFFFcc; font-weight: bold;">
+                        <td height="20" colspan="2" bgcolor="#FFFFcc">Total blister stocks:</td>
+                        <td id="L7hh1YhgC9r-L4l8bjmXAOw_G7tRDnxDLu1-L4l8bjmXAOw_hUpNI5ioZ63-L4l8bjmXAOw" class='datasum'>&nbsp;</td>
+                        <td id="L7hh1YhgC9r-FguxPzk0zgd_G7tRDnxDLu1-FguxPzk0zgd_hUpNI5ioZ63-FguxPzk0zgd" class='datasum'>&nbsp;</td>
+                        <td id="iPq97RFrzOM-L4l8bjmXAOw_v37Or4BVtAp-L4l8bjmXAOw_AvMSN2UQsy6-L4l8bjmXAOw" class='datasum'>&nbsp;</td>
+                        <td id="iPq97RFrzOM-FguxPzk0zgd_v37Or4BVtAp-FguxPzk0zgd_AvMSN2UQsy6-FguxPzk0zgd" class='datasum'>&nbsp;</td>
+                    </tr>
+
+                    <tr rowspan="10" height="25"></tr>
+                    <tr rowspan="10" height="25"></tr>
+                    <!--End Of annual table -->
+
+
+                    <!--table footer-->
+                    <tr style="background: #FFFFcc; border: none;">
+                        <td style="border: none;" width="235" colspan="6">Notes:</td>
+                        <td style="background: #FFF; border: none;" width="196" colspan="4">Signed:_______________________________</td>
+                    </tr>
+                    <tr style="background: #FFFFcc; border: none;">
+                        <td style=" border: none;" colspan="6">1) All cases still registered &nbsp;for treatment at end of reporting period should be included.</td>
+                        <td colspan="4" style="background: #FFF; border: none;text-align:center;">National Programme Manager</td>
+
+                    </tr>
+                    <tr style="background: #FFFFcc;border: none;">
+                        <td style="border: none;" colspan="6">2) All new cases detected during the reporting period should be included&nbsp;</td>
+                    </tr>
+                    <tr style="background: #FFFFcc;border: none;">
+                        <td colspan="6" style="border: none;">3) Please return this form with the Annual Request form for a supply of MDT in <span id="periodId1">&nbsp;</span></td>
+                    <td colspan="4" style="background: #FFF; border: none; text-align: center">Date: _________________</td>
+
+                </tr>
+                <tr height="25">
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">DISTRIBUTION BY EMAIL TO:&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">1) WHO Country Office 2) WHO HQ&nbsp; to esind@who.int or by fax to&nbsp; (+41) 22 791 4777&nbsp; and
+                        3) National Programme Manager file.</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">Please use this form as a template for quarterly reports July-September <span id="periodId33"></span>,
+                        October-December <span id="periodId44"></span>, and January-March
+                        <span id="periodId22"></span>, April-June <span id="periodId77">
+                        </td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+<!--Annual Table End-->
+                <tr rowspan="10" height="25"></tr>
+                <tr rowspan="10" height="25"></tr>
+
+
+
+
+
+<thead>
+
+                    <tr>
+                        <td rowspan="3" width="235">
+                            <img src="https://139.162.61.147/image/who.jpg" style="height: 140px;" />
+                        </td>
+                        <td style="font-weight: bold; background:#FFFFcc" width="83" colspan="5"></td>
+                        <td style="font-weight: bold; background:#FFFFcc" colspan="3" width="610">Quarterly Report</td>
+                        <td style="font-weight: bold; background:#FFFFcc" colspan="2" width="402" class="dateQ3">&nbsp;</td>
+                    </tr>
+                    <tr style="font-weight: bold; background:#FFFFcc">
+                        <td colspan="10"></td>
+                    </tr>
+                    <tr style="font-weight: bold; background:#FFFFcc">
+                        <td colspan="5"></td>
+                        <td>COUNTRY:</td>
+                        <td colspan="3" id="orgUnitid2">&nbsp;</td>
+                    </tr>
+                    <tr height="25" style="text-align: center; font-weight: bold; background:#FFFFcc"></tr>
+
+                </thead>
+
+
+                <!--table quarter 3-->
+
+                <!--<tr>
+                    
+                    <td style="background: #FFFFcc">Stock For the Quarter  -</td>
+                    <td class="dateQ3"></td>
+                </tr>-->
+                <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                    <td rowspan="3" width="318">REGION/STATE OR PROVINCE</td>
+                    <td rowspan="3" width="249">DISTRICT</td>
+                    <td colspan="4" width="929">PATIENTS STILL UNDER TREATMENT AT END OF REPORTING PERIOD <sup>1</sup></td>
+                    <td colspan="2" width="394">NEW CASES DETECTED DURING THIS PERIOD <sup>2</sup></td>
+                    <td colspan="2" width="402">CURED &amp; RELEASED FROM TREATMENT DURING THIS PERIOD</td>
+                </tr>
+                <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                    <td colspan="2">MB CASES</td>
+                    <td colspan="2">PB CASES</td>
+                    <td>MB</td>
+                    <td>PB</td>
+                    <td>MB</td>
+                    <td>PB</td>
+                </tr>
+                <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                    <td>ADULT</td>
+                    <td>CHILD</td>
+                    <td>ADULT</td>
+                    <td>CHILD</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                </thead>
+
+
+                <tr>
+                    <td id="tUEueL0JiYX-Eq9wI9w4xnv" class="dataQ3">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-Eq9wI9w4xnv" class="dataQ3">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-yxVP9FHk9tl" class="dataQ3">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-DlzAT6jK5zM" class="dataQ3">&nbsp;</td>
+                    <td id="UbUmjohzUgc-yxVP9FHk9tl" class="dataQ3">&nbsp;</td>
+                    <td id="UbUmjohzUgc-DlzAT6jK5zM" class="dataQ3">&nbsp;</td>
+                    <td id="q9N1vywzuat-Eq9wI9w4xnv" class="dataQ3">&nbsp;</td>
+                    <td id="hXuFZooxbFF-Eq9wI9w4xnv" class="dataQ3">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-Eq9wI9w4xnv" class="dataQ3">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-Eq9wI9w4xnv" class="dataQ3">&nbsp;</td>
+                </tr>
+
+                <tr>
+                    <td id="tUEueL0JiYX-RN5nVVOe2UZ" class="dataQ3">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-RN5nVVOe2UZ" class="dataQ3">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-a1zth0s4m8A" class="dataQ3">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-e0rDEuJHqe1" class="dataQ3">&nbsp;</td>
+                    <td id="UbUmjohzUgc-a1zth0s4m8A" class="dataQ3">&nbsp;</td>
+                    <td id="UbUmjohzUgc-e0rDEuJHqe1" class="dataQ3">&nbsp;</td>
+                    <td id="q9N1vywzuat-RN5nVVOe2UZ" class="dataQ3">&nbsp;</td>
+                    <td id="hXuFZooxbFF-RN5nVVOe2UZ" class="dataQ3">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-RN5nVVOe2UZ" class="dataQ3"></td>
+                    <td id="xe8jm9NlMNN-RN5nVVOe2UZ" class="dataQ3">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="tUEueL0JiYX-BDvGBnQxjFv" class="dataQ3">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-BDvGBnQxjFv" class="dataQ3">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-kn4huKj7uoQ" class="dataQ3">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-JDfLRMQ3LCs" class="dataQ3">&nbsp;</td>
+                    <td id="UbUmjohzUgc-kn4huKj7uoQ" class="dataQ3">&nbsp;</td>
+                    <td id="UbUmjohzUgc-JDfLRMQ3LCs" class="dataQ3">&nbsp;</td>
+                    <td id="q9N1vywzuat-BDvGBnQxjFv" class="dataQ3">&nbsp;</td>
+                    <td id="hXuFZooxbFF-BDvGBnQxjFv" class="dataQ3">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-BDvGBnQxjFv" class="dataQ3">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-BDvGBnQxjFv" class="dataQ3">&nbsp;</td>
+                </tr>
+
+                <tr>
+                    <td id="tUEueL0JiYX-XkxA1xgfQQ4" class="dataQ3">&nbsp;</td>
+                    <td id="yjbhC4xHXL8-XkxA1xgfQQ4" class="dataQ3">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-lbcHLQG1ZLP" class="dataQ3">&nbsp;</td>
+                    <td id="vSNOi1DxrUc-GFjZKTcZGVj" class="dataQ3">&nbsp;</td>
+                    <td id="UbUmjohzUgc-lbcHLQG1ZLP" class="dataQ3">&nbsp;</td>
+                    <td id="UbUmjohzUgc-GFjZKTcZGVj" class="dataQ3">&nbsp;</td>
+                    <td id="q9N1vywzuat-XkxA1xgfQQ4" class="dataQ3">&nbsp;</td>
+                    <td id="hXuFZooxbFF-XkxA1xgfQQ4" class="dataQ3">&nbsp;</td>
+                    <td id="UGVIcfIvsfs-XkxA1xgfQQ4" class="dataQ3">&nbsp;</td>
+                    <td id="xe8jm9NlMNN-XkxA1xgfQQ4" class="dataQ3">&nbsp;</td>
+                    </tr3>
+                    <tr>
+                        <td id="tUEueL0JiYX-bq9UjjeNV6y" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-bq9UjjeNV6y" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-SP8ppSPcNqx" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-AopZwBb4MWu" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-SP8ppSPcNqx" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-AopZwBb4MWu" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-bq9UjjeNV6y" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-bq9UjjeNV6y" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-bq9UjjeNV6y" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-bq9UjjeNV6y" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-YwOArfyF6Co" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-YwOArfyF6Co" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-tD3qDIVNMUy" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-wJmeXMaFXoZ" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-tD3qDIVNMUy" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-wJmeXMaFXoZ" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-YwOArfyF6Co" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-YwOArfyF6Co" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-YwOArfyF6Co" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-YwOArfyF6Co" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-DJNHr6vnLBW" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-DJNHr6vnLBW" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-KHOuqQS0QyE" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-EndSwMqplW6" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-KHOuqQS0QyE" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-EndSwMqplW6" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-DJNHr6vnLBW" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-DJNHr6vnLBW" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-DJNHr6vnLBW" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-DJNHr6vnLBW" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-aRISAHAJhSh" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-aRISAHAJhSh" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-IN1uKTkbYGs" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-ABxMTF7kBeg" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-IN1uKTkbYGs" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-ABxMTF7kBeg" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-aRISAHAJhSh" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-aRISAHAJhSh" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-aRISAHAJhSh" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-aRISAHAJhSh" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-p3tf317O2in" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-p3tf317O2in" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-mYBINHPQn9o" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-y80KZnB8g7i" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-mYBINHPQn9o" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-y80KZnB8g7i" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-p3tf317O2in" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-p3tf317O2in" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-p3tf317O2in" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-p3tf317O2in" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-dmwjnp8rFKg" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-dmwjnp8rFKg" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-eFDTYvzbVnB" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-PPS4SQPorJI" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-eFDTYvzbVnB" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-PPS4SQPorJI" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-dmwjnp8rFKg" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-dmwjnp8rFKg" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-dmwjnp8rFKg" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-dmwjnp8rFKg" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-h6mCL7tKfaD" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-h6mCL7tKfaD" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-VfiCEs6lK02" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-M2nfO1VAGaF" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-VfiCEs6lK02" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-M2nfO1VAGaF" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-h6mCL7tKfaD" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-h6mCL7tKfaD" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-h6mCL7tKfaD" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-h6mCL7tKfaD" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-AUbIdF8G06Y" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-AUbIdF8G06Y" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-mv4rmqzjVjg" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-qN2JFwqbimW" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-mv4rmqzjVjg" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-qN2JFwqbimW" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-AUbIdF8G06Y" class="dataQ1">&nbsp;</td>
+                        <td id="hXuFZooxbFF-AUbIdF8G06Y" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-AUbIdF8G06Y" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-AUbIdF8G06Y" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-gCU2gEDLgsY" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-gCU2gEDLgsY" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-dUWWIebGpmu" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-vHslmvc2Q2N" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-dUWWIebGpmu" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-vHslmvc2Q2N" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-gCU2gEDLgsY" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-gCU2gEDLgsY" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-gCU2gEDLgsY" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-gCU2gEDLgsY" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-aDXiFSmwAvn" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-aDXiFSmwAvn" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-foq0AArteyi" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-zko4JY3QUGI" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-foq0AArteyi" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-zko4JY3QUGI" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-aDXiFSmwAvn" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-aDXiFSmwAvn" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-aDXiFSmwAvn" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-aDXiFSmwAvn" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-bTFINH3rzSY" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-bTFINH3rzSY" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-ijGHugXIeOD" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-hcyqMJQbpHQ" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-ijGHugXIeOD" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-hcyqMJQbpHQ" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-bTFINH3rzSY" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-bTFINH3rzSY" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-bTFINH3rzSY" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-bTFINH3rzSY" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-gaUrf7FvdFY" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-gaUrf7FvdFY" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-TPcwT72MFk9" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-VCDmXBriiwm" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-TPcwT72MFk9" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-VCDmXBriiwm" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-gaUrf7FvdFY" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-gaUrf7FvdFY" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-gaUrf7FvdFY" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-gaUrf7FvdFY" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-CIDpsRfK1ym" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-CIDpsRfK1ym" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-ci5mJyugIef" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-mG0BO9IXgCU" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-ci5mJyugIef" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-mG0BO9IXgCU" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-CIDpsRfK1ym" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-CIDpsRfK1ym" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-CIDpsRfK1ym" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-CIDpsRfK1ym" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-mutTl55EYdf" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-mutTl55EYdf" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-EFvt90PZ0oq" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-otWOGy8HyMc" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-EFvt90PZ0oq" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-otWOGy8HyMc" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-mutTl55EYdf" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-mutTl55EYdf" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-mutTl55EYdf" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-mutTl55EYdf" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-aVguxyjsQ3b" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-aVguxyjsQ3b" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-NWaEVizgxjW" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-Z0HJRzI9dff" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-NWaEVizgxjW" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-Z0HJRzI9dff" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-aVguxyjsQ3b" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-aVguxyjsQ3b" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-aVguxyjsQ3b" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-aVguxyjsQ3b" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-CGL5jiozJ4k" class="dataQ3">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-CGL5jiozJ4k" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-Ee5XbG1VIy9" class="dataQ3">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-tIaeeWWHHM4" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-Ee5XbG1VIy9" class="dataQ3">&nbsp;</td>
+                        <td id="UbUmjohzUgc-tIaeeWWHHM4" class="dataQ3">&nbsp;</td>
+                        <td id="q9N1vywzuat-CGL5jiozJ4k" class="dataQ3">&nbsp;</td>
+                        <td id="hXuFZooxbFF-CGL5jiozJ4k" class="dataQ3">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-CGL5jiozJ4k" class="dataQ3">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-CGL5jiozJ4k" class="dataQ3">&nbsp;</td>
+                    </tr>
+                    <tr style="background: #FFFFcc; font-weight: bold;">
+                        <td colspan="2">Total: </td>
+                        <td id="vSNOi1DxrUc-yxVP9FHk9tl_vSNOi1DxrUc-a1zth0s4m8A_vSNOi1DxrUc-kn4huKj7uoQ_vSNOi1DxrUc-lbcHLQG1ZLP_vSNOi1DxrUc-SP8ppSPcNqx_vSNOi1DxrUc-tD3qDIVNMUy_vSNOi1DxrUc-KHOuqQS0QyE_vSNOi1DxrUc-IN1uKTkbYGs_vSNOi1DxrUc-mYBINHPQn9o_vSNOi1DxrUc-eFDTYvzbVnB_vSNOi1DxrUc-VfiCEs6lK02_vSNOi1DxrUc-mv4rmqzjVjg_vSNOi1DxrUc-dUWWIebGpmu_vSNOi1DxrUc-foq0AArteyi_vSNOi1DxrUc-ijGHugXIeOD_vSNOi1DxrUc-TPcwT72MFk9_vSNOi1DxrUc-ci5mJyugIef_vSNOi1DxrUc-EFvt90PZ0oq_vSNOi1DxrUc-NWaEVizgxjW_vSNOi1DxrUc-Ee5XbG1VIy9"
+                            class='datasumQ3'>&nbsp;</td>
+                        <td id="vSNOi1DxrUc-DlzAT6jK5zM_vSNOi1DxrUc-e0rDEuJHqe1_vSNOi1DxrUc-JDfLRMQ3LCs_vSNOi1DxrUc-GFjZKTcZGVj_vSNOi1DxrUc-AopZwBb4MWu_vSNOi1DxrUc-wJmeXMaFXoZ_vSNOi1DxrUc-EndSwMqplW6_vSNOi1DxrUc-ABxMTF7kBeg_vSNOi1DxrUc-y80KZnB8g7i_vSNOi1DxrUc-PPS4SQPorJI_vSNOi1DxrUc-M2nfO1VAGaF_vSNOi1DxrUc-qN2JFwqbimW_vSNOi1DxrUc-vHslmvc2Q2N_vSNOi1DxrUc-zko4JY3QUGI_vSNOi1DxrUc-hcyqMJQbpHQ_vSNOi1DxrUc-VCDmXBriiwm_vSNOi1DxrUc-mG0BO9IXgCU_vSNOi1DxrUc-otWOGy8HyMc_vSNOi1DxrUc-Z0HJRzI9dff_vSNOi1DxrUc-tIaeeWWHHM4"
+                            class='datasumQ3'>&nbsp;</td>
+                        <td id="UbUmjohzUgc-yxVP9FHk9tl_UbUmjohzUgc-a1zth0s4m8A_UbUmjohzUgc-kn4huKj7uoQ_UbUmjohzUgc-lbcHLQG1ZLP_UbUmjohzUgc-SP8ppSPcNqx_UbUmjohzUgc-tD3qDIVNMUy_UbUmjohzUgc-KHOuqQS0QyE_UbUmjohzUgc-IN1uKTkbYGs_UbUmjohzUgc-mYBINHPQn9o_UbUmjohzUgc-eFDTYvzbVnB_UbUmjohzUgc-VfiCEs6lK02_UbUmjohzUgc-mv4rmqzjVjg_UbUmjohzUgc-dUWWIebGpmu_UbUmjohzUgc-foq0AArteyi_UbUmjohzUgc-ijGHugXIeOD_UbUmjohzUgc-TPcwT72MFk9_UbUmjohzUgc-ci5mJyugIef_UbUmjohzUgc-EFvt90PZ0oq_UbUmjohzUgc-NWaEVizgxjW_UbUmjohzUgc-Ee5XbG1VIy9"
+                            class='datasumQ3'>&nbsp;</td>
+                        <td id="UbUmjohzUgc-DlzAT6jK5zM_UbUmjohzUgc-e0rDEuJHqe1_UbUmjohzUgc-JDfLRMQ3LCs_UbUmjohzUgc-GFjZKTcZGVj_UbUmjohzUgc-AopZwBb4MWu_UbUmjohzUgc-wJmeXMaFXoZ_UbUmjohzUgc-EndSwMqplW6_UbUmjohzUgc-ABxMTF7kBeg_UbUmjohzUgc-y80KZnB8g7i_UbUmjohzUgc-PPS4SQPorJI_UbUmjohzUgc-M2nfO1VAGaF_UbUmjohzUgc-qN2JFwqbimW_UbUmjohzUgc-vHslmvc2Q2N_UbUmjohzUgc-zko4JY3QUGI_UbUmjohzUgc-hcyqMJQbpHQ_UbUmjohzUgc-VCDmXBriiwm_UbUmjohzUgc-mG0BO9IXgCU_UbUmjohzUgc-otWOGy8HyMc_UbUmjohzUgc-Z0HJRzI9dff_UbUmjohzUgc-tIaeeWWHHM4"
+                            class='datasumQ3'>&nbsp;</td>
+                        <td id="q9N1vywzuat-Eq9wI9w4xnv_q9N1vywzuat-RN5nVVOe2UZ_q9N1vywzuat-BDvGBnQxjFv_q9N1vywzuat-XkxA1xgfQQ4_q9N1vywzuat-bq9UjjeNV6y_q9N1vywzuat-YwOArfyF6Co_q9N1vywzuat-DJNHr6vnLBW_q9N1vywzuat-aRISAHAJhSh_q9N1vywzuat-p3tf317O2in_q9N1vywzuat-dmwjnp8rFKg_q9N1vywzuat-h6mCL7tKfaD_q9N1vywzuat-AUbIdF8G06Y_q9N1vywzuat-gCU2gEDLgsY_q9N1vywzuat-aDXiFSmwAvn_q9N1vywzuat-bTFINH3rzSY_q9N1vywzuat-gaUrf7FvdFY_q9N1vywzuat-CIDpsRfK1ym_q9N1vywzuat-mutTl55EYdf_q9N1vywzuat-aVguxyjsQ3b_q9N1vywzuat-CGL5jiozJ4k"
+                            class='datasumQ3'>&nbsp;</td>
+                        <td id="hXuFZooxbFF-Eq9wI9w4xnv_hXuFZooxbFF-RN5nVVOe2UZ_hXuFZooxbFF-BDvGBnQxjFv_hXuFZooxbFF-XkxA1xgfQQ4_hXuFZooxbFF-bq9UjjeNV6y_hXuFZooxbFF-YwOArfyF6Co_hXuFZooxbFF-DJNHr6vnLBW_hXuFZooxbFF-aRISAHAJhSh_hXuFZooxbFF-p3tf317O2in_hXuFZooxbFF-dmwjnp8rFKg_hXuFZooxbFF-h6mCL7tKfaD_hXuFZooxbFF-AUbIdF8G06Y_hXuFZooxbFF-gCU2gEDLgsY_hXuFZooxbFF-aDXiFSmwAvn_hXuFZooxbFF-bTFINH3rzSY_hXuFZooxbFF-gaUrf7FvdFY_hXuFZooxbFF-CIDpsRfK1ym_hXuFZooxbFF-mutTl55EYdf_hXuFZooxbFF-aVguxyjsQ3b_hXuFZooxbFF-CGL5jiozJ4k"
+                            class='datasumQ3'>&nbsp;</td>
+                        <td id="UGVIcfIvsfs-Eq9wI9w4xnv_UGVIcfIvsfs-RN5nVVOe2UZ_UGVIcfIvsfs-BDvGBnQxjFv_UGVIcfIvsfs-XkxA1xgfQQ4_UGVIcfIvsfs-bq9UjjeNV6y_UGVIcfIvsfs-YwOArfyF6Co_UGVIcfIvsfs-DJNHr6vnLBW_UGVIcfIvsfs-aRISAHAJhSh_UGVIcfIvsfs-p3tf317O2in_UGVIcfIvsfs-dmwjnp8rFKg_UGVIcfIvsfs-h6mCL7tKfaD_UGVIcfIvsfs-AUbIdF8G06Y_UGVIcfIvsfs-gCU2gEDLgsY_UGVIcfIvsfs-aDXiFSmwAvn_UGVIcfIvsfs-bTFINH3rzSY_UGVIcfIvsfs-gaUrf7FvdFY_UGVIcfIvsfs-CIDpsRfK1ym_UGVIcfIvsfs-mutTl55EYdf_UGVIcfIvsfs-aVguxyjsQ3b_UGVIcfIvsfs-CGL5jiozJ4k"
+                            class='datasumQ3'>&nbsp;</td>
+                        <td id="xe8jm9NlMNN-Eq9wI9w4xnv_xe8jm9NlMNN-RN5nVVOe2UZ_xe8jm9NlMNN-BDvGBnQxjFv_xe8jm9NlMNN-XkxA1xgfQQ4_xe8jm9NlMNN-bq9UjjeNV6y_xe8jm9NlMNN-YwOArfyF6Co_xe8jm9NlMNN-DJNHr6vnLBW_xe8jm9NlMNN-aRISAHAJhSh_xe8jm9NlMNN-p3tf317O2in_xe8jm9NlMNN-dmwjnp8rFKg_xe8jm9NlMNN-h6mCL7tKfaD_xe8jm9NlMNN-AUbIdF8G06Y_xe8jm9NlMNN-gCU2gEDLgsY_xe8jm9NlMNN-aDXiFSmwAvn_xe8jm9NlMNN-bTFINH3rzSY_xe8jm9NlMNN-gaUrf7FvdFY_xe8jm9NlMNN-CIDpsRfK1ym_xe8jm9NlMNN-mutTl55EYdf_xe8jm9NlMNN-aVguxyjsQ3b_xe8jm9NlMNN-CGL5jiozJ4k"
+                            class='datasumQ3'>&nbsp;</td>
+                    </tr>
+
+  <tr rowspan="10" height="25"></tr>
+                <tr rowspan="10" height="25"></tr>
+
+                    
+                    <!--Annual Table-->
+
+                    <tr height="20" style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td colspan="2">BLISTER STOCK LEVELS *</td>
+                        <td>MB ADULT</td>
+                        <td>MB CHILD</td>
+                        <td>PB ADULT</td>
+                        <td>MB ADULT</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">CENTRAL LEVEL STOCKS</td>
+                        <td id="L7hh1YhgC9r-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="L7hh1YhgC9r-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="iPq97RFrzOM-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="iPq97RFrzOM-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">REGIONAL LEVEL STOCKS</td>
+                        <td id="G7tRDnxDLu1-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="G7tRDnxDLu1-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="v37Or4BVtAp-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="v37Or4BVtAp-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">DISTRICT LEVEL STOCKS</td>
+                        <td id="hUpNI5ioZ63-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="hUpNI5ioZ63-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="AvMSN2UQsy6-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="AvMSN2UQsy6-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+
+                    <tr style="text-align: center; background:#FFFFcc; font-weight: bold;">
+                        <td height="20" colspan="2" bgcolor="#FFFFcc">Total blister stocks:</td>
+                        <td id="L7hh1YhgC9r-L4l8bjmXAOw_G7tRDnxDLu1-L4l8bjmXAOw_hUpNI5ioZ63-L4l8bjmXAOw" class='datasum'>&nbsp;</td>
+                        <td id="L7hh1YhgC9r-FguxPzk0zgd_G7tRDnxDLu1-FguxPzk0zgd_hUpNI5ioZ63-FguxPzk0zgd" class='datasum'>&nbsp;</td>
+                        <td id="iPq97RFrzOM-L4l8bjmXAOw_v37Or4BVtAp-L4l8bjmXAOw_AvMSN2UQsy6-L4l8bjmXAOw" class='datasum'>&nbsp;</td>
+                        <td id="iPq97RFrzOM-FguxPzk0zgd_v37Or4BVtAp-FguxPzk0zgd_AvMSN2UQsy6-FguxPzk0zgd" class='datasum'>&nbsp;</td>
+                    </tr>
+
+                    <tr rowspan="10" height="25"></tr>
+                    <tr rowspan="10" height="25"></tr>
+                    <!--End Of annual table -->
+
+
+                    <!--table footer-->
+                    <tr style="background: #FFFFcc; border: none;">
+                        <td style="border: none;" width="235" colspan="6">Notes:</td>
+                        <td style="background: #FFF; border: none;" width="196" colspan="4">Signed:_______________________________</td>
+                    </tr>
+                    <tr style="background: #FFFFcc; border: none;">
+                        <td style=" border: none;" colspan="6">1) All cases still registered &nbsp;for treatment at end of reporting period should be included.</td>
+                        <td colspan="4" style="background: #FFF; border: none;text-align:center;">National Programme Manager</td>
+
+                    </tr>
+                    <tr style="background: #FFFFcc;border: none;">
+                        <td style="border: none;" colspan="6">2) All new cases detected during the reporting period should be included&nbsp;</td>
+                    </tr>
+                    <tr style="background: #FFFFcc;border: none;">
+                        <td colspan="6" style="border: none;">3) Please return this form with the Annual Request form for a supply of MDT in <span id="periodId1">&nbsp;</span></td>
+                    <td colspan="4" style="background: #FFF; border: none; text-align: center">Date: _________________</td>
+
+                </tr>
+                <tr height="25">
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">DISTRIBUTION BY EMAIL TO:&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">1) WHO Country Office 2) WHO HQ&nbsp; to esind@who.int or by fax to&nbsp; (+41) 22 791 4777&nbsp; and
+                        3) National Programme Manager file.</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">Please use this form as a template for quarterly reports July-September <span id="periodId333"></span>,
+                        October-December <span id="periodId444"></span>, and January-March
+                        <span id="periodId222"></span>, April-June <span id="periodId777">
+                        </td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+<!--Annual Table End-->
+
+                    <tr rowspan="10" height="25"></tr>
+                    <tr rowspan="10" height="25"></tr>
+
+
+
+<thead>
+
+                    <tr>
+                        <td rowspan="3" width="235">
+                            <img src="https://139.162.61.147/image/who.jpg" style="height: 140px;" />
+                        </td>
+                        <td style="font-weight: bold; background:#FFFFcc" width="83" colspan="5"></td>
+                        <td style="font-weight: bold; background:#FFFFcc" colspan="3" width="610">Quarterly Report</td>
+                        <td style="font-weight: bold; background:#FFFFcc" colspan="2" width="402" class="dateQ4">&nbsp;</td>
+                    </tr>
+                    <tr style="font-weight: bold; background:#FFFFcc">
+                        <td colspan="10"></td>
+                    </tr>
+                    <tr style="font-weight: bold; background:#FFFFcc">
+                        <td colspan="5"></td>
+                        <td>COUNTRY:</td>
+                        <td colspan="3" id="orgUnitid3">&nbsp;</td>
+                    </tr>
+                    <tr height="25" style="text-align: center; font-weight: bold; background:#FFFFcc"></tr>
+
+                
+                </thead>
+
+
+                    <!--table quarter 4-->
+                    <!--<tr>
+                        <td style="background: #FFFFcc">Stock For the Quarter  -</td>
+                        <td class="dateQ4"></td>
+                    </tr>-->
+                    <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td rowspan="3" width="318">REGION/STATE OR PROVINCE</td>
+                        <td rowspan="3" width="249">DISTRICT</td>
+                        <td colspan="4" width="929">PATIENTS STILL UNDER TREATMENT AT END OF REPORTING PERIOD <sup>1</sup></td>
+                        <td colspan="2" width="394">NEW CASES DETECTED DURING THIS PERIOD <sup>2</sup></td>
+                        <td colspan="2" width="402">CURED &amp; RELEASED FROM TREATMENT DURING THIS PERIOD</td>
+                    </tr>
+                    <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td colspan="2">MB CASES</td>
+                        <td colspan="2">PB CASES</td>
+                        <td>MB</td>
+                        <td>PB</td>
+                        <td>MB</td>
+                        <td>PB</td>
+                    </tr>
+                    <tr style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td>ADULT</td>
+                        <td>CHILD</td>
+                        <td>ADULT</td>
+                        <td>CHILD</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    </thead>
+
+
+                    <tr>
+                        <td id="tUEueL0JiYX-Eq9wI9w4xnv" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-Eq9wI9w4xnv" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-yxVP9FHk9tl" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-DlzAT6jK5zM" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-yxVP9FHk9tl" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-DlzAT6jK5zM" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-Eq9wI9w4xnv" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-Eq9wI9w4xnv" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-Eq9wI9w4xnv" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-Eq9wI9w4xnv" class="dataQ4">&nbsp;</td>
+                    </tr>
+
+                    <tr>
+                        <td id="tUEueL0JiYX-RN5nVVOe2UZ" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-RN5nVVOe2UZ" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-a1zth0s4m8A" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-e0rDEuJHqe1" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-a1zth0s4m8A" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-e0rDEuJHqe1" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-RN5nVVOe2UZ" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-RN5nVVOe2UZ" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-RN5nVVOe2UZ" class="dataQ4"></td>
+                        <td id="xe8jm9NlMNN-RN5nVVOe2UZ" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-BDvGBnQxjFv" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-BDvGBnQxjFv" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-kn4huKj7uoQ" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-JDfLRMQ3LCs" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-kn4huKj7uoQ" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-JDfLRMQ3LCs" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-BDvGBnQxjFv" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-BDvGBnQxjFv" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-BDvGBnQxjFv" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-BDvGBnQxjFv" class="dataQ4">&nbsp;</td>
+                    </tr>
+
+                    <tr>
+                        <td id="tUEueL0JiYX-XkxA1xgfQQ4" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-XkxA1xgfQQ4" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-lbcHLQG1ZLP" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-GFjZKTcZGVj" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-lbcHLQG1ZLP" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-GFjZKTcZGVj" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-XkxA1xgfQQ4" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-XkxA1xgfQQ4" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-XkxA1xgfQQ4" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-XkxA1xgfQQ4" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-bq9UjjeNV6y" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-bq9UjjeNV6y" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-SP8ppSPcNqx" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-AopZwBb4MWu" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-SP8ppSPcNqx" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-AopZwBb4MWu" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-bq9UjjeNV6y" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-bq9UjjeNV6y" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-bq9UjjeNV6y" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-bq9UjjeNV6y" class="dataQ4">&nbsp;</td>
+
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-YwOArfyF6Co" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-YwOArfyF6Co" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-tD3qDIVNMUy" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-wJmeXMaFXoZ" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-tD3qDIVNMUy" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-wJmeXMaFXoZ" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-YwOArfyF6Co" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-YwOArfyF6Co" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-YwOArfyF6Co" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-YwOArfyF6Co" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-DJNHr6vnLBW" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-DJNHr6vnLBW" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-KHOuqQS0QyE" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-EndSwMqplW6" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-KHOuqQS0QyE" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-EndSwMqplW6" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-DJNHr6vnLBW" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-DJNHr6vnLBW" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-DJNHr6vnLBW" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-DJNHr6vnLBW" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-aRISAHAJhSh" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-aRISAHAJhSh" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-IN1uKTkbYGs" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-ABxMTF7kBeg" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-IN1uKTkbYGs" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-ABxMTF7kBeg" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-aRISAHAJhSh" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-aRISAHAJhSh" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-aRISAHAJhSh" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-aRISAHAJhSh" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-p3tf317O2in" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-p3tf317O2in" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-mYBINHPQn9o" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-y80KZnB8g7i" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-mYBINHPQn9o" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-y80KZnB8g7i" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-p3tf317O2in" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-p3tf317O2in" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-p3tf317O2in" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-p3tf317O2in" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-dmwjnp8rFKg" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-dmwjnp8rFKg" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-eFDTYvzbVnB" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-PPS4SQPorJI" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-eFDTYvzbVnB" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-PPS4SQPorJI" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-dmwjnp8rFKg" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-dmwjnp8rFKg" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-dmwjnp8rFKg" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-dmwjnp8rFKg" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-h6mCL7tKfaD" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-h6mCL7tKfaD" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-VfiCEs6lK02" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-M2nfO1VAGaF" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-VfiCEs6lK02" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-M2nfO1VAGaF" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-h6mCL7tKfaD" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-h6mCL7tKfaD" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-h6mCL7tKfaD" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-h6mCL7tKfaD" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-AUbIdF8G06Y" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-AUbIdF8G06Y" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-mv4rmqzjVjg" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-qN2JFwqbimW" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-mv4rmqzjVjg" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-qN2JFwqbimW" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-AUbIdF8G06Y" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-AUbIdF8G06Y" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-AUbIdF8G06Y" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-AUbIdF8G06Y" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-gCU2gEDLgsY" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-gCU2gEDLgsY" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-dUWWIebGpmu" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-vHslmvc2Q2N" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-dUWWIebGpmu" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-vHslmvc2Q2N" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-gCU2gEDLgsY" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-gCU2gEDLgsY" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-gCU2gEDLgsY" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-gCU2gEDLgsY" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-aDXiFSmwAvn" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-aDXiFSmwAvn" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-foq0AArteyi" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-zko4JY3QUGI" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-foq0AArteyi" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-zko4JY3QUGI" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-aDXiFSmwAvn" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-aDXiFSmwAvn" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-aDXiFSmwAvn" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-aDXiFSmwAvn" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-bTFINH3rzSY" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-bTFINH3rzSY" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-ijGHugXIeOD" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-hcyqMJQbpHQ" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-ijGHugXIeOD" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-hcyqMJQbpHQ" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-bTFINH3rzSY" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-bTFINH3rzSY" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-bTFINH3rzSY" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-bTFINH3rzSY" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-gaUrf7FvdFY" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-gaUrf7FvdFY" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-TPcwT72MFk9" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-VCDmXBriiwm" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-TPcwT72MFk9" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-VCDmXBriiwm" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-gaUrf7FvdFY" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-gaUrf7FvdFY" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-gaUrf7FvdFY" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-gaUrf7FvdFY" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-CIDpsRfK1ym" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-CIDpsRfK1ym" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-ci5mJyugIef" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-mG0BO9IXgCU" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-ci5mJyugIef" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-mG0BO9IXgCU" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-CIDpsRfK1ym" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-CIDpsRfK1ym" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-CIDpsRfK1ym" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-CIDpsRfK1ym" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-mutTl55EYdf" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-mutTl55EYdf" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-EFvt90PZ0oq" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-otWOGy8HyMc" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-EFvt90PZ0oq" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-otWOGy8HyMc" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-mutTl55EYdf" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-mutTl55EYdf" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-mutTl55EYdf" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-mutTl55EYdf" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-aVguxyjsQ3b" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-aVguxyjsQ3b" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-NWaEVizgxjW" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-Z0HJRzI9dff" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-NWaEVizgxjW" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-Z0HJRzI9dff" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-aVguxyjsQ3b" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-aVguxyjsQ3b" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-aVguxyjsQ3b" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-aVguxyjsQ3b" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td id="tUEueL0JiYX-CGL5jiozJ4k" class="dataQ4">&nbsp;</td>
+                        <td id="yjbhC4xHXL8-CGL5jiozJ4k" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-Ee5XbG1VIy9" class="dataQ4">&nbsp;</td>
+                        <td id="vSNOi1DxrUc-tIaeeWWHHM4" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-Ee5XbG1VIy9" class="dataQ4">&nbsp;</td>
+                        <td id="UbUmjohzUgc-tIaeeWWHHM4" class="dataQ4">&nbsp;</td>
+                        <td id="q9N1vywzuat-CGL5jiozJ4k" class="dataQ4">&nbsp;</td>
+                        <td id="hXuFZooxbFF-CGL5jiozJ4k" class="dataQ4">&nbsp;</td>
+                        <td id="UGVIcfIvsfs-CGL5jiozJ4k" class="dataQ4">&nbsp;</td>
+                        <td id="xe8jm9NlMNN-CGL5jiozJ4k" class="dataQ4">&nbsp;</td>
+                    </tr>
+                    <tr style="background: #FFFFcc; font-weight: bold;">
+                        <td colspan="2">Total: </td>
+                        <td id="vSNOi1DxrUc-yxVP9FHk9tl_vSNOi1DxrUc-a1zth0s4m8A_vSNOi1DxrUc-kn4huKj7uoQ_vSNOi1DxrUc-lbcHLQG1ZLP_vSNOi1DxrUc-SP8ppSPcNqx_vSNOi1DxrUc-tD3qDIVNMUy_vSNOi1DxrUc-KHOuqQS0QyE_vSNOi1DxrUc-IN1uKTkbYGs_vSNOi1DxrUc-mYBINHPQn9o_vSNOi1DxrUc-eFDTYvzbVnB_vSNOi1DxrUc-VfiCEs6lK02_vSNOi1DxrUc-mv4rmqzjVjg_vSNOi1DxrUc-dUWWIebGpmu_vSNOi1DxrUc-foq0AArteyi_vSNOi1DxrUc-ijGHugXIeOD_vSNOi1DxrUc-TPcwT72MFk9_vSNOi1DxrUc-ci5mJyugIef_vSNOi1DxrUc-EFvt90PZ0oq_vSNOi1DxrUc-NWaEVizgxjW_vSNOi1DxrUc-Ee5XbG1VIy9"
+                            class='datasumQ4'>&nbsp;</td>
+                        <td id="vSNOi1DxrUc-DlzAT6jK5zM_vSNOi1DxrUc-e0rDEuJHqe1_vSNOi1DxrUc-JDfLRMQ3LCs_vSNOi1DxrUc-GFjZKTcZGVj_vSNOi1DxrUc-AopZwBb4MWu_vSNOi1DxrUc-wJmeXMaFXoZ_vSNOi1DxrUc-EndSwMqplW6_vSNOi1DxrUc-ABxMTF7kBeg_vSNOi1DxrUc-y80KZnB8g7i_vSNOi1DxrUc-PPS4SQPorJI_vSNOi1DxrUc-M2nfO1VAGaF_vSNOi1DxrUc-qN2JFwqbimW_vSNOi1DxrUc-vHslmvc2Q2N_vSNOi1DxrUc-zko4JY3QUGI_vSNOi1DxrUc-hcyqMJQbpHQ_vSNOi1DxrUc-VCDmXBriiwm_vSNOi1DxrUc-mG0BO9IXgCU_vSNOi1DxrUc-otWOGy8HyMc_vSNOi1DxrUc-Z0HJRzI9dff_vSNOi1DxrUc-tIaeeWWHHM4"
+                            class='datasumQ4'>&nbsp;</td>
+                        <td id="UbUmjohzUgc-yxVP9FHk9tl_UbUmjohzUgc-a1zth0s4m8A_UbUmjohzUgc-kn4huKj7uoQ_UbUmjohzUgc-lbcHLQG1ZLP_UbUmjohzUgc-SP8ppSPcNqx_UbUmjohzUgc-tD3qDIVNMUy_UbUmjohzUgc-KHOuqQS0QyE_UbUmjohzUgc-IN1uKTkbYGs_UbUmjohzUgc-mYBINHPQn9o_UbUmjohzUgc-eFDTYvzbVnB_UbUmjohzUgc-VfiCEs6lK02_UbUmjohzUgc-mv4rmqzjVjg_UbUmjohzUgc-dUWWIebGpmu_UbUmjohzUgc-foq0AArteyi_UbUmjohzUgc-ijGHugXIeOD_UbUmjohzUgc-TPcwT72MFk9_UbUmjohzUgc-ci5mJyugIef_UbUmjohzUgc-EFvt90PZ0oq_UbUmjohzUgc-NWaEVizgxjW_UbUmjohzUgc-Ee5XbG1VIy9"
+                            class='datasumQ4'>&nbsp;</td>
+                        <td id="UbUmjohzUgc-DlzAT6jK5zM_UbUmjohzUgc-e0rDEuJHqe1_UbUmjohzUgc-JDfLRMQ3LCs_UbUmjohzUgc-GFjZKTcZGVj_UbUmjohzUgc-AopZwBb4MWu_UbUmjohzUgc-wJmeXMaFXoZ_UbUmjohzUgc-EndSwMqplW6_UbUmjohzUgc-ABxMTF7kBeg_UbUmjohzUgc-y80KZnB8g7i_UbUmjohzUgc-PPS4SQPorJI_UbUmjohzUgc-M2nfO1VAGaF_UbUmjohzUgc-qN2JFwqbimW_UbUmjohzUgc-vHslmvc2Q2N_UbUmjohzUgc-zko4JY3QUGI_UbUmjohzUgc-hcyqMJQbpHQ_UbUmjohzUgc-VCDmXBriiwm_UbUmjohzUgc-mG0BO9IXgCU_UbUmjohzUgc-otWOGy8HyMc_UbUmjohzUgc-Z0HJRzI9dff_UbUmjohzUgc-tIaeeWWHHM4"
+                            class='datasumQ4'>&nbsp;</td>
+                        <td id="q9N1vywzuat-Eq9wI9w4xnv_q9N1vywzuat-RN5nVVOe2UZ_q9N1vywzuat-BDvGBnQxjFv_q9N1vywzuat-XkxA1xgfQQ4_q9N1vywzuat-bq9UjjeNV6y_q9N1vywzuat-YwOArfyF6Co_q9N1vywzuat-DJNHr6vnLBW_q9N1vywzuat-aRISAHAJhSh_q9N1vywzuat-p3tf317O2in_q9N1vywzuat-dmwjnp8rFKg_q9N1vywzuat-h6mCL7tKfaD_q9N1vywzuat-AUbIdF8G06Y_q9N1vywzuat-gCU2gEDLgsY_q9N1vywzuat-aDXiFSmwAvn_q9N1vywzuat-bTFINH3rzSY_q9N1vywzuat-gaUrf7FvdFY_q9N1vywzuat-CIDpsRfK1ym_q9N1vywzuat-mutTl55EYdf_q9N1vywzuat-aVguxyjsQ3b_q9N1vywzuat-CGL5jiozJ4k"
+                            class='datasumQ4'>&nbsp;</td>
+                        <td id="hXuFZooxbFF-Eq9wI9w4xnv_hXuFZooxbFF-RN5nVVOe2UZ_hXuFZooxbFF-BDvGBnQxjFv_hXuFZooxbFF-XkxA1xgfQQ4_hXuFZooxbFF-bq9UjjeNV6y_hXuFZooxbFF-YwOArfyF6Co_hXuFZooxbFF-DJNHr6vnLBW_hXuFZooxbFF-aRISAHAJhSh_hXuFZooxbFF-p3tf317O2in_hXuFZooxbFF-dmwjnp8rFKg_hXuFZooxbFF-h6mCL7tKfaD_hXuFZooxbFF-AUbIdF8G06Y_hXuFZooxbFF-gCU2gEDLgsY_hXuFZooxbFF-aDXiFSmwAvn_hXuFZooxbFF-bTFINH3rzSY_hXuFZooxbFF-gaUrf7FvdFY_hXuFZooxbFF-CIDpsRfK1ym_hXuFZooxbFF-mutTl55EYdf_hXuFZooxbFF-aVguxyjsQ3b_hXuFZooxbFF-CGL5jiozJ4k"
+                            class='datasumQ4'>&nbsp;</td>
+                        <td id="UGVIcfIvsfs-Eq9wI9w4xnv_UGVIcfIvsfs-RN5nVVOe2UZ_UGVIcfIvsfs-BDvGBnQxjFv_UGVIcfIvsfs-XkxA1xgfQQ4_UGVIcfIvsfs-bq9UjjeNV6y_UGVIcfIvsfs-YwOArfyF6Co_UGVIcfIvsfs-DJNHr6vnLBW_UGVIcfIvsfs-aRISAHAJhSh_UGVIcfIvsfs-p3tf317O2in_UGVIcfIvsfs-dmwjnp8rFKg_UGVIcfIvsfs-h6mCL7tKfaD_UGVIcfIvsfs-AUbIdF8G06Y_UGVIcfIvsfs-gCU2gEDLgsY_UGVIcfIvsfs-aDXiFSmwAvn_UGVIcfIvsfs-bTFINH3rzSY_UGVIcfIvsfs-gaUrf7FvdFY_UGVIcfIvsfs-CIDpsRfK1ym_UGVIcfIvsfs-mutTl55EYdf_UGVIcfIvsfs-aVguxyjsQ3b_UGVIcfIvsfs-CGL5jiozJ4k"
+                            class='datasumQ4'>&nbsp;</td>
+                        <td id="xe8jm9NlMNN-Eq9wI9w4xnv_xe8jm9NlMNN-RN5nVVOe2UZ_xe8jm9NlMNN-BDvGBnQxjFv_xe8jm9NlMNN-XkxA1xgfQQ4_xe8jm9NlMNN-bq9UjjeNV6y_xe8jm9NlMNN-YwOArfyF6Co_xe8jm9NlMNN-DJNHr6vnLBW_xe8jm9NlMNN-aRISAHAJhSh_xe8jm9NlMNN-p3tf317O2in_xe8jm9NlMNN-dmwjnp8rFKg_xe8jm9NlMNN-h6mCL7tKfaD_xe8jm9NlMNN-AUbIdF8G06Y_xe8jm9NlMNN-gCU2gEDLgsY_xe8jm9NlMNN-aDXiFSmwAvn_xe8jm9NlMNN-bTFINH3rzSY_xe8jm9NlMNN-gaUrf7FvdFY_xe8jm9NlMNN-CIDpsRfK1ym_xe8jm9NlMNN-mutTl55EYdf_xe8jm9NlMNN-aVguxyjsQ3b_xe8jm9NlMNN-CGL5jiozJ4k"
+                            class='datasumQ4'>&nbsp;</td>
+                    </tr>
+
+                    <tr rowspan="10" height="25"></tr>
+                    <tr rowspan="10" height="25"></tr>
+
+
+                    <!--Annual Table-->
+
+                    <tr height="20" style="text-align: center; font-weight: bold; background:#FFFFcc">
+                        <td colspan="2">BLISTER STOCK LEVELS *</td>
+                        <td>MB ADULT</td>
+                        <td>MB CHILD</td>
+                        <td>PB ADULT</td>
+                        <td>MB ADULT</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">CENTRAL LEVEL STOCKS</td>
+                        <td id="L7hh1YhgC9r-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="L7hh1YhgC9r-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="iPq97RFrzOM-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="iPq97RFrzOM-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">REGIONAL LEVEL STOCKS</td>
+                        <td id="G7tRDnxDLu1-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="G7tRDnxDLu1-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="v37Or4BVtAp-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="v37Or4BVtAp-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+                    <tr height="20">
+                        <td height="50" colspan="2" bgcolor="#FFFFcc">DISTRICT LEVEL STOCKS</td>
+                        <td id="hUpNI5ioZ63-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="hUpNI5ioZ63-FguxPzk0zgd" class="data">&nbsp;</td>
+                        <td id="AvMSN2UQsy6-L4l8bjmXAOw" class="data">&nbsp;</td>
+                        <td id="AvMSN2UQsy6-FguxPzk0zgd" class="data">&nbsp;</td>
+                    </tr>
+
+                    <tr style="text-align: center; background:#FFFFcc; font-weight: bold;">
+                        <td height="20" colspan="2" bgcolor="#FFFFcc">Total blister stocks:</td>
+                        <td id="L7hh1YhgC9r-L4l8bjmXAOw_G7tRDnxDLu1-L4l8bjmXAOw_hUpNI5ioZ63-L4l8bjmXAOw" class='datasum'>&nbsp;</td>
+                        <td id="L7hh1YhgC9r-FguxPzk0zgd_G7tRDnxDLu1-FguxPzk0zgd_hUpNI5ioZ63-FguxPzk0zgd" class='datasum'>&nbsp;</td>
+                        <td id="iPq97RFrzOM-L4l8bjmXAOw_v37Or4BVtAp-L4l8bjmXAOw_AvMSN2UQsy6-L4l8bjmXAOw" class='datasum'>&nbsp;</td>
+                        <td id="iPq97RFrzOM-FguxPzk0zgd_v37Or4BVtAp-FguxPzk0zgd_AvMSN2UQsy6-FguxPzk0zgd" class='datasum'>&nbsp;</td>
+                    </tr>
+
+                    <tr rowspan="10" height="25"></tr>
+                    <tr rowspan="10" height="25"></tr>
+                    <!--End Of annual table -->
+
+
+                    <!--table footer-->
+                    <tr style="background: #FFFFcc; border: none;">
+                        <td style="border: none;" width="235" colspan="6">Notes:</td>
+                        <td style="background: #FFF; border: none;" width="196" colspan="4">Signed:_______________________________</td>
+                    </tr>
+                    <tr style="background: #FFFFcc; border: none;">
+                        <td style=" border: none;" colspan="6">1) All cases still registered &nbsp;for treatment at end of reporting period should be included.</td>
+                        <td colspan="4" style="background: #FFF; border: none;text-align:center;">National Programme Manager</td>
+
+                    </tr>
+                    <tr style="background: #FFFFcc;border: none;">
+                        <td style="border: none;" colspan="6">2) All new cases detected during the reporting period should be included&nbsp;</td>
+                    </tr>
+                    <tr style="background: #FFFFcc;border: none;">
+                        <td colspan="6" style="border: none;">3) Please return this form with the Annual Request form for a supply of MDT in <span id="periodId1">&nbsp;</span></td>
+                    <td colspan="4" style="background: #FFF; border: none; text-align: center">Date: _________________</td>
+
+                </tr>
+                <tr height="25">
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">DISTRIBUTION BY EMAIL TO:&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">1) WHO Country Office 2) WHO HQ&nbsp; to esind@who.int or by fax to&nbsp; (+41) 22 791 4777&nbsp; and
+                        3) National Programme Manager file.</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr style="border: none">
+                    <td colspan="3">Please use this form as a template for quarterly reports July-September <span id="periodId3333"></span>,
+                        October-December <span id="periodId4444"></span>, and January-March
+                        <span id="periodId2222"></span>, April-June <span id="periodId7777">
+                        </td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+<!--Annual Table End-->
+            </tbody>
+        </table>
+    </div>
+</div>

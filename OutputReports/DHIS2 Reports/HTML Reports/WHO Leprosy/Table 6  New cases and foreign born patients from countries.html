@@ -95,17 +95,19 @@ tbody>tr>td {
 <div id="loader"></div>
 <div id="printing" class="animate-bottom">
     <div id='state'>
-        <table id="dataTable" border="1" class="table  table-hover text-center" cellspacing="6" cellpadding="4" style="border-collapse: collapse; text-align: center">
+        <table id="dataTable" border="1" class="table  table-hover text-center" cellspacing="6"
+            cellpadding="4" style="border-collapse: collapse; text-align: center">
             <thead>
                 <tr style=" font-weight:400; text-align:center;">
-                    <td colspan="2" style="border:1px solid black;background:#ADD8E6; ">Table 3. New case detection in 22 global priority countries <span class="currentPeriod">&nbsp;</span></td>
+                    <td colspan="3" style="border:1px solid black;background:#ADD8E6; ">Table 6 . New cases and foreign born patients from countries, <span class="currentPeriod">&nbsp;</span></td>
                 </tr>
                 <tr style=" font-weight:400; text-align:center;">
-                    <td colspan="2" style="border:1px solid black;background:#ADD8E6; ">Reporting Year : - <span id="period"></span></td>
+                    <td colspan="3" style="border:1px solid black;background:#ADD8E6; ">Reporting Year : - <span id="period"></span></td>
                 </tr>
                 <tr style=" font-weight:400; text-align:center;">
-                    <td style="border:1px solid black;background:#ADD8E6; width: 50% ">Region and country</td>
-                    <td style="border:1px solid black;background:#ADD8E6; width: 50%">Total New Cases </td>
+                    <td style="border:1px solid black;background:#ADD8E6; width: 33.3% ">Region and country</td>
+                    <td style="border:1px solid black;background:#ADD8E6; width: 33.3%">Total New Cases </td>
+                    <td style="border:1px solid black;background:#ADD8E6; width: 33.3%">Foreign Born Leprosy Cases</td>
                 </tr>
             </thead>
         </table>
@@ -133,17 +135,19 @@ tbody>tr>td {
         var params = url.split('=');
         var gotPeriod = params[2];
         periodstr = gotPeriod.substr(0, 4);
-        var periodstr1 = parseInt(periodstr) + 1;
+        var periodstr1 = parseInt(periodstr)+1;
 
         document.getElementById("period").innerHTML = periodstr;
 
         var list = document.getElementsByClassName("currentPeriod");
-        for (var i = 0; i < list.length; i++) {
+        for(var i = 0; i<list.length; i++)
+        {
             list[i].innerHTML = periodstr;
         }
 
         var list1 = document.getElementsByClassName("nextPeriod");
-        for (var i = 0; i < list1.length; i++) {
+        for(var i = 0; i<list1.length; i++)
+        {
             list1[i].innerHTML = periodstr1;
         }
 
@@ -155,31 +159,74 @@ tbody>tr>td {
         var allOrgUnits;
         var level2OrgUnitsList = [];
         var level3OrgUnitsList = [];
-        var orgUnitGroupUid = "gTofFxvbRSI";
+        var firstOrgUnitUid = "x3i5oi4axNu";
         var tabledatalevel2Orgs = '';
         var tabledata = '';
         var ouidName;
         var value1;
         var value2;
         var value3;
+        var value4;
+        var value5;
+        var value6;
+        var value7;
+        var value8;
+        var value9;
+        var value10;
+        var value11;
+        var value12;
+        var value13;
+        var value14;
+        var value15;
+        var value16;
+        var value17;
+        var value18;
+        var value21;
 
         var indicator1;
+        var indicator2;
+        var indicator3;
+        var indicator4;
+        var indicator5;
 
+
+        $.ajax(
+            {
+                type: "GET",
+                async: false,
+                url: "../api/organisationUnits/" + firstOrgUnitUid + ".json?fields=id,name,children[id,name]&paging=false",
+                data: JSON,
+                success: function (data, status) {
+                    allOrgUnits = data;
+                    for (var i = 0; i < allOrgUnits.children.length; i++) {
+                        level2OrgUnitsList.push({ "id": allOrgUnits.children[i].id, "name": allOrgUnits.children[i].name });
+                    }
+                }
+            });
+
+        level2OrgUnitsList.sort(arraySorting);
+
+        for (var j = 0; j < level2OrgUnitsList.length; j++) {
+            tabledatalevel2Orgs = '<tr>';
+            tabledatalevel2Orgs += ('<td colspan="3" align="left" style="border:1px solid black; background-color:#DCDCDC">' + level2OrgUnitsList[j].name + "</td>");
+            tabledatalevel2Orgs += "</tr>";
+            document.getElementById("dataTable").innerHTML += tabledatalevel2Orgs;
 
             var level3OrgUnitsList = [];
             $.ajax({
                 type: "GET",
                 async: false,
-                url: "../api/organisationUnitGroups/" + orgUnitGroupUid + ".json?fields=organisationUnits[id,name]&paging=false",
+                url: "../api/organisationUnits/" + level2OrgUnitsList[j].id + ".json?fields=id,name,children[id,name]&paging=false",
                 data: JSON,
                 success: function (data, status) {
-                    for (var i = 0; i < data.organisationUnits.length; i++) {
-                        level3OrgUnitsList.push({ "id": data.organisationUnits[i].id, "name": data.organisationUnits[i].name });
+                    for (var i = 0; i < data.children.length; i++) {
+                        level3OrgUnitsList.push({ "id": data.children[i].id, "name": data.children[i].name });
                     }
                     level3OrgUnitsList.sort(arraySorting);
                     getAllValues(level3OrgUnitsList);
                 }
             });
+        }
 
         function getAllValues(orgUnits) {
             var count = 0;
@@ -188,7 +235,7 @@ tbody>tr>td {
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "../api/26/analytics.json?dimension=pe:" + periodstr + "&dimension=dx:evXyDr6c7eu;gVmFx873rdZ;IQgrP2W9gTV&dimension=ou:" + orgUnits[k].id + "&displayProperty=NAME&user=fHBBxgutDDB",
+                    url: "../api/26/analytics.json?dimension=pe:" + periodstr + "&dimension=dx:evXyDr6c7eu;gVmFx873rdZ;IQgrP2W9gTV;nbDlMYKljTK&dimension=ou:" + orgUnits[k].id + "&displayProperty=NAME&user=fHBBxgutDDB",
                     data: JSON,
                     success: function (res4, status) {
                         count++;
@@ -203,12 +250,14 @@ tbody>tr>td {
             var value1 = datavalue(res4, 'evXyDr6c7eu');
             var value2 = datavalue(res4, 'gVmFx873rdZ');
             var value3 = datavalue(res4, 'IQgrP2W9gTV');
+            var value4 = datavalue(res4, 'nbDlMYKljTK');
 
             var indicator1 = valueCheck(value1, value2, value3);
+            var value4 = valueCheck(value4);
 
             var tabledata = '<tr>';
 
-            tabledata += '<td style="font:bold;">' + ouidName + '</td><td>' + indicator1 + '</td>';
+            tabledata += '<td style="font:bold;">' + ouidName + '</td><td>' + indicator1 + '</td><td>' + value4 + '</td>';
 
             tabledata += '</tr>';
 

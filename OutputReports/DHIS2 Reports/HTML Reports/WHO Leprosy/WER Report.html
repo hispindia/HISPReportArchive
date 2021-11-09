@@ -1,0 +1,690 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+    onclick="tableToExcel('state', 'COVID19 Lab test outcome report', 'COVID19 Lab test outcome report')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div id="loader" style="display: none"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state' style="display: none;">
+        <table border="1" id="dataTableFirst" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead id="tableHeadFirst">
+                <tr style=" text-align:center;">
+                    <td colspan="5"
+                        style="font-weight:400; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Table 1. Registered Prevalence at the end of <span id="tableYearPrevFirst"></span> and new case
+                        detection during <span id="tableYearFirstEnglish"></span>, by WHO
+                        Region <br />
+                        Tableau 1. Prévalence enregistrée de la lèpre et nombre de nouveaux cas dépistés, par Région OMS
+                        en <span id="tableYearFirstFrench"></span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">WHO Region – Région OMS</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Total Cases registered at
+                        the end of year<br />Nombre de cas enregistrés</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Prevalence rate (Per million
+                        population)<br /> (prévalence/ 10 000 habitants)
+                    </td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Total cases<br /> Nombre de
+                        nouveaux cas dépistés</td>
+                    <td style="border:1px solid black; font-weight:600; background:#f2f2f2">Case detection rate (Per
+                        million population)<br /> Taux de dépistage des nouveaux cas/100 000 habitants) </td>
+                </tr>
+            </thead>
+            <tbody id="tableBodyFirst"></tbody>
+        </table> <br />
+
+        <table border="1" id="dataTableSecond" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead>
+                <tr style=" text-align:center;">
+                    <td colspan="11"
+                        style="font-weight:400; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Table 2 Trends in the detection of new cases of leprosy, by WHO Region, <span
+                            id="tableYearSecondEnglish"></span><br />
+                        Tableau 2 Tendances observées dans le dépistage de nouveaux cas de lèpre, par Région OMS,
+                        en <span id="tableYearSecondFrench"></span>
+                    </td>
+                </tr>
+                <tr id="tableHeadSecond"></tr>
+            </thead>
+            <tbody id="tableBodySecond"></tbody>
+        </table> <br />
+
+        <table border="1" id="dataTableThird" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead>
+                <tr style=" text-align:center;">
+                    <td colspan="11"
+                        style="font-weight:400; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Table 3 New case detection trends in 23 global priority countries for the past 10 years<br />
+                        Tableau 3 Nouvelles tendances en matière de dépistage des cas dans 23 pays prioritaires du monde
+                        au cours des 10 dernières années
+                    </td>
+                </tr>
+                <tr id="tableHeadThird"></tr>
+            </thead>
+            <tbody id="tableBodyThird"></tbody>
+        </table> <br />
+
+        <table border="1" id="dataTableFourth" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead>
+                <tr style=" text-align:center;">
+                    <td colspan="11"
+                        style="font-weight:400; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Table 4. Trends in number of new cases with G2D, by WHO region, <span
+                            id="tableYearFourthEnglish"></span><br />
+                        Tableau 4. Tendance en nombre de nouveaux cas depistes avec incapacité de degré 2, par Région
+                        OMS, <span id="tableYearFourthFrench"></span>
+                    </td>
+                </tr>
+                <tr id="tableHeadFourth"></tr>
+            </thead>
+            <tbody id="tableBodyFourth"></tbody>
+        </table> <br />
+
+        <table border="1" id="dataTableFifth" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead>
+                <tr style=" text-align:center;">
+                    <td colspan="6"
+                        style="font-weight:400; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Table 5. Trends in new cases with G2D in 23 global priority countries, <span
+                            id="tableYearFifthEnglish"></span> <br />
+                        Tableau 5. Tendances des nouveaux cas de G2D dans 23 pays prioritaires, <span
+                            id="tableYearFifthFrench"></span>
+                    </td>
+                </tr>
+                <tr id="tableHeadFifth"></tr>
+            </thead>
+            <tbody id="tableBodyFifth"></tbody>
+        </table> <br />
+
+        <table border="1" id="dataTableSixth" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead>
+                <tr style=" text-align:center;">
+                    <td colspan="6"
+                        style="font-weight:400; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Table 6. Trends in new child cases in 23 global priority countries, <span
+                            id="tableYearSixthEnglish"></span> <br />
+                        Tableau 6. Tendances des nouveaux cas d'enfants dans 23 pays prioritaires, <span
+                            id="tableYearSixthFrench"></span>
+                    </td>
+                </tr>
+                <tr id="tableHeadSixth"></tr>
+            </thead>
+            <tbody id="tableBodySixth"></tbody>
+        </table>
+
+        <table border="1" id="dataTableSixth" class="table table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead>
+                <tr style=" text-align:center;">
+                    <td colspan="2"
+                        style="font-weight:400; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Number of countries with zero Grade 2 cases by WHO Region in last 5 years
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">WHO Region – Région OMS</td>
+                </tr>
+            </thead>
+            <tbody id="tableBodySeventh"></tbody>
+        </table>
+
+        <table border="1" id="dataTableSixth" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead>
+                <tr style=" text-align:center;">
+                    <td colspan="2"
+                        style="font-weight:400; border-bottom:5px solid white; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        Number of countries reported zero cases for the past five years by WHO Region
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="2">WHO Region – Région OMS</td>
+                </tr>
+            </thead>
+            <tbody id="tableBodyEighth"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById("state").style.display = "none";
+    document.getElementById("loader").style.display = "block";
+    var assignValue = (headerId, value) => document.getElementById(headerId).innerHTML = value;
+
+    var generateHeaderRow = (headerId, period, headerOpt) => {
+        document.getElementById(headerId).innerHTML = `<td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:left">${(headerOpt ? `WHO Region – Région OMS` : `Country – Pays`)}</td>`
+        period.forEach(p => {
+            document.getElementById(headerId).innerHTML += `<td style="border:1px solid black; font-weight:600; background:#f2f2f2">${p}</td>`
+        })
+    }
+
+    var getYear = (currentYear, yearsBack) => {
+        let arrYear = [];
+        while (yearsBack != 0) {
+            arrYear.push(currentYear);
+            currentYear--;
+            yearsBack--;
+        }
+        return arrYear.reverse();
+    }
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var printTotalThird = [], printTotalFifth = [], printTotalSixth = [];
+    var globalTotalThird = [], globalTotalFifth = [], globalTotalSixth = [], globalTotalSeventh = 0, globalTotalEighth = 0;
+    for (var i = 0; i <= 10; i++) {
+        printTotalThird[i] = 0;
+        printTotalFifth[i] = 0;
+        printTotalSixth[i] = 0;
+        globalTotalThird[i] = 0;
+        globalTotalFifth[i] = 0;
+        globalTotalSixth[i] = 0;
+    }
+    var selectedOrgunit = dhis2.report.organisationUnit;
+    var selectedPeriod = dhis2.report.date.split("-")["0"];
+
+    let valueYear;
+    var dataElementIdFirst = ["YgvbZE63e8T", "sAXV6Hnve4i", "gY7b9azcUQG", "ElAjdwOrjMq"];
+    var orgUnitIdFirst = ["L9CbxlithLc", "uWVIlmAl1r5", "XHT7CFb5mEe", "vY40CQrh4Kk", "QvCHetFovQg", "UzbbopOhq1L", "x3i5oi4axNu"];
+    var idFirst = `../api/analytics.json?dimension=dx:${dataElementIdFirst.join(";")}&dimension=ou:${orgUnitIdFirst.join(";")}&filter=pe:${selectedPeriod}&displayProperty=NAME`;
+
+    assignValue('tableYearPrevFirst', selectedPeriod - 1)
+    assignValue('tableYearFirstEnglish', selectedPeriod)
+    assignValue('tableYearFirstFrench', selectedPeriod)
+
+    var orgUnitIdSecond = ["L9CbxlithLc", "uWVIlmAl1r5", "XHT7CFb5mEe", "vY40CQrh4Kk", "QvCHetFovQg", "UzbbopOhq1L", "x3i5oi4axNu"];
+    var selectedPeriodSecond = getYear(selectedPeriod, 10);
+    var idSecond = `../api/analytics.json?dimension=dx:gY7b9azcUQG&dimension=pe:${selectedPeriodSecond.join(";")}&dimension=ou:${orgUnitIdSecond.join(";")}&displayProperty=NAME`;
+
+    generateHeaderRow("tableHeadSecond", selectedPeriodSecond, true);
+    assignValue('tableYearSecondEnglish', `${selectedPeriod - 9} - ${selectedPeriod}`)
+    assignValue('tableYearSecondFrench', `${selectedPeriod - 9} - ${selectedPeriod}`)
+
+    var selectedPeriodThird = getYear(selectedPeriod, 10);
+    generateHeaderRow("tableHeadThird", selectedPeriodThird, false);
+    var idThird = `../api/analytics.json?dimension=UcYmwOmalCR:gTofFxvbRSI&dimension=dx:gY7b9azcUQG&dimension=pe:${selectedPeriodThird.join(";")}&dimension=ou:USER_ORGUNIT_GRANDCHILDREN&displayProperty=NAME&user=z7Gac7vahQL`;
+
+    var orgUnitIdFourth = ["L9CbxlithLc", "uWVIlmAl1r5", "XHT7CFb5mEe", "vY40CQrh4Kk", "QvCHetFovQg", "UzbbopOhq1L", "x3i5oi4axNu"];
+    var selectedPeriodFourth = getYear(selectedPeriod, 10);
+    var idFourth = `../api/analytics.json?dimension=dx:cyg9FDI48hW&dimension=pe:${selectedPeriodFourth.join(";")}&dimension=ou:${orgUnitIdFourth.join(";")}&displayProperty=NAME`;
+
+    generateHeaderRow("tableHeadFourth", selectedPeriodFourth, true);
+    assignValue('tableYearFourthEnglish', `${selectedPeriod - 9} - ${selectedPeriod}`)
+    assignValue('tableYearFourthFrench', `${selectedPeriod - 9} - ${selectedPeriod}`)
+
+    var selectedPeriodFifth = getYear(selectedPeriod, 5);
+    generateHeaderRow("tableHeadFifth", selectedPeriodFifth, false)
+    var idFifth = `../api/analytics.json?dimension=UcYmwOmalCR:gTofFxvbRSI&dimension=dx:cyg9FDI48hW&dimension=pe:${selectedPeriodFifth.join(";")}&dimension=ou:USER_ORGUNIT_GRANDCHILDREN&displayProperty=NAME&user=z7Gac7vahQL`;
+
+    generateHeaderRow("tableHeadFourth", selectedPeriodFourth);
+    assignValue('tableYearFifthEnglish', `${selectedPeriod - 4} - ${selectedPeriod}`)
+    assignValue('tableYearFifthFrench', `${selectedPeriod - 4} - ${selectedPeriod}`)
+
+    var selectedPeriodSixth = getYear(selectedPeriod, 5);
+    generateHeaderRow("tableHeadSixth", selectedPeriodSixth, false)
+    var idSixth = `../api/analytics.json?dimension=UcYmwOmalCR:gTofFxvbRSI&dimension=dx:PS9m9ERoPaj&dimension=pe:${selectedPeriodSixth.join(";")}&dimension=ou:USER_ORGUNIT_GRANDCHILDREN&displayProperty=NAME&user=z7Gac7vahQL`;
+
+    generateHeaderRow("tableHeadFourth", selectedPeriodFourth);
+    assignValue('tableYearSixthEnglish', `${selectedPeriod - 4} - ${selectedPeriod}`)
+    assignValue('tableYearSixthFrench', `${selectedPeriod - 4} - ${selectedPeriod}`)
+
+    var orgUnitIdSeventh = 0;
+    var selectedPeriodSeventh = getYear(selectedPeriod, 5);
+    var idSeventh = `../api/analytics.json?dimension=dx:cyg9FDI48hW&dimension=pe:${selectedPeriodSeventh.join(";")}&dimension=ou:USER_ORGUNIT_GRANDCHILDREN&displayProperty=NAME&user=z7Gac7vahQL`;
+
+    var orgUnitIdEighth = 0;
+    var selectedPeriodEighth = getYear(selectedPeriod, 5);
+    var idEighth = `../api/analytics.json?dimension=dx:gY7b9azcUQG&dimension=pe:${selectedPeriodEighth.join(";")}&dimension=ou:USER_ORGUNIT_GRANDCHILDREN&displayProperty=NAME&user=z7Gac7vahQL`;
+
+    var orgUnitGroup = "../api/organisationUnitGroups/gTofFxvbRSI.json?fields=[name,organisationUnits]&paging=false"; //Global Priority Countries
+
+    var globalTotalUrl = "../api/analytics.json?dimension=dx:gY7b9azcUQG;cyg9FDI48hW;PS9m9ERoPaj&dimension=ou:x3i5oi4axNu&dimension=pe:" + getYear(selectedPeriod, 10).join(";") + "&displayProperty=NAME"
+
+    var organisationUnit = [];
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: "../api/organisationUnits/x3i5oi4axNu.json?fields=children[id,name,children[id,name]]",
+        data: JSON,
+        success: function (orgUnit) {
+            orgUnit.children.sort((a, b) => a.name.localeCompare(b.name));
+            orgUnit.children.forEach(level => level.children.sort((a, b) => a.name.localeCompare(b.name)));
+            organisationUnit = orgUnit;
+        }
+    })
+
+    $.when(
+        $.get(idFirst),
+        $.get(idSecond),
+        $.get(idThird),
+        $.get(idFourth),
+        $.get(idFifth),
+        $.get(idSixth),
+        $.get(orgUnitGroup),
+        $.get(globalTotalUrl),
+        $.get(idSeventh),
+        $.get(idEighth),
+    ).done(function (rowFirst, rowSecond, rowThird, rowFourth, rowFifth, rowSixth, GlobalPriorityCountries, globalTotalVlaues, rowSeventh, rowEighth) {
+
+        rowFirst = rowFirst["0"];
+        rowSecond = rowSecond["0"];
+        rowThird = rowThird["0"];
+        rowFourth = rowFourth["0"];
+        rowFifth = rowFifth["0"];
+        rowSixth = rowSixth["0"];
+        rowSeventh = rowSeventh["0"];
+        rowEighth = rowEighth["0"];
+        globalTotalVlaues = globalTotalVlaues["0"];
+        GlobalPriorityCountries = GlobalPriorityCountries["0"].organisationUnits;
+
+
+        let dataFirst = [], dataSecond = [], dataThird = []; dataFourth = [], dataFifth = [], dataSixth = [], globalTotal = [], dataSeventh = [], dataEighth = [];
+        let metadataValues = [];
+
+        for (let id in rowFirst.metaData.items) {
+            metadataValues[id] = rowFirst.metaData.items[id].name;
+        }
+        for (let id in rowThird.metaData.items) {
+            metadataValues[id] = rowThird.metaData.items[id].name;
+        }
+        gpc = GlobalPriorityCountries.map(gpc => {
+            gpc["name"] = metadataValues[gpc.id] ? metadataValues[gpc.id] : ""
+            return gpc;
+        }).sort((a, b) => a.name.localeCompare(b.name));
+
+        debugger;
+        rowFirst.rows.forEach(row => {
+            if (!dataFirst[row["1"]]) {
+                dataFirst[row["1"]] = [];
+                dataFirst[row["1"]][row["0"]] = Number(row["2"]);
+            } else {
+                dataFirst[row["1"]][row["0"]] = Number(row["2"]);
+            }
+        })
+
+        rowSecond.rows.forEach(row => {
+            if (!dataSecond[row["2"]]) {
+                dataSecond[row["2"]] = [];
+                dataSecond[row["2"]][row["1"]] = Number(row["3"]);
+            } else {
+                dataSecond[row["2"]][row["1"]] = Number(row["3"]);
+            }
+        })
+
+        rowThird.rows.forEach(row => {
+            if (!dataThird[row["3"]]) {
+                dataThird[row["3"]] = [];
+                dataThird[row["3"]][row["2"]] = Number(row["4"]);
+            } else {
+                dataThird[row["3"]][row["2"]] = Number(row["4"]);
+            }
+        })
+
+        rowFourth.rows.forEach(row => {
+            if (!dataFourth[row["2"]]) {
+                dataFourth[row["2"]] = [];
+                dataFourth[row["2"]][row["1"]] = Number(row["3"]);
+            } else {
+                dataFourth[row["2"]][row["1"]] = Number(row["3"]);
+            }
+        })
+
+        rowFifth.rows.forEach(row => {
+            if (!dataFifth[row["3"]]) {
+                dataFifth[row["3"]] = [];
+                dataFifth[row["3"]][row["2"]] = Number(row["4"]);
+            } else {
+                dataFifth[row["3"]][row["2"]] = Number(row["4"]);
+            }
+        })
+
+        rowSixth.rows.forEach(row => {
+            if (!dataSixth[row["3"]]) {
+                dataSixth[row["3"]] = [];
+                dataSixth[row["3"]][row["2"]] = Number(row["4"]);
+            } else {
+                dataSixth[row["3"]][row["2"]] = Number(row["4"]);
+            }
+        })
+
+        rowSeventh.rows.forEach(row => {
+            if (Number(row["3"]) == 0) {
+                if (!dataSeventh[row["2"]]) {
+                    dataSeventh[row["2"]] = 1;
+                } else {
+                    dataSeventh[row["2"]] += 1;
+                }
+            }
+        })
+        rowEighth.rows.forEach(row => {
+            if (Number(row["3"]) == 0) {
+                if (!dataEighth[row["2"]]) {
+                    dataEighth[row["2"]] = 1;
+                } else {
+                    dataEighth[row["2"]] += 1;
+                }
+            }
+        })
+
+        // rowEighth.rows.forEach(row => {
+        //     if (Number(row["3"]) == 0) {
+        //         if (!dataEighth[row["2"]]) {
+        //             dataEighth[row["2"]] = [];
+        //             dataEighth[row["2"]][row["1"]] = true;
+        //         } else {
+        //             dataEighth[row["2"]][row["1"]] = true;
+        //         }
+        //     }
+        // })
+
+        // organisationUnit.children.forEach(orgUnit => {
+        //     orgUnitIdEighth[orgUnit.id] = [];
+        //     orgUnit.children.forEach(ou => {
+        //         selectedPeriodSeventh.forEach(period => {
+        //             if (!orgUnitIdEighth[orgUnit.id][period]) orgUnitIdEighth[orgUnit.id][period] = 0;
+        //             if (dataEighth[ou.id]) {
+        //                 if (dataEighth[ou.id][period]) orgUnitIdEighth[orgUnit.id][period] += 1;
+        //             }
+        //         })
+        //     })
+        // })
+
+        globalTotalVlaues.rows.forEach(row => {
+            if (!globalTotal[row["2"]]) {
+                globalTotal[row["2"]] = [];
+                globalTotal[row["2"]][row["0"]] = Number(row["3"]);
+            } else {
+                globalTotal[row["2"]][row["0"]] = Number(row["3"]);
+            }
+        })
+
+        var tableRow = ""
+        for (let orgUnitId of orgUnitIdFirst) {
+            tableRow += "<tr><td style='text-align:left;font-weight:400;'>" + metadataValues[orgUnitId] + "</td>"
+            dataElementIdFirst.forEach((element, index) => {
+                tableRow += "<td style='font-weight:400'>" + (dataFirst[orgUnitId] ? (dataFirst[orgUnitId][element] ? dataFirst[orgUnitId][element] : (dataFirst[orgUnitId][element] == 0 ? 0 : "")) : "") + "</td>"
+            });
+            tableRow += "<tr>";
+        }
+        document.getElementById("tableBodyFirst").innerHTML = tableRow;
+
+        tableRow = ""
+        for (let orgUnitId of orgUnitIdSecond) {
+            tableRow += "<tr><td style='text-align:left;font-weight:400;'>" + metadataValues[orgUnitId] + "</td>"
+            selectedPeriodSecond.forEach((period, index) => {
+                tableRow += "<td style='font-weight:400'>" + (dataSecond[orgUnitId] ? (dataSecond[orgUnitId][period] ? dataSecond[orgUnitId][period] : (dataSecond[orgUnitId][period] == 0 ? 0 : "")) : "") + "</td>"
+            });
+            tableRow += "<tr>";
+        }
+        document.getElementById("tableBodySecond").innerHTML = tableRow;
+
+        tableRow = ""
+        for (let orgUnitId of gpc) {
+            tableRow += "<tr><td style='text-align:left;font-weight:400;'>" + metadataValues[orgUnitId.id] + "</td>"
+            selectedPeriodThird.forEach((period, index) => {
+                tableRow += "<td style='font-weight:400'>" + (dataThird[orgUnitId.id] ? (dataThird[orgUnitId.id][period] ? dataThird[orgUnitId.id][period] : (dataThird[orgUnitId.id][period] == 0 ? 0 : "")) : "") + "</td>"
+                printTotalThird[index] += (dataThird[orgUnitId.id] ? (dataThird[orgUnitId.id][period] ? dataThird[orgUnitId.id][period] : 0) : 0);
+                globalTotalThird[index] = globalTotal[period] ? (globalTotal[period]["gY7b9azcUQG"] ? globalTotal[period]["gY7b9azcUQG"] : 0) : 0;
+            });
+            tableRow += "<tr>";
+        }
+
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>New cases in global priority countries</td>"
+        for (let i = 0; i < 10; i++)  tableRow += "<td style='font-weight:600'>" + printTotalThird[i] + "</td>";
+        tableRow += "<tr>";
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>Proportion (%) of total cases</td>"
+        for (let i = 0; i < 10; i++)  tableRow += "<td style='font-weight:600'>" + (((printTotalThird[i] / globalTotalThird[i]) != Infinity && (printTotalThird[i] / globalTotalThird[i])) ? ((printTotalThird[i] / globalTotalThird[i] * 100).toFixed("2") + "%") : "") + "</td>";
+        tableRow += "<tr>";
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>Global Total</td>"
+        for (let i = 0; i < 10; i++)  tableRow += "<td style='font-weight:600'>" + globalTotalThird[i] + "</td>";
+        tableRow += "<tr>";
+
+        document.getElementById("tableBodyThird").innerHTML = tableRow;
+
+        tableRow = ""
+        for (let orgUnitId of orgUnitIdFourth) {
+            tableRow += "<tr><td style='text-align:left;font-weight:400;'>" + metadataValues[orgUnitId] + "</td>"
+            selectedPeriodFourth.forEach((period, index) => {
+                tableRow += "<td style='font-weight:400'>" + (dataFourth[orgUnitId] ? (dataFourth[orgUnitId][period] ? dataFourth[orgUnitId][period] : (dataFourth[orgUnitId][period] == 0 ? 0 : "")) : "") + "</td>"
+            });
+            tableRow += "<tr>";
+        }
+        document.getElementById("tableBodyFourth").innerHTML = tableRow;
+
+        tableRow = ""
+        for (let orgUnitId of gpc) {
+            tableRow += "<tr><td style='text-align:left;font-weight:400;'>" + metadataValues[orgUnitId.id] + "</td>"
+            selectedPeriodFifth.forEach((period, index) => {
+                tableRow += "<td style='font-weight:400'>" + (dataFifth[orgUnitId.id] ? (dataFifth[orgUnitId.id][period] ? dataFifth[orgUnitId.id][period] : (dataFifth[orgUnitId.id][period] == 0 ? 0 : "")) : "") + "</td>"
+                printTotalFifth[index] += (dataFifth[orgUnitId.id] ? (dataFifth[orgUnitId.id][period] ? dataFifth[orgUnitId.id][period] : 0) : 0)
+                globalTotalFifth[index] = globalTotal[period] ? (globalTotal[period]["cyg9FDI48hW"] ? globalTotal[period]["cyg9FDI48hW"] : 0) : 0;
+            });
+            tableRow += "<tr>";
+        }
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>Number of new cases with G2D in global priority countries</td>"
+        for (let i = 0; i < 5; i++)  tableRow += "<td style='font-weight:600'>" + printTotalFifth[i] + "</td>";
+        tableRow += "<tr>";
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>Proportion (%) of total new cases with G2D in global priority countries </td>"
+        for (let i = 0; i < 5; i++)  tableRow += "<td style='font-weight:600'>" + (((printTotalFifth[i] / globalTotalFifth[i]) != Infinity && (printTotalFifth[i] / globalTotalFifth[i])) ? ((printTotalFifth[i] / globalTotalFifth[i] * 100).toFixed("2") + "%") : "") + "</td>";
+        tableRow += "<tr>";
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>Global total new cases with G2D </td>"
+        for (let i = 0; i < 5; i++)  tableRow += "<td style='font-weight:600'>" + globalTotalFifth[i] + "</td>";
+        tableRow += "<tr>";
+
+        document.getElementById("tableBodyFifth").innerHTML = tableRow;
+
+        tableRow = ""
+        for (let orgUnitId of gpc) {
+            tableRow += "<tr><td style='text-align:left;font-weight:400;'>" + metadataValues[orgUnitId.id] + "</td>"
+            selectedPeriodSixth.forEach((period, index) => {
+                tableRow += "<td style='font-weight:400'>" + (dataSixth[orgUnitId.id] ? (dataSixth[orgUnitId.id][period] ? dataSixth[orgUnitId.id][period] : (dataSixth[orgUnitId.id][period] == 0 ? 0 : "")) : "") + "</td>"
+                printTotalSixth[index] += (dataSixth[orgUnitId.id] ? (dataSixth[orgUnitId.id][period] ? dataSixth[orgUnitId.id][period] : 0) : 0)
+                globalTotalSixth[index] = globalTotal[period] ? (globalTotal[period]["PS9m9ERoPaj"] ? globalTotal[period]["PS9m9ERoPaj"] : 0) : 0;
+            });
+            tableRow += "</tr>";
+        }
+
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>Number of new child cases in 23 g Global priority countries</td>"
+        for (let i = 0; i < 5; i++)  tableRow += "<td style='font-weight:600'>" + printTotalSixth[i] + "</td>";
+        tableRow += "<tr>";
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>Proportion (%) of total new child cases in global priority countries</td>"
+        for (let i = 0; i < 5; i++)  tableRow += "<td style='font-weight:600'>" + (((printTotalSixth[i] / globalTotalSixth[i]) != Infinity && (printTotalSixth[i] / globalTotalSixth[i])) ? ((printTotalSixth[i] / globalTotalSixth[i] * 100).toFixed("2") + "%") : "") + "</td>";
+        tableRow += "<tr>";
+        tableRow += "<tr><td style='text-align:left;font-weight:600;'>Global total new child cases  </td>"
+        for (let i = 0; i < 5; i++)  tableRow += "<td style='font-weight:600'>" + globalTotalSixth[i] + "</td>";
+        tableRow += "<tr>";
+
+        document.getElementById("tableBodySixth").innerHTML = tableRow;
+        debugger;
+        tableRow = ""
+        organisationUnit.children.forEach(orgUnit => {
+            orgUnitIdSeventh = 0;
+            tableRow += "<tr><td style=' font-weight:600;text-align:left' colspan='2'>" + metadataValues[orgUnit.id] + "</td></tr>"
+            orgUnit.children.forEach(ou => {
+                if (dataSeventh[ou.id] == 5) {
+                    console.log(metadataValues[ou.id], dataSeventh[ou.id])
+                    tableRow += "<tr><td style='text-align:left;font-weight:400;' colspan='2' >" + metadataValues[ou.id] + "</td></tr>"
+                    console.log(tableRow)
+                    orgUnitIdSeventh++
+                    globalTotalSeventh++;
+                }
+            })
+            tableRow += "<tr><td style='font-weight:600; background:#f2f2f2;text-align:left'>Total Countries</td><td style='font-weight:600; background:#f2f2f2;text-align:center'>" + orgUnitIdSeventh + "</td></tr>"
+        })
+
+        tableRow += "<tr><td style='font-weight:600; background:#f2f2f2;text-align:left'>Global Total</td><td style='border:font-weight:600; background:#f2f2f2;text-align:center'>" + globalTotalSeventh + "</td></tr>";
+        document.getElementById("tableBodySeventh").innerHTML = tableRow;
+
+
+        // tableRow = ""
+        // for (let orgUnitId in orgUnitIdEighth) {
+        //     tableRow += "<tr><td style='text-align:left;font-weight:400;'>" + metadataValues[orgUnitId] + "</td>"
+        //     selectedPeriodEighth.forEach((period, index) => {
+        //         tableRow += "<td style='font-weight:400'>" + (orgUnitIdEighth[orgUnitId] ? (orgUnitIdEighth[orgUnitId][period] ? orgUnitIdEighth[orgUnitId][period] : (orgUnitIdEighth[orgUnitId][period] == 0 ? 0 : "")) : "") + "</td>"
+        //         globalTotalEighth[index] += (orgUnitIdEighth[orgUnitId] ? (orgUnitIdEighth[orgUnitId][period] ? orgUnitIdEighth[orgUnitId][period] : 0) : 0)
+        //     });
+
+        // }
+        // tableRow += "<tr><td style='text-align:left;font-weight:600;'>WHO Global office</td>"
+        // for (let i = 0; i < 10; i++)  tableRow += "<td style='font-weight:600'>" + globalTotalEighth[i] + "</td>";
+        // tableRow += "<tr>";
+        tableRow = ""
+        organisationUnit.children.forEach(orgUnit => {
+            orgUnitIdEighth = 0;
+            tableRow += "<tr><td style=' font-weight:600;text-align:left' colspan='2'>" + metadataValues[orgUnit.id] + "</td></tr>"
+            orgUnit.children.forEach(ou => {
+                if (dataEighth[ou.id] == 5) {
+                    tableRow += "<tr><td style='text-align:left;font-weight:400;' colspan='2' >" + metadataValues[ou.id] + "</td></tr>"
+                    orgUnitIdEighth++
+                    globalTotalEighth++;
+                }
+            })
+            tableRow += "<tr><td style='font-weight:600; background:#f2f2f2;text-align:left'>Total Countries</td><td style='font-weight:600; background:#f2f2f2;text-align:center'>" + orgUnitIdEighth + "</td></tr>"
+        })
+
+        tableRow += "<tr><td style='font-weight:600; background:#f2f2f2;text-align:left'>Global Total</td><td style='border:font-weight:600; background:#f2f2f2;text-align:center'>" + globalTotalEighth + "</td></tr>";
+        document.getElementById("tableBodyEighth").innerHTML = tableRow;
+
+        document.getElementById("state").style.display = "block";
+        document.getElementById("loader").style.display = "none";
+    })
+
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
