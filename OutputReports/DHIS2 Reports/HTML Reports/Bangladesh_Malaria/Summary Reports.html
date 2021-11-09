@@ -1,0 +1,1080 @@
+<style type="text/css">
+    thead tr.headLv1 {
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1.5px;
+        color: white;
+        height: 40px;
+    }
+
+    thead tr.headLv2 {
+        font-weight: bold;
+        text-align: center;
+        height: 40px;
+    }
+
+    #table1 tbody tr td {
+        text-align: center;
+        padding-left: 1px;
+        padding-right: 1px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    .green1 {
+        background-color: rgb(39, 102, 150);
+        color: white;
+    }
+
+    .green2 {
+        background-color: rgb(39, 102, 150);
+        color: white;
+    }
+
+    .bg2 {
+        background-color: rgb(39, 102, 150);
+    }
+
+    .box {
+        border-radius: 25px;
+        border: 2px solid rgb(39, 102, 150);
+        width: 800px;
+        height: 200px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .tot {
+        font-weight: bold;
+    }
+
+    .colsData {
+        text-align: center;
+    }
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 75%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid rgb(39, 102, 150);
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+<div style="padding-left: 200px;">
+    <div class="box">
+        <table class="table table-borderless table-striped">
+            <thead>
+                <h3>SUMMARY REPORTS</h3>
+            </thead>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="text-align: left;"><strong> Select Report : <span style="color: red;">*</span></strong></td>
+                <td><select id="selectedReport" onchange="onSelectedReport()" class="form-control">
+                        <option selected hidden>
+                            Please Select Report
+                        </option>
+                        <option>District Summary</option>
+                        <option>District Wise GO-NGO Summary</option>
+                        <option>Upazila Summary</option>
+                        <option>Upazila Wise GO-NGO Summary</option>
+                    </select></td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;" id="districtDiv">
+                <td style="text-align: left; padding: 10px;">
+                    <strong>District : <span style="color: red;">*</span></strong>
+                </td>
+                <td style="text-align: left;"><select id="district" class="form-control"
+                        onchange="onSelectedDistrict()">
+                        <option hidden selected> Please Select District :</option>
+                    </select></td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="text-align: left;">
+                    <strong>From Month :<span style="color: red;">*</span> </strong>
+                </td>
+                <td style="text-align: left;">
+                    <select id="sMonth" class="form-control">
+                        <option selected hidden> Please select Month</option>
+                    </select>
+                </td>
+                <td style="text-align: left;">
+                    <strong>From Year :<span style="color: red;">*</span> </strong>
+                </td>
+                <td style="text-align: left;">
+                    <input id="sYear" type="number" class="form-control" />
+                </td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="text-align: left;">
+                    <strong>To Month :<span style="color: red;">*</span> </strong>
+                </td>
+                <td style="text-align: left;">
+                    <select id="eMonth">
+                        <option selected hidden> Please select Month</option>
+                    </select>
+                </td>
+                <td style="text-align: left;">
+                    <strong>To Year :<span style="color: red;">*</span> </strong>
+                </td>
+                <td style="text-align: left;">
+                    <input id="eYear" type="number" class="form-control" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="10" style="text-align: center; height: 50px;">
+                    <button onClick="onGenerateReport()"
+                        style="height: 35px; margin-left: 180px; color: white; border-color: #0275d8; border-radius: 6px; background-color: #0275d8;"><strong>Generate
+                         Report</strong> </button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<br />
+<div id="loader" style="display: none"></div>
+<div>
+    <button type="button" id="print" class="green2"
+        style="height: 40px; font-weight: bold; padding: 10px; color: white; background-color: #0275d8; border-radius: 7px; border-color: #0275d8;"
+        onclick="printContent('content')"> &nbsp;
+        Print
+    </button>
+</div>
+<br />
+<div id="content">
+        <table border="1" class="table" id="table" style="width: 1300px; border-collapse: collapse; text-align: center; display: none !important;">
+        <thead>
+            <tr class="headLv1" style="background-color:rgb(8, 162, 201);;">
+                <td colspan="26"><span id="header"></span></td>
+            </tr>
+            <tr class="headLv2" style="background-color: skyblue;">
+                <td colspan="3">Start Date: </td>
+                <td colspan="10"><span id="selectStartDate"></span></td>
+                <td colspan="3">End Date:</td>
+                <td colspan="10"><span id="selectEndDate"></span></td>
+            </tr>
+            <tr class="headLv2" style="background-color: rgb(160, 218, 241);">
+                <td colspan="2">SN</td>
+                <td>Org Units </td>
+                <td>Microscopy done </td>
+                <td>RDT done</td>
+                <td>Total Test done</td>
+                <td>Microscopy (+)ve </td>
+                <td>Microscopy PF</td>
+                <td>Microscopy PV</td>
+                <td>Microscopy Mixed</td>
+                <td>RDT (+)ve </td>
+                <td>RDT PF</td>
+                <td>RDT PV</td>
+                <td>RDT Mixed</td>
+                <td>Total (+)ve</td>
+                <td>PF</td>
+                <td>PV</td>
+                <td>Mixed</td>
+                <td>Total +ve cases</td>
+                <td>Death</td>
+                <td>UM</td>
+                <td>SM</td>
+                <td>VM</td>
+                <td>Total Cases</td>
+                <td>LLIN distributed (Mass)</td>
+                <td>LLIN distributed (Continuous)</td>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const months = [
+        {
+            id: '01',
+            month: "January"
+        },
+        {
+            id: '02',
+            month: "February"
+        },
+        {
+            id: '03',
+            month: "March"
+        },
+        {
+            id: '04',
+            month: "April"
+        },
+        {
+            id: '05',
+            month: "May"
+        },
+        {
+            id: '06',
+            month: "June"
+        },
+        {
+            id: '07',
+            month: "July"
+        },
+        {
+            id: '08',
+            month: "August"
+        },
+        {
+            id: '09',
+            month: "September"
+        },
+        {
+            id: '10',
+            month: "October"
+        },
+        {
+            id: '11',
+            month: "November"
+        },
+        {
+            id: '12',
+            month: "December"
+        },
+    ]
+    var dataElements = ["DMOXopWJxnd", "SLs1YEczE8T", "Oz2hoJeEcUL", "Q82ZvESVPnL", "Xq1khGp6ENm", "ElhoxIoYNhT", "SIkIsfFVbJJ", "yQFUy5CYLxz", "ecjnrI1sIFY", "p7g5OvQqZXK", "PyAtjxNlXTw", "J3fU1hTZSP9", "sP8cdaNgxY5", "Hz72EVyFSO7", "uflk2WpvPA8", "evq0J1nak9r", "M1MlEMVAUTe", "vxUcPhLwebD", "YORPV5FTzhz", "V7R5enqT3SG", "K5DbzTC9skw", "qEPhMtxqS97"]
+
+    var group = ["hz7mDwA7Svg", "Bhl59XR22Us", "Vbc6aeZ6nzZ"]
+    for (let m of months) {
+        document.getElementById("sMonth").innerHTML += '<option>' + m.month + '</option>'
+        document.getElementById("eMonth").innerHTML += '<option>' + m.month + '</option>'
+    }
+    document.getElementById("sYear").value = new Date().getFullYear()
+    document.getElementById("eYear").value = new Date().getFullYear()
+    $("#districtDiv").hide()
+    document.getElementById("table").style.display = "none"
+    document.getElementById("print").style.display = "none"
+    var obj = {}
+    $.when($.get("../api/29/organisationUnitGroups/PyK69cVqr5l.json?fields=organisationUnits[name,id]"),
+    ).done(function (res) {
+        res.organisationUnits.map(element => {
+            for (let de of dataElements) {
+                element[de] = ''
+            }
+            return element
+        })
+        function compare(a, b) {
+            if (a.name < b.name) {
+                return -1;
+            }
+            if (a.name > b.name) {
+                return 1;
+            }
+            return 0;
+        }
+        res.organisationUnits.sort(compare);
+        obj["districts"] = res.organisationUnits
+
+    })
+    $.when($.get("../api/29/organisationUnitGroups/XpE4AlQZRkV.json?fields=organisationUnits[name,id]"),
+    ).done(function (res) {
+        res.organisationUnits.map(element => {
+            for (let de of dataElements) {
+                element[de] = ''
+            }
+            return element
+        })
+        function compare(a, b) {
+            if (a.name < b.name) {
+                return -1;
+            }
+            if (a.name > b.name) {
+                return 1;
+            }
+            return 0;
+        }
+        res.organisationUnits.sort(compare);
+        obj["upazilas"] = res.organisationUnits
+    })
+
+    function onSelectedReport() {
+        let selectedOpt = document.getElementById("selectedReport").value
+        if (selectedOpt == "Upazila Summary" || selectedOpt == "Upazila Wise GO-NGO Summary") {
+            function compare(a, b) {
+                if (a.name < b.name) {
+                    return -1;
+                }
+                if (a.name > b.name) {
+                    return 1;
+                }
+                return 0;
+            }
+            obj.districts.sort(compare);
+            for (let district of obj.districts) {
+                document.getElementById("district").innerHTML += "<option>" + district.name + "</option>"
+            }
+            $("#districtDiv").show()
+
+        } else {
+            $("#districtDiv").hide()
+        }
+    }
+    function onSelectedDistrict() {
+        let ou = obj.districts.find(ou => ou.name == document.getElementById("district").value)
+        obj["selectedDistrict"] = ou.id
+    }
+    var total1 = 0, total2 = 0, total3 = 0, total4 = 0, total5 = 0, total6 = 0, total7 = 0, total8 = 0, total9 = 0, total10 = 0, total11 = 0, total12 = 0, total13 = 0, total14 = 0, total15 = 0, total16 = 0, total17 = 0;
+    function onGenerateReport() {
+        let startDate = document.getElementById("sMonth").value
+        let endDate = document.getElementById("eMonth").value
+        let sYear = document.getElementById("sYear").value
+        let eYear = document.getElementById("eYear").value
+        var startMonth, endMonth, dataValues
+        for (let m of months) {
+            if (startDate == m.month) {
+                startMonth = m.id
+            }
+            if (endDate == m.month) {
+                endMonth = m.id
+            }
+        }
+        let sDate = parseInt(sYear.concat(startMonth))
+        let eDate = parseInt(eYear.concat(endMonth))
+
+        var getBetweenDates = function (sYear, eYear, startMonth, endMonth) {
+            var arr = [], lastDay, start, end;
+            for (var i = parseInt(sYear); i <= parseInt(eYear); i++) {
+                startMonth = (i > parseInt(sYear)) ? 1 : parseInt(startMonth);
+                let endM = (i == parseInt(eYear)) ? parseInt(endMonth) : 12;
+
+                for (var j = startMonth; j <= endM; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+            return arr;
+        }
+        var periods = getBetweenDates(sYear, eYear, startMonth, endMonth);
+        if (sDate > eDate) {
+            alert("Please Select Date corretly")
+        } else if (startDate == "Please select Month" || endDate == "Please select Month") {
+            alert("Please Select Date corretly")
+        } else {
+            document.getElementById("selectStartDate").innerHTML = startDate + ', ' + sYear
+            document.getElementById("selectEndDate").innerHTML = endDate + ", " + eYear
+            document.getElementById("print").style.display = "block"
+            let selectedOpt = document.getElementById("selectedReport").value
+            document.getElementById("header").innerHTML = selectedOpt
+            var i = 1
+            if (selectedOpt == "District Summary") {
+                document.getElementById("loader").style.display = "block";
+                $('#table').find("tbody").empty()
+                $.when($.get("../api/29/analytics/dataValueSet.json?dimension=pe:" + periods.join(";") + "&dimension=dx:DMOXopWJxnd;SLs1YEczE8T;Oz2hoJeEcUL;Q82ZvESVPnL;Xq1khGp6ENm;ElhoxIoYNhT;SIkIsfFVbJJ;yQFUy5CYLxz;ecjnrI1sIFY;p7g5OvQqZXK;PyAtjxNlXTw;J3fU1hTZSP9;sP8cdaNgxY5;Hz72EVyFSO7;uflk2WpvPA8;evq0J1nak9r;M1MlEMVAUTe;vxUcPhLwebD;YORPV5FTzhz;V7R5enqT3SG;K5DbzTC9skw;qEPhMtxqS97&dimension=ou:dNLjKwsVjod;OU_GROUP-PyK69cVqr5l&displayProperty=NAME"),
+                ).done(function (res) {
+                    dataValues = res.dataValues
+                    for (let district of obj.districts) {
+                        for (let de of dataElements) {
+                            let val = 0;
+                            for (let dataValue of dataValues) {
+                                if (district.id == dataValue.orgUnit) {
+                                    if (dataValue.dataElement == de) {
+                                        val += Math.trunc(dataValue.value)
+                                        district[de] = val
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+                setTimeout(() => {
+                    dataPass(i)
+                }, 3000)
+            }
+            if (selectedOpt == "District Wise GO-NGO Summary") {
+                document.getElementById("loader").style.display = "block";
+                var arr = obj.districts.map(ele => {
+                    let obj = {}
+                    obj["NGO"] = {}
+                    obj["Others"] = {}
+                    obj["GoB"] = {}
+                    obj["id"] = ele.id
+                    obj["name"] = ele.name
+
+                    return obj
+                })
+                $.when($.get("../api/29/analytics.json?dimension=pe:" + periods.join(";") + "&dimension=dx:DMOXopWJxnd;SLs1YEczE8T;Oz2hoJeEcUL;Q82ZvESVPnL;Xq1khGp6ENm;ElhoxIoYNhT;SIkIsfFVbJJ;yQFUy5CYLxz;ecjnrI1sIFY;p7g5OvQqZXK;PyAtjxNlXTw;J3fU1hTZSP9;sP8cdaNgxY5;Hz72EVyFSO7;uflk2WpvPA8;evq0J1nak9r;M1MlEMVAUTe;vxUcPhLwebD;YORPV5FTzhz;V7R5enqT3SG;K5DbzTC9skw;qEPhMtxqS97&dimension=ou:dNLjKwsVjod;OU_GROUP-PyK69cVqr5l&dimension=o4rUjQa0VU6:hz7mDwA7Svg;Bhl59XR22Us;Vbc6aeZ6nzZ&displayProperty=NAME&outputIdScheme=UID"),
+                ).done(function (res) {
+                    let mappedArr = res.rows.map(data => {
+                        let obj = {}
+                        let ele = data["2"] + "-" + data["3"] + "-" + data["0"]
+                        obj[ele] = Math.trunc(data["4"])
+                        return obj
+                    })
+                    for (let district of arr) {
+                        for (let ouGroup of group) {
+                            if (ouGroup == group["0"]) {
+                                for (let de of dataElements) {
+                                    let mapped = district.id + "-" + ouGroup + "-" + de
+                                    let val = 0
+                                    for (let data of mappedArr) {
+                                        let key = Object.keys(data)
+                                        let value = Object.values(data)
+                                        if (key == mapped) {
+                                            val += Number(value)
+                                            district.GoB[de] = Number(val)
+                                        }
+                                    }
+                                }
+                            }
+                            if (ouGroup == group["1"]) {
+                                for (let de of dataElements) {
+                                    let mapped = district.id + "-" + ouGroup + "-" + de
+                                    let val = 0
+                                    for (let data of mappedArr) {
+                                        let key = Object.keys(data)
+                                        let value = Object.values(data)
+                                        if (key == mapped) {
+                                            val += Number(value)
+                                            district.NGO[de] = Number(val)
+                                        }
+                                    }
+                                }
+                            }
+                            if (ouGroup == group["2"]) {
+                                for (let de of dataElements) {
+                                    let mapped = district.id + "-" + ouGroup + "-" + de
+                                    let val = 0
+                                    for (let data of mappedArr) {
+                                        let key = Object.keys(data)
+                                        let value = Object.values(data)
+                                        if (key == mapped) {
+                                            val += Number(value)
+                                            district.Others[de] = Number(val)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                })
+                setTimeout(() => {
+                    passMultipleData(arr, i)
+                }, 3000)
+
+            }
+            if (selectedOpt == "Upazila Summary") {
+                document.getElementById("loader").style.display = "block";
+                $.when($.get("../api/29/analytics.json?dimension=pe:" + periods.join(";") + "&dimension=dx:DMOXopWJxnd;SLs1YEczE8T;Oz2hoJeEcUL;Q82ZvESVPnL;Xq1khGp6ENm;ElhoxIoYNhT;SIkIsfFVbJJ;yQFUy5CYLxz;ecjnrI1sIFY;p7g5OvQqZXK;PyAtjxNlXTw;J3fU1hTZSP9;sP8cdaNgxY5;Hz72EVyFSO7;uflk2WpvPA8;evq0J1nak9r;M1MlEMVAUTe;vxUcPhLwebD;YORPV5FTzhz;V7R5enqT3SG;K5DbzTC9skw;qEPhMtxqS97&dimension=ou:" + obj.selectedDistrict + ";OU_GROUP-XpE4AlQZRkV&displayProperty=NAME&outputIdScheme=UID"),
+                ).done(function (res) {
+                    let districtUpazila = res.metaData.dimensions.ou.map(ele => {
+                        for (let data of obj.upazilas) {
+                            if (ele == data.id) {
+                                return data
+                            }
+                        }
+                    })
+                    obj["upazila"] = districtUpazila
+                    for (let upazila of obj.upazila) {
+                        for (let de of dataElements) {
+                            let val = 0
+                            for (let data of res.rows) {
+                                if (upazila.id == data["2"]) {
+                                    if (data["0"] == de) {
+                                        val += Number(Math.trunc(data["3"]))
+                                        upazila[de] = val
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+                setTimeout(() => {
+                    upazilaDataPass(i)
+                }, 3000)
+            }
+            if (selectedOpt == "Upazila Wise GO-NGO Summary") {
+                document.getElementById("loader").style.display = "block";
+                var arr = []
+                $.when($.get("../api/29/analytics.json?dimension=pe:" + periods.join(";") + "&dimension=dx:DMOXopWJxnd;SLs1YEczE8T;Oz2hoJeEcUL;Q82ZvESVPnL;Xq1khGp6ENm;ElhoxIoYNhT;SIkIsfFVbJJ;yQFUy5CYLxz;ecjnrI1sIFY;p7g5OvQqZXK;PyAtjxNlXTw;J3fU1hTZSP9;sP8cdaNgxY5;Hz72EVyFSO7;uflk2WpvPA8;evq0J1nak9r;M1MlEMVAUTe;vxUcPhLwebD;YORPV5FTzhz;V7R5enqT3SG;K5DbzTC9skw;qEPhMtxqS97&dimension=ou:" + obj.selectedDistrict + ";OU_GROUP-XpE4AlQZRkV&dimension=o4rUjQa0VU6:hz7mDwA7Svg;Bhl59XR22Us;Vbc6aeZ6nzZ&displayProperty=NAME&hierarchyMeta=true&outputIdScheme=UID"),
+                ).done(function (res) {
+                    let mappedArr = res.rows.map(data => {
+                        let obj = {}
+                        let ele = data["2"] + "-" + data["3"] + "-" + data["0"]
+                        obj[ele] = Math.trunc(data["4"])
+                        return obj
+                    })
+                    let districtUpazila = res.metaData.dimensions.ou.map(ele => {
+                        for (let data of obj.upazilas) {
+                            if (ele == data.id) {
+                                return data
+                            }
+                        }
+                    })
+                    arr = districtUpazila.map(ele => {
+                        let obj = {}
+                        obj["NGO"] = {}
+                        obj["Others"] = {}
+                        obj["GoB"] = {}
+                        obj["id"] = ele.id
+                        obj["name"] = ele.name
+                        return obj
+                    })
+                    for (let district of arr) {
+                        for (let ouGroup of group) {
+                            if (ouGroup == group["0"]) {
+                                for (let de of dataElements) {
+                                    let mapped = district.id + "-" + ouGroup + "-" + de
+                                    let val = 0;
+                                    for (let data of mappedArr) {
+                                        let key = Object.keys(data)
+                                        let value = Object.values(data)
+                                        if (key == mapped) {
+                                            val += Number(value)
+                                            district.GoB[de] = Number(val)
+                                        }
+                                    }
+                                }
+                            }
+                            if (ouGroup == group["1"]) {
+                                for (let de of dataElements) {
+                                    let mapped = district.id + "-" + ouGroup + "-" + de
+                                    let val = 0;
+                                    for (let data of mappedArr) {
+                                        let key = Object.keys(data)
+                                        let value = Object.values(data)
+                                        if (key == mapped) {
+                                            val += Number(value)
+                                            district.NGO[de] = Number(val)
+                                        }
+                                    }
+                                }
+                            }
+                            if (ouGroup == group["2"]) {
+                                for (let de of dataElements) {
+                                    let mapped = district.id + "-" + ouGroup + "-" + de
+                                    let val = 0;
+                                    for (let data of mappedArr) {
+                                        let key = Object.keys(data)
+                                        let value = Object.values(data)
+                                        if (key == mapped) {
+                                            val += Number(value)
+                                            district.Others[de] = Number(val)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
+
+                })
+                setTimeout(() => {
+                    passMultipleUpazila(arr, i)
+                }, 3000)
+            }
+        }
+    }
+    function dataPass(i) {
+        for (let district of obj.districts) {
+            $('#table').find('tbody').append(`<tr class="colsData"><td>${i++}</td><td colspan="2">${district.name}</td><td>${district.DMOXopWJxnd}</td><td>${district.SLs1YEczE8T}</td><td>${district.Oz2hoJeEcUL}</td><td>${district.Q82ZvESVPnL}</td><td>${district.Xq1khGp6ENm}</td><td>${district.ElhoxIoYNhT}</td><td>${district.SIkIsfFVbJJ}</td><td>${district.yQFUy5CYLxz}</td><td>${district.ecjnrI1sIFY}</td><td>${district.p7g5OvQqZXK}</td><td>${district.PyAtjxNlXTw}</td><td>${district.uflk2WpvPA8}</td><td>${district.J3fU1hTZSP9}</td><td>${district.sP8cdaNgxY5}</td><td>${district.Hz72EVyFSO7}</td><td>${district.uflk2WpvPA8}</td><td>${district.evq0J1nak9r}</td><td>${district.M1MlEMVAUTe}</td><td>${district.vxUcPhLwebD}</td><td>${district.YORPV5FTzhz}</td><td>${district.V7R5enqT3SG}</td><td>${district.K5DbzTC9skw}</td><td>${district.qEPhMtxqS97}</td></tr>`);
+        }
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("table").style.display = "block"
+
+    }
+    function upazilaDataPass(i) {
+        $('#table').find("tbody").empty()
+        for (let upazila of obj.upazila) {
+            $('#table').find('tbody').append(`<tr class="colsData"><td>${i++}</td><td colspan="2">${upazila.name}</td><td>${upazila.DMOXopWJxnd}</td><td>${upazila.SLs1YEczE8T}</td><td>${upazila.Oz2hoJeEcUL}</td><td>${upazila.Q82ZvESVPnL}</td><td>${upazila.Xq1khGp6ENm}</td><td>${upazila.ElhoxIoYNhT}</td><td>${upazila.SIkIsfFVbJJ}</td><td>${upazila.yQFUy5CYLxz}</td><td>${upazila.ecjnrI1sIFY}</td><td>${upazila.p7g5OvQqZXK}</td><td>${upazila.PyAtjxNlXTw}</td><td>${upazila.uflk2WpvPA8}</td><td>${upazila.J3fU1hTZSP9}</td><td>${upazila.sP8cdaNgxY5}</td><td>${upazila.Hz72EVyFSO7}</td><td>${upazila.uflk2WpvPA8}</td><td>${upazila.evq0J1nak9r}</td><td>${upazila.M1MlEMVAUTe}</td><td>${upazila.vxUcPhLwebD}</td><td>${upazila.YORPV5FTzhz}</td><td>${upazila.V7R5enqT3SG}</td><td>${upazila.K5DbzTC9skw}</td><td>${upazila.qEPhMtxqS97}</td></tr>`);
+            total1 += Number(upazila.DMOXopWJxnd)
+            total2 += Number(upazila.SLs1YEczE8T)
+            total3 += Number(upazila.Oz2hoJeEcUL)
+            total4 += Number(upazila.Q82ZvESVPnL)
+            total5 += Number(upazila.yQFUy5CYLxz)
+            total6 += Number(upazila.uflk2WpvPA8)
+            total7 += Number(upazila.J3fU1hTZSP9)
+            total8 += Number(upazila.sP8cdaNgxY5)
+            total9 += Number(upazila.Hz72EVyFSO7)
+            total10 += Number(upazila.uflk2WpvPA8)
+            total11 += Number(upazila.evq0J1nak9r)
+            total12 += Number(upazila.M1MlEMVAUTe)
+            total13 += Number(upazila.vxUcPhLwebD)
+            total14 += Number(upazila.YORPV5FTzhz)
+            total15 += Number(upazila.V7R5enqT3SG)
+            total16 += Number(upazila.K5DbzTC9skw)
+            total17 += Number(upazila.qEPhMtxqS97)
+            //update 
+            total18 += Number(upazila.Xq1khGp6ENm)
+            total19 += Number(upazila.ElhoxIoYNhT)
+            total20 += Number(upazila.SIkIsfFVbJJ)
+            total21 += Number(upazila.ecjnrI1sIFY)
+            total22 += Number(upazila.p7g5OvQqZXK)
+            total23 += Number(upazila.PyAtjxNlXTw)
+        }
+        $('#table').find('tbody').append(`<tr class="tot colsData"><td colspan="3">Total</td><td>${total1}</td><td>${total2}</td><td>${total3}</td><td>${total4}</td><td>${total18}</td><td>${total19}</td><td>${total20}</td><td>${total5}</td><td>${total21}</td><td>${total22}</td><td>${total23}</td><td>${total6}</td><td>${total7}</td><td>${total8}</td><td>${total9}</td><td>${total10}</td><td>${total11}</td><td>${total12}</td><td>${total13}</td><td>${total14}</td><td>${total15}</td><td>${total16}</td><td>${total17}</td></tr>`)
+        total1 = 0, total2 = 0, total3 = 0, total4 = 0, total5 = 0, total6 = 0, total7 = 0, total8 = 0, total9 = 0, total10 = 0, total11 = 0, total12 = 0, total13 = 0, total14 = 0, total15 = 0, total16 = 0, total17 = 0, total18 = 0, total19 = 0, total20 = 0, total21 = 0, total22 = 0, total23 = 0;
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("table").style.display = "block"
+
+    }
+    function passMultipleUpazila(arr, i) {
+        $('#table').find("tbody").empty()
+        for (let upazila of arr) {
+            if (upazila.GoB.DMOXopWJxnd == undefined) {
+                upazila.GoB.DMOXopWJxnd = ''
+            }
+            if (upazila.NGO.DMOXopWJxnd == undefined) {
+                upazila.NGO.DMOXopWJxnd = ''
+            }
+            if (upazila.Others.DMOXopWJxnd == undefined) {
+                upazila.Others.DMOXopWJxnd = ''
+            }
+            if (upazila.GoB.SLs1YEczE8T == undefined) {
+                upazila.GoB.SLs1YEczE8T = ''
+            } if (upazila.NGO.SLs1YEczE8T == undefined) {
+                upazila.NGO.SLs1YEczE8T = ''
+            } if (upazila.Others.SLs1YEczE8T == undefined) {
+                upazila.Others.SLs1YEczE8T = ''
+            }
+            if (upazila.GoB.Oz2hoJeEcUL == undefined) {
+                upazila.GoB.Oz2hoJeEcUL = ''
+            } if (upazila.NGO.Oz2hoJeEcUL == undefined) {
+                upazila.NGO.Oz2hoJeEcUL = ''
+            } if (upazila.Others.Oz2hoJeEcUL == undefined) {
+                upazila.Others.Oz2hoJeEcUL = ''
+            }
+            if (upazila.GoB.Q82ZvESVPnL == undefined) {
+                upazila.GoB.Q82ZvESVPnL = ''
+            } if (upazila.NGO.Q82ZvESVPnL == undefined) {
+                upazila.NGO.Q82ZvESVPnL = ''
+            } if (upazila.Others.Q82ZvESVPnL == undefined) {
+                upazila.Others.Q82ZvESVPnL = ''
+            }
+            if (upazila.GoB.yQFUy5CYLxz == undefined) {
+                upazila.GoB.yQFUy5CYLxz = ''
+            } if (upazila.NGO.yQFUy5CYLxz == undefined) {
+                upazila.NGO.yQFUy5CYLxz = ''
+            } if (upazila.Others.yQFUy5CYLxz == undefined) {
+                upazila.Others.yQFUy5CYLxz = ''
+            }
+            if (upazila.GoB.uflk2WpvPA8 == undefined) {
+                upazila.GoB.uflk2WpvPA8 = ''
+            } if (upazila.NGO.uflk2WpvPA8 == undefined) {
+                upazila.NGO.uflk2WpvPA8 = ''
+            } if (upazila.Others.uflk2WpvPA8 == undefined) {
+                upazila.Others.uflk2WpvPA8 = ''
+            }
+            if (upazila.GoB.J3fU1hTZSP9 == undefined) {
+                upazila.GoB.J3fU1hTZSP9 = ''
+            } if (upazila.NGO.J3fU1hTZSP9 == undefined) {
+                upazila.NGO.J3fU1hTZSP9 = ''
+            } if (upazila.Others.J3fU1hTZSP9 == undefined) {
+                upazila.Others.J3fU1hTZSP9 = ''
+            }
+            if (upazila.GoB.sP8cdaNgxY5 == undefined) {
+                upazila.GoB.sP8cdaNgxY5 = ''
+            } if (upazila.NGO.sP8cdaNgxY5 == undefined) {
+                upazila.NGO.sP8cdaNgxY5 = ''
+            } if (upazila.Others.sP8cdaNgxY5 == undefined) {
+                upazila.Others.sP8cdaNgxY5 = ''
+            }
+            if (upazila.GoB.Hz72EVyFSO7 == undefined) {
+                upazila.GoB.Hz72EVyFSO7 = ''
+            } if (upazila.NGO.Hz72EVyFSO7 == undefined) {
+                upazila.NGO.Hz72EVyFSO7 = ''
+            } if (upazila.Others.Hz72EVyFSO7 == undefined) {
+                upazila.Others.Hz72EVyFSO7 = ''
+            }
+            if (upazila.GoB.uflk2WpvPA8 == undefined) {
+                upazila.GoB.uflk2WpvPA8 = ''
+            } if (upazila.NGO.uflk2WpvPA8 == undefined) {
+                upazila.NGO.uflk2WpvPA8 = ''
+            } if (upazila.Others.uflk2WpvPA8 == undefined) {
+                upazila.Others.uflk2WpvPA8 = ''
+            }
+            if (upazila.GoB.evq0J1nak9r == undefined) {
+                upazila.GoB.evq0J1nak9r = ''
+            } if (upazila.NGO.evq0J1nak9r == undefined) {
+                upazila.NGO.evq0J1nak9r = ''
+            } if (upazila.Others.evq0J1nak9r == undefined) {
+                upazila.Others.evq0J1nak9r = ''
+            }
+            if (upazila.GoB.M1MlEMVAUTe == undefined) {
+                upazila.GoB.M1MlEMVAUTe = ''
+            } if (upazila.NGO.M1MlEMVAUTe == undefined) {
+                upazila.NGO.M1MlEMVAUTe = ''
+            } if (upazila.Others.M1MlEMVAUTe == undefined) {
+                upazila.Others.M1MlEMVAUTe = ''
+            }
+            if (upazila.GoB.vxUcPhLwebD == undefined) {
+                upazila.GoB.vxUcPhLwebD = ''
+            } if (upazila.NGO.vxUcPhLwebD == undefined) {
+                upazila.NGO.vxUcPhLwebD = ''
+            } if (upazila.Others.vxUcPhLwebD == undefined) {
+                upazila.Others.vxUcPhLwebD = ''
+            }
+            if (upazila.GoB.YORPV5FTzhz == undefined) {
+                upazila.GoB.YORPV5FTzhz = ''
+            } if (upazila.NGO.YORPV5FTzhz == undefined) {
+                upazila.NGO.YORPV5FTzhz = ''
+            } if (upazila.Others.YORPV5FTzhz == undefined) {
+                upazila.Others.YORPV5FTzhz = ''
+            }
+            if (upazila.GoB.V7R5enqT3SG == undefined) {
+                upazila.GoB.V7R5enqT3SG = ''
+            } if (upazila.NGO.V7R5enqT3SG == undefined) {
+                upazila.NGO.V7R5enqT3SG = ''
+            } if (upazila.Others.V7R5enqT3SG == undefined) {
+                upazila.Others.V7R5enqT3SG = ''
+            }
+            if (upazila.GoB.K5DbzTC9skw == undefined) {
+                upazila.GoB.K5DbzTC9skw = ''
+            } if (upazila.NGO.K5DbzTC9skw == undefined) {
+                upazila.NGO.K5DbzTC9skw = ''
+            } if (upazila.Others.K5DbzTC9skw == undefined) {
+                upazila.Others.K5DbzTC9skw = ''
+            }
+            if (upazila.GoB.qEPhMtxqS97 == undefined) {
+                upazila.GoB.qEPhMtxqS97 = ''
+            } if (upazila.NGO.qEPhMtxqS97 == undefined) {
+                upazila.NGO.qEPhMtxqS97 = ''
+            } if (upazila.Others.qEPhMtxqS97 == undefined) {
+                upazila.Others.qEPhMtxqS97 = ''
+            }
+
+            if (upazila.GoB.Xq1khGp6ENm == undefined) {
+                upazila.GoB.Xq1khGp6ENm = ''
+            } if (upazila.NGO.Xq1khGp6ENm == undefined) {
+                upazila.NGO.Xq1khGp6ENm = ''
+            } if (upazila.Others.Xq1khGp6ENm == undefined) {
+                upazila.Others.Xq1khGp6ENm = ''
+            }
+            if (upazila.GoB.ElhoxIoYNhT == undefined) {
+                upazila.GoB.ElhoxIoYNhT = ''
+            } if (upazila.NGO.ElhoxIoYNhT == undefined) {
+                upazila.NGO.ElhoxIoYNhT = ''
+            } if (upazila.Others.ElhoxIoYNhT == undefined) {
+                upazila.Others.ElhoxIoYNhT = ''
+            }
+            if (upazila.GoB.SIkIsfFVbJJ == undefined) {
+                upazila.GoB.SIkIsfFVbJJ = ''
+            } if (upazila.NGO.SIkIsfFVbJJ == undefined) {
+                upazila.NGO.SIkIsfFVbJJ = ''
+            } if (upazila.Others.SIkIsfFVbJJ == undefined) {
+                upazila.Others.SIkIsfFVbJJ = ''
+            }
+            if (upazila.GoB.ecjnrI1sIFY == undefined) {
+                upazila.GoB.ecjnrI1sIFY = ''
+            } if (upazila.NGO.ecjnrI1sIFY == undefined) {
+                upazila.NGO.ecjnrI1sIFY = ''
+            } if (upazila.Others.ecjnrI1sIFY == undefined) {
+                upazila.Others.ecjnrI1sIFY = ''
+            }
+            if (upazila.GoB.p7g5OvQqZXK == undefined) {
+                upazila.GoB.p7g5OvQqZXK = ''
+            } if (upazila.NGO.p7g5OvQqZXK == undefined) {
+                upazila.NGO.p7g5OvQqZXK = ''
+            } if (upazila.Others.p7g5OvQqZXK == undefined) {
+                upazila.Others.p7g5OvQqZXK = ''
+            }
+            if (upazila.GoB.PyAtjxNlXTw == undefined) {
+                upazila.GoB.PyAtjxNlXTw = ''
+            } if (upazila.NGO.PyAtjxNlXTw == undefined) {
+                upazila.NGO.PyAtjxNlXTw = ''
+            } if (upazila.Others.PyAtjxNlXTw == undefined) {
+                upazila.Others.PyAtjxNlXTw = ''
+            }
+
+
+            $('#table').find('tbody').append(`<tr class="colsData"><td rowspan="4">${i++}</td><td rowspan="3">${upazila.name}</td><td>GoB</td><td>${upazila.GoB.DMOXopWJxnd}</td><td>${upazila.GoB.SLs1YEczE8T}</td><td>${upazila.GoB.Oz2hoJeEcUL}</td><td>${upazila.GoB.Q82ZvESVPnL}</td><td>${upazila.GoB.Xq1khGp6ENm}</td><td>${upazila.GoB.ElhoxIoYNhT}</td><td>${upazila.GoB.SIkIsfFVbJJ}</td><td>${upazila.GoB.yQFUy5CYLxz}</td><td>${upazila.GoB.ecjnrI1sIFY}</td><td>${upazila.GoB.p7g5OvQqZXK}</td><td>${upazila.GoB.PyAtjxNlXTw}</td><td>${upazila.GoB.uflk2WpvPA8}</td><td>${upazila.GoB.J3fU1hTZSP9}</td><td>${upazila.GoB.sP8cdaNgxY5}</td><td>${upazila.GoB.Hz72EVyFSO7}</td><td>${upazila.GoB.uflk2WpvPA8}</td><td>${upazila.GoB.evq0J1nak9r}</td><td>${upazila.GoB.M1MlEMVAUTe}</td><td>${upazila.GoB.vxUcPhLwebD}</td><td>${upazila.GoB.YORPV5FTzhz}</td><td>${upazila.GoB.V7R5enqT3SG}</td><td>${upazila.GoB.K5DbzTC9skw}</td><td>${upazila.GoB.qEPhMtxqS97}</td></tr>
+                    <tr class="colsData"><td>NGO</td><td>${upazila.NGO.DMOXopWJxnd}</td><td>${upazila.NGO.SLs1YEczE8T}</td><td>${upazila.NGO.Oz2hoJeEcUL}</td><td>${upazila.NGO.Q82ZvESVPnL}</td><td>${upazila.NGO.Xq1khGp6ENm}</td><td>${upazila.NGO.ElhoxIoYNhT}</td><td>${upazila.NGO.SIkIsfFVbJJ}</td><td>${upazila.NGO.yQFUy5CYLxz}</td><td>${upazila.NGO.ecjnrI1sIFY}</td><td>${upazila.NGO.p7g5OvQqZXK}</td><td>${upazila.NGO.PyAtjxNlXTw}</td><td>${upazila.NGO.uflk2WpvPA8}</td><td>${upazila.NGO.J3fU1hTZSP9}</td><td>${upazila.NGO.sP8cdaNgxY5}</td><td>${upazila.NGO.Hz72EVyFSO7}</td><td>${upazila.NGO.uflk2WpvPA8}</td><td>${upazila.NGO.evq0J1nak9r}</td><td>${upazila.NGO.M1MlEMVAUTe}</td><td>${upazila.NGO.vxUcPhLwebD}</td><td>${upazila.NGO.YORPV5FTzhz}</td><td>${upazila.NGO.V7R5enqT3SG}</td><td>${upazila.NGO.K5DbzTC9skw}</td><td>${upazila.NGO.qEPhMtxqS97}</td></tr>
+                    <tr class="colsData"><td>Others</td><td>${upazila.Others.DMOXopWJxnd}</td><td>${upazila.Others.SLs1YEczE8T}</td><td>${upazila.Others.Oz2hoJeEcUL}</td><td>${upazila.Others.Q82ZvESVPnL}</td><td>${upazila.Others.Xq1khGp6ENm}</td><td>${upazila.Others.ElhoxIoYNhT}</td><td>${upazila.Others.SIkIsfFVbJJ}</td><td>${upazila.Others.yQFUy5CYLxz}</td><td>${upazila.Others.ecjnrI1sIFY}</td><td>${upazila.Others.p7g5OvQqZXK}</td><td>${upazila.Others.PyAtjxNlXTw}</td><td>${upazila.Others.uflk2WpvPA8}</td><td>${upazila.Others.J3fU1hTZSP9}</td><td>${upazila.Others.sP8cdaNgxY5}</td><td>${upazila.Others.Hz72EVyFSO7}</td><td>${upazila.Others.uflk2WpvPA8}</td><td>${upazila.Others.evq0J1nak9r}</td><td>${upazila.Others.M1MlEMVAUTe}</td><td>${upazila.Others.vxUcPhLwebD}</td><td>${upazila.Others.YORPV5FTzhz}</td><td>${upazila.Others.V7R5enqT3SG}</td><td>${upazila.Others.K5DbzTC9skw}</td><td>${upazila.Others.qEPhMtxqS97}</td></tr>`);
+            total1 = Number(upazila.GoB.DMOXopWJxnd) + Number(upazila.NGO.DMOXopWJxnd) + Number(upazila.Others.DMOXopWJxnd)
+            total2 = Number(upazila.GoB.SLs1YEczE8T) + Number(upazila.NGO.SLs1YEczE8T) + Number(upazila.Others.SLs1YEczE8T)
+            total3 = Number(upazila.GoB.Oz2hoJeEcUL) + Number(upazila.NGO.Oz2hoJeEcUL) + Number(upazila.Others.Oz2hoJeEcUL)
+            total4 = Number(upazila.GoB.Q82ZvESVPnL) + Number(upazila.NGO.Q82ZvESVPnL) + Number(upazila.Others.Q82ZvESVPnL)
+            total5 = Number(upazila.GoB.yQFUy5CYLxz) + Number(upazila.NGO.yQFUy5CYLxz) + Number(upazila.Others.yQFUy5CYLxz)
+            total6 = Number(upazila.GoB.uflk2WpvPA8) + Number(upazila.NGO.uflk2WpvPA8) + Number(upazila.Others.uflk2WpvPA8)
+            total7 = Number(upazila.GoB.J3fU1hTZSP9) + Number(upazila.NGO.J3fU1hTZSP9) + Number(upazila.Others.J3fU1hTZSP9)
+            total8 = Number(upazila.GoB.sP8cdaNgxY5) + Number(upazila.NGO.sP8cdaNgxY5) + Number(upazila.Others.sP8cdaNgxY5)
+            total9 = Number(upazila.GoB.Hz72EVyFSO7) + Number(upazila.NGO.Hz72EVyFSO7) + Number(upazila.Others.Hz72EVyFSO7)
+            total10 = Number(upazila.GoB.uflk2WpvPA8) + Number(upazila.NGO.uflk2WpvPA8) + Number(upazila.Others.uflk2WpvPA8)
+            total11 = Number(upazila.GoB.evq0J1nak9r) + Number(upazila.NGO.evq0J1nak9r) + Number(upazila.Others.evq0J1nak9r)
+            total12 = Number(upazila.GoB.M1MlEMVAUTe) + Number(upazila.NGO.M1MlEMVAUTe) + Number(upazila.Others.M1MlEMVAUTe)
+            total13 = Number(upazila.GoB.vxUcPhLwebD) + Number(upazila.NGO.vxUcPhLwebD) + Number(upazila.Others.vxUcPhLwebD)
+            total14 = Number(upazila.GoB.YORPV5FTzhz) + Number(upazila.NGO.YORPV5FTzhz) + Number(upazila.Others.YORPV5FTzhz)
+            total15 = Number(upazila.GoB.V7R5enqT3SG) + Number(upazila.NGO.V7R5enqT3SG) + Number(upazila.Others.V7R5enqT3SG)
+            total16 = Number(upazila.GoB.K5DbzTC9skw) + Number(upazila.NGO.K5DbzTC9skw) + Number(upazila.Others.K5DbzTC9skw)
+            total17 = Number(upazila.GoB.qEPhMtxqS97) + Number(upazila.NGO.qEPhMtxqS97) + Number(upazila.Others.qEPhMtxqS97)
+            total18 = Number(upazila.GoB.Xq1khGp6ENm) + Number(upazila.NGO.Xq1khGp6ENm) + Number(upazila.Others.Xq1khGp6ENm)
+            total19 = Number(upazila.GoB.ElhoxIoYNhT) + Number(upazila.NGO.ElhoxIoYNhT) + Number(upazila.Others.ElhoxIoYNhT)
+            total20 = Number(upazila.GoB.SIkIsfFVbJJ) + Number(upazila.NGO.SIkIsfFVbJJ) + Number(upazila.Others.SIkIsfFVbJJ)
+            total21 = Number(upazila.GoB.ecjnrI1sIFY) + Number(upazila.NGO.ecjnrI1sIFY) + Number(upazila.Others.ecjnrI1sIFY)
+            total22 = Number(upazila.GoB.p7g5OvQqZXK) + Number(upazila.NGO.p7g5OvQqZXK) + Number(upazila.Others.p7g5OvQqZXK)
+            total23 = Number(upazila.GoB.PyAtjxNlXTw) + Number(upazila.NGO.PyAtjxNlXTw) + Number(upazila.Others.PyAtjxNlXTw)
+            $('#table').find('tbody').append(`<tr class="tot colsData"><td colspan="2">Total</td><td>${total1}</td><td>${total2}</td><td>${total3}</td><td>${total4}</td><td>${total18}</td><td>${total19}</td><td>${total20}</td><td>${total5}</td><td>${total21}</td><td>${total22}</td><td>${total23}</td><td>${total6}</td><td>${total7}</td><td>${total8}</td><td>${total9}</td><td>${total10}</td><td>${total11}</td><td>${total12}</td><td>${total13}</td><td>${total14}</td><td>${total15}</td><td>${total16}</td><td>${total17}</td></tr>`);
+        }
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("table").style.display = "block"
+
+    }
+    function passMultipleData(arr, i) {
+        $('#table').find("tbody").empty()
+        for (let district of arr) {
+            if (district.GoB.DMOXopWJxnd == undefined) {
+                district.GoB.DMOXopWJxnd = ''
+            }
+            if (district.NGO.DMOXopWJxnd == undefined) {
+                district.NGO.DMOXopWJxnd = ''
+            }
+            if (district.Others.DMOXopWJxnd == undefined) {
+                district.Others.DMOXopWJxnd = ''
+            }
+            if (district.GoB.SLs1YEczE8T == undefined) {
+                district.GoB.SLs1YEczE8T = ''
+            } if (district.NGO.SLs1YEczE8T == undefined) {
+                district.NGO.SLs1YEczE8T = ''
+            } if (district.Others.SLs1YEczE8T == undefined) {
+                district.Others.SLs1YEczE8T = ''
+            }
+            if (district.GoB.Oz2hoJeEcUL == undefined) {
+                district.GoB.Oz2hoJeEcUL = ''
+            } if (district.NGO.Oz2hoJeEcUL == undefined) {
+                district.NGO.Oz2hoJeEcUL = ''
+            } if (district.Others.Oz2hoJeEcUL == undefined) {
+                district.Others.Oz2hoJeEcUL = ''
+            }
+            if (district.GoB.Q82ZvESVPnL == undefined) {
+                district.GoB.Q82ZvESVPnL = ''
+            } if (district.NGO.Q82ZvESVPnL == undefined) {
+                district.NGO.Q82ZvESVPnL = ''
+            } if (district.Others.Q82ZvESVPnL == undefined) {
+                district.Others.Q82ZvESVPnL = ''
+            }
+            if (district.GoB.yQFUy5CYLxz == undefined) {
+                district.GoB.yQFUy5CYLxz = ''
+            } if (district.NGO.yQFUy5CYLxz == undefined) {
+                district.NGO.yQFUy5CYLxz = ''
+            } if (district.Others.yQFUy5CYLxz == undefined) {
+                district.Others.yQFUy5CYLxz = ''
+            }
+            if (district.GoB.uflk2WpvPA8 == undefined) {
+                district.GoB.uflk2WpvPA8 = ''
+            } if (district.NGO.uflk2WpvPA8 == undefined) {
+                district.NGO.uflk2WpvPA8 = ''
+            } if (district.Others.uflk2WpvPA8 == undefined) {
+                district.Others.uflk2WpvPA8 = ''
+            }
+            if (district.GoB.J3fU1hTZSP9 == undefined) {
+                district.GoB.J3fU1hTZSP9 = ''
+            } if (district.NGO.J3fU1hTZSP9 == undefined) {
+                district.NGO.J3fU1hTZSP9 = ''
+            } if (district.Others.J3fU1hTZSP9 == undefined) {
+                district.Others.J3fU1hTZSP9 = ''
+            }
+            if (district.GoB.sP8cdaNgxY5 == undefined) {
+                district.GoB.sP8cdaNgxY5 = ''
+            } if (district.NGO.sP8cdaNgxY5 == undefined) {
+                district.NGO.sP8cdaNgxY5 = ''
+            } if (district.Others.sP8cdaNgxY5 == undefined) {
+                district.Others.sP8cdaNgxY5 = ''
+            }
+            if (district.GoB.Hz72EVyFSO7 == undefined) {
+                district.GoB.Hz72EVyFSO7 = ''
+            } if (district.NGO.Hz72EVyFSO7 == undefined) {
+                district.NGO.Hz72EVyFSO7 = ''
+            } if (district.Others.Hz72EVyFSO7 == undefined) {
+                district.Others.Hz72EVyFSO7 = ''
+            }
+            if (district.GoB.uflk2WpvPA8 == undefined) {
+                district.GoB.uflk2WpvPA8 = ''
+            } if (district.NGO.uflk2WpvPA8 == undefined) {
+                district.NGO.uflk2WpvPA8 = ''
+            } if (district.Others.uflk2WpvPA8 == undefined) {
+                district.Others.uflk2WpvPA8 = ''
+            }
+            if (district.GoB.evq0J1nak9r == undefined) {
+                district.GoB.evq0J1nak9r = ''
+            } if (district.NGO.evq0J1nak9r == undefined) {
+                district.NGO.evq0J1nak9r = ''
+            } if (district.Others.evq0J1nak9r == undefined) {
+                district.Others.evq0J1nak9r = ''
+            }
+            if (district.GoB.M1MlEMVAUTe == undefined) {
+                district.GoB.M1MlEMVAUTe = ''
+            } if (district.NGO.M1MlEMVAUTe == undefined) {
+                district.NGO.M1MlEMVAUTe = ''
+            } if (district.Others.M1MlEMVAUTe == undefined) {
+                district.Others.M1MlEMVAUTe = ''
+            }
+            if (district.GoB.vxUcPhLwebD == undefined) {
+                district.GoB.vxUcPhLwebD = ''
+            } if (district.NGO.vxUcPhLwebD == undefined) {
+                district.NGO.vxUcPhLwebD = ''
+            } if (district.Others.vxUcPhLwebD == undefined) {
+                district.Others.vxUcPhLwebD = ''
+            }
+            if (district.GoB.YORPV5FTzhz == undefined) {
+                district.GoB.YORPV5FTzhz = ''
+            } if (district.NGO.YORPV5FTzhz == undefined) {
+                district.NGO.YORPV5FTzhz = ''
+            } if (district.Others.YORPV5FTzhz == undefined) {
+                district.Others.YORPV5FTzhz = ''
+            }
+            if (district.GoB.V7R5enqT3SG == undefined) {
+                district.GoB.V7R5enqT3SG = ''
+            } if (district.NGO.V7R5enqT3SG == undefined) {
+                district.NGO.V7R5enqT3SG = ''
+            } if (district.Others.V7R5enqT3SG == undefined) {
+                district.Others.V7R5enqT3SG = ''
+            }
+            if (district.GoB.K5DbzTC9skw == undefined) {
+                district.GoB.K5DbzTC9skw = ''
+            } if (district.NGO.K5DbzTC9skw == undefined) {
+                district.NGO.K5DbzTC9skw = ''
+            } if (district.Others.K5DbzTC9skw == undefined) {
+                district.Others.K5DbzTC9skw = ''
+            }
+            if (district.GoB.qEPhMtxqS97 == undefined) {
+                district.GoB.qEPhMtxqS97 = ''
+            } if (district.NGO.qEPhMtxqS97 == undefined) {
+                district.NGO.qEPhMtxqS97 = ''
+            } if (district.Others.qEPhMtxqS97 == undefined) {
+                district.Others.qEPhMtxqS97 = ''
+            }
+            if (district.GoB.Xq1khGp6ENm == undefined) {
+                district.GoB.Xq1khGp6ENm = ''
+            } if (district.NGO.Xq1khGp6ENm == undefined) {
+                district.NGO.Xq1khGp6ENm = ''
+            } if (district.Others.Xq1khGp6ENm == undefined) {
+                district.Others.Xq1khGp6ENm = ''
+            }
+            if (district.GoB.ElhoxIoYNhT == undefined) {
+                district.GoB.ElhoxIoYNhT = ''
+            } if (district.NGO.ElhoxIoYNhT == undefined) {
+                district.NGO.ElhoxIoYNhT = ''
+            } if (district.Others.ElhoxIoYNhT == undefined) {
+                district.Others.ElhoxIoYNhT = ''
+            }
+
+            if (district.GoB.SIkIsfFVbJJ == undefined) {
+                district.GoB.SIkIsfFVbJJ = ''
+            } if (district.NGO.SIkIsfFVbJJ == undefined) {
+                district.NGO.SIkIsfFVbJJ = ''
+            } if (district.Others.SIkIsfFVbJJ == undefined) {
+                district.Others.SIkIsfFVbJJ = ''
+            }
+            if (district.GoB.ecjnrI1sIFY == undefined) {
+                district.GoB.ecjnrI1sIFY = ''
+            } if (district.NGO.ecjnrI1sIFY == undefined) {
+                district.NGO.ecjnrI1sIFY = ''
+            } if (district.Others.ecjnrI1sIFY == undefined) {
+                district.Others.ecjnrI1sIFY = ''
+            }
+
+            if (district.GoB.p7g5OvQqZXK == undefined) {
+                district.GoB.p7g5OvQqZXK = ''
+            } if (district.NGO.p7g5OvQqZXK == undefined) {
+                district.NGO.p7g5OvQqZXK = ''
+            } if (district.Others.p7g5OvQqZXK == undefined) {
+                district.Others.p7g5OvQqZXK = ''
+            }
+            if (district.GoB.PyAtjxNlXTw == undefined) {
+                district.GoB.PyAtjxNlXTw = ''
+            } if (district.NGO.PyAtjxNlXTw == undefined) {
+                district.NGO.PyAtjxNlXTw = ''
+            } if (district.Others.PyAtjxNlXTw == undefined) {
+                district.Others.PyAtjxNlXTw = ''
+            }
+            $('#table').find('tbody').append(`<tr class="colsData"><td rowspan="4">${i++}</td><td rowspan="3">${district.name}</td><td>GoB</td><td>${district.GoB.DMOXopWJxnd}</td><td>${district.GoB.SLs1YEczE8T}</td><td>${district.GoB.Oz2hoJeEcUL}</td><td>${district.GoB.Q82ZvESVPnL}</td><td>${district.GoB.Xq1khGp6ENm}</td><td>${district.GoB.ElhoxIoYNhT}</td><td>${district.GoB.SIkIsfFVbJJ}</td><td>${district.GoB.yQFUy5CYLxz}</td><td>${district.GoB.ecjnrI1sIFY}</td><td>${district.GoB.p7g5OvQqZXK}</td><td>${district.GoB.PyAtjxNlXTw}</td><td>${district.GoB.uflk2WpvPA8}</td><td>${district.GoB.J3fU1hTZSP9}</td><td>${district.GoB.sP8cdaNgxY5}</td><td>${district.GoB.Hz72EVyFSO7}</td><td>${district.GoB.uflk2WpvPA8}</td><td>${district.GoB.evq0J1nak9r}</td><td>${district.GoB.M1MlEMVAUTe}</td><td>${district.GoB.vxUcPhLwebD}</td><td>${district.GoB.YORPV5FTzhz}</td><td>${district.GoB.V7R5enqT3SG}</td><td>${district.GoB.K5DbzTC9skw}</td><td>${district.GoB.qEPhMtxqS97}</td></tr>
+            <tr class="colsData"><td>NGO</td><td>${district.NGO.DMOXopWJxnd}</td><td>${district.NGO.SLs1YEczE8T}</td><td>${district.NGO.Oz2hoJeEcUL}</td><td>${district.NGO.Q82ZvESVPnL}</td><td>${district.NGO.Xq1khGp6ENm}</td><td>${district.NGO.ElhoxIoYNhT}</td><td>${district.NGO.SIkIsfFVbJJ}</td><td>${district.NGO.yQFUy5CYLxz}</td><td>${district.NGO.ecjnrI1sIFY}</td><td>${district.NGO.p7g5OvQqZXK}</td><td>${district.NGO.PyAtjxNlXTw}</td><td>${district.NGO.uflk2WpvPA8}</td><td>${district.NGO.J3fU1hTZSP9}</td><td>${district.NGO.sP8cdaNgxY5}</td><td>${district.NGO.Hz72EVyFSO7}</td><td>${district.NGO.uflk2WpvPA8}</td><td>${district.NGO.evq0J1nak9r}</td><td>${district.NGO.M1MlEMVAUTe}</td><td>${district.NGO.vxUcPhLwebD}</td><td>${district.NGO.YORPV5FTzhz}</td><td>${district.NGO.V7R5enqT3SG}</td><td>${district.NGO.K5DbzTC9skw}</td><td>${district.NGO.qEPhMtxqS97}</td></tr>
+            <tr class="colsData"><td>Others</td><td>${district.Others.DMOXopWJxnd}</td><td>${district.Others.SLs1YEczE8T}</td><td>${district.Others.Oz2hoJeEcUL}</td><td>${district.Others.Q82ZvESVPnL}</td><td>${district.Others.Xq1khGp6ENm}</td><td>${district.Others.ElhoxIoYNhT}</td><td>${district.Others.SIkIsfFVbJJ}</td><td>${district.Others.yQFUy5CYLxz}</td><td>${district.Others.ecjnrI1sIFY}</td><td>${district.Others.p7g5OvQqZXK}</td><td>${district.Others.PyAtjxNlXTw}</td><td>${district.Others.uflk2WpvPA8}</td><td>${district.Others.J3fU1hTZSP9}</td><td>${district.Others.sP8cdaNgxY5}</td><td>${district.Others.Hz72EVyFSO7}</td><td>${district.Others.uflk2WpvPA8}</td><td>${district.Others.evq0J1nak9r}</td><td>${district.Others.M1MlEMVAUTe}</td><td>${district.Others.vxUcPhLwebD}</td><td>${district.Others.YORPV5FTzhz}</td><td>${district.Others.V7R5enqT3SG}</td><td>${district.Others.K5DbzTC9skw}</td><td>${district.Others.qEPhMtxqS97}</td></tr>`);
+            total1 = Number(district.GoB.DMOXopWJxnd) + Number(district.NGO.DMOXopWJxnd) + Number(district.Others.DMOXopWJxnd)
+            total2 = Number(district.GoB.SLs1YEczE8T) + Number(district.NGO.SLs1YEczE8T) + Number(district.Others.SLs1YEczE8T)
+            total3 = Number(district.GoB.Oz2hoJeEcUL) + Number(district.NGO.Oz2hoJeEcUL) + Number(district.Others.Oz2hoJeEcUL)
+            total4 = Number(district.GoB.Q82ZvESVPnL) + Number(district.NGO.Q82ZvESVPnL) + Number(district.Others.Q82ZvESVPnL)
+            total5 = Number(district.GoB.yQFUy5CYLxz) + Number(district.NGO.yQFUy5CYLxz) + Number(district.Others.yQFUy5CYLxz)
+            total6 = Number(district.GoB.uflk2WpvPA8) + Number(district.NGO.uflk2WpvPA8) + Number(district.Others.uflk2WpvPA8)
+            total7 = Number(district.GoB.J3fU1hTZSP9) + Number(district.NGO.J3fU1hTZSP9) + Number(district.Others.J3fU1hTZSP9)
+            total8 = Number(district.GoB.sP8cdaNgxY5) + Number(district.NGO.sP8cdaNgxY5) + Number(district.Others.sP8cdaNgxY5)
+            total9 = Number(district.GoB.Hz72EVyFSO7) + Number(district.NGO.Hz72EVyFSO7) + Number(district.Others.Hz72EVyFSO7)
+            total10 = Number(district.GoB.uflk2WpvPA8) + Number(district.NGO.uflk2WpvPA8) + Number(district.Others.uflk2WpvPA8)
+            total11 = Number(district.GoB.evq0J1nak9r) + Number(district.NGO.evq0J1nak9r) + Number(district.Others.evq0J1nak9r)
+            total12 = Number(district.GoB.M1MlEMVAUTe) + Number(district.NGO.M1MlEMVAUTe) + Number(district.Others.M1MlEMVAUTe)
+            total13 = Number(district.GoB.vxUcPhLwebD) + Number(district.NGO.vxUcPhLwebD) + Number(district.Others.vxUcPhLwebD)
+            total14 = Number(district.GoB.YORPV5FTzhz) + Number(district.NGO.YORPV5FTzhz) + Number(district.Others.YORPV5FTzhz)
+            total15 = Number(district.GoB.V7R5enqT3SG) + Number(district.NGO.V7R5enqT3SG) + Number(district.Others.V7R5enqT3SG)
+            total16 = Number(district.GoB.K5DbzTC9skw) + Number(district.NGO.K5DbzTC9skw) + Number(district.Others.K5DbzTC9skw)
+            total17 = Number(district.GoB.qEPhMtxqS97) + Number(district.NGO.qEPhMtxqS97) + Number(district.Others.qEPhMtxqS97)
+            total18 = Number(district.GoB.Xq1khGp6ENm) + Number(district.NGO.Xq1khGp6ENm) + Number(district.Others.Xq1khGp6ENm)
+            total19 = Number(district.GoB.ElhoxIoYNhT) + Number(district.NGO.ElhoxIoYNhT) + Number(district.Others.ElhoxIoYNhT)
+            total20 = Number(district.GoB.SIkIsfFVbJJ) + Number(district.NGO.SIkIsfFVbJJ) + Number(district.Others.SIkIsfFVbJJ)
+            total21 = Number(district.GoB.ecjnrI1sIFY) + Number(district.NGO.ecjnrI1sIFY) + Number(district.Others.ecjnrI1sIFY)
+            total22 = Number(district.GoB.p7g5OvQqZXK) + Number(district.NGO.p7g5OvQqZXK) + Number(district.Others.p7g5OvQqZXK)
+            total23 = Number(district.GoB.PyAtjxNlXTw) + Number(district.NGO.PyAtjxNlXTw) + Number(district.Others.PyAtjxNlXTw)
+
+            $('#table').find('tbody').append(`<tr class="tot colsData"><td colspan="2">Total</td><td>${total1}</td><td>${total2}</td><td>${total3}</td><td>${total4}</td><td>${total18}</td><td>${total19}</td><td>${total20}</td><td>${total5}</td><td>${total21}</td><td>${total22}</td><td>${total23}</td><td>${total6}</td><td>${total7}</td><td>${total8}</td><td>${total9}</td><td>${total10}</td><td>${total11}</td><td>${total12}</td><td>${total13}</td><td>${total14}</td><td>${total15}</td><td>${total16}</td><td>${total17}</td></tr>`);
+        }
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("table").style.display = "block"
+    }
+
+    function fnExcelReport() {
+        var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'>";
+        var textRange; var j = 0;
+        tab = document.getElementById('table');
+
+        for (j = 0; j < tab.rows.length; j++) {
+            tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+        }
+
+        tab_text = tab_text + "</table>";
+        tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");
+        tab_text = tab_text.replace(/<img[^>]*>/gi, "");
+        tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, "");
+
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE ");
+
+        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+            txtArea1.document.open("txt/html", "replace");
+            txtArea1.document.write(tab_text);
+            txtArea1.document.close();
+            txtArea1.focus();
+            sa = txtArea1.document.execCommand("SaveAs", true, "Say Thanks to Sumit.xls");
+        }
+        else
+            sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+
+        return (sa);
+    }
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>

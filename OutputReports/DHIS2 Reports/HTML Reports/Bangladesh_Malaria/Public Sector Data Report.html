@@ -1,0 +1,580 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('state')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+<!-- <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;position:fixed;z-index:1"
+    id="btnExport"
+    onclick="tableToExcel('state', 'Monthly Malaria Disease Specific Report', 'Monthly Malaria Disease Specific Report')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button> -->
+
+<br />
+<div style="width: 50%; margin-left:25%;">
+    <table class="table table-borderless table-striped">
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Report Area: </strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="report-area" onchange="displayRow(this)"></select>
+            </td>
+        </tr>
+        <tr id="selection-district" style="display: none;">
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>District: </strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="report-district"></select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong> Start Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="month" id="start-month">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong> End Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="month" id="end-month">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+
+
+<div id="loader" style="display: none"></div>
+<div id='state' style="visibility: hidden;">
+    <table border="1" class="table table-hover text-center" cellspacing="6" cellpadding="4"
+        style="border-collapse: collapse; text-align: center;">
+        <tr>
+            <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                colspan="24">Service delivery wise Malaria Epidemological Data of public sector, NMEP, Bangladesh</th>
+        </tr>
+        <tr>
+            <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                colspan="24"><span id="period"></span></th>
+        </tr>
+        <tr>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Facility </th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Data Set</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Microscopy done </th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                RDT done </th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Total test done</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Microscopy (+)ve</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Microscopy Pf</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Microscopy Pv</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Microscopy Mixed</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                RDT (+)ve </th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                RDT Pf</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                RDT Pv</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                RDT Mixed</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Total (+)ve</th>
+
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Pf</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Pv</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Mixed</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                Death</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                UM</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                SM</th>
+            <th
+                style="background:#f2f2f2;border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                VM</th>
+        </tr>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    var categoryOrgUnits = {
+        sectors: [
+            {
+                id: "PK4PTbUHRhJ",
+                name: 'Facility'
+            }, {
+
+                id: "ZaSjghyQKTZ",
+                name: 'Health Workers'
+            }, {
+                id: "dRokuVMSJRT",
+                name: 'Community Clinics'
+            }
+        ],
+        district: '',
+        upazila: ''
+    };
+    var orgUnitLength = 0;
+    var orgUnitChildren = [];
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    document.getElementById("state").style.visibility = "hidden";
+
+    fetch('../api/organisationUnitLevels.json?paging=false&fields=[level,id]')
+        .then(response => response.json())
+        .then(response => {
+            orgUnitLength = response.organisationUnitLevels.length;
+        });
+
+    fetch('../api/organisationUnitGroupSets/ntFXU7pFGUm.json?fields=organisationUnitGroups[id,name]&paging=false')
+        .then(response => response.json())
+        .then(response => {
+            var reportAreaOptions = response.organisationUnitGroups.map(ouGroup => `<option>${ouGroup.name}</option>`)
+            document.getElementById('report-area').innerHTML = reportAreaOptions;
+        });
+
+
+    displayRow({ value: 'District' });
+    function displayRow(event) {
+        if (event.value == "District") {
+            document.getElementById('selection-district').style.display = 'none';
+            fetch('../api/organisationUnitGroups/PyK69cVqr5l.json?fields=organisationUnits[id,name]&paging=false')
+                .then(response => response.json())
+                .then(response => {
+                    response.organisationUnits.sort((a, b) => a.name.localeCompare(b.name));
+                    var districtOptions = response.organisationUnits.map(ou => `<option value="${ou.id}">${ou.name}</option>`)
+                    document.getElementById('report-district').innerHTML = districtOptions;
+                    categoryOrgUnits.district = response.organisationUnits;
+                    categoryOrgUnits.upazila = '';
+                });
+        }
+        else if (event.value == "Upazila") {
+            document.getElementById('selection-district').style.display = '';
+            fetch('../api/organisationUnitGroups/XpE4AlQZRkV.json?fields=organisationUnits[id,name]&paging=false')
+                .then(response => response.json())
+                .then(response => {
+                    response.organisationUnits.sort((a, b) => a.name.localeCompare(b.name));
+                    categoryOrgUnits.upazila = response.organisationUnits;
+                    categoryOrgUnits.district = '';
+                });
+        }
+    }
+
+
+    function submitData() {
+        var data = {
+            categoryOrgUnits: categoryOrgUnits,
+            startMonth: document.getElementById('start-month').value,
+            endMonth: document.getElementById('end-month').value,
+        }
+        document.getElementById("state").style.visibility = "hidden";
+        document.getElementById("loader").style.display = "block";
+        if (!data.startMonth || !data.endMonth || new Date(data.startMonth) > new Date(data.endMonth)) {
+            alert("Please Select months correctly!")
+            document.getElementById("loader").style.display = "none";
+            return;
+        }
+        setTimeout(function () {
+            document.getElementById('period').innerHTML = `${(months[(data.startMonth.split('-')[1] - 1)])} ${(data.startMonth.split('-')[0])} to ${(months[(data.endMonth.split('-')[1] - 1)])} ${(data.endMonth.split('-')[0])} `
+            getData(data);
+        }, 1000);
+    }
+
+
+    async function getData(data) {
+
+        var dataElementId = [
+            "DMOXopWJxnd", "SLs1YEczE8T", "Oz2hoJeEcUL", "Q82ZvESVPnL", "Xq1khGp6ENm", "ElhoxIoYNhT", "SIkIsfFVbJJ",
+            "yQFUy5CYLxz", "ecjnrI1sIFY", "p7g5OvQqZXK", "PyAtjxNlXTw", "uflk2WpvPA8", "J3fU1hTZSP9", "sP8cdaNgxY5",
+            "Hz72EVyFSO7", "evq0J1nak9r", "M1MlEMVAUTe", "vxUcPhLwebD", "YORPV5FTzhz"
+        ];
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+            return arr;
+        }
+        data.periods = getBetweenDates(data.startMonth, data.endMonth);
+        var dataValues = {};
+        var grandTotalValues = {};
+        var orgUnits = [];
+        debugger;
+        if (data.categoryOrgUnits.district) orgUnits = data.categoryOrgUnits.district;
+        else if (data.categoryOrgUnits.upazila) {
+            let hasUpazila = {};
+            data.categoryOrgUnits.upazila.forEach(ou => hasUpazila[ou.id] = true);
+            let district = document.getElementById('report-district').value;
+            let url = `../api/organisationUnits/${district}.json?fields=id,name,level,children[id,name`
+            for (let i = 1; i <= orgUnitLength; i++) url += ',children[id,name'
+            for (let i = 1; i <= orgUnitLength; i++) url += ']'
+            url += '&paging=false';
+            let response = await (await fetch(url)).json();
+            treeDown(response)
+
+            orgUnits = orgUnitChildren.filter(ou => {
+                if (hasUpazila[ou.id]) return { ou: ou.id, name: ou.name }
+            })
+            orgUnitChildren = [];
+            debugger;
+
+        }
+        var orgUnitIds = orgUnits.map(ou => ou.id)
+        let response = await (await fetch(`../api/analytics.json?dimension=dx:${dataElementId.join(';')}&dimension=ou:${orgUnitIds.join(';')}&dimension=MUAmfb6atBZ:PK4PTbUHRhJ;ZaSjghyQKTZ;dRokuVMSJRT&filter=BE5zUsROi0Y:fJStXLL6mh9&filter=pe:${data.periods.join(';')}&displayProperty=NAME&paging=false`)).json()
+
+        if (response.rows) {
+            response.rows.forEach(row => {
+                if (!dataValues[row[1]]) dataValues[row[1]] = {};
+                if (!dataValues[row[1]][row[2]]) dataValues[row[1]][row[2]] = {};
+                if (!grandTotalValues[row[2]]) grandTotalValues[row[2]] = {}
+
+                dataValues[row[1]][row[2]][row[0]] = row[3];
+
+                if (!grandTotalValues[row[2]][row[0]]) grandTotalValues[row[2]][row[0]] = Number(row[3]);
+                else grandTotalValues[row[2]][row[0]] += Number(row[3]);
+            });
+        }
+        console.log(dataValues)
+        var tableRow = "";
+        var totalValues = [];
+        orgUnits.forEach((ou, index) => {
+            tableRow += `<tr><td rowspan="4" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${ou.name}</td>`;
+            data.categoryOrgUnits.sectors.forEach((co, index) => {
+                if (index == 0) tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+                else tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+                dataElementId.forEach((de, ids) => {
+                    let value = dataValues[ou.id] && dataValues[ou.id][co.id] && dataValues[ou.id][co.id][de] ? Number(dataValues[ou.id][co.id][de]) : '';
+
+                    if (!totalValues[ids]) totalValues[ids] = Number(value);
+                    else totalValues[ids] += Number(value);
+
+                    tableRow += `<td style="border:1px solid black; text-align:left;font-weight:600;">${value}</td>`;
+                })
+                tableRow += `</tr>`;
+            })
+
+            tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">Total</td>`;
+            totalValues.forEach((value, index) => {
+                tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${Number(value)}</td>`;
+                totalValues[index] = 0;
+            })
+            tableRow += `</tr>`;
+        })
+
+        //Grand Total
+        tableRow += `<tr><td rowspan="4" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">Grand total</td>`;
+        data.categoryOrgUnits.sectors.forEach((co, index) => {
+            if (index == 0) tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+            else tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+            dataElementId.forEach((de, ids) => {
+                let value = grandTotalValues[co.id] && grandTotalValues[co.id][de] ? Number(grandTotalValues[co.id][de]) : 0;
+                
+                if (!totalValues[ids]) totalValues[ids] = Number(value);
+                else totalValues[ids] += Number(value);
+
+                tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${value}</td>`;
+                if(!grandTotalValues[co.id]) grandTotalValues[co.id] = {};
+                else grandTotalValues[co.id][de] = 0;
+            })
+            tableRow += `</tr>`;
+        })
+
+        tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">Total</td>`;
+        totalValues.forEach((value, index) => {
+            tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${Number(value)}</td>`;
+            totalValues[index] = 0;
+        })
+        tableRow += `</tr>`;
+
+        if(document.getElementById('report-area').value == 'District') {
+            var ouIds = {};
+        //3 CHT districts total
+        var orgUnitCHT = [{ name: 'Rangamati District', id: 'jZ8dlmuMZtf' }, { id: 'E1ZfA4shh10', name: 'Khagrachhari District' }, { name: 'Bandarban District', id: 'kIigufR2pxZ' }];
+        orgUnitCHT.forEach(ou => {
+            data.categoryOrgUnits.sectors.forEach((co, index) => {
+                dataElementId.forEach((de, ids) => {
+                    grandTotalValues[co.id][de]  += dataValues[ou.id] && dataValues[ou.id][co.id] && dataValues[ou.id][co.id][de] ? Number(dataValues[ou.id][co.id][de]) : 0;
+                })
+            })
+        })
+        tableRow += `<tr><td rowspan="4" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">3 CHT districts total</td>`;
+        data.categoryOrgUnits.sectors.forEach((co, index) => {
+            if (index == 0) tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+            else tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+            dataElementId.forEach((de, ids) => {
+                let value = grandTotalValues[co.id] && grandTotalValues[co.id][de] ? Number(grandTotalValues[co.id][de]) : 0;
+
+                if (!totalValues[ids]) totalValues[ids] = Number(value);
+                else totalValues[ids] += Number(value);
+
+                tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${value}</td>`;
+                if(!grandTotalValues[co.id]) grandTotalValues[co.id] = {};
+                else grandTotalValues[co.id][de] = 0;
+            })
+            tableRow += `</tr>`;
+        })
+
+        tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">Total</td>`;
+        totalValues.forEach((value, index) => {
+            tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${Number(value)}</td>`;
+            totalValues[index] = 0;
+        })
+        tableRow += `</tr>`;
+
+        //10 other endemic districts total
+        var orgUnitEndemic = [{id: 'M4azdi9vz14',name: 'Chattogram District'},{id: 'Wmrde4309dn',name: 'Sunamganj District'},{id: 'SJhtJq6WthC',name: 'Coxs Bazar District'},{id: 'ZgN5uKtBudP',name: 'Sylhet District'},{id: 'uUiWLZJ0KzP',name: 'Habiganj District'},{id: 'UWtSL9W0Vpi',name: 'Kurigram District'},{id: 'fMlyvi84MY6',name: 'Mymensingh District'},{id: 'adV5bZoWv7l',name: 'Netrokona District'},{id: 'NlNXKUQwbVf',name: 'Sherpur District'},{id: 'RlmeN98ytOK',name: 'Maulavi Bazar District'}];
+        orgUnitEndemic.forEach(ou => {
+            data.categoryOrgUnits.sectors.forEach((co, index) => {
+                dataElementId.forEach((de, ids) => {
+                    grandTotalValues[co.id][de]  += dataValues[ou.id] && dataValues[ou.id][co.id] && dataValues[ou.id][co.id][de] ? Number(dataValues[ou.id][co.id][de]) : 0;
+                })
+            })
+        })
+        tableRow += `<tr><td rowspan="4" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">10 other endemic districts total</td>`;
+        data.categoryOrgUnits.sectors.forEach((co, index) => {
+            if (index == 0) tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+            else tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+            dataElementId.forEach((de, ids) => {
+                let value = grandTotalValues[co.id] && grandTotalValues[co.id][de] ? Number(grandTotalValues[co.id][de]) : 0;
+
+                if (!totalValues[ids]) totalValues[ids] = Number(value);
+                else totalValues[ids] += Number(value);
+
+                tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${value}</td>`;
+                if(!grandTotalValues[co.id]) grandTotalValues[co.id] = {};
+                else grandTotalValues[co.id][de] = 0;
+            })
+            tableRow += `</tr>`;
+        })
+
+        tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">Total</td>`;
+        totalValues.forEach((value, index) => {
+            tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${Number(value)}</td>`;
+            totalValues[index] = 0;
+        })
+        tableRow += `</tr>`;
+        //Other districts total
+        orgUnitCHT.forEach(ou => ouIds[ou.id] = true);
+        orgUnitEndemic.forEach(ou => ouIds[ou.id] = true);
+
+        var otherDistrict = orgUnits.filter(ou => {
+            if(ouIds[ou.id]) return;
+            return ou;
+        });
+
+        otherDistrict.forEach(ou => {
+            data.categoryOrgUnits.sectors.forEach((co, index) => {
+                dataElementId.forEach((de, ids) => {
+                    grandTotalValues[co.id][de]  += dataValues[ou.id] && dataValues[ou.id][co.id] && dataValues[ou.id][co.id][de] ? Number(dataValues[ou.id][co.id][de]) : 0;
+                })
+            })
+        })
+        tableRow += `<tr><td rowspan="4" style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">Other districts total</td>`;
+        data.categoryOrgUnits.sectors.forEach((co, index) => {
+            if (index == 0) tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+            else tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${co.name}</td>`;
+            dataElementId.forEach((de, ids) => {
+                let value = grandTotalValues[co.id] && grandTotalValues[co.id][de] ? Number(grandTotalValues[co.id][de]) : 0;
+
+                if (!totalValues[ids]) totalValues[ids] = Number(value);
+                else totalValues[ids] += Number(value);
+
+                tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${value}</td>`;
+                if(!grandTotalValues[co.id]) grandTotalValues[co.id] = {};
+                else grandTotalValues[co.id][de] = 0;
+            })
+            tableRow += `</tr>`;
+        })
+
+        tableRow += `<tr><td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">Total</td>`;
+        totalValues.forEach((value, index) => {
+            tableRow += `<td style="background:#f2f2f2;border:1px solid black; text-align:left;font-weight:600;">${Number(value)}</td>`;
+            totalValues[index] = 0;
+        })
+        tableRow += `</tr>`;
+
+        }        
+        
+        document.getElementById("tableBody").innerHTML = tableRow;
+        document.getElementById("state").style.visibility = "visible";
+        document.getElementById("loader").style.display = "none";
+
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            debugger
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+    function treeDown(arr, color) {
+        var key = arr;
+        if (key.children) {
+            key.children.sort((a, b) => a.name.localeCompare(b.name))
+            for (let i = 0; i < key.children.length; i++) treeDown(key.children[i]);
+        }
+        orgUnitChildren.push({ id: key.id, name: key.name });
+    }
+
+</script>

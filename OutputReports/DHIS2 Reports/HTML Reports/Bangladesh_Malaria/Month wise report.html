@@ -1,0 +1,623 @@
+<style type="text/css">
+    thead tr.headLv1 {
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1.5px;
+        color: white;
+        height: 40px;
+    }
+
+    thead tr.headLv2 {
+        font-weight: bold;
+        text-align: center;
+        height: 40px;
+    }
+
+    #table1 tbody tr td {
+        text-align: center;
+        padding-left: 1px;
+        padding-right: 1px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        color: black;
+    }
+
+    .green1 {
+        background-color:rgb(39, 102, 150);
+        color: white;
+    }
+
+    .green2 {
+        background-color:rgb(39, 102, 150);
+        color: white;
+    }
+
+    .bg2 {
+        background-color: rgb(39, 102, 150);
+        color: white;
+    }
+
+    .box {
+        border-radius: 25px;
+        border: 2px solid #2162ad;
+        width: 800px;
+        height: 200px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .tot {
+        font-weight: bold;
+    }
+
+    .colsData {
+        text-align: center;
+    }
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 75%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #0a4e8e;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+</style>
+<div style="padding-left: 200px;">
+    <div class="box">
+        <table class="table table-borderless table-striped">
+            <thead>
+                <h3>MONTHLY REPORTS</h3>
+            </thead>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="text-align: left;"><strong> Select Report : <span style="color: red;">*</span></strong></td>
+                <td><select id="selectedReport" onchange="onSelectedReport()" class="form-control">
+                        <option selected hidden> Please Select Report </option>
+                        <option>Month Wise District Level Summary Report</option>
+                        <option>Month Wise Upazila Level Summary Report</option>
+                    </select></td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;" id="districtDiv">
+                <td style="text-align: left; padding: 10px;">
+                    <strong>District : <span style="color: red;">*</span></strong>
+                </td>
+                <td style="text-align: left;"><select id="district" class="form-control"
+                        onchange="onSelectedDistrict()">
+                        <option hidden selected> Please Select District :</option>
+                    </select></td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="text-align: left;">
+                    <strong>Year :<span style="color: red;">*</span> </strong>
+                </td>
+                <td style="text-align: left;">
+                    <select id="selectedYear" class="form-control">
+                        <option selected hidden>Please select Year</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="10" style="text-align: center; height: 50px;">
+                    <button onClick="onGenerateReport()"
+                        style="height: 35px; margin-left: 180px; border-radius: 6px; background-color: #0275d8; border-color: #0275d8;color: white;"><strong>Generate Report</strong> </button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+
+
+<br />
+<div id="loader" style="display: none"></div>
+<div>
+    <button type="button" id="print" style="height: 40px; font-weight: bold; padding: 10px; border-radius: 6px; background-color: #0275d8; color: white; border-color: #0275d8;;"
+    onclick="printContent('content')"> &nbsp;
+    Print
+   </button>
+</div>
+
+
+<br />
+<div id="content">
+    <table border="1"  class="table" cellspacing="0" id="table" style="width: 100%;" >
+        <thead>
+            <tr class="headLv1" style="background-color: rgb(8, 162, 201);">
+                <td colspan="16"><span id="header"></span></td>
+            </tr>
+            <tr class="headLv2" style="background-color: skyblue;">
+                <td   colspan="3">Year </td>
+                <td colspan="13"><span id="selectYear"></span></td>
+            </tr>
+            <tr class="headLv2" style="background-color: rgb(163, 219, 241);">
+                <td  >SN</td>
+                <td   colspan="2">Org Units </td>
+                <td  >Jan</td>
+                <td  >Feb</td>
+                <td  >Mar</td>
+                <td  >Apr </td>
+                <td  >May </td>
+                <td  >June</td>
+                <td  >July</td>
+                <td  >Aug</td>
+                <td  >Sep</td>
+                <td  >Oct</td>
+                <td  >Nov</td>
+                <td  >Dec</td>
+                <td  >Total</td>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+
+var cht= ["jZ8dlmuMZtf","E1ZfA4shh10", "kIigufR2pxZ"];
+var other =["M4azdi9vz14","Wmrde4309dn","SJhtJq6WthC","ZgN5uKtBudP","uUiWLZJ0KzP","UWtSL9W0Vpi","fMlyvi84MY6","adV5bZoWv7l","NlNXKUQwbVf","RlmeN98ytOK"];
+var Others = ["a9BoGnQ5WSk","ldBlsRqxlSm","HgO6ATQG60V","rUKRMOq3URy","XGJHrgJ8ykh","wkFPxX6l11i","WSSiFQl17qU","QJeXbGHbm8C","GctvKH9az5O","WNCBZLbFD70","XhdKah2EbJL","VYD709lJrbq","h7DJenpQSge","ydIDZczz2NH","zfHjfIlQtiV","LQzQyYZs9bQ","mKn5NrbGLGb","QeUmt4wMJMD","bBuf1XpP30n","fkWy1DlGBr1","L1qBCPMDHvs","L2doe2jZqfw","Xou8RA7C6Q0","deMzy4wfdQp","Gl0i4WfYY4n","uOU0jtyD1PZ","HydVaiJB2HB","HbfaPXJoy6n","bEiL5HnmKZO","aLbPgj33QnT","uQ5mEw4iqG0","Z3YombS0Cdj","saWQr5gSYwW","wrWeJ5hrTtt","UYr0nhecZoI","TNnUjBNDA2I","FnkjxiotvId","AQhghrwSLED","SBXgCz8a1mJ","KPfHsGzvbVW","lhGA8GSCWgJ","TCRkIkZxBRU","ADgCqo7XEdN","tvU7upQVfxZ","s6ILNzEtAYL","ZPSkGVNsXUH","KJP55rCyV09","xNcsJeRMUCM","gsPQsMB74aW","EdOWA8sKh2p","f08h9fc6BBC"]
+    let dataElements =['01','02','03','04','05','06','07','08','09','10','11','12']
+    let Year = new Date().getFullYear()
+    for(let i=0; i<10; i++){
+        document.getElementById("selectedYear").innerHTML += "<option>" + Year + "</option>"
+        --Year;
+    }
+    $("#districtDiv").hide()
+    document.getElementById("table").style.visibility = "hidden"
+    document.getElementById("print").style.display = "none"
+    var obj = {}
+    $.when($.get("../api/29/organisationUnitGroups/PyK69cVqr5l.json?fields=organisationUnits[name,id]"),
+    ).done(function (res) {
+        res.organisationUnits.map(element => {
+            for (let de of dataElements) {
+                element['Oz2hoJeEcUL'+de] = ''
+                element['uflk2WpvPA8'+de]=''
+            }
+            return element
+        })
+        function compare(a, b) {
+                if (a.name < b.name) {
+                    return -1;
+                }
+                if (a.name > b.name) {
+                    return 1;
+                }
+                return 0;
+            }
+        res.organisationUnits.sort(compare);
+        obj["districts"] = res.organisationUnits
+    })
+    $.when($.get("../api/29/organisationUnitGroups/XpE4AlQZRkV.json?fields=organisationUnits[name,id]"),
+    ).done(function (res) {  
+        res.organisationUnits.map(element => {
+            for (let de of dataElements) {
+                element['Oz2hoJeEcUL'+de] = ''
+                element['uflk2WpvPA8'+de]=''
+            }
+            return element
+        })
+
+        function compare(a, b) {
+                if (a.name < b.name) {
+                    return -1;
+                }
+                if (a.name > b.name) {
+                    return 1;
+                }
+                return 0;
+            }
+        res.organisationUnits.sort(compare);
+        obj["upazilas"] = res.organisationUnits
+    })
+
+    function onSelectedReport() {
+        let selectedOpt = document.getElementById("selectedReport").value
+        if (selectedOpt == "Month Wise Upazila Level Summary Report") {
+            for (let district of obj.districts) {
+                document.getElementById("district").innerHTML += "<option>" + district.name + "</option>"
+            }
+            $("#districtDiv").show()
+
+        } else {
+            $("#districtDiv").hide()
+        }
+    }
+    function onSelectedDistrict() {
+        let ou = obj.districts.find(ou => ou.name == document.getElementById("district").value)
+        obj["selectedDistrict"] = ou.id
+    }
+    function onGenerateReport() {
+        let selectedYear = document.getElementById("selectedYear").value
+        if (selectedYear == 'Please select Year') {
+            alert("Please Select Year!")
+        } else {
+            document.getElementById("selectYear").innerHTML = selectedYear
+           var period = dataElements.map(ele=> selectedYear.concat(ele)) 
+            document.getElementById("print").style.display = "block"
+            let selectedOpt = document.getElementById("selectedReport").value
+            document.getElementById("header").innerHTML = selectedOpt
+            var i = 1
+            if (selectedOpt == "Month Wise District Level Summary Report") {
+                document.getElementById("loader").style.display = "block";
+                $.when($.get("../api/29/analytics.json?dimension=pe:"+period.join(";")+"&dimension=ou:dNLjKwsVjod;OU_GROUP-PyK69cVqr5l&dimension=dx:Oz2hoJeEcUL;uflk2WpvPA8&displayProperty=NAME&outputIdScheme=UID"),
+                ).done(function (res) {
+                    for (let district of obj.districts) {
+                        for(let p of period){
+                            for(let data of res.rows){
+                                if(district.id == data[2] && p == data[1] && data[0]=="Oz2hoJeEcUL"){
+                                    district['Oz2hoJeEcUL'+p.slice(4,6)]= Number(data[3])
+                                }
+                                if(district.id == data[2] && p == data[1] && data[0]=="uflk2WpvPA8"){
+                                    district['uflk2WpvPA8'+p.slice(4,6)]= Number(data[3])
+
+                                }
+
+                            }
+                        }
+                    }
+                })
+                setTimeout(()=>{
+                    generateDistrictWiseReport(obj.districts,i)
+                },1000)
+               }
+            if (selectedOpt == "Month Wise Upazila Level Summary Report") {
+                document.getElementById("loader").style.display = "block";
+                $.when($.get("../api/29/analytics.json?dimension=pe:"+period.join(";")+"&dimension=ou:OU_GROUP-XpE4AlQZRkV;"+obj.selectedDistrict+"&dimension=dx:Oz2hoJeEcUL;uflk2WpvPA8&displayProperty=NAME&outputIdScheme=UID"),
+                ).done(function (res) {
+                    let districtUpazila = res.metaData.dimensions.ou.map(ele => {
+                        for (let data of obj.upazilas) {
+                            if (ele == data.id) {
+                                return data
+                            }
+                        }
+                    })
+                    obj["upazila"] = districtUpazila
+                   for(let upazila of obj.upazila){
+                       for(let p of period){
+                        for(let data of res.rows){
+                            if(upazila.id == data[2] && p == data[1] && data[0]=="Oz2hoJeEcUL"){
+                              upazila['Oz2hoJeEcUL'+p.slice(4,6)]= Number(data[3])
+                             }
+                             if(upazila.id == data[2] && p == data[1] && data[0]=="uflk2WpvPA8"){
+                             upazila['uflk2WpvPA8'+p.slice(4,6)]= Number(data[3])
+                           }
+                         }
+                       }
+                   }
+                }) 
+                setTimeout(()=>{
+                    generateUpazilaWiseReport(obj.upazila,i)
+                },1000)
+            }
+            
+        }  
+    }
+
+  function generateUpazilaWiseReport(arr, i){
+       let total1t=0,total2t=0,total3t=0,total4t=0,total5t=0,total6t=0,total7t=0,total8t=0,total9t=0,total10t=0,total11t=0,total12t=0;
+       let total1c=0,total2c=0,total3c=0,total4c=0,total5c=0,total6c=0,total7c=0,total8c=0,total9c=0,total10c=0,total11c=0,total12c=0;
+        $('#table').find("tbody").empty()
+            for (let district of arr) {  
+                    let tt =0, tc=0;
+                    if(district.Oz2hoJeEcUL01){
+                        tt+=Number(district.Oz2hoJeEcUL01)
+                    } 
+                    if(district.Oz2hoJeEcUL02){
+                        tt+=Number(district.Oz2hoJeEcUL02)
+                    } 
+                    if(district.Oz2hoJeEcUL03){
+                        tt+=Number(district.Oz2hoJeEcUL03)
+                    } 
+                    if(district.Oz2hoJeEcUL04){
+                        tt+=Number(district.Oz2hoJeEcUL04)
+                    } 
+                    if(district.Oz2hoJeEcUL05){
+                        tt+=Number(district.Oz2hoJeEcUL05)
+                    } 
+                    if(district.Oz2hoJeEcUL06){
+                        tt+=Number(district.Oz2hoJeEcUL06)
+                    } 
+                    if(district.Oz2hoJeEcUL07){
+                        tt+=Number(district.Oz2hoJeEcUL07)
+                    } 
+                    if(district.Oz2hoJeEcUL08){
+                        tt+=Number(district.Oz2hoJeEcUL08)
+                    } 
+                    if(district.Oz2hoJeEcUL09){
+                        tt+=Number(district.Oz2hoJeEcUL09)
+                    }
+                     if(district.Oz2hoJeEcUL10){
+                        tt+=Number(district.Oz2hoJeEcUL10)
+                    } 
+                    if(district.Oz2hoJeEcUL11){
+                        tt+=Number(district.Oz2hoJeEcUL11)
+                    } 
+                    if(district.Oz2hoJeEcUL12){
+                        tt+=Number(district.Oz2hoJeEcUL12)
+                    }
+                    if(district.uflk2WpvPA801){
+                        tc+=Number(district.uflk2WpvPA801)
+                    }
+                    if(district.uflk2WpvPA802){
+                        tc+=Number(district.uflk2WpvPA802)
+                    } if(district.uflk2WpvPA803){
+                        tc+=Number(district.uflk2WpvPA803)
+                    } if(district.uflk2WpvPA804){
+                        tc+=Number(district.uflk2WpvPA804)
+                    } if(district.uflk2WpvPA805){
+                        tc+=Number(district.uflk2WpvPA805)
+                    } if(district.uflk2WpvPA806){
+                        tc+=Number(district.uflk2WpvPA806)
+                    } if(district.uflk2WpvPA807){
+                        tc+=Number(district.uflk2WpvPA807)
+                    } if(district.uflk2WpvPA808){
+                        tc+=Number(district.uflk2WpvPA808)
+                    } if(district.uflk2WpvPA809){
+                        tc+=Number(district.uflk2WpvPA809)
+                    } if(district.uflk2WpvPA810){
+                        tc+=Number(district.uflk2WpvPA810)
+                    } if(district.uflk2WpvPA811){
+                        tc+=Number(district.uflk2WpvPA811)
+                    } if(district.uflk2WpvPA812){
+                        tc+=Number(district.uflk2WpvPA812)
+                    }
+                   $('#table').find('tbody').append(`<tr class="colsData"><td rowspan="2">${i++}</td><td rowspan="2">${district.name}</td><td>Total Tests</td><td>${district.Oz2hoJeEcUL01}</td><td>${district.Oz2hoJeEcUL02}</td><td>${district.Oz2hoJeEcUL03}</td><td>${district.Oz2hoJeEcUL04}</td><td>${district.Oz2hoJeEcUL05}</td><td>${district.Oz2hoJeEcUL06}</td><td>${district.Oz2hoJeEcUL07}</td><td>${district.Oz2hoJeEcUL08}</td><td>${district.Oz2hoJeEcUL09}</td><td>${district.Oz2hoJeEcUL10}</td><td>${district.Oz2hoJeEcUL11}</td><td>${district.Oz2hoJeEcUL12}</td><td class="tot">${tt}</td></tr>
+                     <tr class="colsData"><td>Total cases</td><td>${district.uflk2WpvPA801}</td><td>${district.uflk2WpvPA802}</td><td>${district.uflk2WpvPA803}</td><td>${district.uflk2WpvPA804}</td><td>${district.uflk2WpvPA805}</td><td>${district.uflk2WpvPA806}</td><td>${district.uflk2WpvPA807}</td><td>${district.uflk2WpvPA808}</td><td>${district.uflk2WpvPA809}</td><td>${district.uflk2WpvPA810}</td><td>${district.uflk2WpvPA811}</td><td>${district.uflk2WpvPA812}</td><td class="tot">${tc}</td></tr>`);
+                    tt=0, tc=0;
+                     total1t += Number(district.Oz2hoJeEcUL01)
+                     total2t += Number(district.Oz2hoJeEcUL02)
+                     total3t += Number(district.Oz2hoJeEcUL03)
+                     total4t += Number(district.Oz2hoJeEcUL04)
+                     total5t += Number(district.Oz2hoJeEcUL05)
+                     total6t += Number(district.Oz2hoJeEcUL06)
+                     total7t += Number(district.Oz2hoJeEcUL07)
+                     total8t += Number(district.Oz2hoJeEcUL08)
+                     total9t += Number(district.Oz2hoJeEcUL09)
+                     total10t += Number(district.Oz2hoJeEcUL10)
+                     total11t += Number(district.Oz2hoJeEcUL11)
+                     total12t += Number(district.Oz2hoJeEcUL12)
+        
+                     total1c += Number(district.uflk2WpvPA801)
+                     total2c += Number(district.uflk2WpvPA802)
+                     total3c += Number(district.uflk2WpvPA803)
+                     total4c += Number(district.uflk2WpvPA804)
+                     total5c += Number(district.uflk2WpvPA805)
+                     total6c += Number(district.uflk2WpvPA806)
+                     total7c += Number(district.uflk2WpvPA807)
+                     total8c += Number(district.uflk2WpvPA808)
+                     total9c += Number(district.uflk2WpvPA809)
+                     total10c +=Number(district.uflk2WpvPA810)
+                     total11c +=Number(district.uflk2WpvPA811)
+                     total12c +=Number(district.uflk2WpvPA812)
+                    }
+                    $('#table').find('tbody').append(`<tr class="colsData tot"><td  colspan="2" rowspan="2">Grand Total</td><td>Total Tests</td><td>${total1t}</td><td>${total2t}</td><td>${total3t}</td><td>${total4t}</td><td>${total5t}</td><td>${total6t}</td><td>${total7t}</td><td>${total8t}</td><td>${total9t}</td><td>${total10t}</td><td>${total11t}</td><td>${total12t}</td><td>0</td></tr>
+                     <tr class="colsData tot"><td>Total cases</td><td>${total1c}</td><td>${total2c}</td><td>${total3c}</td><td>${total4c}</td><td>${total5c}</td><td>${total6c}</td><td>${total7c}</td><td>${total8c}</td><td>${total9c}</td><td>${total10c}</td><td>${total11c}</td><td>${total12c}</td><td>0</td></tr>`);
+                document.getElementById("table").style.visibility = "visible"
+                document.getElementById("loader").style.display = "none";
+            }
+
+   function generateDistrictWiseReport(arr, i){
+       let  val = cht.map(ele =>{
+           for(let a of arr){
+            if(ele == a.id ){
+             return a
+            }
+           }
+       })
+       let  other10 = other.map(ele =>{
+           for(let a of arr){
+            if(ele == a.id ){
+             return a
+            }
+           }
+       })
+       let  Othersdis = Others.map(ele =>{
+           for(let a of arr){
+            if(ele == a.id ){
+             return a
+            }
+           }
+       })
+       let chtObj ={}
+       let OtherObj={}
+       let OObj ={}
+       let IDs = Object.keys(val[0]).filter(e => e !=="id" && e !=="name")
+         for(let id of IDs){
+             chtObj[id] =0;
+             OtherObj[id] =0;
+             OObj[id] =0;
+         }
+       let total1t=0,total2t=0,total3t=0,total4t=0,total5t=0,total6t=0,total7t=0,total8t=0,total9t=0,total10t=0,total11t=0,total12t=0;
+       let total1c=0,total2c=0,total3c=0,total4c=0,total5c=0,total6c=0,total7c=0,total8c=0,total9c=0,total10c=0,total11c=0,total12c=0;
+       for(let pro in chtObj){
+           for(let v of val){
+              chtObj[pro] +=Number(v[pro])
+           }
+       }
+       for(let pro in OtherObj){
+           for(let v of other10){
+              OtherObj[pro] +=Number(v[pro])
+           }
+       }
+       for(let pro in OObj){
+           for(let v of Othersdis){
+              OObj[pro] +=Number(v[pro])
+           }
+       }
+        $('#table').find("tbody").empty()
+            for (let district of arr) {  
+                    let tt =0, tc=0;
+                    if(district.Oz2hoJeEcUL01){
+                        tt+=Number(district.Oz2hoJeEcUL01)
+                    } 
+                    if(district.Oz2hoJeEcUL02){
+                        tt+=Number(district.Oz2hoJeEcUL02)
+                    } 
+                    if(district.Oz2hoJeEcUL03){
+                        tt+=Number(district.Oz2hoJeEcUL03)
+                    } 
+                    if(district.Oz2hoJeEcUL04){
+                        tt+=Number(district.Oz2hoJeEcUL04)
+                    } 
+                    if(district.Oz2hoJeEcUL05){
+                        tt+=Number(district.Oz2hoJeEcUL05)
+                    } 
+                    if(district.Oz2hoJeEcUL06){
+                        tt+=Number(district.Oz2hoJeEcUL06)
+                    } 
+                    if(district.Oz2hoJeEcUL07){
+                        tt+=Number(district.Oz2hoJeEcUL07)
+                    } 
+                    if(district.Oz2hoJeEcUL08){
+                        tt+=Number(district.Oz2hoJeEcUL08)
+                    } 
+                    if(district.Oz2hoJeEcUL09){
+                        tt+=Number(district.Oz2hoJeEcUL09)
+                    }
+                     if(district.Oz2hoJeEcUL10){
+                        tt+=Number(district.Oz2hoJeEcUL10)
+                    } 
+                    if(district.Oz2hoJeEcUL11){
+                        tt+=Number(district.Oz2hoJeEcUL11)
+                    } 
+                    if(district.Oz2hoJeEcUL12){
+                        tt+=Number(district.Oz2hoJeEcUL12)
+                    }
+                    if(district.uflk2WpvPA801){
+                        tc+=Number(district.uflk2WpvPA801)
+                    }
+                    if(district.uflk2WpvPA802){
+                        tc+=Number(district.uflk2WpvPA802)
+                    } if(district.uflk2WpvPA803){
+                        tc+=Number(district.uflk2WpvPA803)
+                    } if(district.uflk2WpvPA804){
+                        tc+=Number(district.uflk2WpvPA804)
+                    } if(district.uflk2WpvPA805){
+                        tc+=Number(district.uflk2WpvPA805)
+                    } if(district.uflk2WpvPA806){
+                        tc+=Number(district.uflk2WpvPA806)
+                    } if(district.uflk2WpvPA807){
+                        tc+=Number(district.uflk2WpvPA807)
+                    } if(district.uflk2WpvPA808){
+                        tc+=Number(district.uflk2WpvPA808)
+                    } if(district.uflk2WpvPA809){
+                        tc+=Number(district.uflk2WpvPA809)
+                    } if(district.uflk2WpvPA810){
+                        tc+=Number(district.uflk2WpvPA810)
+                    } if(district.uflk2WpvPA811){
+                        tc+=Number(district.uflk2WpvPA811)
+                    } if(district.uflk2WpvPA812){
+                        tc+=Number(district.uflk2WpvPA812)
+                    }
+                   $('#table').find('tbody').append(`<tr class="colsData"><td rowspan="2">${i++}</td><td rowspan="2">${district.name}</td><td>Total Tests</td><td>${district.Oz2hoJeEcUL01}</td><td>${district.Oz2hoJeEcUL02}</td><td>${district.Oz2hoJeEcUL03}</td><td>${district.Oz2hoJeEcUL04}</td><td>${district.Oz2hoJeEcUL05}</td><td>${district.Oz2hoJeEcUL06}</td><td>${district.Oz2hoJeEcUL07}</td><td>${district.Oz2hoJeEcUL08}</td><td>${district.Oz2hoJeEcUL09}</td><td>${district.Oz2hoJeEcUL10}</td><td>${district.Oz2hoJeEcUL11}</td><td>${district.Oz2hoJeEcUL12}</td><td class="tot">${tt}</td></tr>
+                     <tr class="colsData"><td>Total cases</td><td>${district.uflk2WpvPA801}</td><td>${district.uflk2WpvPA802}</td><td>${district.uflk2WpvPA803}</td><td>${district.uflk2WpvPA804}</td><td>${district.uflk2WpvPA805}</td><td>${district.uflk2WpvPA806}</td><td>${district.uflk2WpvPA807}</td><td>${district.uflk2WpvPA808}</td><td>${district.uflk2WpvPA809}</td><td>${district.uflk2WpvPA810}</td><td>${district.uflk2WpvPA811}</td><td>${district.uflk2WpvPA812}</td><td class="tot">${tc}</td></tr>`);
+                    tt=0, tc=0;
+                     total1t += Number(district.Oz2hoJeEcUL01)
+                     total2t += Number(district.Oz2hoJeEcUL02)
+                     total3t += Number(district.Oz2hoJeEcUL03)
+                     total4t += Number(district.Oz2hoJeEcUL04)
+                     total5t += Number(district.Oz2hoJeEcUL05)
+                     total6t += Number(district.Oz2hoJeEcUL06)
+                     total7t += Number(district.Oz2hoJeEcUL07)
+                     total8t += Number(district.Oz2hoJeEcUL08)
+                     total9t += Number(district.Oz2hoJeEcUL09)
+                     total10t += Number(district.Oz2hoJeEcUL10)
+                     total11t += Number(district.Oz2hoJeEcUL11)
+                     total12t += Number(district.Oz2hoJeEcUL12)
+        
+                     total1c += Number(district.uflk2WpvPA801)
+                     total2c += Number(district.uflk2WpvPA802)
+                     total3c += Number(district.uflk2WpvPA803)
+                     total4c += Number(district.uflk2WpvPA804)
+                     total5c += Number(district.uflk2WpvPA805)
+                     total6c += Number(district.uflk2WpvPA806)
+                     total7c += Number(district.uflk2WpvPA807)
+                     total8c += Number(district.uflk2WpvPA808)
+                     total9c += Number(district.uflk2WpvPA809)
+                     total10c +=Number(district.uflk2WpvPA810)
+                     total11c +=Number(district.uflk2WpvPA811)
+                     total12c +=Number(district.uflk2WpvPA812)
+                    }
+                    $('#table').find('tbody').append(`<tr class="colsData tot"><td  colspan="2" rowspan="2">Grand Total</td><td>Total Tests</td><td>${total1t}</td><td>${total2t}</td><td>${total3t}</td><td>${total4t}</td><td>${total5t}</td><td>${total6t}</td><td>${total7t}</td><td>${total8t}</td><td>${total9t}</td><td>${total10t}</td><td>${total11t}</td><td>${total12t}</td><td>0</td></tr>
+                     <tr class="colsData tot"><td>Total cases</td><td>${total1c}</td><td>${total2c}</td><td>${total3c}</td><td>${total4c}</td><td>${total5c}</td><td>${total6c}</td><td>${total7c}</td><td>${total8c}</td><td>${total9c}</td><td>${total10c}</td><td>${total11c}</td><td>${total12c}</td><td>0</td></tr>`);
+                     
+                     $('#table').find('tbody').append(`<tr class="colsData tot"><td  colspan="2" rowspan="2">3 CHT Districts' Grand Total</td><td>Total Tests</td><td>${chtObj[IDs[0]]}</td><td>${chtObj[IDs[1]]}</td><td>${chtObj[IDs[2]]}</td><td>${chtObj[IDs[3]]}</td><td>${chtObj[IDs[4]]}</td><td>${chtObj[IDs[5]]}</td><td>${chtObj[IDs[6]]}</td><td>${chtObj[IDs[7]]}</td><td>${chtObj[IDs[8]]}</td><td>${chtObj[IDs[9]]}</td><td>${chtObj[IDs[10]]}</td><td>${chtObj[IDs[11]]}</td><td>0</td></tr>
+                     <tr class="colsData tot"><td>Total cases</td><td>${chtObj.uflk2WpvPA801}</td><td>${chtObj.uflk2WpvPA802}</td><td>${chtObj.uflk2WpvPA803}</td><td>${chtObj.uflk2WpvPA804}</td><td>${chtObj.uflk2WpvPA805}</td><td>${chtObj.uflk2WpvPA806}</td><td>${chtObj.uflk2WpvPA807}</td><td>${chtObj.uflk2WpvPA808}</td><td>${chtObj.uflk2WpvPA809}</td><td>${chtObj.uflk2WpvPA810}</td><td>${chtObj.uflk2WpvPA811}</td><td>${chtObj.uflk2WpvPA812}</td><td>0</td></tr>`);
+                     
+                     $('#table').find('tbody').append(`<tr class="colsData tot"><td  colspan="2" rowspan="2">10 other endemic districts' Grand Total</td><td>Total Tests</td><td>${OtherObj[IDs[0]]}</td><td>${OtherObj[IDs[1]]}</td><td>${OtherObj[IDs[2]]}</td><td>${OtherObj[IDs[3]]}</td><td>${OtherObj[IDs[4]]}</td><td>${OtherObj[IDs[5]]}</td><td>${OtherObj[IDs[6]]}</td><td>${OtherObj[IDs[7]]}</td><td>${OtherObj[IDs[8]]}</td><td>${OtherObj[IDs[9]]}</td><td>${OtherObj[IDs[10]]}</td><td>${OtherObj[IDs[11]]}</td><td>0</td></tr>
+                     <tr class="colsData tot"><td>Total cases</td><td>${OtherObj.uflk2WpvPA801}</td><td>${OtherObj.uflk2WpvPA802}</td><td>${OtherObj.uflk2WpvPA803}</td><td>${OtherObj.uflk2WpvPA804}</td><td>${OtherObj.uflk2WpvPA805}</td><td>${OtherObj.uflk2WpvPA806}</td><td>${OtherObj.uflk2WpvPA807}</td><td>${OtherObj.uflk2WpvPA808}</td><td>${OtherObj.uflk2WpvPA809}</td><td>${OtherObj.uflk2WpvPA810}</td><td>${OtherObj.uflk2WpvPA811}</td><td>${OtherObj.uflk2WpvPA812}</td><td>0</td></tr>`);
+                    
+                     $('#table').find('tbody').append(`<tr class="colsData tot"><td  colspan="2" rowspan="2">Other Districts Total</td><td>Total Tests</td><td>${OObj[IDs[0]]}</td><td>${OObj[IDs[1]]}</td><td>${OObj[IDs[2]]}</td><td>${OObj[IDs[3]]}</td><td>${OObj[IDs[4]]}</td><td>${OObj[IDs[5]]}</td><td>${OObj[IDs[6]]}</td><td>${OObj[IDs[7]]}</td><td>${OObj[IDs[8]]}</td><td>${OObj[IDs[9]]}</td><td>${OObj[IDs[10]]}</td><td>${OObj[IDs[11]]}</td><td>0</td></tr>
+                     <tr class="colsData tot"><td>Total cases</td><td>${OObj.uflk2WpvPA801}</td><td>${OObj.uflk2WpvPA802}</td><td>${OObj.uflk2WpvPA803}</td><td>${OObj.uflk2WpvPA804}</td><td>${OObj.uflk2WpvPA805}</td><td>${OObj.uflk2WpvPA806}</td><td>${OObj.uflk2WpvPA807}</td><td>${OObj.uflk2WpvPA808}</td><td>${OObj.uflk2WpvPA809}</td><td>${OObj.uflk2WpvPA810}</td><td>${OObj.uflk2WpvPA811}</td><td>${OObj.uflk2WpvPA812}</td><td>0</td></tr>`);
+    
+                document.getElementById("table").style.visibility = "visible"
+                document.getElementById("loader").style.display = "none";
+            }
+    function fnExcelReport() {
+        var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'>";
+        var textRange; var j = 0;
+        tab = document.getElementById('table'); 
+
+        for (j = 0; j < tab.rows.length; j++) {
+            tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+           
+        }
+
+        tab_text = tab_text + "</table>";
+        tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");
+        tab_text = tab_text.replace(/<img[^>]*>/gi, ""); 
+        tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); 
+
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE ");
+
+        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))
+        {
+            txtArea1.document.open("txt/html", "replace");
+            txtArea1.document.write(tab_text);
+            txtArea1.document.close();
+            txtArea1.focus();
+            sa = txtArea1.document.execCommand("SaveAs", true, "Say Thanks to Sumit.xls");
+        }
+        else                
+            sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+
+        return (sa);
+    }
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>

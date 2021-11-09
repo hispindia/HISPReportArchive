@@ -1,0 +1,380 @@
+<style type="text/css">
+    thead tr.headLv1 {
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1.5px;
+        color: white;
+        height: 40px;
+    }
+
+    thead tr.headLv2 {
+        font-weight: bold;
+        text-align: center;
+        height: 40px;
+    }
+
+    #table1 tbody tr td {
+        text-align: center;
+        padding-left: 1px;
+        padding-right: 1px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    .green1 {
+        background-color:rgb(39, 102, 150);
+        color: white;
+    }
+
+    .green2 {
+        background-color:rgb(39, 102, 150);
+        color: white;
+    }
+
+    .box {
+        border-radius: 25px;
+        border: 2px solid rgb(39, 102, 150);
+        width: 800px;
+        height: 200px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .tot {
+        font-weight: bold;
+    }
+
+    .colsData {
+        text-align: center;
+    }
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 75%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid rgb(39, 102, 150);
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+</style>
+<div style="padding-left: 200px;">
+    <div class="box">
+        <table class="table table-borderless table-striped">
+            <thead>
+                <h3>INDICATOR WISE REPORTS</h3>
+            </thead>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="text-align: left;"><strong> Select Report : <span style="color: red;">*</span></strong></td>
+                <td><select id="selectedReport" onchange="onSelectedReport()" class="form-control">
+                        <option selected hidden> Please Select Report </option>
+                        <option>Indicator Wise District Level Summary Report</option>
+                        <option>Indicator Wise Upazila Level Summary Report</option>
+                    </select></td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;" id="districtDiv">
+                <td style="text-align: left; padding: 10px;">
+                    <strong>District : <span style="color: red;">*</span></strong>
+                </td>
+                <td style="text-align: left;"><select id="district" class="form-control"
+                        onchange="onSelectedDistrict()">
+                        <option hidden selected> Please Select District :</option>
+                    </select></td>
+            </tr>
+            <tr style="border: 1px solid #DDDDDD;">
+                <td style="text-align: left;">
+                    <strong>Year :<span style="color: red;">*</span> </strong>
+                </td>
+                <td style="text-align: left;">
+                    <select id="selectedYear" class="form-control">
+                        <option selected hidden>Please select Year</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="10" style="text-align: center; height: 50px;">
+                    <button onClick="onGenerateReport()"
+                        style="height: 35px; margin-left: 180px; border-color: #0275d8; border-radius: 6px; color: white; background-color: #0275d8;"><strong>Generate Report</strong> </button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<br />
+<div id="loader" style="display: block"></div>
+<div>
+    <button type="button" id="print" style="height: 40px; font-weight: bold; padding: 10px; border-radius: 7px; border-color: #0275d8; background-color: #0275d8; color: white;"
+    onclick="printContent('content')">&nbsp;
+    Print
+   </button>
+</div>
+<br />
+<div id="content">
+    <table border="1" class="table" cellspacing="0" id="table" width="100%">
+        <thead>
+            <tr class="headLv1" style="background-color: rgb(8, 162, 201);">
+                <td class="green1" colspan="11"><span id="header"></span></td>
+            </tr>
+            <tr class="headLv2" style="background-color: skyblue;">
+                <td   colspan="2">Year: </td>
+                <td  colspan="9" width="5%"><span id="selectYear"></span></td>
+            </tr>
+            <tr class="headLv2" style="background-color: rgb(144, 210, 236);">
+                <td  >SN</td>
+                <td >Org Units </td>
+                <td >Annual Parasite Incidence (API) - Confirmed malaria cases per 1000 persons per year</td>
+                <td  id="row2">Annual Parasite Incidence (API) - Confirmed malaria cases per 1000 persons per year in elimination settings</td>
+                <td  >Malaria mortality - malaria deaths per 100000 persons per year</td>
+                <td  >Annual Blood Examination Rate (ABER)</td>
+                <td  >Slide positivity rate</td>
+                <td  >RDT positivity rate </td>
+                <td  >Test Positivity Rate (TPR)</td>
+                <td  >Case Fatality Rate (CFR)</td>
+                <td  >Proportion of SM cases</td>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    var indicatorsID = ["dkmZivEKfzF","uHTQBCFHrhB","EiTlxSaC4Ql","W1W8b3WLtin","HzWrldSwGpk","lJMUrDgR9Ta","xWSg5qamFID","MVyntUi0pzL"]
+    let Year = new Date().getFullYear()
+    for(let i=0; i<10; i++){
+        document.getElementById("selectedYear").innerHTML += "<option>" + Year + "</option>"
+        --Year;
+    }
+    $("#districtDiv").hide()
+    $('#loader').hide()
+    $('#table').hide()
+    document.getElementById("print").style.display = "none"
+    var obj = {}
+    var nationObj ={}
+    for(let indicator of indicatorsID){
+        nationObj[indicator]=''
+    }
+    $.when($.get("../api/29/organisationUnitGroups/PyK69cVqr5l.json?fields=organisationUnits[name,id]"),
+    ).done(function (res) {
+        res.organisationUnits.map((element,i) => {
+            for (let de of indicatorsID) {
+                element[de]=''
+            }
+            return element
+        })
+
+        function compare(a, b) {
+                if (a.name < b.name) {
+                    return -1;
+                }
+                if (a.name > b.name) {
+                    return 1;
+                }
+                return 0;
+            }
+        res.organisationUnits.sort(compare);
+        obj["districts"] = res.organisationUnits
+
+    })
+    $.when($.get("../api/29/organisationUnitGroups/XpE4AlQZRkV.json?fields=organisationUnits[name,id]"),
+    ).done(function (res) {
+        res.organisationUnits.map(element => {
+            for (let de of indicatorsID) {
+                element[de] = ''
+            }
+            return element
+        })
+        function compare(a, b) {
+                if (a.name < b.name) {
+                    return -1;
+                }
+                if (a.name > b.name) {
+                    return 1;
+                }
+                return 0;
+            }
+        res.organisationUnits.sort(compare);
+        obj["upazilas"] = res.organisationUnits
+    })
+
+    function onSelectedReport() {
+        let selectedOpt = document.getElementById("selectedReport").value
+        if (selectedOpt == "Indicator Wise Upazila Level Summary Report") {
+            for (let district of obj.districts) {
+                document.getElementById("district").innerHTML += "<option>" + district.name + "</option>"
+            }
+            $("#districtDiv").show()
+
+        } else {
+            $("#districtDiv").hide()
+        }
+    }
+    function onSelectedDistrict() {
+        let ou = obj.districts.find(ou => ou.name == document.getElementById("district").value)
+        obj["selectedDistrict"] = ou.id
+        obj['selectedDistrictName']= ou.name
+    }
+    function onGenerateReport() {
+        let selectedYear = document.getElementById("selectedYear").value
+        if (selectedYear == 'Please select Year') {
+            alert("Please Select Year!")
+        } else {
+            document.getElementById("selectYear").innerHTML = selectedYear
+            document.getElementById("print").style.display = "block"
+            let selectedOpt = document.getElementById("selectedReport").value
+            document.getElementById("header").innerHTML = selectedOpt
+            var i = 1
+            if (selectedOpt == "Indicator Wise District Level Summary Report") {
+                $("#row2").show()
+             $('#loader').show()
+                $.when($.get("../api/29/analytics.json?dimension=dx:dkmZivEKfzF;uHTQBCFHrhB;EiTlxSaC4Ql;W1W8b3WLtin;HzWrldSwGpk;lJMUrDgR9Ta;xWSg5qamFID;MVyntUi0pzL&dimension=ou:dNLjKwsVjod;OU_GROUP-PyK69cVqr5l&filter=pe:"+selectedYear+"&displayProperty=NAME&outputIdScheme=UID"),
+                ).done(function (res) {
+                   for(let district of obj.districts){
+                       for(let pro in district){
+                        for(let data of res.rows){
+                            if(district.id == data[1] && pro== data[0])
+                               district[data[0]]= Number(data[2]) 
+                         }
+                       }
+                   }
+                })
+                $.when($.get("../api/29/analytics.json?dimension=dx:dkmZivEKfzF;uHTQBCFHrhB;EiTlxSaC4Ql;W1W8b3WLtin;HzWrldSwGpk;lJMUrDgR9Ta;xWSg5qamFID;MVyntUi0pzL&dimension=ou:dNLjKwsVjod&filter=pe:"+selectedYear+"&displayProperty=NAME&outputIdScheme=UID"),
+                ).done(function (res) {
+                    for(let indicator of indicatorsID){
+                        for(let data of res.rows){
+                            if(indicator == data[0]){
+                             nationObj[data[0]] = Number(data[2])
+                            }
+                        }
+                    }
+                 })
+                 var newIndicaotr =0
+                 $.when($.get("../api/29/analytics.json?dimension=dx:uflk2WpvPA8;gqOK3occpce&dimension=pe:"+selectedYear+"&filter=ou:SJhtJq6WthC;M4azdi9vz14;fMlyvi84MY6;NlNXKUQwbVf;adV5bZoWv7l;UWtSL9W0Vpi;uUiWLZJ0KzP;RlmeN98ytOK;Wmrde4309dn;ZgN5uKtBudP&displayProperty=NAME"),
+                ).done(function (res) {
+                    newIndicaotr =(Number(res.rows[0][2])/Number(res.rows[1][2]))*1000
+                 })
+                 setTimeout(()=>{
+                 generateTable(obj, i, newIndicaotr)
+                },1000)  
+               }
+            if (selectedOpt == "Indicator Wise Upazila Level Summary Report") {
+                $("#row2").hide()
+                $('#loader').show()
+                $.when($.get("../api/29/analytics.json?dimension=dx:dkmZivEKfzF;uHTQBCFHrhB;EiTlxSaC4Ql;W1W8b3WLtin;HzWrldSwGpk;lJMUrDgR9Ta;xWSg5qamFID;MVyntUi0pzL&dimension=ou:"+obj.selectedDistrict+";OU_GROUP-XpE4AlQZRkV&filter=pe:"+selectedYear+"&displayProperty=NAME&outputIdScheme=UID"),
+                ).done(function (res) {
+                    let districtUpazila = res.metaData.dimensions.ou.map(ele => {
+                        for (let data of obj.upazilas) {
+                            if (ele == data.id) {
+                                return data
+                            }
+                        }
+                    })
+                    obj["upazila"] = districtUpazila
+                   for(let upazila of obj.upazila){
+                       for(let pro in upazila){
+                        for(let data of res.rows){
+                            if(upazila.id == data[1] && pro== data[0])
+                               upazila[data[0]]= Number(data[2]) 
+                         }
+                       }
+                   }
+                   $.when($.get("../api/29/analytics.json?dimension=dx:dkmZivEKfzF;uHTQBCFHrhB;EiTlxSaC4Ql;W1W8b3WLtin;HzWrldSwGpk;lJMUrDgR9Ta;xWSg5qamFID;MVyntUi0pzL&dimension=ou:"+obj.selectedDistrict+"&filter=pe:"+selectedYear+"&displayProperty=NAME&outputIdScheme=UID"),
+                ).done(function (res) {
+                    for(let indicator of indicatorsID){
+                        for(let data of res.rows){
+                            if(indicator == data[0]){
+                             nationObj[data[0]] = Number(data[2])
+                            }
+                        }
+                    }
+                })
+                setTimeout(()=>{
+                $('#table').find("tbody").empty()
+                $('#table').find('tbody').append(`<tr class="colsData" style="font-weight: bold;"><td colspan='2'>${obj.selectedDistrictName}</td><td>${nationObj.dkmZivEKfzF}</td><td>${nationObj.uHTQBCFHrhB}</td><td>${nationObj.EiTlxSaC4Ql}</td><td>${nationObj.W1W8b3WLtin}</td><td>${nationObj.HzWrldSwGpk}</td><td>${nationObj.lJMUrDgR9Ta}</td><td>${nationObj.xWSg5qamFID}</td><td>${nationObj.MVyntUi0pzL}</td></tr>`);
+                for (let upazila of obj.upazila) {
+                        $('#table').find('tbody').append(`<tr class="colsData"><td>${i++}</td><td>${upazila.name}</td><td>${upazila.dkmZivEKfzF}</td><td>${upazila.uHTQBCFHrhB}</td><td>${upazila.EiTlxSaC4Ql}</td><td>${upazila.W1W8b3WLtin}</td><td>${upazila.HzWrldSwGpk}</td><td>${upazila.lJMUrDgR9Ta}</td><td>${upazila.xWSg5qamFID}</td><td>${upazila.MVyntUi0pzL}</td></tr>`);
+                        $('#loader').hide()
+                         $('#table').show()
+                }
+                },1000)  
+                }) 
+            }
+            
+        }  
+    }
+    function generateTable(obj, i, val){
+        $('#table').find("tbody").empty()
+                $('#table').find('tbody').append(`<tr class="colsData" style="font-weight: bold;"><td colspan='2'>National Level</td><td>${nationObj.dkmZivEKfzF}</td><td>${val.toFixed(2)}</td><td>${nationObj.uHTQBCFHrhB}</td><td>${nationObj.EiTlxSaC4Ql}</td><td>${nationObj.W1W8b3WLtin}</td><td>${nationObj.HzWrldSwGpk}</td><td>${nationObj.lJMUrDgR9Ta}</td><td>${nationObj.xWSg5qamFID}</td><td>${nationObj.MVyntUi0pzL}</td></tr>`);
+                for (let district of obj.districts) {
+                        $('#table').find('tbody').append(`<tr class="colsData"><td>${i++}</td><td>${district.name}</td><td>${district.dkmZivEKfzF}</td><td></td><td>${district.uHTQBCFHrhB}</td><td>${district.EiTlxSaC4Ql}</td><td>${district.W1W8b3WLtin}</td><td>${district.HzWrldSwGpk}</td><td>${district.lJMUrDgR9Ta}</td><td>${district.xWSg5qamFID}</td><td>${district.MVyntUi0pzL}</td></tr>`);
+                        $('#loader').hide()
+                 $('#table').show()
+     }
+    }
+
+    function fnExcelReport() {
+        var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'>";
+        var textRange; var j = 0;
+        tab = document.getElementById('table'); 
+
+        for (j = 0; j < tab.rows.length; j++) {
+            tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+           
+        }
+
+        tab_text = tab_text + "</table>";
+        tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");
+        tab_text = tab_text.replace(/<img[^>]*>/gi, ""); 
+        tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); 
+
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE ");
+
+        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))
+        {
+            txtArea1.document.open("txt/html", "replace");
+            txtArea1.document.write(tab_text);
+            txtArea1.document.close();
+            txtArea1.focus();
+            sa = txtArea1.document.execCommand("SaveAs", true, "Say Thanks to Sumit.xls");
+        }
+        else                
+            sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+
+        return (sa);
+    }
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+</script>

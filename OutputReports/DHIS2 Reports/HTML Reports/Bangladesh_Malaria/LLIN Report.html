@@ -1,0 +1,538 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('state')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+<!-- <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;position:fixed;z-index:1"
+    id="btnExport"
+    onclick="tableToExcel('state', 'Monthly Malaria Disease Specific Report', 'Monthly Malaria Disease Specific Report')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button> -->
+
+<br />
+<div style="width: 50%; margin-left:25%;">
+    <table class="table table-borderless table-striped">
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Category: </strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="report-category" onchange="fetchOrgUnits(this)">
+                    <option value="hz7mDwA7Svg">GOV</option>
+                    <option value="Bhl59XR22Us">NGO</option>
+                    <option value="hz7mDwA7Svg;Bhl59XR22Us">GOV+NGO</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Report Area: </strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="report-area" onchange="displayRow(this)"></select>
+            </td>
+        </tr>
+
+        <tr id="selection-district" style="display: none;">
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>District: </strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="report-district" onchange="displayUpazilla(this)"></select>
+            </td>
+        </tr>
+        <tr id="selection-upazila" style="display: none;">
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Upazila: </strong>
+            </td>
+            <td style="width: 60%;">
+                <select class="form-control" id="report-upazila"></select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong> Start Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="month" id="start-month">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong> End Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input class="form-control" type="month" id="end-month">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+
+
+<div id="loader" style="display: none"></div>
+<div id='state' style="display: none;width: 100%;">
+    <table border="1" class="table table-hover text-center" cellspacing="6" cellpadding="4"
+        style="border-collapse: collapse; text-align: center;">
+        <thead>
+            <tr>
+                <th style="font-weight:400; border-bottom:1px solid white; background: rgb(39, 102, 150);font-size:20px; color:white; text-align: center;"
+                    colspan="4">LLIN Distribution Data Entry</th>
+            </tr>
+            <tr>
+                <th style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Distribution type</th>
+                <th style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Category</th>
+                <th style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Sub-category</th>
+                <th style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    No. of LLIN distributed</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td rowspan="11" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Continuous</td>
+                <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Pregnant Women</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value0"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    School Children</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value1"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Children 0 - 5 years</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value2"></td>
+            </tr>
+            <tr>
+                <td rowspan="8" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Others</td>
+                <td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">Army / BGB /
+                    Police / other law-enforcement agency</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value3"></td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">Jhum
+                    cultivator / Forest goers</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value4"></td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">Patients in
+                    new area / Foci response</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value5"></td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">Seasonal
+                    workers</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value6"></td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">New family
+                </td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value7"></td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">Outbreak
+                    response</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value8"></td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">Replacement of
+                    lost / damaged LLINs</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value9"></td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">Public health
+                    facilities</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value10"></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Total number of LLIN distributed through Continuous distribution</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value11"></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Total number of others LLIN</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value12"></td>
+            </tr>
+            <tr>
+                <td rowspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Mass</td>
+                <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Migrants / refugees / IDPs</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value13"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Prisoners</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value14"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Other population group</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value15"></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Total number of LLIN distributed through Mass distribution</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value16"></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; font-weight:600; background:#f2f2f2;text-align:center">
+                    Total LLIN distributed (Mass + Continuous)</td>
+                <td style="border:1px solid black; font-weight:600; text-align:center" id="value17"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    var categoryOrgUnits = [];
+    var orgUnitLength = 0;
+    var orgUnitChildren = [];
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    document.getElementById("state").style.display = "none";
+
+    fetch('../api/organisationUnitLevels.json?paging=false&fields=[level,id]')
+        .then(response => response.json())
+        .then(response => {
+            orgUnitLength = response.organisationUnitLevels.length;
+        });
+
+
+    var category = document.getElementById('report-category').value;
+    fetchOrgUnits({ value: category });
+
+    showReportArea();
+    function showReportArea() {
+        fetch('../api/organisationUnitGroupSets/ntFXU7pFGUm.json?fields=organisationUnitGroups[id,name]&paging=false')
+            .then(response => response.json())
+            .then(response => {
+                response.organisationUnitGroups.unshift({ id: "central", name: "Central" })
+                var reportAreaOptions = response.organisationUnitGroups.map(ouGroup => `<option>${ouGroup.name}</option>`)
+                document.getElementById('report-area').innerHTML = reportAreaOptions;
+            });
+
+    }
+    fetch('../api/organisationUnitGroups/PyK69cVqr5l.json?fields=organisationUnits[id,name]&paging=false')
+        .then(response => response.json())
+        .then(response => {
+            response.organisationUnits.sort((a, b) => a.name.localeCompare(b.name));
+            var districtOptions = response.organisationUnits.map(ou => `<option value="${ou.id}">${ou.name}</option>`)
+            document.getElementById('report-district').innerHTML = districtOptions;
+        });
+
+    async function fetchOrgUnits(event) {
+        var response = {};
+        if (event.value == 'hz7mDwA7Svg;Bhl59XR22Us') {
+            response1 = await (await fetch(`../api/organisationUnitGroups/${event.value.split(';')[0]}.json?fields=organisationUnits[id,name]&paging=false`)).json()
+            response2 = await (await fetch(`../api/organisationUnitGroups/${event.value.split(';')[1]}.json?fields=organisationUnits[id,name]&paging=false`)).json()
+            response['organisationUnits'] = [...response1.organisationUnits, ...response2.organisationUnits];
+
+        } else {
+            response = await (await fetch(`../api/organisationUnitGroups/${event.value}.json?fields=organisationUnits[id,name]&paging=false`)).json()
+        }
+        categoryOrgUnits = response.organisationUnits.map(ou => {
+            return { id: ou.id, name: ou.name }
+        })
+        document.getElementById('selection-district').style.display = "none";
+        document.getElementById('selection-upazila').style.display = "none";
+        showReportArea();
+    }
+
+    function displayRow(event) {
+        if (event.value == "District") {
+            document.getElementById('selection-district').style.display = "table-row";
+            document.getElementById('selection-upazila').style.display = "none";
+        }
+        else if (event.value == "Upazila") {
+            document.getElementById('selection-district').style.display = "table-row";
+            displayUpazilla(document.getElementById('report-district'));
+        }
+        else {
+            document.getElementById('selection-district').style.display = "none";
+            document.getElementById('selection-upazila').style.display = "none";
+        }
+    }
+
+    async function displayUpazilla(event) {
+        var value = document.getElementById('report-area').value;
+
+        if (value == "Upazila") {
+            let isSelected = []
+            let response = await (await fetch(`../api/organisationUnits/${event.value}.json?fields=id,name,children[id,name]&paging=false`)).json()
+            response.children.sort((a, b) => a.name.localeCompare(b.name));
+
+            let responseUpazila = await (await fetch(`../api/organisationUnitGroups/XpE4AlQZRkV.json?fields=organisationUnits[id,name]&paging=false`)).json();
+            responseUpazila = responseUpazila.organisationUnits.forEach(ou => isSelected[ou.id] = true)
+
+            selectedUpazila = response.children.filter(ou => {
+                if (isSelected[ou.id]) return { id: ou.id, name: ou.name }
+            })
+
+            let upazilaOptions = selectedUpazila.map(ou => {
+                return `<option  value="${ou.id}">${ou.name}</option>`;
+            })
+            document.getElementById('report-upazila').innerHTML = upazilaOptions;
+            document.getElementById('selection-upazila').style.display = "table-row";
+        }
+    }
+
+    function submitData() {
+        var data = {
+            categoryOrgUnits,
+            reportArea: document.getElementById('report-area').value,
+            district: document.getElementById('report-district').value,
+            upazila: document.getElementById('report-upazila').value,
+            startMonth: document.getElementById('start-month').value,
+            endMonth: document.getElementById('end-month').value,
+        }
+        document.getElementById("state").style.display = "none";
+        document.getElementById("loader").style.display = "block";
+        if (!data.startMonth || !data.endMonth || new Date(data.startMonth) > new Date(data.endMonth)) {
+            alert("Please Select months correctly!")
+            document.getElementById("loader").style.display = "none";
+            return;
+        }
+        setTimeout(function () {
+            getData(data);
+        }, 1000);
+    }
+
+
+    async function getData(data) {
+
+        var dataElementId = [
+            "Mr3l6DcKu3w.RpSl0BZj9Xl", "Mr3l6DcKu3w.LS2MCuutXaw", "Mr3l6DcKu3w.AecsXccGwUB", "PH3Vn5UgZJr.IdA8e3f5p97", "PH3Vn5UgZJr.Ju5WrTGIhhF",
+            "PH3Vn5UgZJr.XQTqwPD49iQ", "PH3Vn5UgZJr.RXMd7wk6S2i", "PH3Vn5UgZJr.P7kHZ4cILWA", "PH3Vn5UgZJr.Sa5C3kuVc8I", "PH3Vn5UgZJr.TfBz4joRcap",
+            "PH3Vn5UgZJr.jniG7hTbMYR", "K5DbzTC9skw", "PH3Vn5UgZJr", "qEPhMtxqS97.VeXQ3ldldin", "qEPhMtxqS97.Q6qU1rwusAQ", "qEPhMtxqS97.K4z1oWDXaaI", "qEPhMtxqS97", "lPCHAo8yLFL"
+        ];
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+                }
+            }
+            return arr;
+        }
+        data.periods = getBetweenDates(data.startMonth, data.endMonth);
+        var reportCategory = document.getElementById('report-category').value;
+        var dataValues = {};
+        var orgUnits = [];
+        if (data.reportArea == "Central") {
+            orgUnits = data.categoryOrgUnits;
+        }
+        else if (data.reportArea == "District") {
+            let categoryOu = {}
+            orgUnitChildren = [];
+            data.categoryOrgUnits.forEach(ou => categoryOu[ou.id] = true);
+            let url = `../api/organisationUnits/${data.district}.json?fields=id,name,level,children[id,name`
+            for (let i = 1; i <= orgUnitLength; i++) url += ',children[id,name'
+            for (let i = 1; i <= orgUnitLength; i++) url += ']'
+            url += '&paging=false';
+            let response = await (await fetch(url)).json();
+            treeDown(response)
+            debugger;
+            orgUnits = orgUnitChildren.filter(ou => {
+                if (categoryOu[ou.id]) return { ou: ou.id, name: ou.name }
+            })
+            debugger;
+        }
+        else if (data.reportArea == "Upazila") {
+            let categoryOu = {}
+            orgUnitChildren = [];
+            data.categoryOrgUnits.forEach(ou => categoryOu[ou.id] = true);
+            let url = `../api/organisationUnits/${data.upazila}.json?fields=id,name,level,children[id,name`
+            for (let i = 1; i <= orgUnitLength; i++) url += ',children[id,name'
+            for (let i = 1; i <= orgUnitLength; i++) url += ']'
+            url += '&paging=false';
+            let response = await (await fetch(url)).json();
+            treeDown(response)
+            debugger;
+            orgUnits = orgUnitChildren.filter(ou => {
+                if (categoryOu[ou.id]) return { ou: ou.id, name: ou.name }
+            })
+            debugger;
+        }
+
+        orgUnitId = orgUnits.map(ou => ou.id)
+
+
+        let response = await (await fetch(`../api/analytics.json?dimension=dx:${dataElementId.join(";")}&filter=o4rUjQa0VU6:${reportCategory}&filter=pe:${data.periods.join(";")}&dimension=ou:${orgUnitId.join(';')}&displayProperty=NAME`)).json()
+
+        if (response.rows) {
+            response.rows.forEach(row => {
+                if (!dataValues[row[0]]) dataValues[row[0]] = Number(row[2]);
+                else dataValues[row[0]] += Number(row[2]);
+            });
+        }
+
+        // for (let orgUnit of orgUnits) {
+        //     if (orgUnit) {
+        //         for (let period of data.periods) {
+        //             let response = await (await fetch(`../api/dataValueSets.json?dataSet=eVRVFmvmdFI&orgUnit=${orgUnit.id}&period=${period}`)).json();
+        //             if (response.dataValues) response.dataValues.forEach(dataValue => {
+        //                 if (dataValue.categoryOptionCombo && dataValue.dataElement) de = dataValue.dataElement + "-" + dataValue.categoryOptionCombo;
+        //                 else de = dataValue.dataElement;
+        //                 if (!dataValues[de]) dataValues[de] = Number(dataValue.value);
+        //                 else dataValues[de] += Number(dataValue.value);
+        //             });
+        //         }
+        //     }
+        // }
+
+        dataElementId.forEach((de, index) => {
+            document.getElementById(`value${index}`).innerHTML = (dataValues[de] ? Number(dataValues[de]) : '')
+        })
+        document.getElementById("state").style.display = "block";
+        document.getElementById("loader").style.display = "none";
+
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            debugger
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+    function treeDown(arr, color) {
+        var key = arr;
+        if (key.children) {
+            key.children.sort((a, b) => a.name.localeCompare(b.name))
+            for (let i = 0; i < key.children.length; i++) treeDown(key.children[i]);
+        }
+        orgUnitChildren.push({ id: key.id, name: key.name });
+    }
+
+</script>
