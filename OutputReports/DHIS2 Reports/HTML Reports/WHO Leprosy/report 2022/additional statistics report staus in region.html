@@ -1,0 +1,304 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    /* Center the loader  */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+        display: none;
+        text-align: center;
+    }
+    .box{
+      background-color:  rgb(236, 238, 239);
+      height: 150px;
+      width: 380px;
+      border-radius: 5px;
+      border: ivory 1px;
+      margin-left: 300px;
+    }
+</style>
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('allContent')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allContent', 'Leprosy additional Statistics - Country wise reporting rate', 'Leprosy additional Statistics - Country wise reporting rate.xls')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Excel</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allContent', 'Leprosy additional Statistics - Country wise reporting rate', 'Leprosy additional Statistics - Country wise reporting rate.doc')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Doc</button>
+<br><br>
+
+<div id="loader"></div>
+<div id="allContent">
+    <table border="1" class="table  table-hover text-center" id="dataTable"
+        style="border-collapse: collapse; font-size: 15px; width: 100%;">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $('#loader').show();
+    $('#allContent').hide()
+    var obj = {};
+    var orgUnit = dhis2.report.organisationUnit;
+    let orgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    var level2OrgUnitsList = []
+    var dataList = []
+    var period = dhis2.report.date.split("-")[0];   
+    let otherDataElements = [
+    "fWOu6CXWmYj-HllvX50cXC0",
+    "JeewVif7Qzp-HllvX50cXC0",
+    "pLZpRkMZWLH-HllvX50cXC0",
+    "kISRp1zDJ1o-HllvX50cXC0",
+    "tLDXtC3M2Wb-HllvX50cXC0",
+    "mivRLJvsrCN-HllvX50cXC0",
+    "kYhH6RKnKaW-HllvX50cXC0",
+    "qLjY1H04rz5-HllvX50cXC0",
+    "WnksIAR4HHE-HllvX50cXC0",
+    "XnhnouZQIZD-HllvX50cXC0",
+    "DDP7WHn3xBq-HllvX50cXC0",
+    "dl2Ykn3f9A5-HllvX50cXC0",
+    "qGsRWxnlgnp-HllvX50cXC0",
+    "vgvQVd98mS8-HllvX50cXC0",
+    "kKoiaRvujGL-HllvX50cXC0",
+    "GZbdFPLrNJu-HllvX50cXC0",
+    "vbVx5GUmxU5-HllvX50cXC0",
+    "NXvBmgzF1tS-HllvX50cXC0",
+    "MeDkAw5qy9L-HllvX50cXC0",
+    "bJiRxBdlM3F-HllvX50cXC0",
+    "cPVhsfEclQw-HllvX50cXC0",
+    "s4JEZsDU1Vx-HllvX50cXC0",
+    "T4sd77FTesI-HllvX50cXC0",
+    "wUBT6DCqmYn-HllvX50cXC0",
+    "ObSThhA8DGn-HllvX50cXC0",
+    "v7s0H3vLoQc-HllvX50cXC0",
+    "ZaoLDIVS9S0-HllvX50cXC0",
+    "b6s7LHEOJ03-HllvX50cXC0",
+    "E2ciCYyQADF-HllvX50cXC0",
+    "KABaJ7eFDLb-HllvX50cXC0",
+    "mPrCvcc0Dxt-HllvX50cXC0",
+    "gUQ9nYmXlsB-HllvX50cXC0",
+    "BvcLwHp7Nnt-HllvX50cXC0",
+    "TCJv5BNVYCw-HllvX50cXC0",
+    "t5AmFhGyKw9-HllvX50cXC0",
+    "whSNEteJUqY-HllvX50cXC0",
+    "m3Ri2WLjD2X-HllvX50cXC0",
+    "lX0xOxS9eLV-HllvX50cXC0",
+    "gK6hEAvQrtb-HllvX50cXC0",
+    "XTB7Rh8VRfL-m0vZJMmHelg",
+    "XTB7Rh8VRfL-GVcPtC2klm0",
+    "XTB7Rh8VRfL-P98hQY3LVzh",
+    "KKNyMmqR1un-m0vZJMmHelg",
+    "KKNyMmqR1un-GVcPtC2klm0",
+    "KKNyMmqR1un-P98hQY3LVzh",
+    "IXp7eeh9yNU-m0vZJMmHelg",
+    "IXp7eeh9yNU-GVcPtC2klm0",
+    "IXp7eeh9yNU-P98hQY3LVzh",
+    "KXMA2VWNIDY-m0vZJMmHelg",
+    "KXMA2VWNIDY-GVcPtC2klm0",
+    "KXMA2VWNIDY-P98hQY3LVzh"
+    ]
+        setTimeout(() => {
+        loadData()
+         }, 1000)
+
+    function loadData() {
+      let dataReportedbyByCountry = 0
+     if(orgUnitLevel == 2){
+        function getCountryData(id) {
+            let objOthers = {countODEwithData:0, countODEwithNA:0, countODEwithNoData:0, totalOtherDataElement: otherDataElements.length, completeDate:''}
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/dataValueSets.json?orgUnit=" + id + "&period=" + period + "&dataSet=KaaRzuDwB2X",
+                data: JSON,
+                success: function (data, status) {
+                    if (data.dataValues) {
+                        objOthers.completeDate = data.completeDate.split("T")["0"]
+                        for (let ode of otherDataElements) {
+                            for (let ele of data.dataValues) {
+                                if (ode == (ele.dataElement + "-" + ele.categoryOptionCombo)) {
+                                     ele.comment ?  objOthers.countODEwithNA+=1 : objOthers.countODEwithData+=1
+                                }
+                            }
+                        }
+                        objOthers.countODEwithNoData = otherDataElements.length - (objOthers.countODEwithNA + objOthers.countODEwithData)
+                    } 
+                }
+            });
+            return objOthers
+        }
+        function arraySorting(a, b) {
+            return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
+        }
+        $.ajax(
+            {
+                type: "GET",
+                async: false,
+                url: "../api/organisationUnits/" + orgUnit.id + ".json?fields=id,name,children[id,name,code]&paging=false",
+                data: JSON,
+                success: function (data, status) {
+                    allOrgUnits = data;
+                    for (var i = 0; i < allOrgUnits.children.length; i++) {
+                        level2OrgUnitsList.push({ "id": allOrgUnits.children[i].id, "name": allOrgUnits.children[i].name, "code": allOrgUnits.children[i].code });
+                    }
+                }
+            });
+        level2OrgUnitsList.sort(arraySorting);
+            var level3OrgUnitsList = [];
+            let gObj = { region : orgUnit.name}
+            for (var j = 0; j < level2OrgUnitsList.length; j++) {
+                let val = getCountryData(level2OrgUnitsList[j].id)
+                let oo = { ...val, "id": level2OrgUnitsList[j].id, "name": level2OrgUnitsList[j].name }
+                level3OrgUnitsList.push(oo);
+            }
+            gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+            dataList.push(gObj)
+        $('#dataTable').find("thead").append(` <tr style=" font-weight:400; text-align:center;">
+                <td colspan="7" width="100%" style="border:1px solid black;background:#ADD8E6; ">Leprosy additional Statistics - Country wise reporting rate <span class="currentPeriod">&nbsp;</span></td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td colspan="7" style="border:1px solid black;background:#ADD8E6; ">Reporting Year : - <span id="period">${period}</span></td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6; ">country</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Countries reported additional statistics</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Fields with data</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Fields marked data not available</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Fields without any data</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total fields</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Completion of fields (%)</td>
+             </tr>`)
+        for (let data of dataList) {
+            $('#dataTable').find("tbody").append(`<tr style="background-color:#DCDCDC; text-align: left"><td  colspan="7">${data.region}</td></tr>`)
+            var t = 0, t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
+            for (let ele of data.countrylist) {
+                let  ODR = ((ele.countODEwithData+ele.countODEwithNA)/ele.totalOtherDataElement)*100
+                if (ele.completeDate) {
+                    t += 1
+                   ele.completeDate = "complete"
+                }else{
+                   ele.completeDate = "incomplete"
+                }
+                $('#dataTable').find("tbody").append(`<tr><td>${ele.name}</td><td>${ele.completeDate == "complete" ? ele.completeDate : "incomplete"}</td><td>${ele.countODEwithData}</td><td>${ele.countODEwithNA}</td><td>${ele.countODEwithNoData}</td><td>${ele.totalOtherDataElement}</td><td>${ODR.toFixed(2)}</td></tr>`)
+                t1 += ele.countODEwithData
+                t2 += ele.countODEwithNA
+                t3 += ele.countODEwithNoData
+                t4 += ele.totalOtherDataElement
+            }
+            t5 = ((t1+t2)/t4)*100
+            $('#dataTable').find("tbody").append(`<tr style="font-weight: bold;"><td>Total</td><td>${t}</td><td>${t1}</td><td>${t2}</td><td>${t3}</td><td>${t4}</td><td>${t5.toFixed(2)}</td></tr>`)
+            $('#loader').hide();
+            $('#allContent').show()
+        }
+      }
+    }
+</script>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>

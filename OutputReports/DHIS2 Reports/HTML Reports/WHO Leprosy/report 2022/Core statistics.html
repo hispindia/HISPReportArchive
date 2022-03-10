@@ -1,0 +1,1094 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    /* Center the loader  */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+        display: none;
+        text-align: center;
+    }
+</style>
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('allContent')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allContent', 'core statistics', 'core statistics.xls')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Excel</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allContent', 'core statistics', 'core statistics.doc')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Doc</button>
+<br><br>
+
+<div id="loader"></div>
+<div id="allContent">
+    <table border="1" class="table  table-hover text-center" id="dataTable"
+        style="border-collapse: collapse; font-size: 15px; width: 100%;">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+</div>
+
+<script>
+    $('#loader').show();
+    $('#allContent').hide()
+    var orgUnit = dhis2.report.organisationUnit;
+    let orgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    var obj = {};
+    var level2OrgUnitsList = []
+    var dataList = []
+    var period = dhis2.report.date.split("-")[0];
+    var dataElements = ['d1d6EWQZJGB-HllvX50cXC0', 'evXyDr6c7eu-Te9RyzefSAz', 'evXyDr6c7eu-ZZFiCRpT37i', 'evXyDr6c7eu-sdMU6tpPki6', 'xdbnQxRVTBq-HllvX50cXC0', 'MiHLzmsVFPf-xC5PhT2YVtr', 'ubgNtdy3h9H-xC5PhT2YVtr', 'tyHgOKrZsMJ-xC5PhT2YVtr', 'MiHLzmsVFPf-GcQ4Ep0wmnH', 'ubgNtdy3h9H-GcQ4Ep0wmnH', 'tyHgOKrZsMJ-GcQ4Ep0wmnH', 'EnQPW5xZDPX-DGU1CWAZ6qw', 'xl4EXfRMBrK-ZZFiCRpT37i', 'xl4EXfRMBrK-Te9RyzefSAz', 'xl4EXfRMBrK-sdMU6tpPki6', 'RcRolaLXGcw-HllvX50cXC0', 'nbDlMYKljTK-HllvX50cXC0', 'VBEhMPsLu53-HllvX50cXC0', 'YVj2PYy0Slj-HllvX50cXC0', 'KJtRiyeoCGx-HllvX50cXC0', 'VBEhMPsLu53-HllvX50cXC0', 'YVj2PYy0Slj-HllvX50cXC0', 'KJtRiyeoCGx-HllvX50cXC0', 'lhSRNgfsxYC-HllvX50cXC0', 'EHT4ON2ZtNl-HllvX50cXC0', 'vp8pxtgYBL2-HllvX50cXC0', 'lhSRNgfsxYC-HllvX50cXC0', 'EHT4ON2ZtNl-HllvX50cXC0', 'vp8pxtgYBL2-HllvX50cXC0', 'Xzuid5sSSg3-HllvX50cXC0', 'lk5YKbM2SEu-HllvX50cXC0', 'NlyC1FwJWy9-HllvX50cXC0', 'uhtjTobhtHO-HllvX50cXC0', 'VVBrsKiEqdh-HllvX50cXC0', 'PFNL3BPu3A6-HllvX50cXC0', 'JK1VCsNhg6x-HllvX50cXC0', 'MJGjCnCK8qJ-HllvX50cXC0', 'sgdAybfDzTl-oSHl2cUvHmk', 'CAwisvSGkaj-oSHl2cUvHmk', 'sgdAybfDzTl-qqJwrOzkzcz', 'CAwisvSGkaj-qqJwrOzkzcz', 'sgdAybfDzTl-G0EY8ZnkmVI', 'CAwisvSGkaj-G0EY8ZnkmVI', 'sgdAybfDzTl-oSHl2cUvHmk', 'CAwisvSGkaj-oSHl2cUvHmk', 'sgdAybfDzTl-qqJwrOzkzcz', 'CAwisvSGkaj-qqJwrOzkzcz', 'sgdAybfDzTl-G0EY8ZnkmVI', 'CAwisvSGkaj-G0EY8ZnkmVI', 'sgdAybfDzTl-Vi7NufwLzKs', 'CAwisvSGkaj-Vi7NufwLzKs', 'CAwisvSGkaj-Vi7NufwLzKs', 'DAs6FtLcYz1-HllvX50cXC0', 'sgdAybfDzTl-Vi7NufwLzKs', 'CAwisvSGkaj-Vi7NufwLzKs', 'CAwisvSGkaj-Vi7NufwLzKs', 'ej7YYjvhLmR-HllvX50cXC0']
+    var indicatorsObj = {
+        'pa23ioVh5Qy': {
+            'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': '', 'd1d6EWQZJGB-HllvX50cXC0': ''
+        },
+        'MP151BZABwj': {
+            'bLR7YvL1f5O-Te9RyzefSAz': '', 'bLR7YvL1f5O-ZZFiCRpT37i': '', 'mdupOTsRJ58-Te9RyzefSAz': '', 'mdupOTsRJ58-ZZFiCRpT37i': '', 'lzbsUQJvvJB-Te9RyzefSAz': '', 'lzbsUQJvvJB-ZZFiCRpT37i': '', 'd1d6EWQZJGB-HllvX50cXC0': ''
+
+        },
+        'LhfXR2fKhsZ': {
+            'evXyDr6c7eu-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': ''
+
+        },
+        'KrvcvcTLqIh': {
+            'mNPlDlzmwru-HllvX50cXC0': '', 'xdbnQxRVTBq-HllvX50cXC0': '', 'liZaznYiWwp-HllvX50cXC0': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': ''
+        },
+        'C6xcdI95huJ': {
+            'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'TBTHguhWty1-HllvX50cXC0': '', 'liZaznYiWwp-HllvX50cXC0': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': ''
+        },
+        'gxRtjY03TOP': {
+            'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'TBTHguhWty1-HllvX50cXC0': '', 'EnQPW5xZDPX-DGU1CWAZ6qw': ''
+        },
+        'j62SFyBOrSN': {
+            'tzGljEoaVdT-HllvX50cXC0': '', 'xl4EXfRMBrK-Te9RyzefSAz': '', 'xl4EXfRMBrK-ZZFiCRpT37i': '', 'xl4EXfRMBrK-sdMU6tpPki6': '', 'liZaznYiWwp-HllvX50cXC0': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': '',
+        },
+        'OiN8STr6naq': {
+            'tzGljEoaVdT-HllvX50cXC0': '', 'xl4EXfRMBrK-Te9RyzefSAz': '', 'xl4EXfRMBrK-ZZFiCRpT37i': '', 'xl4EXfRMBrK-sdMU6tpPki6': '', 'd1d6EWQZJGB-HllvX50cXC0': ''
+        },
+        'KmggYyaINdB': {
+            'nbDlMYKljTK-HllvX50cXC0': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': '', 'liZaznYiWwp-HllvX50cXC0': '',
+
+        },
+        'trqV4BI71xI': {
+            'GuZ5MKrfrBp-HllvX50cXC0': '', 'qHIGkVqSItK-HllvX50cXC0': ''
+        },
+        'M2kzreZCnhv': {
+            'Xzuid5sSSg3-HllvX50cXC0': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': ''
+
+        },
+        'w0DzxpCd0aq': {
+            'lk5YKbM2SEu-HllvX50cXC0': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': ''
+        },
+        'JcTzoupKdtG': {
+            'NlyC1FwJWy9-HllvX50cXC0': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': ''
+        },
+        'RJcnYMtVxOS': {
+            'uhtjTobhtHO-HllvX50cXC0': '', 'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': ''
+        },
+        'xWUvequQxeM': {
+            'TCJv5BNVYCw-HllvX50cXC0': '', 'VVBrsKiEqdh-HllvX50cXC0': ''
+
+        },
+        'PQCJ1jNYVMU': {
+            't5AmFhGyKw9-HllvX50cXC0': '', 'PFNL3BPu3A6-HllvX50cXC0': ''
+        },
+        'gY7b9azcUQG': {
+            'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': '', 'liZaznYiWwp-HllvX50cXC0': ''
+        },
+        'ElAjdwOrjMq': {
+            'evXyDr6c7eu-Te9RyzefSAz': '', 'gVmFx873rdZ-Te9RyzefSAz': '', 'IQgrP2W9gTV-Te9RyzefSAz': '', 'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'evXyDr6c7eu-sdMU6tpPki6': '', 'gVmFx873rdZ-sdMU6tpPki6': '', 'IQgrP2W9gTV-sdMU6tpPki6': '', 'liZaznYiWwp-HllvX50cXC0': '', 'd1d6EWQZJGB-HllvX50cXC0': ''
+        },
+        'YgvbZE63e8T': {
+            'bLR7YvL1f5O-Te9RyzefSAz': '', 'bLR7YvL1f5O-ZZFiCRpT37i': '', 'mdupOTsRJ58-Te9RyzefSAz': '', 'mdupOTsRJ58-ZZFiCRpT37i': '', 'lzbsUQJvvJB-Te9RyzefSAz': '', 'lzbsUQJvvJB-ZZFiCRpT37i': '', 'LL3PpzJHqJZ-HllvX50cXC0': ''
+        },
+        'PS9m9ERoPaj': {
+            'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'TBTHguhWty1-HllvX50cXC0': '',
+        },
+        'xl4EXfRMBrK': {
+        },
+        'v1Fr4On014j': {
+            'tzGljEoaVdT-HllvX50cXC0': '', 'xl4EXfRMBrK-Te9RyzefSAz': '', 'xl4EXfRMBrK-ZZFiCRpT37i': '', 'xl4EXfRMBrK-sdMU6tpPki6': '', 'd1d6EWQZJGB-HllvX50cXC0': '',
+        },
+        'SSmKGrwFLyR': {
+            'YVj2PYy0Slj': '', 'EHT4ON2ZtNl': '', 'VBEhMPsLu53': '', 'lhSRNgfsxYC': '', 'vp8pxtgYBL2': '', 'KJtRiyeoCGx': '', 'ze0DbmcIajV': '',
+        },
+        'sAXV6Hnve4i': {
+            'bLR7YvL1f5O-Te9RyzefSAz': '', 'bLR7YvL1f5O-ZZFiCRpT37i': '', 'mdupOTsRJ58-Te9RyzefSAz': '', 'mdupOTsRJ58-ZZFiCRpT37i': '', 'lzbsUQJvvJB-Te9RyzefSAz': '', 'lzbsUQJvvJB-ZZFiCRpT37i': '', 'LL3PpzJHqJZ-HllvX50cXC0': '', 'd1d6EWQZJGB-HllvX50cXC0': '',
+        },
+        'SsZP6Izyhay': {
+            'evXyDr6c7eu-ZZFiCRpT37i': '', 'gVmFx873rdZ-ZZFiCRpT37i': '', 'IQgrP2W9gTV-ZZFiCRpT37i': '', 'TBTHguhWty1-HllvX50cXC0': '', 'EnQPW5xZDPX-DGU1CWAZ6qw': '',
+        },
+        'yMIaVLPC3P9': {
+            'MiHLzmsVFPf-xC5PhT2YVtr': '', 'ubgNtdy3h9H-xC5PhT2YVtr': '', 'tyHgOKrZsMJ-xC5PhT2YVtr': '',
+        }
+    }
+    var indicators = [
+        "gY7b9azcUQG",
+        "ElAjdwOrjMq",
+        "YgvbZE63e8T",
+        "LhfXR2fKhsZ",
+        "KrvcvcTLqIh",
+        "PS9m9ERoPaj",
+        "C6xcdI95huJ",
+        "xl4EXfRMBrK",
+        "j62SFyBOrSN",
+        "v1Fr4On014j",
+        "KmggYyaINdB",
+        "SSmKGrwFLyR",
+        "trqV4BI71xI",
+        "M2kzreZCnhv",
+        "w0DzxpCd0aq",
+        "JcTzoupKdtG",
+        "RJcnYMtVxOS",
+        "xWUvequQxeM",
+        "PQCJ1jNYVMU",
+        "sAXV6Hnve4i",
+        "SsZP6Izyhay",
+        "yMIaVLPC3P9"
+    ]
+    setTimeout(() => {
+        loadData()
+    }, 1000)
+    function loadData() {
+        var ouTotal = [
+            "L9CbxlithLc",
+            "uWVIlmAl1r5",
+            "XHT7CFb5mEe",
+            "UzbbopOhq1L",
+            "vY40CQrh4Kk",
+            "QvCHetFovQg",
+        ]
+        var rTotal = []
+        for (let ou of ouTotal) {
+            var regionTotal = {}
+            regionTotal["ou"] = ou
+            for (let indi of indicators) {
+                regionTotal[indi] = "NR"
+            }
+            rTotal.push(regionTotal)
+        }
+        var globalTotal = { "word": "x3i5oi4axNu" }
+        for (let indi of indicators) {
+            globalTotal[indi] = "NR"
+        }
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/analytics.json?dimension=pe:" + period + "&dimension=dx:yMIaVLPC3P9;gY7b9azcUQG;ElAjdwOrjMq;YgvbZE63e8T;YgvbZE63e8T;LhfXR2fKhsZ;KrvcvcTLqIh;PS9m9ERoPaj;C6xcdI95huJ;xl4EXfRMBrK;j62SFyBOrSN;v1Fr4On014j;KmggYyaINdB;SSmKGrwFLyR;trqV4BI71xI;M2kzreZCnhv;w0DzxpCd0aq;JcTzoupKdtG;RJcnYMtVxOS;xWUvequQxeM;PQCJ1jNYVMU;sAXV6Hnve4i;SsZP6Izyhay;&dimension=ou:L9CbxlithLc;uWVIlmAl1r5;XHT7CFb5mEe;UzbbopOhq1L;vY40CQrh4Kk;QvCHetFovQg;x3i5oi4axNu&displayProperty=NAME",
+            data: JSON,
+            success: function (data, status) {
+                if (data.rows) {
+                    for (let pro in globalTotal) {
+                        for (let ele of data.rows) {
+                            if ((globalTotal.word == ele['2']) && (pro == ele['0'])) {
+                                globalTotal[pro] = Number(ele['3'])
+                            }
+                        }
+                    }
+                    for (let region of rTotal) {
+                        for (let pro in region) {
+                            for (let ele of data.rows) {
+                                if ((region.ou == ele['2']) && (pro == ele['0'])) {
+                                    region[pro] = Number(ele['3'])
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        function getCountryData(id) {
+            var obj = {};
+            let dataObj = {}
+            var indicatorObj = {}
+            for (let e of dataElements) {
+                obj[e] = ""
+            }
+            for (let e of indicators) {
+                indicatorObj[e] = ""
+            }
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/dataValueSets.json?orgUnit=" + id + "&period=" + period + "&dataSet=m4Hy2QZbW9p",
+                data: JSON,
+                success: function (data, status) {
+                    if (data.dataValues) {
+                        for (let pro in obj) {
+                            for (let ele of data.dataValues) {
+                                if (pro == (ele.dataElement + "-" + ele.categoryOptionCombo)) {
+                                    obj[pro] = ele.value ? ele.value : ele.comment
+                                }
+                            }
+                        }
+                        for (let pro in indicatorsObj) {
+                            for (let pro1 in indicatorsObj[pro]) {
+                                for (let ele of data.dataValues) {
+                                    if (pro1 == (ele.dataElement + "-" + ele.categoryOptionCombo)) {
+                                        indicatorsObj[pro][pro1] = ele.value ? ele.value : ele.comment
+                                    }
+                                }
+                            }
+                        }
+                        dataObj['indicatorDataElements'] = indicatorsObj
+                    } else {
+                        dataObj['indicatorDataElements'] = indicatorsObj
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/analytics.json?dimension=pe:" + period + "&dimension=dx:yMIaVLPC3P9;gY7b9azcUQG;SsZP6Izyhay;ElAjdwOrjMq;YgvbZE63e8T;YgvbZE63e8T;LhfXR2fKhsZ;KrvcvcTLqIh;PS9m9ERoPaj;C6xcdI95huJ;xl4EXfRMBrK;j62SFyBOrSN;sAXV6Hnve4i;v1Fr4On014j;KmggYyaINdB;SSmKGrwFLyR;trqV4BI71xI;M2kzreZCnhv;w0DzxpCd0aq;JcTzoupKdtG;RJcnYMtVxOS;xWUvequQxeM;PQCJ1jNYVMU;&dimension=ou:" + id + "&displayProperty=NAME",
+                data: JSON,
+                success: function (data, status) {
+                    if (data.rows.length > 0) {
+                        for (let pro in indicatorObj) {
+                            for (let ele of data.rows) {
+                                if (pro == ele["0"]) {
+                                    indicatorObj[pro] = Number(ele['3'])
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            return { ...obj, ...indicatorObj, ...dataObj }
+        }
+        function arraySorting(a, b) {
+            return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
+        }
+        $.ajax(
+            {
+                type: "GET",
+                async: false,
+                url: "../api/organisationUnits/" + orgUnit.id + ".json?fields=id,name,children[id,name,code]&paging=false",
+                data: JSON,
+                success: function (data, status) {
+                    allOrgUnits = data;
+                    for (var i = 0; i < allOrgUnits.children.length; i++) {
+                        level2OrgUnitsList.push({ "id": allOrgUnits.children[i].id, "name": allOrgUnits.children[i].name, "code": allOrgUnits.children[i].code });
+                    }
+                }
+            });
+        level2OrgUnitsList.sort(arraySorting);
+        if (orgUnitLevel == 1) {
+            for (var j = 0; j < level2OrgUnitsList.length; j++) {
+                let gObj = { region: level2OrgUnitsList[j].name }
+                let t = rTotal.find(ele => ele.ou == level2OrgUnitsList[j].id)
+                gObj['totalRegion'] = t
+                var level3OrgUnitsList = [];
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "../api/organisationUnits/" + level2OrgUnitsList[j].id + ".json?fields=id,name,children[id,name,code]&paging=false",
+                    data: JSON,
+                    success: function (data, status) {
+                        for (var i = 0; i < data.children.length; i++) {
+                            let val = getCountryData(data.children[i].id)
+                            let oo = { ...val, "id": data.children[i].id, "name": data.children[i].name, "code": data.children[i].code }
+                            level3OrgUnitsList.push(oo);
+                        }
+                        gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+                        /// dynamically  
+                    }
+                });
+                dataList.push(gObj)
+            }
+        }
+        if (orgUnitLevel == 2) {
+            var level3OrgUnitsList = [];
+            let gObj = { region: orgUnit.name }
+            let t = rTotal.find(ele => ele.ou == orgUnit.id)
+            gObj['totalRegion'] = t
+            for (var j = 0; j < level2OrgUnitsList.length; j++) {
+                let val = getCountryData(level2OrgUnitsList[j].id)
+                let oo = { ...val, "id": level2OrgUnitsList[j].id, "name": level2OrgUnitsList[j].name, "code": level2OrgUnitsList[j].code }
+                level3OrgUnitsList.push(oo);
+            }
+            gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+            dataList.push(gObj)
+        }
+        if (orgUnitLevel == 3) {
+            let gObj = {}
+            var level3OrgUnitsList = [];
+            let val = getCountryData(orgUnit.id)
+            let oo = { ...val, "id": orgUnit.id, "name": orgUnit.name, "code": orgUnit.code }
+            level3OrgUnitsList.push(oo);
+            gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+            dataList.push(gObj)
+        }
+        var gt = 0, gt1 = 0, gt2 = 0, gt3 = 0, gt4 = 0, gt5 = 0, gt6 = 0, gt7 = 0, gt8 = 0, gt9 = 0, gt10 = 0, gt11 = 0, gt12 = 0, gt13 = 0, gt14 = 0, gt15 = 0, gt16 = 0, gt17 = 0, gt18 = 0, gt19 = 0, gt20 = 0, gt21 = 0, gt22 = 0, gt23 = 0, gt24 = 0, gt25 = 0, gt26 = 0, gt27 = 0, gt28 = 0, gt29 = 0, gt30 = 0, gt31 = 0, gt32 = 0, gt33 = 0, gt34 = 0, gt35 = 0, gt36 = 0, gt37 = 0, gt38 = 0, gt39 = 0, gt40 = 0, gt41 = 0, gt42 = 0, gt43 = 0, gt44 = 0, gt45 = 0, gt46 = 0, gt47 = 0, gt48 = 0, gt49 = 0, gt50 = 0, gt51 = 0, gt52 = 0, gt53 = 0, gt54 = 0, gt55 = 0, gt56 = 0, gt57 = 0, gt58 = 0, gt59 = 0, gt60 = 0, gt61 = 0, gt62 = 0, gt63 = 0;
+        var checkgt = '', checkgt1 = '', checkgt2 = '', checkgt3 = '', checkgt4 = '', checkgt5 = '', checkgt6 = '', checkgt7 = '', checkgt8 = '', checkgt9 = '', checkgt10 = '', checkgt11 = '', checkgt12 = '', checkgt13 = '', checkgt14 = '', checkgt15 = '', checkgt16 = '', checkgt17 = '', checkgt18 = '', checkgt19 = '', checkgt20 = '', checkgt21 = '', checkgt22 = '', checkgt23 = '', checkgt24 = '', checkgt25 = '', checkgt26 = '', checkgt27 = '', checkgt28 = '', checkgt29 = '', checkgt30 = '', checkgt31 = '', checkgt32 = '', checkgt33 = '', checkgt34 = '', checkgt35 = '', checkgt36 = '', checkgt37 = '', checkgt38 = '', checkgt39 = '', checkgt40 = '', checkgt41 = '', checkgt42 = '', checkgt43 = '', checkgt44 = '', checkgt45 = '', checkgt46 = '', checkgt47 = '', checkgt48 = '', checkgt49 = '', checkgt50 = '', checkgt51 = '', checkgt52 = '', checkgt53 = '', checkgt54 = '', checkgt55 = '', checkgt56 = '', checkgt57 = '', checkgt58 = '', checkgt59 = '', checkgt60 = '', checkgt61 = '', checkgt62 = '', checkgt63 = '';
+
+        $('#dataTable').find("thead").append(` <tr style=" font-weight:400; text-align:center;">
+                <td colspan="57" width="100%" style="border:1px solid black;background:#ADD8E6; ">Leprosy core statistics by WHO region and country, <span class="currentPeriod">&nbsp;</span></td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td colspan="57" style="border:1px solid black;background:#ADD8E6; ">Reporting Year : - <span id="period">${period}</span></td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6; ">Region and country</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Code</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Population (in '000)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new cases detected (2020)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">New case detection rate (per 1 000 000 population)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of cases registered for treatment (end of 2020)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Registered prevalence rate (per 1 000 000 population)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of MB leprosy</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of MB leprosy</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of females among new cases</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of females among new cases</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new cases among children less than 5 and equal to 5 years</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new cases among children 6 to 15 years</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Child population (in '000)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new cases among children < 15 years</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of children among new cases</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Child case detection rate (per 1 000 000 child population)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new cases with G2D among children  < 15 years</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new cases with G2D among adults greater than 15 and equal to 15 years</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new cases with G2D among age unknown</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new G2D cases among females</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of new cases with G2D</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of new cases with G2D</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">New cases with G2D rate (per 1 000 000 population)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of non-autochthonous cases</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of non-autochthonous cases</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of relapses- MB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of relapses- PB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of relapses- unclassified</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total relapses</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Other retreatments- MB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Other retreatments- PB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Other retreatments- unclassified</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total other retreatments</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total retreatment cases</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Percentage of contacts examined</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of cases detected from contacts</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of new cases detected from contacts</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of cases detected through school children examination</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of new cases detected through school children examination</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of cases detected through active campaigns</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of new cases detected through active campaigns</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of cases detected through active campaigns for special groups</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of new cases detected through active campaigns for special groups</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients started treatment- MB (2018 cohort)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients started treatment- PB (2019 cohort)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Treatment completion rate (%) - MB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Treatment completion rate (%) - PB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">AMR test among relapse/ other retreatment cases</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">AMR test among new cases</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">AMR - rifampicin</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">AMR - dapsone</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">AMR - ofloxacin</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Resistance to one drug </td>
+                <td style="border:1px solid black;background:#ADD8E6; ">AMR - rifampicin and dapsone</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">AMR- rifampicin and ofloxacin</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Resistance to >1 drug </td>
+             </tr>`)
+        for (let data of dataList) {
+            if (orgUnitLevel < 3) {
+                $('#dataTable').find("tbody").append(`<tr style="background-color:#DCDCDC; text-align: left"><td  colspan="65">${data.region}</td></tr>`)
+            }
+            var checktot = '', checktot1 = '', checktot2 = '', checktot3 = '', checktot4 = '', checktot5 = '', checktot6 = '', checktot7 = '', checktot8 = '', checktot9 = '', checktot10 = '', checktot11 = '', checktot12 = '', checktot13 = '', checktot14 = '', checktot15 = '', checktot16 = '', checktot17 = '', checktot18 = '', checktot19 = '', checktot20 = '', checktot21 = '', checktot22 = '', checktot23 = '', checktot24 = '', checktot25 = '', checktot26 = '', checktot27 = '', checktot28 = '', checktot29 = '', checktot30 = '', checktot31 = '', checktot32 = '', checktot33 = '', checktot34 = '', checktot35 = '', checktot36 = '', checktot37 = '', checktot38 = '', checktot39 = '', checktot40 = '', checktot41 = '', checktot42 = '', checktot43 = '', checktot44 = '', checktot45 = '', checktot46 = '', checktot47 = '', checktot48 = '', checktot49 = '', checktot50 = '', checktot51 = '', checktot52 = '', checktot53 = '', checktot54 = '', checktot55 = '', checktot56 = '', checktot57 = '', checktot58 = '', checktot59 = '', checktot60 = '', checktot61 = '', checktot62 = '', checktot63 = 0;
+            var t = 0, t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, t31 = 0, t32 = 0, t33 = 0, t34 = 0, t35 = 0, t36 = 0, t37 = 0, t38 = 0, t39 = 0, t40 = 0, t41 = 0, t42 = 0, t43 = 0, t44 = 0, t45 = 0, t46 = 0, t47 = 0, t48 = 0, t49 = 0, t50 = 0, t51 = 0, t52 = 0, t53 = 0, t54 = 0, t55 = 0, t56 = 0, t57 = 0, t58 = 0, t59 = 0, t60 = 0, t61 = 0, t62 = 0, t63 = 0;
+            for (let ele of data.countrylist) {
+                if (ele.id == 'M2kzreZCnhv')
+                    if (ele['M2kzreZCnhv'] == '') {
+                        if ((ele['indicatorDataElements']['M2kzreZCnhv']['Xzuid5sSSg3-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-sdMU6tpPki6'] == "")) {
+                            ele['M2kzreZCnhv'] = 'NR'
+                        } else if ((ele['indicatorDataElements']['M2kzreZCnhv']['Xzuid5sSSg3-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-sdMU6tpPki6'] == "Not Available")) {
+                            ele['M2kzreZCnhv'] = 'Not Available'
+                        }
+                        else {
+                            let nu = Number(ele['indicatorDataElements']['M2kzreZCnhv']['Xzuid5sSSg3-HllvX50cXC0'])
+                            let de = Number(ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['M2kzreZCnhv']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['M2kzreZCnhv']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['M2kzreZCnhv']['IQgrP2W9gTV-sdMU6tpPki6'])
+                            let calc1 = (nu / de) * 100 || 0
+                            ele['M2kzreZCnhv'] = 0
+                        }
+                    }
+
+                if (ele['gY7b9azcUQG'] == '') {
+                    if ((ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['gY7b9azcUQG']['liZaznYiWwp-HllvX50cXC0'] == '')) {
+                        ele['gY7b9azcUQG'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['gY7b9azcUQG']['liZaznYiWwp-HllvX50cXC0'] == "Not Available")) {
+                        ele['gY7b9azcUQG'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['IQgrP2W9gTV-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['gY7b9azcUQG']['liZaznYiWwp-HllvX50cXC0'])
+                        let calc1 = (nu / 1) * 1000000 || 0
+                        ele['gY7b9azcUQG'] = 0
+                    }
+                }
+
+                if (ele['ElAjdwOrjMq'] == '') {
+                    if (((ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['ElAjdwOrjMq']['liZaznYiWwp-HllvX50cXC0'])) / Number(ele['indicatorDataElements']['ElAjdwOrjMq']['d1d6EWQZJGB-HllvX50cXC0'] == '')) {
+                        ele['ElAjdwOrjMq'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['liZaznYiWwp-HllvX50cXC0'] == 'Not Available') && (ele['indicatorDataElements']['ElAjdwOrjMq']['d1d6EWQZJGB-HllvX50cXC0'] == "Not Available")) {
+                        ele['ElAjdwOrjMq'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['IQgrP2W9gTV-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['ElAjdwOrjMq']['liZaznYiWwp-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['ElAjdwOrjMq']['d1d6EWQZJGB-HllvX50cXC0'])
+                        let calc1 = (nu / de) * 1000000 || 0
+                        ele['ElAjdwOrjMq'] = 0
+                    }
+                }
+
+                if (ele['YgvbZE63e8T'] == '') {
+                    if ((ele['indicatorDataElements']['YgvbZE63e8T']['bLR7YvL1f5O-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['YgvbZE63e8T']['bLR7YvL1f5O-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['YgvbZE63e8T']['mdupOTsRJ58-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['YgvbZE63e8T']['mdupOTsRJ58-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['YgvbZE63e8T']['lzbsUQJvvJB-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['YgvbZE63e8T']['lzbsUQJvvJB-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['YgvbZE63e8T']['LL3PpzJHqJZ-HllvX50cXC0'])) {
+                        ele['YgvbZE63e8T'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['YgvbZE63e8T']['bLR7YvL1f5O-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['YgvbZE63e8T']['bLR7YvL1f5O-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['YgvbZE63e8T']['mdupOTsRJ58-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['YgvbZE63e8T']['mdupOTsRJ58-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['YgvbZE63e8T']['lzbsUQJvvJB-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['YgvbZE63e8T']['lzbsUQJvvJB-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['YgvbZE63e8T']['LL3PpzJHqJZ-HllvX50cXC0'])) {
+                        ele['YgvbZE63e8T'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['YgvbZE63e8T']['bLR7YvL1f5O-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['YgvbZE63e8T']['bLR7YvL1f5O-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['YgvbZE63e8T']['mdupOTsRJ58-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['YgvbZE63e8T']['mdupOTsRJ58-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['YgvbZE63e8T']['lzbsUQJvvJB-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['YgvbZE63e8T']['lzbsUQJvvJB-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['YgvbZE63e8T']['LL3PpzJHqJZ-HllvX50cXC0'])
+                        let calc1 = (nu / 1) || 0
+                        ele['YgvbZE63e8T'] = 0
+                    }
+                }
+
+                if (ele['LhfXR2fKhsZ'] == '') {
+                    if ((ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-sdMU6tpPki6'] == "")) {
+                        ele['LhfXR2fKhsZ'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-sdMU6tpPki6'] == "Not Available")) {
+                        ele['LhfXR2fKhsZ'] = 'Not Available'
+                    } else {
+                        let nu = Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-sdMU6tpPki6'])
+                        let de = Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['LhfXR2fKhsZ']['IQgrP2W9gTV-sdMU6tpPki6'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['LhfXR2fKhsZ'] = 0
+                    }
+                }
+
+                if (ele['KrvcvcTLqIh'] == '') {
+                    if ((ele['indicatorDataElements']['KrvcvcTLqIh']['mNPlDlzmwru-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['xdbnQxRVTBq-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['liZaznYiWwp-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-sdMU6tpPki6'] == "")) {
+                        ele['KrvcvcTLqIh'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['KrvcvcTLqIh']['mNPlDlzmwru-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['xdbnQxRVTBq-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['liZaznYiWwp-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-sdMU6tpPki6'] == "Not Available")) {
+                        ele['KrvcvcTLqIh'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['KrvcvcTLqIh']['mNPlDlzmwru-HllvX50cXC0']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['xdbnQxRVTBq-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['KrvcvcTLqIh']['liZaznYiWwp-HllvX50cXC0']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['KrvcvcTLqIh']['IQgrP2W9gTV-sdMU6tpPki6'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['KrvcvcTLqIh'] = 0
+                    }
+                }
+                if (ele['PS9m9ERoPaj'] == '') {
+                    if ((ele['indicatorDataElements']['PS9m9ERoPaj']['evXyDr6c7eu-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['PS9m9ERoPaj']['gVmFx873rdZ-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['PS9m9ERoPaj']['IQgrP2W9gTV-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['PS9m9ERoPaj']['TBTHguhWty1-HllvX50cXC0'] == '')) {
+                        ele['PS9m9ERoPaj'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['PS9m9ERoPaj']['evXyDr6c7eu-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['PS9m9ERoPaj']['gVmFx873rdZ-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['PS9m9ERoPaj']['IQgrP2W9gTV-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['PS9m9ERoPaj']['TBTHguhWty1-HllvX50cXC0'] == 'Not Available')) {
+                        ele['PS9m9ERoPaj'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['PS9m9ERoPaj']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['PS9m9ERoPaj']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['PS9m9ERoPaj']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['PS9m9ERoPaj']['TBTHguhWty1-HllvX50cXC0'])
+                        let calc1 = (nu / 1) || 0
+                        ele['PS9m9ERoPaj'] = 0
+                    }
+                }
+                if (ele['C6xcdI95huJ'] == '') {
+                    if ((ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['TBTHguhWty1-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['liZaznYiWwp-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-sdMU6tpPki6'] == "")) {
+                        ele['C6xcdI95huJ'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['TBTHguhWty1-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['liZaznYiWwp-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-sdMU6tpPki6'] == "Not Available")) {
+                        ele['C6xcdI95huJ'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['TBTHguhWty1-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['C6xcdI95huJ']['liZaznYiWwp-HllvX50cXC0']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['C6xcdI95huJ']['IQgrP2W9gTV-sdMU6tpPki6'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['C6xcdI95huJ'] = 0
+                    }
+                }
+                //    if(ele['xl4EXfRMBrK'] == ''){
+                //      if(Object.keys(ele['indicatorDataElements']['xl4EXfRMBrK']).length == 0 ){
+                //          ele['xl4EXfRMBrK'] = ''
+                //     }else{
+                //          let calc1 =  Number(ele['indicatorDataElements']['xl4EXfRMBrK'])
+                //           ele['xl4EXfRMBrK'] =calc1  
+                //       }
+                //    } 
+
+                if (ele['j62SFyBOrSN'] == '') {
+                    if ((ele['indicatorDataElements']['j62SFyBOrSN']['tzGljEoaVdT-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['liZaznYiWwp-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-sdMU6tpPki6'] == "")) {
+                        ele['j62SFyBOrSN'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['j62SFyBOrSN']['tzGljEoaVdT-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['liZaznYiWwp-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-sdMU6tpPki6'] == "Not Available")) {
+                        ele['j62SFyBOrSN'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['j62SFyBOrSN']['tzGljEoaVdT-HllvX50cXC0']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['xl4EXfRMBrK-sdMU6tpPki6'])
+                        let de = Number(ele['indicatorDataElements']['j62SFyBOrSN']['liZaznYiWwp-HllvX50cXC0']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['j62SFyBOrSN']['IQgrP2W9gTV-sdMU6tpPki6'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['j62SFyBOrSN'] = 0
+                    }
+                }
+
+                if (ele['v1Fr4On014j'] == '') {
+                    if ((ele['indicatorDataElements']['v1Fr4On014j']['tzGljEoaVdT-HllvX50cXC0'] == '') && (ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['v1Fr4On014j']['d1d6EWQZJGB-HllvX50cXC0'] == '')) {
+                        ele['v1Fr4On014j'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['v1Fr4On014j']['tzGljEoaVdT-HllvX50cXC0'] == 'Not Available') && (ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['v1Fr4On014j']['d1d6EWQZJGB-HllvX50cXC0'] == 'Not Available')) {
+                        ele['v1Fr4On014j'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['v1Fr4On014j']['tzGljEoaVdT-HllvX50cXC0'] == 'Not Available') && (ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['v1Fr4On014j']['xl4EXfRMBrK-sdMU6tpPki6'])
+                        let de = Number(ele['indicatorDataElements']['v1Fr4On014j']['d1d6EWQZJGB-HllvX50cXC0'])
+                        let calc1 = (nu / de) * 1000000 || 0
+                        ele['v1Fr4On014j'] = 0
+                    }
+                }
+
+                if (ele['KmggYyaINdB'] == '') {
+                    if ((ele['indicatorDataElements']['KmggYyaINdB']['nbDlMYKljTK-HllvX50cXC0'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-sdMU6tpPki6'] == '') && (ele['indicatorDataElements']['KmggYyaINdB']['liZaznYiWwp-HllvX50cXC0'] == '')) {
+                        ele['KmggYyaINdB'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['KmggYyaINdB']['nbDlMYKljTK-HllvX50cXC0'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-sdMU6tpPki6'] == 'Not Available') && (ele['indicatorDataElements']['KmggYyaINdB']['liZaznYiWwp-HllvX50cXC0'] == 'Not Available')) {
+                        ele['KmggYyaINdB'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['KmggYyaINdB']['nbDlMYKljTK-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['IQgrP2W9gTV-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['KmggYyaINdB']['liZaznYiWwp-HllvX50cXC0'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['KmggYyaINdB'] = 0
+                    }
+                }
+
+                //    if(ele['SSmKGrwFLyR'] == ''){
+                //      if(Object.keys(ele['indicatorDataElements']['SSmKGrwFLyR']).length == 0 ){
+                //          ele['SSmKGrwFLyR'] = ''
+                //     }else{
+                //          let calc1 =  Number(ele['indicatorDataElements']['SSmKGrwFLyR'])
+                //           ele['SSmKGrwFLyR'] =calc1  
+                //       }
+                //    }
+                if (ele['trqV4BI71xI'] == '') {
+                    if ((ele['indicatorDataElements']['trqV4BI71xI']['GuZ5MKrfrBp-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['trqV4BI71xI']['qHIGkVqSItK-HllvX50cXC0'] == '')) {
+                        ele['trqV4BI71xI'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['trqV4BI71xI']['GuZ5MKrfrBp-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['trqV4BI71xI']['qHIGkVqSItK-HllvX50cXC0'] == 'Not Available')) {
+                        ele['trqV4BI71xI'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['trqV4BI71xI']['GuZ5MKrfrBp-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['trqV4BI71xI']['qHIGkVqSItK-HllvX50cXC0'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['trqV4BI71xI'] = 0
+                    }
+                }
+
+                if (ele['w0DzxpCd0aq'] == '') {
+                    if ((ele['indicatorDataElements']['w0DzxpCd0aq']['lk5YKbM2SEu-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-sdMU6tpPki6'] == "")) {
+                        ele['w0DzxpCd0aq'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['w0DzxpCd0aq']['lk5YKbM2SEu-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-sdMU6tpPki6'] == "Not Available")) {
+                        ele['w0DzxpCd0aq'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['w0DzxpCd0aq']['lk5YKbM2SEu-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['w0DzxpCd0aq']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['w0DzxpCd0aq']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['w0DzxpCd0aq']['IQgrP2W9gTV-sdMU6tpPki6'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['w0DzxpCd0aq'] = 0
+                    }
+                }
+                if (ele['JcTzoupKdtG'] == '') {
+                    if ((ele['indicatorDataElements']['JcTzoupKdtG']['NlyC1FwJWy9-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-sdMU6tpPki6'] == "")) {
+                        ele['JcTzoupKdtG'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['JcTzoupKdtG']['NlyC1FwJWy9-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-sdMU6tpPki6'] == "Not Available")) {
+                        ele['JcTzoupKdtG'] = 'Not Available'
+                    } else {
+                        let nu = Number(ele['indicatorDataElements']['JcTzoupKdtG']['NlyC1FwJWy9-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['JcTzoupKdtG']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['JcTzoupKdtG']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['JcTzoupKdtG']['IQgrP2W9gTV-sdMU6tpPki6'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['JcTzoupKdtG'] = 0
+                    }
+                }
+                if (ele['RJcnYMtVxOS'] == '') {
+                    if ((ele['indicatorDataElements']['RJcnYMtVxOS']['uhtjTobhtHO-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-Te9RyzefSAz'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-ZZFiCRpT37i'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-sdMU6tpPki6'] == "") && (ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-sdMU6tpPki6'] == "")) {
+                        ele['RJcnYMtVxOS'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['RJcnYMtVxOS']['uhtjTobhtHO-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-Te9RyzefSAz'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-ZZFiCRpT37i'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-sdMU6tpPki6'] == "Not Available") && (ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-sdMU6tpPki6'] == "Not Available")) {
+                        ele['RJcnYMtVxOS'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['RJcnYMtVxOS']['uhtjTobhtHO-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['RJcnYMtVxOS']['evXyDr6c7eu-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['RJcnYMtVxOS']['gVmFx873rdZ-sdMU6tpPki6']) + Number(ele['indicatorDataElements']['RJcnYMtVxOS']['IQgrP2W9gTV-sdMU6tpPki6'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['RJcnYMtVxOS'] = 0
+                    }
+                }
+                if (ele['xWUvequQxeM'] == '') {
+                    if ((ele['indicatorDataElements']['xWUvequQxeM']['TCJv5BNVYCw-HllvX50cXC0'] == '') && (ele['indicatorDataElements']['xWUvequQxeM']['VVBrsKiEqdh-HllvX50cXC0'] == "")) {
+                        ele['xWUvequQxeM'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['xWUvequQxeM']['TCJv5BNVYCw-HllvX50cXC0'] == 'Not Available') && (ele['indicatorDataElements']['xWUvequQxeM']['VVBrsKiEqdh-HllvX50cXC0'] == "Not Available")) {
+                        ele['xWUvequQxeM'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['xWUvequQxeM']['TCJv5BNVYCw-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['xWUvequQxeM']['VVBrsKiEqdh-HllvX50cXC0'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['xWUvequQxeM'] = 0
+                    }
+                }
+                if (ele['PQCJ1jNYVMU'] == '') {
+                    if ((ele['indicatorDataElements']['PQCJ1jNYVMU']['t5AmFhGyKw9-HllvX50cXC0'] == "") && (ele['indicatorDataElements']['PQCJ1jNYVMU']['PFNL3BPu3A6-HllvX50cXC0'] == "")) {
+                        ele['PQCJ1jNYVMU'] = 'NR'
+                    }
+                    else if ((ele['indicatorDataElements']['PQCJ1jNYVMU']['t5AmFhGyKw9-HllvX50cXC0'] == "Not Available") && (ele['indicatorDataElements']['PQCJ1jNYVMU']['PFNL3BPu3A6-HllvX50cXC0'] == "Not Available")) {
+                        ele['PQCJ1jNYVMU'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['PQCJ1jNYVMU']['t5AmFhGyKw9-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['PQCJ1jNYVMU']['PFNL3BPu3A6-HllvX50cXC0'])
+                        let calc1 = (nu / de) * 100 || 0
+                        ele['PQCJ1jNYVMU'] = 0
+                    }
+                }
+                if (ele['sAXV6Hnve4i'] == '') {
+                    if ((ele['indicatorDataElements']['sAXV6Hnve4i']['bLR7YvL1f5O-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['sAXV6Hnve4i']['bLR7YvL1f5O-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['sAXV6Hnve4i']['mdupOTsRJ58-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['sAXV6Hnve4i']['mdupOTsRJ58-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['sAXV6Hnve4i']['lzbsUQJvvJB-Te9RyzefSAz'] == '') && (ele['indicatorDataElements']['sAXV6Hnve4i']['lzbsUQJvvJB-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['sAXV6Hnve4i']['LL3PpzJHqJZ-HllvX50cXC0'] == '') && (ele['indicatorDataElements']['sAXV6Hnve4i']['d1d6EWQZJGB-HllvX50cXC0'] == '')) {
+                        ele['sAXV6Hnve4i'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['sAXV6Hnve4i']['bLR7YvL1f5O-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['sAXV6Hnve4i']['bLR7YvL1f5O-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['sAXV6Hnve4i']['mdupOTsRJ58-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['sAXV6Hnve4i']['mdupOTsRJ58-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['sAXV6Hnve4i']['lzbsUQJvvJB-Te9RyzefSAz'] == 'Not Available') && (ele['indicatorDataElements']['sAXV6Hnve4i']['lzbsUQJvvJB-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['sAXV6Hnve4i']['LL3PpzJHqJZ-HllvX50cXC0'] == 'Not Available') && (ele['indicatorDataElements']['sAXV6Hnve4i']['d1d6EWQZJGB-HllvX50cXC0'] == 'Not Available')) {
+                        ele['sAXV6Hnve4i'] = 'Not Available'
+                    } else {
+                        let nu = Number(ele['indicatorDataElements']['sAXV6Hnve4i']['bLR7YvL1f5O-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['sAXV6Hnve4i']['bLR7YvL1f5O-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['sAXV6Hnve4i']['mdupOTsRJ58-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['sAXV6Hnve4i']['mdupOTsRJ58-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['sAXV6Hnve4i']['lzbsUQJvvJB-Te9RyzefSAz']) + Number(ele['indicatorDataElements']['sAXV6Hnve4i']['lzbsUQJvvJB-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['sAXV6Hnve4i']['LL3PpzJHqJZ-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['sAXV6Hnve4i']['d1d6EWQZJGB-HllvX50cXC0'])
+                        let calc1 = (nu / de) * 1000000 || 0
+                        ele['sAXV6Hnve4i'] = 0
+                    }
+                }
+                if (ele['SsZP6Izyhay'] == '') {
+                    if ((ele['indicatorDataElements']['SsZP6Izyhay']['evXyDr6c7eu-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['SsZP6Izyhay']['gVmFx873rdZ-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['SsZP6Izyhay']['IQgrP2W9gTV-ZZFiCRpT37i'] == '') && (ele['indicatorDataElements']['SsZP6Izyhay']['TBTHguhWty1-HllvX50cXC0'] == '') && (ele['indicatorDataElements']['SsZP6Izyhay']['EnQPW5xZDPX-DGU1CWAZ6qw'] == '')) {
+                        ele['SsZP6Izyhay'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['SsZP6Izyhay']['evXyDr6c7eu-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['SsZP6Izyhay']['gVmFx873rdZ-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['SsZP6Izyhay']['IQgrP2W9gTV-ZZFiCRpT37i'] == 'Not Available') && (ele['indicatorDataElements']['SsZP6Izyhay']['TBTHguhWty1-HllvX50cXC0'] == 'Not Available') && (ele['indicatorDataElements']['SsZP6Izyhay']['EnQPW5xZDPX-DGU1CWAZ6qw'] == 'Not Available')) {
+                        ele['SsZP6Izyhay'] = 'Not Available'
+                    } else {
+                        let nu = Number(ele['indicatorDataElements']['SsZP6Izyhay']['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['SsZP6Izyhay']['gVmFx873rdZ-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['SsZP6Izyhay']['IQgrP2W9gTV-ZZFiCRpT37i']) + Number(ele['indicatorDataElements']['SsZP6Izyhay']['TBTHguhWty1-HllvX50cXC0'])
+                        let de = Number(ele['indicatorDataElements']['SsZP6Izyhay']['EnQPW5xZDPX-DGU1CWAZ6qw'])
+                        let calc1 = (nu / de) * 1000000 || 0
+                        ele['SsZP6Izyhay'] = 0
+                    }
+                }
+                if (ele['yMIaVLPC3P9'] == '') {
+                    if ((ele['indicatorDataElements']['yMIaVLPC3P9']['MiHLzmsVFPf-xC5PhT2YVtr'] == '') && (ele['indicatorDataElements']['yMIaVLPC3P9']['ubgNtdy3h9H-xC5PhT2YVtr'] == '') && (ele['indicatorDataElements']['yMIaVLPC3P9']['tyHgOKrZsMJ-xC5PhT2YVtr'] == '')) {
+                        ele['yMIaVLPC3P9'] = 'NR'
+                    } else if ((ele['indicatorDataElements']['yMIaVLPC3P9']['MiHLzmsVFPf-xC5PhT2YVtr'] == 'Not Available') && (ele['indicatorDataElements']['yMIaVLPC3P9']['ubgNtdy3h9H-xC5PhT2YVtr'] == 'Not Available') && (ele['indicatorDataElements']['yMIaVLPC3P9']['tyHgOKrZsMJ-xC5PhT2YVtr'] == 'Not Available')) {
+                        ele['yMIaVLPC3P9'] = 'Not Available'
+                    }
+                    else {
+                        let nu = Number(ele['indicatorDataElements']['yMIaVLPC3P9']['MiHLzmsVFPf-xC5PhT2YVtr']) + Number(ele['indicatorDataElements']['yMIaVLPC3P9']['ubgNtdy3h9H-xC5PhT2YVtr']) + Number(ele['indicatorDataElements']['yMIaVLPC3P9']['tyHgOKrZsMJ-xC5PhT2YVtr'])
+                        let calc1 = (nu / 1) || 0
+                        ele['yMIaVLPC3P9'] = 0
+                    }
+                }
+
+                var sumVal1 = 0, sumVal2 = 0, sumVal3 = 0, sumVal4 = 0, sumVal5 = 0, sumVal6 = 0, sumVal7 = 0, sumVal8 = 0, sumVal9 = 0, sumVal10 = 0, sumVal11 = 0, sumVal12 = 0, sumVal13 = 0, sumVal14 = 0, sumVal15 = 0, sumVal16 = 0, sumVal = 17, sumVal = 18, sumVal19 = 0, sumVal20;
+                if (Number.isInteger(Number(ele['d1d6EWQZJGB-HllvX50cXC0']))) t += Number(ele['d1d6EWQZJGB-HllvX50cXC0'])
+                checktot += ele['d1d6EWQZJGB-HllvX50cXC0']
+                var sum1 = (Number(ele['evXyDr6c7eu-Te9RyzefSAz']) + Number(ele['evXyDr6c7eu-ZZFiCRpT37i']) + Number(ele['evXyDr6c7eu-sdMU6tpPki6'])); if (isNaN(sum1)) sum1 = 0
+                t5 += sum1
+                var checkStatus = ele['evXyDr6c7eu-Te9RyzefSAz'] + ele['evXyDr6c7eu-ZZFiCRpT37i'] + ele['evXyDr6c7eu-sdMU6tpPki6'];
+                checktot5 += checkStatus
+                if (Number.isInteger(Number(ele['xdbnQxRVTBq-HllvX50cXC0']))) t7 += Number(ele['xdbnQxRVTBq-HllvX50cXC0'])
+                checktot7 += ele['xdbnQxRVTBq-HllvX50cXC0']
+                var sum2 = (Number(ele['MiHLzmsVFPf-xC5PhT2YVtr']) + Number(ele['ubgNtdy3h9H-xC5PhT2YVtr']) + Number(ele['tyHgOKrZsMJ-xC5PhT2YVtr'])); if (isNaN(sum2)) sum2 = 0
+                t9 += sum2
+                var csum2 = ele['MiHLzmsVFPf-xC5PhT2YVtr'] + ele['ubgNtdy3h9H-xC5PhT2YVtr'] + ele['tyHgOKrZsMJ-xC5PhT2YVtr']
+                checktot9 += csum2
+                var sum3 = (Number(ele['MiHLzmsVFPf-GcQ4Ep0wmnH']) + Number(ele['ubgNtdy3h9H-GcQ4Ep0wmnH']) + Number(ele['tyHgOKrZsMJ-GcQ4Ep0wmnH'])); if (isNaN(sum3)) sum3 = 0
+                t10 += sum3
+                var csum3 = ele['MiHLzmsVFPf-GcQ4Ep0wmnH'] + ele['ubgNtdy3h9H-GcQ4Ep0wmnH'] + ele['tyHgOKrZsMJ-GcQ4Ep0wmnH']
+                checktot10 += csum3
+                if (Number.isInteger(Number(ele['EnQPW5xZDPX-DGU1CWAZ6qw']))) t11 += Number(ele['EnQPW5xZDPX-DGU1CWAZ6qw'])
+                checktot11 += ele['EnQPW5xZDPX-DGU1CWAZ6qw']
+                if (Number.isInteger(Number(ele['xl4EXfRMBrK-ZZFiCRpT37i']))) t15 += Number(ele['xl4EXfRMBrK-ZZFiCRpT37i'])
+                checktot15 += ele['xl4EXfRMBrK-ZZFiCRpT37i']
+                if (Number.isInteger(Number(ele['xl4EXfRMBrK-Te9RyzefSAz']))) t16 += Number(ele['xl4EXfRMBrK-Te9RyzefSAz'])
+                checktot16 += ele['xl4EXfRMBrK-Te9RyzefSAz']
+                if (Number.isInteger(Number(ele['xl4EXfRMBrK-sdMU6tpPki6']))) t17 += Number(ele['xl4EXfRMBrK-sdMU6tpPki6'])
+                checktot17 += ele['xl4EXfRMBrK-sdMU6tpPki6']
+                if (Number.isInteger(Number(ele['RcRolaLXGcw-HllvX50cXC0']))) t18 += Number(ele['RcRolaLXGcw-HllvX50cXC0'])
+                checktot18 += ele['RcRolaLXGcw-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['nbDlMYKljTK-HllvX50cXC0']))) t22 += Number(ele['nbDlMYKljTK-HllvX50cXC0'])
+                checktot22 += ele['nbDlMYKljTK-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['VBEhMPsLu53-HllvX50cXC0']))) t24 += Number(ele['VBEhMPsLu53-HllvX50cXC0'])
+                checktot24 += ele['VBEhMPsLu53-HllvX50cXC0']
+                if (ele['YVj2PYy0Slj-HllvX50cXC0']) t25 += Number(ele['YVj2PYy0Slj-HllvX50cXC0'])
+                checktot25 += ele['YVj2PYy0Slj-HllvX50cXC0']
+                if (ele['KJtRiyeoCGx-HllvX50cXC0']) t26 += Number(ele['KJtRiyeoCGx-HllvX50cXC0'])
+                checktot26 += ele['KJtRiyeoCGx-HllvX50cXC0']
+                let checkedVal = ele['VBEhMPsLu53-HllvX50cXC0'] + ele['YVj2PYy0Slj-HllvX50cXC0'] + ele['KJtRiyeoCGx-HllvX50cXC0']
+                var sum4 = (Number(ele['VBEhMPsLu53-HllvX50cXC0']) + Number(ele['YVj2PYy0Slj-HllvX50cXC0']) + Number(ele['KJtRiyeoCGx-HllvX50cXC0'])); if (isNaN(sum4)) sum4 = 0
+                t27 += sum4
+                var csum4 = ele['VBEhMPsLu53-HllvX50cXC0'] + ele['YVj2PYy0Slj-HllvX50cXC0'] + ele['KJtRiyeoCGx-HllvX50cXC0']
+                checktot27 += csum4
+                if (Number.isInteger(Number(ele['lhSRNgfsxYC-HllvX50cXC0']))) t28 += Number(ele['lhSRNgfsxYC-HllvX50cXC0'])
+                checktot28 += ele['lhSRNgfsxYC-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['EHT4ON2ZtNl-HllvX50cXC0']))) t29 += Number(ele['EHT4ON2ZtNl-HllvX50cXC0'])
+                checktot29 += ele['EHT4ON2ZtNl-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['vp8pxtgYBL2-HllvX50cXC0']))) t30 += Number(ele['vp8pxtgYBL2-HllvX50cXC0'])
+                checktot30 += ele['vp8pxtgYBL2-HllvX50cXC0']
+                var sum5 = (Number(ele['lhSRNgfsxYC-HllvX50cXC0']) + Number(ele['EHT4ON2ZtNl-HllvX50cXC0']) + Number(ele['vp8pxtgYBL2-HllvX50cXC0'])); if (isNaN(sum5)) sum5 = 0
+                t31 += sum5
+                var csum5 = ele['lhSRNgfsxYC-HllvX50cXC0'] + ele['EHT4ON2ZtNl-HllvX50cXC0'] + ele['vp8pxtgYBL2-HllvX50cXC0']
+                checktot31 += csum5
+                if (Number.isInteger(Number(ele['Xzuid5sSSg3-HllvX50cXC0']))) t34 += Number(ele['Xzuid5sSSg3-HllvX50cXC0'])
+                checktot34 += ele['Xzuid5sSSg3-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['lk5YKbM2SEu-HllvX50cXC0']))) t36 += Number(ele['lk5YKbM2SEu-HllvX50cXC0'])
+                checktot36 += ele['lk5YKbM2SEu-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['NlyC1FwJWy9-HllvX50cXC0']))) t38 += Number(ele['NlyC1FwJWy9-HllvX50cXC0'])
+                checktot38 += ele['NlyC1FwJWy9-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['uhtjTobhtHO-HllvX50cXC0']))) t40 += Number(ele['uhtjTobhtHO-HllvX50cXC0'])
+                checktot40 += ele['uhtjTobhtHO-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['VVBrsKiEqdh-HllvX50cXC0']))) t42 += Number(ele['VVBrsKiEqdh-HllvX50cXC0'])
+                checktot42 += ele['VVBrsKiEqdh-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['PFNL3BPu3A6-HllvX50cXC0']))) t43 += Number(ele['PFNL3BPu3A6-HllvX50cXC0'])
+                checktot43 += ele['PFNL3BPu3A6-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['JK1VCsNhg6x-HllvX50cXC0']))) t46 += Number(ele['JK1VCsNhg6x-HllvX50cXC0'])
+                checktot46 += ele['JK1VCsNhg6x-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['MJGjCnCK8qJ-HllvX50cXC0']))) t47 += Number(ele['MJGjCnCK8qJ-HllvX50cXC0'])
+                checktot47 += ele['MJGjCnCK8qJ-HllvX50cXC0']
+                let s1 = ele['sgdAybfDzTl-oSHl2cUvHmk'] + ele['CAwisvSGkaj-oSHl2cUvHmk'];
+                let s2 = ele['sgdAybfDzTl-qqJwrOzkzcz'] + ele['CAwisvSGkaj-qqJwrOzkzcz'];
+                let s3 = ele['sgdAybfDzTl-G0EY8ZnkmVI'] + ele['CAwisvSGkaj-G0EY8ZnkmVI'];
+                let s4 = ele['sgdAybfDzTl-oSHl2cUvHmk'] + ele['CAwisvSGkaj-oSHl2cUvHmk'] + ele['sgdAybfDzTl-qqJwrOzkzcz'] + ele['CAwisvSGkaj-qqJwrOzkzcz'] + ele['sgdAybfDzTl-G0EY8ZnkmVI'] + ele['CAwisvSGkaj-G0EY8ZnkmVI'];
+                let s5 = ele['sgdAybfDzTl-Vi7NufwLzKs'] + ele['CAwisvSGkaj-Vi7NufwLzKs'];
+                let s6 = ele['ej7YYjvhLmR-HllvX50cXC0'] + ele['DAs6FtLcYz1-HllvX50cXC0'];
+                let s7 = ele['sgdAybfDzTl-Vi7NufwLzKs'] + ele['CAwisvSGkaj-Vi7NufwLzKs'] + ele['CAwisvSGkaj-Vi7NufwLzKs'] + ele['DAs6FtLcYz1-HllvX50cXC0'];
+                var sum6 = (Number(ele['sgdAybfDzTl-oSHl2cUvHmk']) + Number(ele['CAwisvSGkaj-oSHl2cUvHmk'])); if (isNaN(sum6)) sum6 = 0
+                t48 += sum6
+                var csum6 = ele['sgdAybfDzTl-oSHl2cUvHmk'] + ele['CAwisvSGkaj-oSHl2cUvHmk']
+                checktot48 += csum6
+                var sum7 = (Number(ele['sgdAybfDzTl-qqJwrOzkzcz']) + Number(ele['CAwisvSGkaj-qqJwrOzkzcz'])); if (isNaN(sum7)) sum7 = 0
+                t49 += sum7
+                var csum7 = ele['sgdAybfDzTl-qqJwrOzkzcz'] + ele['CAwisvSGkaj-qqJwrOzkzcz']
+                checktot49 += csum9
+                var sum8 = (Number(ele['sgdAybfDzTl-G0EY8ZnkmVI']) + Number(ele['CAwisvSGkaj-G0EY8ZnkmVI'])); if (isNaN(sum8)) sum8 = 0
+                t50 += sum8
+                var csum8 = ele['sgdAybfDzTl-G0EY8ZnkmVI'] + ele['CAwisvSGkaj-G0EY8ZnkmVI'];
+                checktot50 += csum8
+                var sum9 = (Number(ele['sgdAybfDzTl-oSHl2cUvHmk']) + Number(ele['CAwisvSGkaj-oSHl2cUvHmk']) + Number(ele['sgdAybfDzTl-qqJwrOzkzcz']) + Number(ele['CAwisvSGkaj-qqJwrOzkzcz']) + Number(ele['sgdAybfDzTl-G0EY8ZnkmVI']) + Number(ele['CAwisvSGkaj-G0EY8ZnkmVI'])); if (isNaN(sum9)) sum9 = 0
+                t51 += sum9
+                var csum9 = ele['sgdAybfDzTl-oSHl2cUvHmk'] + ele['CAwisvSGkaj-oSHl2cUvHmk'] + ele['sgdAybfDzTl-qqJwrOzkzcz'] + ele['CAwisvSGkaj-qqJwrOzkzcz'] + ele['sgdAybfDzTl-G0EY8ZnkmVI'] + ele['CAwisvSGkaj-G0EY8ZnkmVI'];
+                checktot51 += csum9
+                var sum10 = (Number(ele['sgdAybfDzTl-Vi7NufwLzKs']) + Number(ele['CAwisvSGkaj-Vi7NufwLzKs'])); if (isNaN(sum10)) sum10 = 0
+                t52 += sum10
+                var csum10 = ele['sgdAybfDzTl-Vi7NufwLzKs'] + ele['CAwisvSGkaj-Vi7NufwLzKs']
+                checktot52 += csum10
+                var sum11 = (Number(ele['CAwisvSGkaj-Vi7NufwLzKs']) + Number(ele['DAs6FtLcYz1-HllvX50cXC0'])); if (isNaN(sum11)) sum11 = 0
+                t53 += sum11
+                var csum11 = ele['CAwisvSGkaj-Vi7NufwLzKs'] + ele['DAs6FtLcYz1-HllvX50cXC0']
+                checktot53 += csum11
+                var sum12 = (Number(ele['sgdAybfDzTl-Vi7NufwLzKs']) + Number(ele['CAwisvSGkaj-Vi7NufwLzKs']) + Number(ele['CAwisvSGkaj-Vi7NufwLzKs']) + Number(ele['DAs6FtLcYz1-HllvX50cXC0'])); if (isNaN(sum12)) sum12 = 0
+                t54 += sum12
+                var csum12 = ele['sgdAybfDzTl-Vi7NufwLzKs'] + ele['CAwisvSGkaj-Vi7NufwLzKs'] + ele['CAwisvSGkaj-Vi7NufwLzKs'] + ele['DAs6FtLcYz1-HllvX50cXC0'];
+                checktot54 += csum12
+                if (ele['nbDlMYKljTK-HllvX50cXC0'] == 0) ele['KmggYyaINdB'] = 0
+                if (ele['nbDlMYKljTK-HllvX50cXC0'] == "") ele['KmggYyaINdB'] = ""
+
+                if (ele['Xzuid5sSSg3-HllvX50cXC0'] == 0) ele['M2kzreZCnhv'] = 0
+                if (ele['Xzuid5sSSg3-HllvX50cXC0'] == "") ele['M2kzreZCnhv'] = ""
+
+                if (ele['lk5YKbM2SEu-HllvX50cXC0'] == 0) ele['w0DzxpCd0aq'] = 0
+                if (ele['lk5YKbM2SEu-HllvX50cXC0'] == "") ele['w0DzxpCd0aq'] = ""
+
+                if (ele['NlyC1FwJWy9-HllvX50cXC0'] == 0) ele['JcTzoupKdtG'] = 0
+                if (ele['NlyC1FwJWy9-HllvX50cXC0'] == "") ele['JcTzoupKdtG'] = ""
+
+                if (ele['uhtjTobhtHO-HllvX50cXC0'] == 0) ele['RJcnYMtVxOS'] = 0
+                if (ele['uhtjTobhtHO-HllvX50cXC0'] == "") ele['RJcnYMtVxOS'] = ""
+                $('#dataTable').find("tbody").append(`<tr><td>${ele.name}</td><td>${ele.code}</td><td>${ele['d1d6EWQZJGB-HllvX50cXC0'] == "" ? "NR" : ele['d1d6EWQZJGB-HllvX50cXC0']}</td><td>${ele['gY7b9azcUQG']}</td><td>${ele['ElAjdwOrjMq']}</td><td>${ele['YgvbZE63e8T']}</td><td>${ele['sAXV6Hnve4i']}</td><td>${sum1 == "" ? "NR" : sum1}</td><td>${ele['LhfXR2fKhsZ']}</td><td>${ele['xdbnQxRVTBq-HllvX50cXC0'] == "" ? "NR" : ele['xdbnQxRVTBq-HllvX50cXC0']}</td><td>${ele['KrvcvcTLqIh']}</td><td>${ele['yMIaVLPC3P9']}</td><td>${sum3 == "" ? "NR" : sum3}</td><td>${ele['EnQPW5xZDPX-DGU1CWAZ6qw'] == "" ? "NR" : ele['EnQPW5xZDPX-DGU1CWAZ6qw']}</td><td>${ele['PS9m9ERoPaj']}</td><td>${ele['C6xcdI95huJ']}</td><td>${ele['SsZP6Izyhay']}</td><td>${ele['xl4EXfRMBrK-ZZFiCRpT37i'] == "" ? "NR" : ele['xl4EXfRMBrK-ZZFiCRpT37i']}</td><td>${ele['xl4EXfRMBrK-Te9RyzefSAz'] == "" ? "NR" : ele['xl4EXfRMBrK-Te9RyzefSAz']}</td><td>${ele['xl4EXfRMBrK-sdMU6tpPki6'] == "" ? "NR" : ele['xl4EXfRMBrK-sdMU6tpPki6']}</td><td>${ele['RcRolaLXGcw-HllvX50cXC0'] == "" ? "NR" : ele['RcRolaLXGcw-HllvX50cXC0']}</td><td>${ele['xl4EXfRMBrK']}</td><td>${ele['j62SFyBOrSN']}</td><td>${ele['v1Fr4On014j']}</td><td>${ele['nbDlMYKljTK-HllvX50cXC0'] == "" ? "NR" : ele['nbDlMYKljTK-HllvX50cXC0']}</td><td>${ele['KmggYyaINdB']}</td><td>${ele['VBEhMPsLu53-HllvX50cXC0'] == "" ? "NR" : ele['VBEhMPsLu53-HllvX50cXC0']}</td><td>${ele['YVj2PYy0Slj-HllvX50cXC0'] == "" ? "NR" : ele['YVj2PYy0Slj-HllvX50cXC0']}</td><td>${ele['KJtRiyeoCGx-HllvX50cXC0'] == "" ? "NR" : ele['KJtRiyeoCGx-HllvX50cXC0']}</td><td>${checkedVal == "" ? "NR" : sum4}</td><td>${ele['lhSRNgfsxYC-HllvX50cXC0'] == "" ? "NR" : ele['lhSRNgfsxYC-HllvX50cXC0']}</td><td>${ele['EHT4ON2ZtNl-HllvX50cXC0'] == "" ? "NR" : ele['EHT4ON2ZtNl-HllvX50cXC0']}</td><td>${ele['vp8pxtgYBL2-HllvX50cXC0'] == "" ? "NR" : ele['vp8pxtgYBL2-HllvX50cXC0']}</td><td>${sum5 == "" ? "NR" : sum5}</td><td>${ele['SSmKGrwFLyR'] == "" ? "NR" : ele['SSmKGrwFLyR']}</td><td>${ele['trqV4BI71xI'] == "" ? "NR" : ele['trqV4BI71xI']}</td><td>${ele['Xzuid5sSSg3-HllvX50cXC0'] == "" ? "NR" : ele['Xzuid5sSSg3-HllvX50cXC0']}</td><td>${ele['M2kzreZCnhv']}</td><td>${ele['lk5YKbM2SEu-HllvX50cXC0'] == "" ? "NR" : ele['lk5YKbM2SEu-HllvX50cXC0']}</td><td>${ele['w0DzxpCd0aq']}</td><td>${ele['NlyC1FwJWy9-HllvX50cXC0'] == "" ? "NR" : ele['NlyC1FwJWy9-HllvX50cXC0']}</td><td>${ele['JcTzoupKdtG']}</td><td>${ele['uhtjTobhtHO-HllvX50cXC0'] == "" ? "NR" : ele['uhtjTobhtHO-HllvX50cXC0']}</td><td>${ele['RJcnYMtVxOS']}</td><td>${ele['VVBrsKiEqdh-HllvX50cXC0'] == "" ? "NR" : ele['VVBrsKiEqdh-HllvX50cXC0']}</td><td>${ele['PFNL3BPu3A6-HllvX50cXC0'] == "" ? "NR" : ele['PFNL3BPu3A6-HllvX50cXC0']}</td><td>${ele['xWUvequQxeM'] == "NR" ? "" : ele['xWUvequQxeM']}</td><td>${ele['PQCJ1jNYVMU'] == "NR" ? "" : ele['PQCJ1jNYVMU']}</td><td>${ele['JK1VCsNhg6x-HllvX50cXC0'] == "" ? "NR" : ele['JK1VCsNhg6x-HllvX50cXC0']}</td><td>${ele['MJGjCnCK8qJ-HllvX50cXC0'] == "" ? "NR" : ele['MJGjCnCK8qJ-HllvX50cXC0']}</td><td>${s1 == "" ? "NR" : Number(sum6)}</td><td>${s2 == "" ? "NR" : Number(sum7)}</td><td>${s3 == "" ? "NR" : Number(sum8)}</td><td>${s4 == "" ? "NR" : Number(sum9)}</td><td>${s5 == "" ? "NR" : Number(sum10)}</td><td>${s6 == "" ? "NR" : Number(sum11)}</td><td>${s7 == "" ? "NR" : Number(sum12)}</td></tr>`)
+                sumVal1 = 0, sumVal2 = 0, sumVal3 = 0, sumVal4 = 0, sumVal5 = 0, sumVal6 = 0, sumVal7 = 0, sumVal8 = 0, sumVal9 = 0, sumVal10 = 0, sumVal11 = 0, sumVal12 = 0, sumVal13 = 0, sumVal14 = 0, sumVal15 = 0, sumVal16 = 0, sumVal = 17, sumVal = 18, sumVal19 = 0, sumVal20;
+            }
+            if (orgUnitLevel < 3) {
+
+                if (checktot == '') t = ''
+                if (checktot1 == '') t1 = ''
+                if (checktot2 == '') t2 = ''
+                if (checktot3 == '') t3 = ''
+                if (checktot4 == '') t4 = ''
+                if (checktot5 == '') t5 = ''
+                if (checktot6 == '') t6 = ''
+                if (checktot7 == '') t7 = ''
+                if (checktot8 == '') t8 = ''
+                if (checktot9 == '') t9 = ''
+                if (checktot12 == '') t12 = ''
+                if (checktot13 == '') t13 = ''
+                if (checktot14 == '') t14 = ''
+                if (checktot15 == '') t15 = ''
+                if (checktot16 == '') t16 = ''
+                if (checktot17 == '') t17 = ''
+                if (checktot18 == '') t18 = ''
+                if (checktot19 == '') t19 = ''
+                if (checktot20 == '') t20 = ''
+                if (checktot21 == '') t21 = ''
+                if (checktot22 == '') t22 = ''
+                if (checktot23 == '') t23 = ''
+                if (checktot24 == '') t24 = ''
+                if (checktot25 == '') t25 = ''
+                if (checktot26 == '') t26 = ''
+                if (checktot27 == '') t27 = ''
+                if (checktot28 == '') t28 = ''
+                if (checktot29 == '') t29 = ''
+                if (checktot30 == '') t30 = ''
+                if (checktot31 == '') t31 = ''
+                if (checktot32 == '') t32 = ''
+                if (checktot33 == '') t33 = ''
+                if (checktot34 == '') t34 = ''
+                if (checktot35 == '') t35 = ''
+                if (checktot36 == '') t36 = ''
+                if (checktot37 == '') t37 = ''
+                if (checktot38 == '') t38 = ''
+                if (checktot39 == '') t39 = ''
+                if (checktot40 == '') t40 = ''
+                if (checktot41 == '') t41 = ''
+                if (checktot42 == '') t42 = ''
+                if (checktot43 == '') t43 = ''
+                if (checktot44 == '') t44 = ''
+                if (checktot45 == '') t45 = ''
+                if (checktot46 == '') t46 = ''
+                if (checktot47 == '') t47 = ''
+                if (checktot48 == '') t48 = ''
+                if (checktot49 == '') t49 = ''
+                if (checktot10 == '') t10 = ''
+                if (checktot11 == '') t11 = ''
+                if (checktot50 == '') t50 = ''
+                if (checktot51 == '') t51 = ''
+                if (checktot52 == '') t52 = ''
+                if (checktot53 == '') t53 = ''
+                if (checktot54 == '') t54 = ''
+                $('#dataTable').find("tbody").append(`<tr style="font-weight: bold;"><td colspan="2">Total</td><td>${t.toString() == '' ? "NR" : t}</td><td>${data.totalRegion.gY7b9azcUQG}</td><td>${data.totalRegion.ElAjdwOrjMq}</td><td>${data.totalRegion.YgvbZE63e8T}</td><td>${data.totalRegion.sAXV6Hnve4i}</td><td>${t5.toString() == '' ? "NR" : t5}</td><td>${data.totalRegion.LhfXR2fKhsZ}</td><td>${t7.toString() == '' ? "NR" : t7}</td><td>${data.totalRegion.KrvcvcTLqIh}</td><td>${data.totalRegion.yMIaVLPC3P9}</td><td>${t10.toString() == '' ? "NR" : t10}</td><td>${t11.toString() == '' ? "NR" : t11}</td><td>${data.totalRegion.PS9m9ERoPaj}</td><td>${data.totalRegion.C6xcdI95huJ}</td><td>${data.totalRegion.SsZP6Izyhay}</td><td>${t15.toString() == '' ? "NR" : t15}</td><td>${t16.toString() == '' ? "NR" : t16}</td><td>${t17.toString() == '' ? "NR" : t17}</td><td>${t18.toString() == '' ? "NR" : t18}</td><td>${data.totalRegion.xl4EXfRMBrK}</td><td>${data.totalRegion.j62SFyBOrSN}</td><td>${data.totalRegion.v1Fr4On014j}</td><td>${t22.toString() == '' ? "NR" : t22}</td><td>${data.totalRegion.KmggYyaINdB}</td><td>${t24.toString() == '' ? "NR" : t24}</td><td>${t25.toString() == '' ? "NR" : t25}</td><td>${t26.toString() == '' ? "NR" : t26}</td><td>${t27.toString() == '' ? "NR" : t27}</td><td>${t28.toString() == '' ? "NR" : t28}</td><td>${t29.toString() == '' ? "NR" : t29}</td><td>${t30.toString() == '' ? "NR" : t30}</td><td>${t31.toString() == '' ? "NR" : t31}</td><td>${data.totalRegion.SSmKGrwFLyR}</td><td>${data.totalRegion.trqV4BI71xI}</td><td>${t34.toString() == '' ? "NR" : t34}</td><td>${data.totalRegion.M2kzreZCnhv}</td><td>${t36.toString() == '' ? "NR" : t36}</td><td>${data.totalRegion.w0DzxpCd0aq}</td><td>${t38.toString() == '' ? "NR" : t38}</td><td>${data.totalRegion.JcTzoupKdtG}</td><td>${t40.toString() == '' ? "NR" : t40}</td><td>${data.totalRegion.RJcnYMtVxOS}</td><td>${t42.toString() == '' ? "NR" : t42}</td><td>${t43.toString() == '' ? "NR" : t43}</td><td>${data.totalRegion.PQCJ1jNYVMU}</td><td>${data.totalRegion.xWUvequQxeM}</td><td>${t46.toString() == '' ? "NR" : t46}</td><td>${t47.toString() == '' ? "NR" : t47}</td><td>${t48.toString() == '' ? "NR" : t48}</td><td>${t49.toString() == '' ? "NR" : t49}</td><td>${t50.toString() == '' ? "NR" : t50}</td><td>${t51.toString() == '' ? "NR" : t51}</td><td>${t52.toString() == '' ? "NR" : t52}</td><td>${t53 == 0 ? "NR" : t53}</td><td>${t54.toString() == '' ? "NR" : t54}</td></tr>`)
+            }
+            gt += Number(t), gt1 += Number(t1), gt2 += Number(t2), gt3 += Number(t3), gt4 += Number(t5), gt5 += Number(t5), gt6 += Number(t6), gt7 += Number(t7), gt8 += Number(t8), gt9 += Number(t9), gt10 += Number(t10), gt11 += Number(t11), gt12 += Number(t12), gt13 += Number(t13), gt14 += Number(t14), gt15 += Number(t15), gt16 += Number(t16), gt17 += Number(t17), gt18 += Number(t18), gt19 += Number(t19), gt20 += Number(t20), gt21 += Number(t21), gt22 += Number(t22), gt23 += Number(t23), gt24 += Number(t24), gt25 += Number(t25), gt26 += Number(t26), gt27 += Number(t27), gt28 += Number(t28), gt29 += Number(t29), gt30 += Number(t30), gt31 += Number(t31), gt32 += Number(t32), gt33 += Number(t33), gt34 += Number(t34), gt35 += Number(t35), gt36 += Number(t36), gt37 += Number(t37), gt38 += Number(t38), gt39 += Number(t39), gt40 += Number(t40), gt41 += Number(t41), gt42 += Number(t42), gt43 += Number(t43), gt44 += Number(t44), gt45 += Number(t45), gt46 += Number(t46), gt47 += Number(t47), gt48 += Number(t48), gt49 += Number(t49), gt50 += Number(t50), gt51 += Number(t51), gt52 += Number(t52), gt53 += Number(t53), gt54 += Number(t54);
+            checkgt += checktot
+            checkgt1 += checktot1
+            checkgt2 += checktot2
+            checkgt3 += checktot3
+            checkgt4 += checktot4
+            checkgt5 += checktot5
+            checkgt6 += checktot6
+            checkgt7 += checktot7
+            checkgt8 += checktot8
+            checkgt9 += checktot9
+            checkgt12 += checktot12
+            checkgt13 += checktot13
+            checkgt14 += checktot14
+            checkgt15 += checktot15
+            checkgt16 += checktot16
+            checkgt17 += checktot17
+            checkgt18 += checktot18
+            checkgt19 += checktot19
+            checkgt20 += checktot20
+            checkgt21 += checktot21
+            checkgt22 += checktot22
+            checkgt23 += checktot23
+            checkgt24 += checktot24
+            checkgt25 += checktot25
+            checkgt26 += checktot26
+            checkgt27 += checktot27
+            checkgt28 += checktot28
+            checkgt29 += checktot29
+            checkgt30 += checktot30
+            checkgt31 += checktot31
+            checkgt32 += checktot32
+            checkgt33 += checktot33
+            checkgt34 += checktot34
+            checkgt35 += checktot35
+            checkgt36 += checktot36
+            checkgt37 += checktot37
+            checkgt38 += checktot38
+            checkgt39 += checktot39
+            checkgt40 += checktot40
+            checkgt41 += checktot41
+            checkgt42 += checktot42
+            checkgt43 += checktot43
+            checkgt44 += checktot44
+            checkgt45 += checktot45
+            checkgt46 += checktot46
+            checkgt47 += checktot47
+            checkgt48 += checktot48
+            checkgt49 += checktot49
+            checkgt10 += checktot10
+            checkgt11 += checktot11
+            checkgt50 += checktot50
+            checkgt51 += checktot51
+            checkgt52 += checktot52
+            checkgt53 += checktot53
+            checkgt54 += checktot54
+            t = 0, t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, t31 = 0, t32 = 0, t33 = 0, t34 = 0, t35 = 0, t36 = 0, t37 = 0, t38 = 0, t39 = 0, t40 = 0, t41 = 0, t42 = 0, t43 = 0, t44 = 0, t45 = 0, t46 = 0, t47 = 0, t48 = 0, t49 = 0, t50 = 0, t51 = 0, t52 = 0, t53 = 0, t54 = 0, t55 = 0, t56 = 0, t57 = 0, t58 = 0, t59 = 0, t60 = 0, t61 = 0, t62 = 0, t63 = 0;
+            checktot = '', checktot1 = '', checktot2 = '', checktot3 = '', checktot4 = '', checktot5 = '', checktot6 = '', checktot7 = '', checktot8 = '', checktot9 = '', checktot10 = '', checktot11 = '', checktot12 = '', checktot13 = '', checktot14 = '', checktot15 = '', checktot16 = '', checktot17 = '', checktot18 = '', checktot19 = '', checktot20 = '', checktot21 = '', checktot22 = '', checktot23 = '', checktot24 = '', checktot25 = '', checktot26 = '', checktot27 = '', checktot28 = '', checktot29 = '', checktot30 = '', checktot31 = '', checktot32 = '', checktot33 = '', checktot34 = '', checktot35 = '', checktot36 = '', checktot37 = '', checktot38 = '', checktot39 = '', checktot40 = '', checktot41 = '', checktot42 = '', checktot43 = '', checktot44 = '', checktot45 = '', checktot46 = '', checktot47 = '', checktot48 = '', checktot49 = '', checktot50 = '', checktot51 = '', checktot52 = '', checktot53 = '', checktot54 = '', checktot55 = '', checktot56 = '', checktot57 = '', checktot58 = '', checktot59 = '';
+            $('#loader').hide();
+            $('#allContent').show()
+        }
+        if (orgUnitLevel == 1) {
+            if (checkgt == '') gt = ''
+            if (checkgt1 == '') gt1 = ''
+            if (checkgt2 == '') gt2 = ''
+            if (checkgt3 == '') gt3 = ''
+            if (checkgt4 == '') gt4 = ''
+            if (checkgt5 == '') gt5 = ''
+            if (checkgt6 == '') gt6 = ''
+            if (checkgt7 == '') gt7 = ''
+            if (checkgt8 == '') gt8 = ''
+            if (checkgt9 == '') gt9 = ''
+            if (checkgt12 == '') gt12 = ''
+            if (checkgt13 == '') gt13 = ''
+            if (checkgt14 == '') gt14 = ''
+            if (checkgt15 == '') gt15 = ''
+            if (checkgt16 == '') gt16 = ''
+            if (checkgt17 == '') gt17 = ''
+            if (checkgt18 == '') gt18 = ''
+            if (checkgt19 == '') gt19 = ''
+            if (checkgt20 == '') gt20 = ''
+            if (checkgt21 == '') gt21 = ''
+            if (checkgt22 == '') gt22 = ''
+            if (checkgt23 == '') gt23 = ''
+            if (checkgt24 == '') gt24 = ''
+            if (checkgt25 == '') gt25 = ''
+            if (checkgt26 == '') gt26 = ''
+            if (checkgt27 == '') gt27 = ''
+            if (checkgt28 == '') gt28 = ''
+            if (checkgt29 == '') gt29 = ''
+            if (checkgt30 == '') gt30 = ''
+            if (checkgt31 == '') gt31 = ''
+            if (checkgt32 == '') gt32 = ''
+            if (checkgt33 == '') gt33 = ''
+            if (checkgt34 == '') gt34 = ''
+            if (checkgt35 == '') gt35 = ''
+            if (checkgt36 == '') gt36 = ''
+            if (checkgt37 == '') gt37 = ''
+            if (checkgt38 == '') gt38 = ''
+            if (checkgt39 == '') gt39 = ''
+            if (checkgt40 == '') gt40 = ''
+            if (checkgt41 == '') gt41 = ''
+            if (checkgt42 == '') gt42 = ''
+            if (checkgt43 == '') gt43 = ''
+            if (checkgt44 == '') gt44 = ''
+            if (checkgt45 == '') gt45 = ''
+            if (checkgt46 == '') gt46 = ''
+            if (checkgt47 == '') gt47 = ''
+            if (checkgt48 == '') gt48 = ''
+            if (checkgt49 == '') gt49 = ''
+            if (checkgt10 == '') gt10 = ''
+            if (checkgt11 == '') gt11 = ''
+            if (checkgt50 == '') gt50 = ''
+            if (checkgt51 == '') gt51 = ''
+            if (checkgt52 == '') gt52 = ''
+            if (checkgt53 == '') gt53 = ''
+            if (checkgt54 == '') gt54 = ''
+
+            $('#dataTable').find("tbody").append(`<tr style="font-weight: bold;"><td colspan="2"> Global Total</td><td>${gt.toString() == '' ? "NR" : gt}</td><td>${globalTotal['gY7b9azcUQG']}</td><td>${globalTotal['ElAjdwOrjMq']}</td><td>${globalTotal['YgvbZE63e8T']}</td><td>${globalTotal['sAXV6Hnve4i']}</td><td>${gt5.toString() == '' ? "NR" : gt5}</td><td>${globalTotal['LhfXR2fKhsZ']}</td><td>${gt7.toString() == '' ? "NR" : gt7}</td><td>${globalTotal['KrvcvcTLqIh']}</td><td>${globalTotal['yMIaVLPC3P9']}</td><td>${gt10.toString() == '' ? "NR" : gt10}</td><td>${gt11.toString() == '' ? "NR" : gt11}</td><td>${globalTotal['PS9m9ERoPaj']}</td><td>${globalTotal['C6xcdI95huJ']}</td><td>${globalTotal['SsZP6Izyhay']}</td><td>${gt15.toString() == '' ? "NR" : gt15}</td><td>${gt16.toString() == '' ? "NR" : gt16}</td><td>${gt17.toString() == '' ? "NR" : gt17}</td><td>${gt18.toString() == '' ? "NR" : gt18}</td><td>${globalTotal['xl4EXfRMBrK']}</td><td>${globalTotal['j62SFyBOrSN']}</td><td>${globalTotal['v1Fr4On014j']}</td><td>${gt22.toString() == '' ? "NR" : gt22}</td><td>${globalTotal['KmggYyaINdB']}</td><td>${gt24.toString() == '' ? "NR" : gt24}</td><td>${gt25.toString() == '' ? "NR" : gt25}</td><td>${gt26.toString() == '' ? "NR" : gt26}</td><td>${gt27.toString() == '' ? "NR" : gt27}</td><td>${gt28.toString() == '' ? "NR" : gt28}</td><td>${gt29.toString() == '' ? "NR" : gt29}</td><td>${gt30.toString() == '' ? "NR" : gt30}</td><td>${gt31.toString() == '' ? "NR" : gt31}</td><td>${globalTotal['SSmKGrwFLyR']}</td><td>${globalTotal['trqV4BI71xI']}</td><td>${gt34.toString() == '' ? "NR" : gt34}</td><td>${globalTotal['M2kzreZCnhv']}</td><td>${gt36.toString() == '' ? "NR" : gt36}</td><td>${globalTotal['w0DzxpCd0aq']}</td><td>${gt38.toString() == '' ? "NR" : gt38}</td><td>${globalTotal['JcTzoupKdtG']}</td><td>${gt40.toString() == '' ? "NR" : gt40}</td><td>${globalTotal['RJcnYMtVxOS']}</td><td>${gt42.toString() == '' ? "NR" : gt42}</td><td>${gt43.toString() == '' ? "NR" : gt43}</td><td>${globalTotal['xWUvequQxeM']}</td><td>${globalTotal['PQCJ1jNYVMU']}</td><td>${gt46.toString() == '' ? "NR" : gt46}</td><td>${gt47.toString() == '' ? "NR" : gt47}</td><td>${gt48.toString() == '' ? "NR" : gt48}</td><td>${gt49.toString() == '' ? "NR" : gt49}</td><td>${gt50.toString() == '' ? "NR" : gt50}</td><td>${gt51.toString() == '' ? "NR" : gt51}</td><td>${gt52.toString() == '' ? "NR" : gt52}</td><td>${gt53.toString() == '' ? "NR" : gt53}</td><td>${gt54.toString() == '' ? "NR" : gt54}</td></tr>`)
+        }
+        gt = 0, gt1 = 0, gt2 = 0, gt3 = 0, gt4 = 0, gt5 = 0, gt6 = 0, gt7 = 0, gt8 = 0, gt9 = 0, gt10 = 0, gt11 = 0, gt12 = 0, gt13 = 0, gt14 = 0, gt15 = 0, gt16 = 0, gt17 = 0, gt18 = 0, gt19 = 0, gt20 = 0, gt21 = 0, gt22 = 0, gt23 = 0, gt24 = 0, gt25 = 0, gt26 = 0, gt27 = 0, gt28 = 0, gt29 = 0, gt30 = 0, gt31 = 0, gt32 = 0, gt33 = 0, gt34 = 0, gt35 = 0, gt36 = 0, gt37 = 0, gt38 = 0, gt39 = 0, gt40 = 0, gt41 = 0, gt42 = 0, gt43 = 0, gt44 = 0, gt45 = 0, gt46 = 0, gt47 = 0, gt48 = 0, gt49 = 0, gt50 = 0, gt51 = 0, gt52 = 0, gt53 = 0, gt54 = 0;
+    }
+
+</script>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>

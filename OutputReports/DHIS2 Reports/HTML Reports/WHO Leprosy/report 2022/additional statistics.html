@@ -1,0 +1,881 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    /* Center the loader  */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+        display: none;
+        text-align: center;
+    }
+</style>
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('allDiv')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allDiv', 'additional statistics', 'additional statistics.xls')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Excel</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allDiv', 'additional statistics', 'additional statistics.doc')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Doc</button>
+<br><br>
+
+<div id="loader"></div>
+<div id="allDiv">
+    <table border="1" class="table  table-hover text-center" id="dataTable"
+        style="border-collapse: collapse; font-size: 15px; width: 100%;">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $('#loader').show()
+    var level2OrgUnitsList = []
+    var dataList = []
+    var orgUnit = dhis2.report.organisationUnit;
+    let orgUnitLevel = dhis2.report.organisationUnitHierarchy.length;
+    var period = dhis2.report.date.split("-")[0];
+    var dataElement = ['fWOu6CXWmYj-HllvX50cXC0', 'JeewVif7Qzp-HllvX50cXC0', 'fWOu6CXWmYj-HllvX50cXC0', 'tLDXtC3M2Wb-HllvX50cXC0', 'mivRLJvsrCN-HllvX50cXC0', 'kYhH6RKnKaW-HllvX50cXC0', 'qLjY1H04rz5-HllvX50cXC0', 'WnksIAR4HHE-HllvX50cXC0', 'XnhnouZQIZD-HllvX50cXC0', 'DDP7WHn3xBq-HllvX50cXC0', 'dl2Ykn3f9A5-HllvX50cXC0', 'pLZpRkMZWLH-HllvX50cXC0', 'kISRp1zDJ1o-HllvX50cXC0', 'qGsRWxnlgnp-HllvX50cXC0', 'qGsRWxnlgnp-HllvX50cXC0', 'vgvQVd98mS8-HllvX50cXC0', 'vgvQVd98mS8-HllvX50cXC0', 'kKoiaRvujGL-HllvX50cXC0', 'kKoiaRvujGL-HllvX50cXC0', 'GZbdFPLrNJu-HllvX50cXC0', 'GZbdFPLrNJu-HllvX50cXC0', 'vbVx5GUmxU5-HllvX50cXC0', 'NXvBmgzF1tS-HllvX50cXC0', 'bJiRxBdlM3F-HllvX50cXC0', 'MeDkAw5qy9L-HllvX50cXC0', 'cPVhsfEclQw-HllvX50cXC0', 's4JEZsDU1Vx-HllvX50cXC0', 'T4sd77FTesI-HllvX50cXC0', 'wUBT6DCqmYn-HllvX50cXC0', 'ObSThhA8DGn-HllvX50cXC0', 'v7s0H3vLoQc-HllvX50cXC0', 'ZaoLDIVS9S0-HllvX50cXC0', 'b6s7LHEOJ03-HllvX50cXC0', 'E2ciCYyQADF-HllvX50cXC0', 'KABaJ7eFDLb-HllvX50cXC0', 'mPrCvcc0Dxt-HllvX50cXC0', 'gUQ9nYmXlsB-HllvX50cXC0', 'BvcLwHp7Nnt-HllvX50cXC0', 'TCJv5BNVYCw-HllvX50cXC0', 't5AmFhGyKw9-HllvX50cXC0', 'whSNEteJUqY-HllvX50cXC0', 'm3Ri2WLjD2X-HllvX50cXC0', 'lX0xOxS9eLV-HllvX50cXC0', 'gK6hEAvQrtb-HllvX50cXC0', 'XTB7Rh8VRfL-m0vZJMmHelg', 'XTB7Rh8VRfL-GVcPtC2klm0', 'XTB7Rh8VRfL-P98hQY3LVzh', 'KKNyMmqR1un-m0vZJMmHelg', 'KKNyMmqR1un-GVcPtC2klm0', 'KKNyMmqR1un-P98hQY3LVzh', 'IXp7eeh9yNU-m0vZJMmHelg', 'IXp7eeh9yNU-m0vZJMmHelg', 'IXp7eeh9yNU-P98hQY3LVzh', 'KXMA2VWNIDY-P98hQY3LVzh', 'KXMA2VWNIDY-GVcPtC2klm0', 'KXMA2VWNIDY-m0vZJMmHelg', 'KXMA2VWNIDY-HllvX50cXC0']
+    let indicatorID = ['aZyjREvHyxV', 'UXbyOqpRzfR', 'N1LLcjiou4k', 'XTB7Rh8VRfL', 'KKNyMmqR1un', 'IXp7eeh9yNU']
+    var ouTotal = ["L9CbxlithLc", "uWVIlmAl1r5", "XHT7CFb5mEe", "UzbbopOhq1L", "vY40CQrh4Kk", "QvCHetFovQg"]
+    var indicatorsObj = {
+        'aZyjREvHyxV': {
+            'pLZpRkMZWLH-HllvX50cXC0': '', 'JeewVif7Qzp-HllvX50cXC0': ''
+        },
+        'UXbyOqpRzfR': {
+            'KABaJ7eFDLb-HllvX50cXC0': '', 'mPrCvcc0Dxt-HllvX50cXC0': ''
+        },
+        'N1LLcjiou4k': {
+            'gUQ9nYmXlsB-HllvX50cXC0': '', 'BvcLwHp7Nnt-HllvX50cXC0': ''
+        },
+        'XTB7Rh8VRfL': {
+            'XTB7Rh8VRfL-m0vZJMmHelg': '', 'XTB7Rh8VRfL-GVcPtC2klm0': '', 'XTB7Rh8VRfL-P98hQY3LVzh': ''
+        },
+        'KKNyMmqR1un': {
+            'KKNyMmqR1un-m0vZJMmHelg': '', 'KKNyMmqR1un-GVcPtC2klm0': '', 'KKNyMmqR1un-P98hQY3LVzh': ''
+        },
+        'IXp7eeh9yNU': {
+            'IXp7eeh9yNU-m0vZJMmHelg': '', 'IXp7eeh9yNU-GVcPtC2klm0': '', 'IXp7eeh9yNU-P98hQY3LVzh': ''
+        },
+    }
+    var indicators = ['aZyjREvHyxV', 'UXbyOqpRzfR', 'N1LLcjiou4k', 'XTB7Rh8VRfL', 'KKNyMmqR1un', 'IXp7eeh9yNU']
+    var ouTotal = ["L9CbxlithLc", "uWVIlmAl1r5", "XHT7CFb5mEe", "UzbbopOhq1L", "vY40CQrh4Kk", "QvCHetFovQg",]
+    var rTotal = []
+    for (let ou of ouTotal) {
+        var regionTotal = {}
+        regionTotal["ou"] = ou
+        for (let indi of indicators) {
+            regionTotal[indi] = "0"
+        }
+        rTotal.push(regionTotal)
+    }
+    var globalTotal = { "word": "x3i5oi4axNu" }
+    for (let indi of indicators) {
+        globalTotal[indi] = "0"
+    }
+    setTimeout(() => {
+        loadData()
+    }, 1000)
+    function loadData() {
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "../api/analytics.json?dimension=pe:" + period + "&dimension=dx:aZyjREvHyxV;UXbyOqpRzfR;N1LLcjiou4k;XTB7Rh8VRfL;KKNyMmqR1un;IXp7eeh9yNU;&dimension=ou:L9CbxlithLc;uWVIlmAl1r5;XHT7CFb5mEe;UzbbopOhq1L;vY40CQrh4Kk;QvCHetFovQg;x3i5oi4axNu&displayProperty=NAME",
+            data: JSON,
+            success: function (data, status) {
+                if (data.rows) {
+                    for (let pro in globalTotal) {
+                        for (let ele of data.rows) {
+                            if ((globalTotal.word == ele['2']) && (pro == ele['0'])) {
+                                globalTotal[pro] = Number(ele['3'])
+                            }
+                        }
+                    }
+                    for (let region of rTotal) {
+                        for (let pro in region) {
+                            for (let ele of data.rows) {
+                                if ((region.ou == ele['2']) && (pro == ele['0'])) {
+                                    region[pro] = Number(ele['3'])
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function getCountryData(id) {
+            var obj = {};
+            let dataObj = {}
+            var indicatorObj = {}
+            for (let e of dataElement) {
+                obj[e] = ""
+            }
+            for (let e of indicators) {
+                indicatorObj[e] = ""
+            }
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/dataValueSets.json?orgUnit=" + id + "&period=" + period + "&dataSet=KaaRzuDwB2X",
+                data: JSON,
+                success: function (data, status) {
+                    if (data.dataValues) {
+                        for (let pro in obj) {
+                            for (let ele of data.dataValues) {
+                                if (pro == (ele.dataElement + "-" + ele.categoryOptionCombo)) {
+                                    obj[pro] = ele.value ? ele.value : ele.comment
+                                }
+                            }
+                        }
+                        for (let pro in indicatorsObj) {
+                            for (let pro1 in indicatorsObj[pro]) {
+                                for (let ele of data.dataValues) {
+                                    if (pro1 == (ele.dataElement + "-" + ele.categoryOptionCombo)) {
+                                        indicatorsObj[pro][pro1] = ele.value ? ele.value : ele.comment
+                                    }
+                                }
+                            }
+                        }
+                        dataObj['indicatorDataElements'] = indicatorsObj
+                    }
+                    else {
+                        dataObj['indicatorDataElements'] = indicatorsObj
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/analytics.json?dimension=pe:" + period + "&dimension=dx:aZyjREvHyxV;UXbyOqpRzfR;N1LLcjiou4k;XTB7Rh8VRfL;KKNyMmqR1un;IXp7eeh9yNU;&dimension=ou:" + id + "&displayProperty=NAME",
+                data: JSON,
+                success: function (data, status) {
+                    if (data.rows.length > 0) {
+                        for (let pro in indicatorObj) {
+                            for (let ele of data.rows) {
+                                if (pro == ele["0"]) {
+                                    indicatorObj[pro] = Number(ele['3'])
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            return { ...obj, ...indicatorObj, ...dataObj }
+        }
+        function arraySorting(a, b) {
+            return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
+        }
+
+        $.ajax(
+            {
+                type: "GET",
+                async: false,
+                url: "../api/organisationUnits/" + orgUnit.id + ".json?fields=id,name,children[id,name,code]&paging=false",
+                data: JSON,
+                success: function (data, status) {
+                    allOrgUnits = data;
+                    for (var i = 0; i < allOrgUnits.children.length; i++) {
+                        level2OrgUnitsList.push({ "id": allOrgUnits.children[i].id, "name": allOrgUnits.children[i].name, "code": allOrgUnits.children[i].code });
+                    }
+                }
+            });
+        level2OrgUnitsList.sort(arraySorting);
+        if (orgUnitLevel == 1) {
+            for (var j = 0; j < level2OrgUnitsList.length; j++) {
+                let gObj = { region: level2OrgUnitsList[j].name }
+                let t = rTotal.find(ele => ele.ou == level2OrgUnitsList[j].id)
+                gObj['totalRegion'] = t
+                var level3OrgUnitsList = [];
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "../api/organisationUnits/" + level2OrgUnitsList[j].id + ".json?fields=id,name,children[id,name,code]&paging=false",
+                    data: JSON,
+                    success: function (data, status) {
+                        for (var i = 0; i < data.children.length; i++) {
+                            let val = getCountryData(data.children[i].id)
+                            let oo = { ...val, "id": data.children[i].id, "name": data.children[i].name, "code": data.children[i].code }
+                            level3OrgUnitsList.push(oo);
+                        }
+                        gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+                    }
+                });
+                dataList.push(gObj)
+            }
+        }
+        if (orgUnitLevel == 2) {
+            var level3OrgUnitsList = [];
+            let gObj = { region: orgUnit.name }
+            let t = rTotal.find(ele => ele.ou == orgUnit.id)
+            gObj['totalRegion'] = t
+            for (var j = 0; j < level2OrgUnitsList.length; j++) {
+                let val = getCountryData(level2OrgUnitsList[j].id)
+                let oo = { ...val, "id": level2OrgUnitsList[j].id, "name": level2OrgUnitsList[j].name, "code": level2OrgUnitsList[j].code }
+                level3OrgUnitsList.push(oo);
+            }
+            gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+            dataList.push(gObj)
+        }
+        if (orgUnitLevel == 3) {
+            let gObj = {}
+            var level3OrgUnitsList = [];
+            let val = getCountryData(orgUnit.id)
+            let oo = { ...val, "id": orgUnit.id, "name": orgUnit.name, "code": orgUnit.code }
+            level3OrgUnitsList.push(oo);
+            gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+            dataList.push(gObj)
+        }
+        var checkgt = '', checkgt1 = '', checkgt2 = '', checkgt3 = '', checkgt4 = '', checkgt5 = '', checkgt6 = '', checkgt7 = '', checkgt8 = '', checkgt9 = '', checkgt10 = '', checkgt11 = '', checkgt12 = '', checkgt13 = '', checkgt14 = '', checkgt15 = '', checkgt16 = '', checkgt17 = '', checkgt18 = '', checkgt19 = '', checkgt20 = '', checkgt21 = '', checkgt22 = '', checkgt23 = '', checkgt24 = '', checkgt25 = '', checkgt26 = '', checkgt27 = '', checkgt28 = '', checkgt29 = '', checkgt30 = '', checkgt31 = '', checkgt32 = '', checkgt33 = '', checkgt34 = '', checkgt35 = '', checkgt36 = '', checkgt37 = '', checkgt38 = '', checkgt39 = '', checkgt40 = '', checkgt41 = '', checkgt42 = '', checkgt43 = '', checkgt44 = '', checkgt45 = '', checkgt46 = '', checkgt47 = '', checkgt48 = '', checkgt49 = '', checkgt50 = '', checkgt51 = '', checkgt52 = '', checkgt53 = '', checkgt54 = '', checkgt55 = '', checkgt56 = '', checkgt57 = '', checkgt58 = '', checkgt59 = '', checkgt60 = '', checkgt61 = '', checkgt62 = '', checkgt63 = '';
+        var gt = 0, gt1 = 0, gt2 = 0, gt3 = 0, gt4 = 0, gt5 = 0, gt6 = 0, gt7 = 0, gt8 = 0, gt9 = 0, gt10 = 0, gt11 = 0, gt12 = 0, gt13 = 0, gt14 = 0, gt15 = 0, gt16 = 0, gt17 = 0, gt18 = 0, gt19 = 0, gt20 = 0, gt21 = 0, gt22 = 0, gt23 = 0, gt24 = 0, gt25 = 0, gt26 = 0, gt27 = 0, gt28 = 0, gt29 = 0, gt30 = 0, gt31 = 0, gt32 = 0, gt33 = 0, gt34 = 0, gt35 = 0, gt36 = 0, gt37 = 0, gt38 = 0, gt39 = 0, gt40 = 0, gt41 = 0, gt42 = 0, gt43 = 0, gt44 = 0, gt45 = 0, gt46 = 0, gt47 = 0, gt48 = 0, gt49 = 0, gt50 = 0, gt51 = 0, gt52 = 0, gt53 = 0, gt54 = 0, gt55 = 0, gt56 = 0, gt57 = 0, gt58 = 0, gt59 = 0, gt60 = 0, gt61 = 0, gt62 = 0, gt63 = 0;
+        $("#dataTable").find('thead').append(`
+            <tr style=" font-weight:400; text-align:center;">
+                <td colspan="66" width="100%" style="border:1px solid black;background:#ADD8E6; "> Leprosy additional statistics by WHO region and country, <span class="currentPeriod">&nbsp;</span></td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td colspan="66" style="border:1px solid black;background:#ADD8E6; ">Reporting Year : - <span id="period">${period}</span></td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6; ">Region and country</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Code</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Discriminatory laws/ policies</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Health facilities providing leprosy services</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Disability care for PAL- ulcer care</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Disability care for PAL- reconstructive surgery</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Disability care for PAL- assistive devices</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Disability care for PAL- physiotherapy</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of services provided- ulcer care</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of services provided- reconstructive surgery</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of services provided- assistive devices</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of services provided- physiotherpay</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Facilities with trained leprosy counselor</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Proportion of facilities providing leprosy counselling</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Number of discriminations reported</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Web-based recording-YES</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Web-based recording-NO</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Web-based reporting- YES</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Web-based reporting- NO</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Guidelines and SOPs- YES</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Guidelines and SOPs- NO</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Training materials- YES</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Training materials- NO</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total districts in the country</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Districts with PAL involved in leprosy microplanning</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">High-burden districts in the country</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">High-burden districts with PAL involved in leprosy microplanning</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Criteria for high-burden districts</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">In-country research- clinical</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">In-country research- basic science</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">In-country research- programme management</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">In-country research- stigma and discrimination</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total in-country research studies</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Published studies- clinical</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Published studies- basic science</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Published studies- programme management</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Published studies- stigma and discrimination</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total studies published</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients treated for type-1 reaction- MB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients treated for type-1 reaction- PB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total patients treated for type-1 reaction</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients treated for type-2 reaction- MB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients treated for type-2 reaction- PB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total patients treated for type-2 reaction</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients completed treatment- MB (2018 cohort)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients completed treatment- PB (2019 cohort)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total patients completed treatment (previous cohorts- MB & PB)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients assessed for disability grading- MB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Patients assessed for disability grading- PB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total patients assessed for disability grading</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Disability grading worsened- MB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Disability grading worsened- PB</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total patients with worsened disability grading</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Side effects- dapsone</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Side effects- rifampicin</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Side effects- clofazimine</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total patients reported side effects</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">ADR- dapsone</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">ADR- rifampicin</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">ADR- clofazimine</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total patients reported ADR</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Adverse events- dapsone</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Adverse events- rifampicin</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Adverse events- clofazimine</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total patients reported adverse events</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Unknown but attributable- MDT</td>
+               </tr>`)
+        for (let data of dataList) {
+            if (orgUnitLevel < 3) {
+                $('#dataTable').find("tbody").append(`<tr style="background-color:#DCDCDC; text-align: left"><td  colspan="66">${data.region}</td></tr>`)
+            }
+
+            var checktot = '', checktot1 = '', checktot2 = '', checktot3 = '', checktot4 = '', checktot5 = '', checktot6 = '', checktot7 = '', checktot8 = '', checktot9 = '', checktot10 = '', checktot11 = '', checktot12 = '', checktot13 = '', checktot14 = '', checktot15 = '', checktot16 = '', checktot17 = '', checktot18 = '', checktot19 = '', checktot20 = '', checktot21 = '', checktot22 = '', checktot23 = '', checktot24 = '', checktot25 = '', checktot26 = '', checktot27 = '', checktot28 = '', checktot29 = '', checktot30 = '', checktot31 = '', checktot32 = '', checktot33 = '', checktot34 = '', checktot35 = '', checktot36 = '', checktot37 = '', checktot38 = '', checktot39 = '', checktot40 = '', checktot41 = '', checktot42 = '', checktot43 = '', checktot44 = '', checktot45 = '', checktot46 = '', checktot47 = '', checktot48 = '', checktot49 = '', checktot50 = '', checktot51 = '', checktot52 = '', checktot53 = '', checktot54 = '', checktot55 = '', checktot56 = '', checktot57 = '', checktot58 = '', checktot59 = '', checktot60 = '', checktot61 = '', checktot62 = '', checktot63 = '';
+            var t = 0, t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, t31 = 0, t32 = 0, t33 = 0, t34 = 0, t35 = 0, t36 = 0, t37 = 0, t38 = 0, t39 = 0, t40 = 0, t41 = 0, t42 = 0, t43 = 0, t44 = 0, t45 = 0, t46 = 0, t47 = 0, t48 = 0, t49 = 0, t50 = 0, t51 = 0, t52 = 0, t53 = 0, t54 = 0, t55 = 0, t56 = 0, t57 = 0, t58 = 0, t59 = 0, t60 = 0, t61 = 0, t62 = 0, t63 = 0;
+            for (let ele of data.countrylist) {
+                //    if(indicatorsData){
+                //    if(ele["aZyjREvHyxV"] == ''){
+                //     if((ele["indicatorDataElements"]['aZyjREvHyxV']['pLZpRkMZWLH-HllvX50cXC0']== "NR") && (ele["indicatorDataElements"]['aZyjREvHyxV']['JeewVif7Qzp-HllvX50cXC0']== "NR")){
+                //         ele["aZyjREvHyxV"] ="NR"
+                //     }
+                //    else if((ele["indicatorDataElements"]["aZyjREvHyxV"]["pLZpRkMZWLH-HllvX50cXC0"] == "Not Available") && (ele["indicatorDataElements"]["aZyjREvHyxV"]["JeewVif7Qzp-HllvX50cXC0"] == "Not Available")){
+                //       ele["aZyjREvHyxV"]= "Not Available"
+                //    }
+                //    else {
+                //       ele["aZyjREvHyxV"]=0
+                //    }
+                //   }
+                //   if(ele["UXbyOqpRzfR"] == ''){
+                //     if((ele["indicatorDataElements"]['UXbyOqpRzfR']['KABaJ7eFDLb-HllvX50cXC0']== "NR") && (ele["indicatorDataElements"]['UXbyOqpRzfR']['mPrCvcc0Dxt-HllvX50cXC0']== "NR")){
+                //         ele["UXbyOqpRzfR"] ="NR"
+                //     }
+                //    else if((ele["indicatorDataElements"]["UXbyOqpRzfR"]["KABaJ7eFDLb-HllvX50cXC0"] == "Not Available") && (ele["indicatorDataElements"]["UXbyOqpRzfR"]["mPrCvcc0Dxt-HllvX50cXC0"] == "Not Available")){
+                //       ele["UXbyOqpRzfR"]= "Not Available"
+                //    }
+                //    else {
+                //       ele["UXbyOqpRzfR"]=0
+                //    }
+                //   } 
+                //  if(ele["N1LLcjiou4k"] == ''){
+                //     if((ele["indicatorDataElements"]['N1LLcjiou4k']['gUQ9nYmXlsB-HllvX50cXC0']== "NR") && (ele["indicatorDataElements"]['N1LLcjiou4k']['BvcLwHp7Nnt-HllvX50cXC0']== "NR")){
+                //         ele["N1LLcjiou4k"] ="NR"
+                //     }
+                //    else if((ele["indicatorDataElements"]["N1LLcjiou4k"]["gUQ9nYmXlsB-HllvX50cXC0"] == "Not Available") && (ele["indicatorDataElements"]["N1LLcjiou4k"]["BvcLwHp7Nnt-HllvX50cXC0"] == "Not Available")){
+                //       ele["N1LLcjiou4k"]= "Not Available"
+                //    }
+                //    else {
+                //       ele["N1LLcjiou4k"]=0
+                //    }
+                //   }  
+
+                //   if(ele["XTB7Rh8VRfL"] == ''){
+                //     if((ele["indicatorDataElements"]['XTB7Rh8VRfL']['XTB7Rh8VRfL-m0vZJMmHelg']== "NR") && (ele["indicatorDataElements"]['XTB7Rh8VRfL']['XTB7Rh8VRfL-GVcPtC2klm0']== "NR") && (ele["indicatorDataElements"]["XTB7Rh8VRfL"]["XTB7Rh8VRfL-P98hQY3LVzh"] == "NR")){
+                //         ele["XTB7Rh8VRfL"] ="NR"
+                //     }
+                //    else if((ele["indicatorDataElements"]["XTB7Rh8VRfL"]["XTB7Rh8VRfL-m0vZJMmHelg"] == "Not Available") && (ele["indicatorDataElements"]["XTB7Rh8VRfL"]["XTB7Rh8VRfL-GVcPtC2klm0"] == "Not Available") && (ele["indicatorDataElements"]["XTB7Rh8VRfL"]["XTB7Rh8VRfL-P98hQY3LVzh"] == "Not Available")){
+                //       ele["XTB7Rh8VRfL"]= "Not Available"
+                //    }
+                //    else {
+                //       ele["XTB7Rh8VRfL"]=0
+                //    }
+                //   } 
+                //    if(ele["KKNyMmqR1un"] == ''){
+                //     if((ele["indicatorDataElements"]['KKNyMmqR1un']['KKNyMmqR1un-m0vZJMmHelg']== "NR") && (ele["indicatorDataElements"]['KKNyMmqR1un']['KKNyMmqR1un-GVcPtC2klm0']== "NR") && (ele["indicatorDataElements"]['KKNyMmqR1un']['KKNyMmqR1un-P98hQY3LVzh']== "NR")){
+                //         ele["KKNyMmqR1un"] ="NR"
+                //     }
+                //    else if((ele["indicatorDataElements"]["KKNyMmqR1un"]["KKNyMmqR1un-m0vZJMmHelg"] == "Not Available") && (ele["indicatorDataElements"]["KKNyMmqR1un"]["KKNyMmqR1un-GVcPtC2klm0"] == "Not Available") && (ele["indicatorDataElements"]['KKNyMmqR1un']['KKNyMmqR1un-P98hQY3LVzh']== "Not Available")){
+                //       ele["KKNyMmqR1un"]= "Not Available"
+                //    }
+                //    else {
+                //       ele["KKNyMmqR1un"]=0
+                //    }
+                //   }  
+                //   if(ele["IXp7eeh9yNU"] == ''){
+                //     if((ele["indicatorDataElements"]['IXp7eeh9yNU']['IXp7eeh9yNU-m0vZJMmHelg']== "NR") && (ele["indicatorDataElements"]['IXp7eeh9yNU']['IXp7eeh9yNU-GVcPtC2klm0']== "NR") && (ele["indicatorDataElements"]['IXp7eeh9yNU']['IXp7eeh9yNU-P98hQY3LVzh']== "NR")){
+                //         ele["IXp7eeh9yNU"] ="NR"
+                //     }
+                //    else if((ele["indicatorDataElements"]["IXp7eeh9yNU"]["IXp7eeh9yNU-m0vZJMmHelg"] == "Not Available") && (ele["indicatorDataElements"]["IXp7eeh9yNU"]["IXp7eeh9yNU-GVcPtC2klm0"] == "Not Available") && (ele["indicatorDataElements"]['IXp7eeh9yNU']['IXp7eeh9yNU-P98hQY3LVzh']== "Not Available")){
+                //       ele["IXp7eeh9yNU"]= "Not Available"
+                //    }
+                //    else {
+                //       ele["IXp7eeh9yNU"]=0
+                //    }
+                //   }
+                // }
+                var calc = (Number(ele["pLZpRkMZWLH-HllvX50cXC0"]) / Number(ele["JeewVif7Qzp-HllvX50cXC0"]) * 100).toFixed(2)
+                if (isNaN(calc)) {
+                    calc = 0
+                }
+
+                var sum1 = (Number(ele["KABaJ7eFDLb-HllvX50cXC0"]) + Number(ele["mPrCvcc0Dxt-HllvX50cXC0"]));
+                if (isNaN(sum1)) {
+                    sum1 = 0
+                }
+                var sum2 = (Number(ele["gUQ9nYmXlsB-HllvX50cXC0"]) + Number(ele["BvcLwHp7Nnt-HllvX50cXC0"]));
+                if (isNaN(sum2)) {
+                    sum2 = 0
+                }
+                var sum3 = (Number(ele["XTB7Rh8VRfL-P98hQY3LVzh"]) + Number(ele["XTB7Rh8VRfL-GVcPtC2klm0"]) + Number(ele["XTB7Rh8VRfL-m0vZJMmHelg"]));
+                if (isNaN(sum3)) {
+                    sum3 = 0
+                }
+                var sum4 = (Number(ele["KKNyMmqR1un-P98hQY3LVzh"]) + Number(ele["KKNyMmqR1un-GVcPtC2klm0"]) + Number(ele["KKNyMmqR1un-m0vZJMmHelg"]));
+                if (isNaN(sum4)) {
+                    sum4 = 0
+                }
+                // var sum5 = (Number(ele["KXMA2VWNIDY-P98hQY3LVzh"])+Number(ele["KXMA2VWNIDY-GVcPtC2klm0"])+Number(ele["KXMA2VWNIDY-m0vZJMmHelg"]));
+                var sum5 = (Number(ele["IXp7eeh9yNU-m0vZJMmHelg"]) + Number(ele["IXp7eeh9yNU-m0vZJMmHelg"]) + Number(ele["IXp7eeh9yNU-P98hQY3LVzh"]));
+                if (isNaN(sum5)) {
+                    sum5 = 0
+                }
+                var sum6 = (Number(ele['whSNEteJUqY-HllvX50cXC0']) + Number(ele['m3Ri2WLjD2X-HllvX50cXC0']))
+                if (isNaN(sum6)) {
+                    sum6 = 0
+                }
+                var sum7 = (Number(ele['lX0xOxS9eLV-HllvX50cXC0']) + Number(ele['gK6hEAvQrtb-HllvX50cXC0']))
+                if (isNaN(sum7)) {
+                    sum7 = 0
+                }
+                var sum8 = (Number(ele['s4JEZsDU1Vx-HllvX50cXC0']) + Number(ele['T4sd77FTesI-HllvX50cXC0']) + Number(ele['wUBT6DCqmYn-HllvX50cXC0']) + Number(ele['ObSThhA8DGn-HllvX50cXC0']))
+                if (isNaN(sum8)) {
+                    sum8 = 0
+                }
+                var sum9 = (Number(ele['v7s0H3vLoQc-HllvX50cXC0']) + Number(ele['ZaoLDIVS9S0-HllvX50cXC0']) + Number(ele['b6s7LHEOJ03-HllvX50cXC0']) + Number(ele['b6s7LHEOJ03-HllvX50cXC0']))
+                if (isNaN(sum9)) {
+                    sum9 = 0
+                }
+                var sum10 = (Number(ele['TCJv5BNVYCw-HllvX50cXC0']) + Number(ele['t5AmFhGyKw9-HllvX50cXC0']))
+                if (isNaN(sum10)) {
+                    sum10 = 0
+                }
+                var calc1 = ele["pLZpRkMZWLH-HllvX50cXC0"] + ele["JeewVif7Qzp-HllvX50cXC0"]
+                var csum1 = ele["KABaJ7eFDLb-HllvX50cXC0"] + ele["mPrCvcc0Dxt-HllvX50cXC0"]
+                var csum2 = ele["gUQ9nYmXlsB-HllvX50cXC0"] + ele["BvcLwHp7Nnt-HllvX50cXC0"]
+                var csum3 = ele["XTB7Rh8VRfL-P98hQY3LVzh"] + ele["XTB7Rh8VRfL-GVcPtC2klm0"] + ele["XTB7Rh8VRfL-m0vZJMmHelg"]
+                var csum4 = ele["KKNyMmqR1un-P98hQY3LVzh"] + ele["KKNyMmqR1un-GVcPtC2klm0"] + ele["KKNyMmqR1un-m0vZJMmHelg"]
+                var csum5 = ele["IXp7eeh9yNU-m0vZJMmHelg"] + ele["IXp7eeh9yNU-m0vZJMmHelg"] + ele["IXp7eeh9yNU-P98hQY3LVzh"]
+                var csum6 = ele['whSNEteJUqY-HllvX50cXC0'] + ele['m3Ri2WLjD2X-HllvX50cXC0']
+                var csum7 = ele['lX0xOxS9eLV-HllvX50cXC0'] + ele['gK6hEAvQrtb-HllvX50cXC0']
+                var csum8 = ele['s4JEZsDU1Vx-HllvX50cXC0'] + ele['T4sd77FTesI-HllvX50cXC0'] + ele['wUBT6DCqmYn-HllvX50cXC0'] + ele['ObSThhA8DGn-HllvX50cXC0']
+                var csum9 = ele['v7s0H3vLoQc-HllvX50cXC0'] + ele['ZaoLDIVS9S0-HllvX50cXC0'] + ele['b6s7LHEOJ03-HllvX50cXC0'] + ele['b6s7LHEOJ03-HllvX50cXC0']
+                var csum10 = ele['TCJv5BNVYCw-HllvX50cXC0'] + ele['t5AmFhGyKw9-HllvX50cXC0']
+                // t+=Number(ele['fWOu6CXWmYj-HllvX50cXC0']), t1+=Number(ele['fWOu6CXWmYj-HllvX50cXC0']),t2+=Number(ele['tLDXtC3M2Wb-HllvX50cXC0']),t3+=Number(ele['mivRLJvsrCN-HllvX50cXC0']),t4+=Number(ele['kYhH6RKnKaW-HllvX50cXC0']),t5+=Number(ele['qLjY1H04rz5-HllvX50cXC0']),t6+=Number(ele['WnksIAR4HHE-HllvX50cXC0']),t7+=Number(ele['XnhnouZQIZD-HllvX50cXC0']),t8+=Number(ele['DDP7WHn3xBq-HllvX50cXC0']),t9+=Number(ele['dl2Ykn3f9A5-HllvX50cXC0']),t10+=Number(ele['pLZpRkMZWLH-HllvX50cXC0']),t11+=Number(ele['aZyjREvHyxV']),t12+=Number(ele['kISRp1zDJ1o-HllvX50cXC0']),t13+=Number(ele['qGsRWxnlgnp-HllvX50cXC0']),t14+=Number(ele['qGsRWxnlgnp-HllvX50cXC0']),t15+=Number(ele['vgvQVd98mS8-HllvX50cXC0']),t16+=Number(ele['vgvQVd98mS8-HllvX50cXC0']),t17+=Number(ele['kKoiaRvujGL-HllvX50cXC0']),t18+=Number(ele['kKoiaRvujGL-HllvX50cXC0']),t19+=Number(ele['GZbdFPLrNJu-HllvX50cXC0']),t20+=Number(ele['GZbdFPLrNJu-HllvX50cXC0']),t21+=Number(ele['vbVx5GUmxU5-HllvX50cXC0']),t22+=Number(ele['NXvBmgzF1tS-HllvX50cXC0']),t23+=Number(ele['bJiRxBdlM3F-HllvX50cXC0']),t24+=Number(ele['MeDkAw5qy9L-HllvX50cXC0']),t25+=Number(ele['cPVhsfEclQw-HllvX50cXC0']),t26+=Number(ele['s4JEZsDU1Vx-HllvX50cXC0']),t27+=Number(ele['T4sd77FTesI-HllvX50cXC0']),t28+=Number(ele['wUBT6DCqmYn-HllvX50cXC0']),t29+=Number(ele['ObSThhA8DGn-HllvX50cXC0']),t30+=(Number(ele['s4JEZsDU1Vx-HllvX50cXC0'])+Number(ele['T4sd77FTesI-HllvX50cXC0'])+Number(ele['wUBT6DCqmYn-HllvX50cXC0'])+Number(ele['ObSThhA8DGn-HllvX50cXC0'])),t31+=Number(ele['v7s0H3vLoQc-HllvX50cXC0']),t32+=Number(ele['ZaoLDIVS9S0-HllvX50cXC0']),t33+=Number(ele['b6s7LHEOJ03-HllvX50cXC0']),t34+=Number(ele['E2ciCYyQADF-HllvX50cXC0']),t35+=(Number(ele['v7s0H3vLoQc-HllvX50cXC0'])+Number(ele['ZaoLDIVS9S0-HllvX50cXC0'])+Number(ele['b6s7LHEOJ03-HllvX50cXC0'])+Number(ele['b6s7LHEOJ03-HllvX50cXC0'])),t36+=Number(ele['KABaJ7eFDLb-HllvX50cXC0']),t37+=Number(ele['mPrCvcc0Dxt-HllvX50cXC0']),t38+=Number(ele['UXbyOqpRzfR']),t39+=Number(ele['gUQ9nYmXlsB-HllvX50cXC0']),t40+=Number(ele['BvcLwHp7Nnt-HllvX50cXC0']),t41+=Number(ele['N1LLcjiou4k']),t42+=Number(ele['TCJv5BNVYCw-HllvX50cXC0']),t43+=Number(ele['t5AmFhGyKw9-HllvX50cXC0']),t44+=(Number(ele['TCJv5BNVYCw-HllvX50cXC0'])+Number(ele['t5AmFhGyKw9-HllvX50cXC0'])),t45+=Number(ele['whSNEteJUqY-HllvX50cXC0']),t46+=Number(ele['m3Ri2WLjD2X-HllvX50cXC0']),t47+=(Number(ele['whSNEteJUqY-HllvX50cXC0'])+Number(ele['m3Ri2WLjD2X-HllvX50cXC0'])),t48+=Number(ele['lX0xOxS9eLV-HllvX50cXC0']),t49+=Number(ele['gK6hEAvQrtb-HllvX50cXC0']),t50+=(Number(ele['lX0xOxS9eLV-HllvX50cXC0'])+Number(ele['gK6hEAvQrtb-HllvX50cXC0'])),t51+=Number(ele['XTB7Rh8VRfL-m0vZJMmHelg']),t52+=Number(ele['XTB7Rh8VRfL-GVcPtC2klm0']),t53+=Number(ele['XTB7Rh8VRfL-P98hQY3LVzh']),t54+=Number(ele['XTB7Rh8VRfL']),t55+=Number(ele['KKNyMmqR1un-m0vZJMmHelg']),t56+=Number(ele['KKNyMmqR1un-GVcPtC2klm0']),t57+=Number(ele['KKNyMmqR1un-P98hQY3LVzh']),t58+=Number(ele['KKNyMmqR1un']),t59+=Number(ele['IXp7eeh9yNU-m0vZJMmHelg']),t60+=Number(ele['IXp7eeh9yNU-m0vZJMmHelg']),t61+=Number(ele['IXp7eeh9yNU-P98hQY3LVzh']),t62+=Number(ele['IXp7eeh9yNU']),t63+=Number(ele['KXMA2VWNIDY-HllvX50cXC0']);           
+                if (Number.isInteger(Number(ele['fWOu6CXWmYj-HllvX50cXC0']))) t += Number(ele['fWOu6CXWmYj-HllvX50cXC0']);
+                checktot += ele['fWOu6CXWmYj-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['JeewVif7Qzp-HllvX50cXC0']))) t1 += Number(ele['JeewVif7Qzp-HllvX50cXC0']);
+                checktot1 += ele['JeewVif7Qzp-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['tLDXtC3M2Wb-HllvX50cXC0']))) t2 += Number(ele['tLDXtC3M2Wb-HllvX50cXC0']);
+                checktot2 += ele['tLDXtC3M2Wb-HllvX50cXC0'];
+                if (Number.isInteger(Number(ele['mivRLJvsrCN-HllvX50cXC0']))) t3 += Number(ele['mivRLJvsrCN-HllvX50cXC0'])
+                checktot3 += ele['mivRLJvsrCN-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['kYhH6RKnKaW-HllvX50cXC0']))) t4 += Number(ele['kYhH6RKnKaW-HllvX50cXC0'])
+                checktot4 += ele['kYhH6RKnKaW-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['qLjY1H04rz5-HllvX50cXC0']))) t5 += Number(ele['qLjY1H04rz5-HllvX50cXC0'])
+                checktot5 += ele['qLjY1H04rz5-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['WnksIAR4HHE-HllvX50cXC0']))) t6 += Number(ele['WnksIAR4HHE-HllvX50cXC0'])
+                checktot6 += ele['WnksIAR4HHE-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['XnhnouZQIZD-HllvX50cXC0']))) t7 += Number(ele['XnhnouZQIZD-HllvX50cXC0'])
+                checktot7 += ele['XnhnouZQIZD-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['DDP7WHn3xBq-HllvX50cXC0']))) t8 += Number(ele['DDP7WHn3xBq-HllvX50cXC0'])
+                checktot8 += ele['DDP7WHn3xBq-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['dl2Ykn3f9A5-HllvX50cXC0']))) t9 += Number(ele['dl2Ykn3f9A5-HllvX50cXC0'])
+                checktot9 += ele['dl2Ykn3f9A5-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['pLZpRkMZWLH-HllvX50cXC0']))) t10 += Number(ele['pLZpRkMZWLH-HllvX50cXC0'])
+                checktot10 += ele['pLZpRkMZWLH-HllvX50cXC0']
+                t11 += calc
+                checktot11 += calc1
+                if (Number.isInteger(Number(ele['kISRp1zDJ1o-HllvX50cXC0']))) t12 += Number(ele['kISRp1zDJ1o-HllvX50cXC0'])
+                checktot12 += ele['kISRp1zDJ1o-HllvX50cXC0']
+                if (ele['qGsRWxnlgnp-HllvX50cXC0'] == "true") {
+                    t13 += 1
+                    gt13 += t13
+                }
+                if (ele['qGsRWxnlgnp-HllvX50cXC0'] == "false") {
+                    t14 += 1
+                    gt14 += t14
+                }
+                if (ele['vgvQVd98mS8-HllvX50cXC0'] == "true") {
+                    t15 += 1
+                    gt15 += t15
+                }
+                if (ele['vgvQVd98mS8-HllvX50cXC0'] == "false") {
+                    t16 += 1
+                    gt16 += t16
+                }
+                if (ele['kKoiaRvujGL-HllvX50cXC0'] == "true") {
+                    t17 += 1
+                    gt17 += 1
+                }
+                if (ele['kKoiaRvujGL-HllvX50cXC0'] == "false") {
+                    t18 += 1
+                    gt18 += 1
+                }
+                if (ele['GZbdFPLrNJu-HllvX50cXC0'] == "true") {
+                    t19 += 1
+                    gt19 += t19
+                }
+                if (ele['GZbdFPLrNJu-HllvX50cXC0'] == "false") {
+                    t20 += 1
+                    gt20 += t20
+                }
+                if (Number.isInteger(Number(ele['vbVx5GUmxU5-HllvX50cXC0']))) t21 += Number(ele['vbVx5GUmxU5-HllvX50cXC0'])
+                checktot21 += ele['vbVx5GUmxU5-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['NXvBmgzF1tS-HllvX50cXC0']))) t22 += Number(ele['NXvBmgzF1tS-HllvX50cXC0'])
+                checktot22 += ele['NXvBmgzF1tS-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['bJiRxBdlM3F-HllvX50cXC0']))) t23 += Number(ele['bJiRxBdlM3F-HllvX50cXC0'])
+                checktot23 += ele['bJiRxBdlM3F-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['MeDkAw5qy9L-HllvX50cXC0']))) t24 += Number(ele['MeDkAw5qy9L-HllvX50cXC0'])
+                checktot24 += ele['MeDkAw5qy9L-HllvX50cXC0']
+                if (ele['cPVhsfEclQw-HllvX50cXC0'] !== "") {
+                    t25 += 1
+                    gt25 += t25
+                }
+                if (Number.isInteger(Number(ele['s4JEZsDU1Vx-HllvX50cXC0']))) t26 += Number(ele['s4JEZsDU1Vx-HllvX50cXC0'])
+                checktot26 += ele['s4JEZsDU1Vx-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['T4sd77FTesI-HllvX50cXC0']))) t27 += Number(ele['T4sd77FTesI-HllvX50cXC0'])
+                checktot27 += ele['T4sd77FTesI-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['wUBT6DCqmYn-HllvX50cXC0']))) t28 += Number(ele['wUBT6DCqmYn-HllvX50cXC0'])
+                checktot28 += ele['wUBT6DCqmYn-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['ObSThhA8DGn-HllvX50cXC0']))) t29 += Number(ele['ObSThhA8DGn-HllvX50cXC0'])
+                checktot29 += ele['ObSThhA8DGn-HllvX50cXC0']
+                t30 += sum8
+                checktot30 += csum8
+                if (Number.isInteger(Number(ele['v7s0H3vLoQc-HllvX50cXC0']))) t31 += Number(ele['v7s0H3vLoQc-HllvX50cXC0'])
+                checktot31 += ele['v7s0H3vLoQc-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['ZaoLDIVS9S0-HllvX50cXC0']))) t32 += Number(ele['ZaoLDIVS9S0-HllvX50cXC0'])
+                checktot32 += ele['ZaoLDIVS9S0-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['b6s7LHEOJ03-HllvX50cXC0']))) t33 += Number(ele['b6s7LHEOJ03-HllvX50cXC0'])
+                checktot33 += ele['b6s7LHEOJ03-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['E2ciCYyQADF-HllvX50cXC0']))) t34 += Number(ele['E2ciCYyQADF-HllvX50cXC0'])
+                checktot34 += ele['E2ciCYyQADF-HllvX50cXC0']
+                t35 += sum9
+                checktot35 += csum9
+                if (Number.isInteger(Number(ele['KABaJ7eFDLb-HllvX50cXC0']))) t36 += Number(ele['KABaJ7eFDLb-HllvX50cXC0'])
+                checktot36 += ele['KABaJ7eFDLb-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['mPrCvcc0Dxt-HllvX50cXC0']))) t37 += Number(ele['mPrCvcc0Dxt-HllvX50cXC0'])
+                checktot37 += ele['mPrCvcc0Dxt-HllvX50cXC0']
+                t38 += sum1
+                checktot38 += csum1
+                if (Number.isInteger(Number(ele['gUQ9nYmXlsB-HllvX50cXC0']))) t39 += Number(ele['gUQ9nYmXlsB-HllvX50cXC0'])
+                checktot39 += ele['gUQ9nYmXlsB-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['BvcLwHp7Nnt-HllvX50cXC0']))) t40 += Number(ele['BvcLwHp7Nnt-HllvX50cXC0'])
+                checktot40 += ele['BvcLwHp7Nnt-HllvX50cXC0']
+                t41 += sum2
+                checktot41 += csum2
+                if (Number.isInteger(Number(ele['TCJv5BNVYCw-HllvX50cXC0']))) t42 += Number(ele['TCJv5BNVYCw-HllvX50cXC0'])
+                checktot42 += ele['TCJv5BNVYCw-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['t5AmFhGyKw9-HllvX50cXC0']))) t43 += Number(ele['t5AmFhGyKw9-HllvX50cXC0'])
+                checktot43 += ele['t5AmFhGyKw9-HllvX50cXC0']
+                t44 += sum10
+                checktot44 += csum10
+                if (Number.isInteger(Number(ele['whSNEteJUqY-HllvX50cXC0']))) t45 += Number(ele['whSNEteJUqY-HllvX50cXC0'])
+                checktot45 += ele['whSNEteJUqY-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['m3Ri2WLjD2X-HllvX50cXC0']))) t46 += Number(ele['m3Ri2WLjD2X-HllvX50cXC0'])
+                checktot46 += ele['m3Ri2WLjD2X-HllvX50cXC0']
+                t47 += sum6
+                checktot47 += csum6
+                if (Number.isInteger(Number(ele['lX0xOxS9eLV-HllvX50cXC0']))) t48 += Number(ele['lX0xOxS9eLV-HllvX50cXC0'])
+                checktot48 += ele['lX0xOxS9eLV-HllvX50cXC0']
+                if (Number.isInteger(Number(ele['gK6hEAvQrtb-HllvX50cXC0']))) t49 += Number(ele['gK6hEAvQrtb-HllvX50cXC0'])
+                checktot49 += ele['gK6hEAvQrtb-HllvX50cXC0']
+                t50 += sum7
+                checktot50 += csum7
+                if (Number.isInteger(Number(ele['XTB7Rh8VRfL-m0vZJMmHelg']))) t51 += Number(ele['XTB7Rh8VRfL-m0vZJMmHelg'])
+                checktot51 += ele['XTB7Rh8VRfL-m0vZJMmHelg']
+                if (Number.isInteger(Number(ele['XTB7Rh8VRfL-GVcPtC2klm0']))) t52 += Number(ele['XTB7Rh8VRfL-GVcPtC2klm0'])
+                checktot52 += ele['XTB7Rh8VRfL-GVcPtC2klm0']
+                if (Number.isInteger(Number(ele['XTB7Rh8VRfL-P98hQY3LVzh']))) t53 += Number(ele['XTB7Rh8VRfL-P98hQY3LVzh'])
+                checktot53 += ele['XTB7Rh8VRfL-P98hQY3LVzh']
+                t54 += sum3
+                checktot54 += csum3
+                if (Number.isInteger(Number(ele['KKNyMmqR1un-m0vZJMmHelg']))) t55 += Number(ele['KKNyMmqR1un-m0vZJMmHelg'])
+                checktot55 += ele['KKNyMmqR1un-m0vZJMmHelg']
+                if (Number.isInteger(Number(ele['KKNyMmqR1un-GVcPtC2klm0']))) t56 += Number(ele['KKNyMmqR1un-GVcPtC2klm0'])
+                checktot56 += ele['KKNyMmqR1un-GVcPtC2klm0']
+                if (Number.isInteger(Number(ele['KKNyMmqR1un-P98hQY3LVzh']))) t57 += Number(ele['KKNyMmqR1un-P98hQY3LVzh'])
+                checktot57 += ele['KKNyMmqR1un-P98hQY3LVzh']
+                t58 += sum4
+                checktot58 += csum4
+                if (Number.isInteger(Number(ele['IXp7eeh9yNU-m0vZJMmHelg']))) t59 += Number(ele['IXp7eeh9yNU-m0vZJMmHelg'])
+                checktot59 += ele['IXp7eeh9yNU-m0vZJMmHelg']
+                if (Number.isInteger(Number(ele['IXp7eeh9yNU-m0vZJMmHelg']))) t60 += Number(ele['IXp7eeh9yNU-m0vZJMmHelg'])
+                checktot60 += ele['IXp7eeh9yNU-m0vZJMmHelg']
+                if (Number.isInteger(Number(ele['IXp7eeh9yNU-P98hQY3LVzh']))) t61 += Number(ele['IXp7eeh9yNU-P98hQY3LVzh'])
+                checktot61 += ele['IXp7eeh9yNU-P98hQY3LVzh']
+                t62 += sum5
+                checktot62 += csum5
+                if (Number.isInteger(Number(ele['KXMA2VWNIDY-HllvX50cXC0']))) t63 += Number(ele['KXMA2VWNIDY-HllvX50cXC0'])
+                checktot63 += ele['KXMA2VWNIDY-HllvX50cXC0']
+                $('#dataTable').find("tbody").append(`<tr><td>${ele.name}</td><td>${ele.code}</td><td>${ele['fWOu6CXWmYj-HllvX50cXC0'] == '' ? "NR" : ele['fWOu6CXWmYj-HllvX50cXC0']}</td><td>${ele['JeewVif7Qzp-HllvX50cXC0'] == '' ? "NR" : ele['JeewVif7Qzp-HllvX50cXC0']}</td><td>${ele['tLDXtC3M2Wb-HllvX50cXC0'] == '' ? "NR" : ele['tLDXtC3M2Wb-HllvX50cXC0']}</td><td>${ele['mivRLJvsrCN-HllvX50cXC0'] == '' ? "NR" : ele['mivRLJvsrCN-HllvX50cXC0']}</td><td>${ele['kYhH6RKnKaW-HllvX50cXC0'] == '' ? "NR" : ele['kYhH6RKnKaW-HllvX50cXC0']}</td><td>${ele['qLjY1H04rz5-HllvX50cXC0'] == '' ? "NR" : ele['qLjY1H04rz5-HllvX50cXC0']}</td><td>${ele['WnksIAR4HHE-HllvX50cXC0'] == '' ? "NR" : ele['WnksIAR4HHE-HllvX50cXC0']}</td><td>${ele['XnhnouZQIZD-HllvX50cXC0'] == '' ? "NR" : ele['XnhnouZQIZD-HllvX50cXC0']}</td><td>${ele['DDP7WHn3xBq-HllvX50cXC0'] == '' ? "NR" : ele['DDP7WHn3xBq-HllvX50cXC0']}</td><td>${ele['dl2Ykn3f9A5-HllvX50cXC0'] == '' ? "NR" : ele['dl2Ykn3f9A5-HllvX50cXC0']}</td><td>${ele['pLZpRkMZWLH-HllvX50cXC0'] == '' ? "NR" : ele['pLZpRkMZWLH-HllvX50cXC0']}</td><td>${calc}</td><td>${ele['kISRp1zDJ1o-HllvX50cXC0'] == '' ? "NR" : ele['kISRp1zDJ1o-HllvX50cXC0']}</td><td>${ele["qGsRWxnlgnp-HllvX50cXC0"] == "" ? "NR" : "" || ele["qGsRWxnlgnp-HllvX50cXC0"] == "true" ? "Yes" : "NR"}</td><td>${ele["qGsRWxnlgnp-HllvX50cXC0"] == "" ? "NR" : "" || ele["qGsRWxnlgnp-HllvX50cXC0"] == "false" ? "No" : "NR"}</td><td>${ele["vgvQVd98mS8-HllvX50cXC0"] == "" ? "NR" : "" || ele["vgvQVd98mS8-HllvX50cXC0"] == "true" ? "Yes" : "NR"}</td><td>${ele["vgvQVd98mS8-HllvX50cXC0"] == "" ? "NR" : "" || ele["vgvQVd98mS8-HllvX50cXC0"] == "false" ? "No" : "NR"}</td><td>${ele["kKoiaRvujGL-HllvX50cXC0"] == "" ? "NR" : "" || ele["kKoiaRvujGL-HllvX50cXC0"] == "true" ? "Yes" : "NR"}</td><td>${ele["kKoiaRvujGL-HllvX50cXC0"] == "" ? "NR" : "" || ele["kKoiaRvujGL-HllvX50cXC0"] == "false" ? "No" : "NR"}</td><td>${ele["GZbdFPLrNJu-HllvX50cXC0"] == "" ? "NR" : "" || ele["GZbdFPLrNJu-HllvX50cXC0"] == "true" ? "Yes" : "NR"}</td><td>${ele["GZbdFPLrNJu-HllvX50cXC0"] == "" ? "NR" : "" || ele["GZbdFPLrNJu-HllvX50cXC0"] == "false" ? "No" : "NR"}</td><td>${ele['vbVx5GUmxU5-HllvX50cXC0'] == '' ? "NR" : ele['vbVx5GUmxU5-HllvX50cXC0']}</td><td>${ele['NXvBmgzF1tS-HllvX50cXC0'] == '' ? "NR" : ele['NXvBmgzF1tS-HllvX50cXC0']}</td><td>${ele['bJiRxBdlM3F-HllvX50cXC0'] == '' ? "NR" : ele['bJiRxBdlM3F-HllvX50cXC0']}</td><td>${ele['MeDkAw5qy9L-HllvX50cXC0'] == '' ? "NR" : ele['MeDkAw5qy9L-HllvX50cXC0']}</td><td>${ele['cPVhsfEclQw-HllvX50cXC0'] == '' ? "NR" : ele['cPVhsfEclQw-HllvX50cXC0']}</td><td>${ele['s4JEZsDU1Vx-HllvX50cXC0'] == '' ? "NR" : ele['s4JEZsDU1Vx-HllvX50cXC0']}</td><td>${ele['T4sd77FTesI-HllvX50cXC0'] == '' ? "NR" : ele['T4sd77FTesI-HllvX50cXC0']}</td><td>${ele['wUBT6DCqmYn-HllvX50cXC0'] == '' ? "NR" : ele['wUBT6DCqmYn-HllvX50cXC0']}</td><td>${ele['ObSThhA8DGn-HllvX50cXC0'] == '' ? "NR" : ele['ObSThhA8DGn-HllvX50cXC0']}</td><td>${sum8}</td><td>${ele['v7s0H3vLoQc-HllvX50cXC0'] == '' ? "NR" : ele['v7s0H3vLoQc-HllvX50cXC0']}</td><td>${ele['ZaoLDIVS9S0-HllvX50cXC0'] == '' ? "NR" : ele['ZaoLDIVS9S0-HllvX50cXC0']}</td><td>${ele['b6s7LHEOJ03-HllvX50cXC0'] == '' ? "NR" : ele['b6s7LHEOJ03-HllvX50cXC0']}</td><td>${ele['E2ciCYyQADF-HllvX50cXC0'] == '' ? "NR" : ele['E2ciCYyQADF-HllvX50cXC0']}</td><td>${sum9}</td><td>${ele['KABaJ7eFDLb-HllvX50cXC0'] == '' ? "NR" : ele['KABaJ7eFDLb-HllvX50cXC0']}</td><td>${ele['mPrCvcc0Dxt-HllvX50cXC0'] == '' ? "NR" : ele['mPrCvcc0Dxt-HllvX50cXC0']}</td><td>${sum1}</td><td>${ele['gUQ9nYmXlsB-HllvX50cXC0'] == '' ? "NR" : ele['gUQ9nYmXlsB-HllvX50cXC0']}</td><td>${ele['BvcLwHp7Nnt-HllvX50cXC0'] == '' ? "NR" : ele['BvcLwHp7Nnt-HllvX50cXC0']}</td><td>${sum2}</td><td>${ele['TCJv5BNVYCw-HllvX50cXC0'] == '' ? "NR" : ele['TCJv5BNVYCw-HllvX50cXC0']}</td><td>${ele['t5AmFhGyKw9-HllvX50cXC0'] == '' ? "NR" : ele['t5AmFhGyKw9-HllvX50cXC0']}</td><td>${sum10}</td><td>${ele['whSNEteJUqY-HllvX50cXC0'] == '' ? "NR" : ele['whSNEteJUqY-HllvX50cXC0']}</td><td>${ele['m3Ri2WLjD2X-HllvX50cXC0'] == '' ? "NR" : ele['m3Ri2WLjD2X-HllvX50cXC0']}</td><td>${sum6}</td><td>${ele['lX0xOxS9eLV-HllvX50cXC0'] == '' ? "NR" : ele['lX0xOxS9eLV-HllvX50cXC0']}</td><td>${ele['gK6hEAvQrtb-HllvX50cXC0'] == '' ? "NR" : ele['gK6hEAvQrtb-HllvX50cXC0']}</td><td>${sum7}</td><td>${ele['XTB7Rh8VRfL-m0vZJMmHelg'] == '' ? "NR" : ele['XTB7Rh8VRfL-m0vZJMmHelg']}</td><td>${ele['XTB7Rh8VRfL-GVcPtC2klm0'] == '' ? "NR" : ele['XTB7Rh8VRfL-GVcPtC2klm0']}</td><td>${ele['XTB7Rh8VRfL-P98hQY3LVzh'] == '' ? "NR" : ele['XTB7Rh8VRfL-P98hQY3LVzh']}</td><td>${sum3}</td><td>${ele['KKNyMmqR1un-m0vZJMmHelg'] == '' ? "NR" : ele['KKNyMmqR1un-m0vZJMmHelg']}</td><td>${ele['KKNyMmqR1un-GVcPtC2klm0'] == '' ? "NR" : ele['KKNyMmqR1un-GVcPtC2klm0']}</td><td>${ele['KKNyMmqR1un-P98hQY3LVzh'] == '' ? "NR" : ele['KKNyMmqR1un-P98hQY3LVzh']}</td><td>${sum4}</td><td>${ele['IXp7eeh9yNU-m0vZJMmHelg'] == '' ? "NR" : ele['IXp7eeh9yNU-m0vZJMmHelg']}</td><td>${ele['IXp7eeh9yNU-m0vZJMmHelg'] == '' ? "NR" : ele['IXp7eeh9yNU-m0vZJMmHelg']}</td><td>${ele['IXp7eeh9yNU-P98hQY3LVzh'] == '' ? "NR" : ele['IXp7eeh9yNU-P98hQY3LVzh']}</td><td>${sum5}</td><td>${ele['KXMA2VWNIDY-HllvX50cXC0'] == '' ? "NR" : ele['KXMA2VWNIDY-HllvX50cXC0']}</td></tr>`)
+            }
+            if (orgUnitLevel < 3) {
+                if (checktot == '') t = ''
+                if (checktot1 == '') t1 = ''
+                if (checktot2 == '') t2 = ''
+                if (checktot3 == '') t3 = ''
+                if (checktot4 == '') t4 = ''
+                if (checktot5 == '') t5 = ''
+                if (checktot6 == '') t6 = ''
+                if (checktot7 == '') t7 = ''
+                if (checktot8 == '') t8 = ''
+                if (checktot9 == '') t9 = ''
+                if (checktot12 == '') t12 = ''
+                if (checktot21 == '') t21 = ''
+                if (checktot22 == '') t22 = ''
+                if (checktot23 == '') t23 = ''
+                if (checktot24 == '') t24 = ''
+                if (checktot26 == '') t26 = ''
+                if (checktot27 == '') t27 = ''
+                if (checktot28 == '') t28 = ''
+                if (checktot29 == '') t29 = ''
+                if (checktot30 == '') t30 = ''
+                if (checktot31 == '') t31 = ''
+                if (checktot32 == '') t32 = ''
+                if (checktot33 == '') t33 = ''
+                if (checktot34 == '') t34 = ''
+                //  if(checktot35 == '') t35=''
+                if (checktot36 == '') t36 = ''
+                if (checktot37 == '') t37 = ''
+                if (checktot38 == '') t38 = ''
+                if (checktot39 == '') t39 = ''
+                if (checktot40 == '') t40 = ''
+                if (checktot41 == '') t41 = ''
+                if (checktot42 == '') t42 = ''
+                if (checktot43 == '') t43 = ''
+                if (checktot44 == '') t44 = ''
+                if (checktot45 == '') t45 = ''
+                if (checktot46 == '') t46 = ''
+                if (checktot47 == '') t47 = ''
+                if (checktot48 == '') t48 = ''
+                if (checktot49 == '') t49 = ''
+                if (checktot10 == '') t10 = ''
+                if (checktot11 == '') t11 = ''
+                if (checktot50 == '') t50 = ''
+                if (checktot51 == '') t51 = ''
+                if (checktot52 == '') t52 = ''
+                if (checktot53 == '') t53 = ''
+                if (checktot54 == '') t54 = ''
+                if (checktot55 == '') t55 = ''
+                if (checktot56 == '') t56 = ''
+                if (checktot57 == '') t57 = ''
+                if (checktot58 == '') t58 = ''
+                if (checktot59 == '') t59 = ''
+                if (checktot60 == '') t60 = ''
+                if (checktot61 == '') t61 = ''
+                if (checktot62 == '') t62 = ''
+                if (checktot63 == '') t63 = ''
+                $('#dataTable').find("tbody").append(`<tr style="font-weight: bold;"><td colspan="2">Total</td><td>${t.toString() == '' ? 'NR' : t}</td><td>${t1.toString() == '' ? 'NR' : t1}</td><td>${t2.toString() == '' ? 'NR' : t2}</td><td>${t3.toString() == '' ? 'NR' : t3}</td><td>${t4.toString() == '' ? 'NR' : t4}</td><td>${t5.toString() == '' ? 'NR' : t5}</td><td>${t6.toString() == '' ? 'NR' : t6}</td><td>${t7.toString() == '' ? 'NR' : t7}</td><td>${t8.toString() == '' ? 'NR' : t8}</td><td>${t9.toString() == '' ? 'NR' : t9}</td><td>${t10.toString() == '' ? 'NR' : t10}</td><td>${data.totalRegion.aZyjREvHyxV}</td><td>${t12.toString() == '' ? 'NR' : t12}</td><td>${t13 == 0 ? "NR" : t13}</td><td>${t14 == 0 ? "NR" : t14}</td><td>${t15 == 0 ? "NR" : t15}</td><td>${t16 == 0 ? "NR" : t16}</td><td>${t17 == 0 ? "NR" : t17}</td><td>${t18 == 0 ? "NR" : t18}</td><td>${t19 == 0 ? "NR" : t19}</td><td>${t20 == 0 ? "NR" : t20}</td><td>${t21.toString() == '' ? 'NR' : t21}</td><td>${t22.toString() == '' ? 'NR' : t22}</td><td>${t23.toString() == '' ? 'NR' : t23}</td><td>${t24.toString() == '' ? 'NR' : t24}</td><td>${t25 == 0 ? "NR" : t25}</td><td>${t26.toString() == '' ? 'NR' : t26}</td><td>${t27.toString() == '' ? 'NR' : t27}</td><td>${t28.toString() == '' ? 'NR' : t28}</td><td>${t29.toString() == '' ? 'NR' : t29}</td><td>${t30.toString() == '' ? 'NR' : t30}</td><td>${t31.toString() == '' ? 'NR' : t31}</td><td>${t32.toString() == '' ? 'NR' : t32}</td><td>${t33.toString() == '' ? 'NR' : t33}</td><td>${t34.toString() == '' ? 'NR' : t34}</td><td>${t35.toString() == '' ? "NR" : t35}</td><td>${t36.toString() == '' ? 'NR' : t36}</td><td>${t37.toString() == '' ? 'NR' : t37}</td><td>${data.totalRegion.UXbyOqpRzfR}</td><td>${t39.toString() == '' ? 'NR' : t39}</td><td>${t40.toString() == '' ? 'NR' : t40}</td><td>${data.totalRegion.N1LLcjiou4k}</td><td>${t42.toString() == '' ? 'NR' : t42}</td><td>${t43.toString() == '' ? 'NR' : t43}</td><td>${t44.toString() == '' ? 'NR' : t44}</td><td>${t45.toString() == '' ? 'NR' : t45}</td><td>${t46.toString() == '' ? 'NR' : t46}</td><td>${t47.toString() == '' ? 'NR' : t47}</td><td>${t48.toString() == '' ? 'NR' : t48}</td><td>${t49.toString() == '' ? 'NR' : t49}</td><td>${t50.toString() == '' ? 'NR' : t50}</td><td>${t51.toString() == '' ? 'NR' : t51}</td><td>${t52.toString() == '' ? 'NR' : t52}</td><td>${t53.toString() == '' ? 'NR' : t53}</td><td>${data.totalRegion.XTB7Rh8VRfL}</td><td>${t55.toString() == '' ? 'NR' : t55}</td><td>${t56.toString() == '' ? 'NR' : t56}</td><td>${t57.toString() == '' ? 'NR' : t57}</td><td>${data.totalRegion.KKNyMmqR1un}</td><td>${t59.toString() == '' ? 'NR' : t59}</td><td>${t60.toString() == '' ? 'NR' : t60}</td><td>${t61.toString() == '' ? 'NR' : t61}</td><td>${data.totalRegion.IXp7eeh9yNU}</td><td>${t63.toString() == '' ? 'NR' : t63}</td></tr>`)
+            }
+            gt += Number(t), gt1 += Number(t1), gt2 += Number(t2), gt3 += Number(t3), gt4 += Number(t5), gt5 += Number(t5), gt6 += Number(t6), gt7 += Number(t7), gt8 += Number(t8), gt9 += Number(t9), gt10 += Number(t10), gt11 += Number(t11), gt12 += Number(t12), gt13 += Number(t13), gt14 += Number(t14), gt15 += Number(t15), gt16 += Number(t16), gt17 += Number(t17), gt18 += Number(t18), gt19 += Number(t19), gt20 += Number(t20), gt21 += Number(t21), gt22 += Number(t22), gt23 += Number(t23), gt24 += Number(t24), gt25 += Number(t25), gt26 += Number(t26), gt27 += Number(t27), gt28 += Number(t28), gt29 += Number(t29), gt30 += Number(t30), gt31 += Number(t31), gt32 += Number(t32), gt33 += Number(t33), gt34 += Number(t34), gt35 += Number(t35), gt36 += Number(t36), gt37 += Number(t37), gt38 += Number(t38), gt39 += Number(t39), gt40 += Number(t40), gt41 += Number(t41), gt42 += Number(t42), gt43 += Number(t43), gt44 += Number(t44), gt45 += Number(t45), gt46 += Number(t46), gt47 += Number(t47), gt48 += Number(t48), gt49 += Number(t49), gt50 += Number(t50), gt51 += Number(t51), gt52 += Number(t52), gt53 += Number(t53), gt54 += Number(t54), gt55 += Number(t55), gt56 += Number(t56), gt57 += Number(t57), gt58 += Number(t58), gt59 += Number(t59), gt60 += Number(t60), gt61 += Number(t61), gt62 += Number(t62), gt63 += Number(t63);
+            checkgt += checktot
+            checkgt1 += checktot1
+            checkgt2 += checktot2
+            checkgt3 += checktot3
+            checkgt4 += checktot4
+            checkgt5 += checktot5
+            checkgt6 += checktot6
+            checkgt7 += checktot7
+            checkgt8 += checktot8
+            checkgt9 += checktot9
+            checkgt12 += checktot12
+            checkgt21 += checktot21
+            checkgt22 += checktot22
+            checkgt23 += checktot23
+            checkgt24 += checktot24
+            checkgt26 += checktot26
+            checkgt27 += checktot27
+            checkgt28 += checktot28
+            checkgt29 += checktot29
+            checkgt30 += checktot30
+            checkgt31 += checktot31
+            checkgt32 += checktot32
+            checkgt33 += checktot33
+            checkgt34 += checktot34
+            checkgt35 += checktot35
+            checkgt36 += checktot36
+            checkgt37 += checktot37
+            checkgt38 += checktot38
+            checkgt39 += checktot39
+            checkgt40 += checktot40
+            checkgt41 += checktot41
+            checkgt42 += checktot42
+            checkgt43 += checktot43
+            checkgt44 += checktot44
+            checkgt45 += checktot45
+            checkgt46 += checktot46
+            checkgt47 += checktot47
+            checkgt48 += checktot48
+            checkgt49 += checktot49
+            checkgt10 += checktot10
+            checkgt11 += checktot11
+            checkgt50 += checktot50
+            checkgt51 += checktot51
+            checkgt52 += checktot52
+            checkgt53 += checktot53
+            checkgt54 += checktot54
+            checkgt55 += checktot55
+            checkgt56 += checktot56
+            checkgt57 += checktot57
+            checkgt58 += checktot58
+            checkgt59 += checktot59
+            checkgt60 += checktot60
+            checkgt61 += checktot61
+            checkgt62 += checktot62
+            checkgt63 += checktot63
+            t = 0, t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, t31 = 0, t32 = 0, t33 = 0, t34 = 0, t35 = 0, t36 = 0, t37 = 0, t38 = 0, t39 = 0, t40 = 0, t41 = 0, t42 = 0, t43 = 0, t44 = 0, t45 = 0, t46 = 0, t47 = 0, t48 = 0, t49 = 0, t50 = 0, t51 = 0, t52 = 0, t53 = 0, t54 = 0, t55 = 0, t56 = 0, t57 = 0, t58 = 0, t59 = 0, t60 = 0, t61 = 0, t62 = 0, t63 = 0;
+            checktot = '', checktot1 = '', checktot2 = '', checktot3 = '', checktot4 = '', checktot5 = '', checktot6 = '', checktot7 = '', checktot8 = '', checktot9 = '', checktot10 = '', checktot11 = '', checktot12 = '', checktot13 = '', checktot14 = '', checktot15 = '', checktot16 = '', checktot17 = '', checktot18 = '', checktot19 = '', checktot20 = '', checktot21 = '', checktot22 = '', checktot23 = '', checktot24 = '', checktot25 = '', checktot26 = '', checktot27 = '', checktot28 = '', checktot29 = '', checktot30 = '', checktot31 = '', checktot32 = '', checktot33 = '', checktot34 = '', checktot35 = '', checktot36 = '', checktot37 = '', checktot38 = '', checktot39 = '', checktot40 = '', checktot41 = '', checktot42 = '', checktot43 = '', checktot44 = '', checktot45 = '', checktot46 = '', checktot47 = '', checktot48 = '', checktot49 = '', checktot50 = '', checktot51 = '', checktot52 = '', checktot53 = '', checktot54 = '', checktot55 = '', checktot56 = '', checktot57 = '', checktot58 = '', checktot59 = '', checktot60 = '', checktot61 = '', checktot62 = '', checktot63 = '';
+
+        }
+        if (orgUnitLevel == 1) {
+            if (checkgt == '') gt = ''
+            if (checkgt1 == '') gt1 = ''
+            if (checkgt2 == '') gt2 = ''
+            if (checkgt3 == '') gt3 = ''
+            if (checkgt4 == '') gt4 = ''
+            if (checkgt5 == '') gt5 = ''
+            if (checkgt6 == '') gt6 = ''
+            if (checkgt7 == '') gt7 = ''
+            if (checkgt8 == '') gt8 = ''
+            if (checkgt9 == '') gt9 = ''
+            if (checkgt12 == '') gt12 = ''
+            if (checkgt21 == '') gt21 = ''
+            if (checkgt22 == '') gt22 = ''
+            if (checkgt23 == '') gt23 = ''
+            if (checkgt24 == '') gt24 = ''
+            if (checkgt26 == '') gt26 = ''
+            if (checkgt27 == '') gt27 = ''
+            if (checkgt28 == '') gt28 = ''
+            if (checkgt29 == '') gt29 = ''
+            if (checkgt30 == '') gt30 = ''
+            if (checkgt31 == '') gt31 = ''
+            if (checkgt32 == '') gt32 = ''
+            if (checkgt33 == '') gt33 = ''
+            if (checkgt34 == '') gt34 = ''
+            //  if(checkgt35 == '') gt35=''
+            if (checkgt36 == '') gt36 = ''
+            if (checkgt37 == '') gt37 = ''
+            if (checkgt38 == '') gt38 = ''
+            if (checkgt39 == '') gt39 = ''
+            if (checkgt40 == '') gt40 = ''
+            if (checkgt41 == '') gt41 = ''
+            if (checkgt42 == '') gt42 = ''
+            if (checkgt43 == '') gt43 = ''
+            if (checkgt44 == '') gt44 = ''
+            if (checkgt45 == '') gt45 = ''
+            if (checkgt46 == '') gt46 = ''
+            if (checkgt47 == '') gt47 = ''
+            if (checkgt48 == '') gt48 = ''
+            if (checkgt49 == '') gt49 = ''
+            if (checkgt10 == '') gt10 = ''
+            if (checkgt11 == '') gt11 = ''
+            if (checkgt50 == '') gt50 = ''
+            if (checkgt51 == '') gt51 = ''
+            if (checkgt52 == '') gt52 = ''
+            if (checkgt53 == '') gt53 = ''
+            if (checkgt54 == '') gt54 = ''
+            if (checkgt55 == '') gt55 = ''
+            if (checkgt56 == '') gt56 = ''
+            if (checkgt57 == '') gt57 = ''
+            if (checkgt58 == '') gt58 = ''
+            if (checkgt59 == '') gt59 = ''
+            if (checkgt60 == '') gt60 = ''
+            if (checkgt61 == '') gt61 = ''
+            if (checkgt62 == '') gt62 = ''
+            if (checkgt63 == '') gt63 = ''
+            $('#dataTable').find("tbody").append(`<tr style="font-weight: bold;"><td colspan="2"> Global Total</td><td>${gt.toString() == "" ? "NR" : gt}</td><td>${gt1.toString() == "" ? "NR" : gt1}</td><td>${gt2.toString() == "" ? "NR" : gt2}</td><td>${gt3.toString() == "" ? "NR" : gt3}</td><td>${gt4.toString() == "" ? "NR" : gt4}</td><td>${gt5.toString() == "" ? "NR" : gt5}</td><td>${gt6.toString() == "" ? "NR" : gt6}</td><td>${gt7.toString() == "" ? "NR" : gt7}</td><td>${gt8.toString() == "" ? "NR" : gt8}</td><td>${gt9.toString() == "" ? "NR" : gt9}</td><td>${gt10.toString() == "" ? "NR" : gt10}</td><td>${globalTotal['aZyjREvHyxV']}</td><td>${gt12.toString() == "" ? "NR" : gt12}</td><td>${gt13 == 0 ? "NR" : gt13}</td><td>${gt14 == 0 ? "NR" : gt14}</td><td>${gt15 == 0 ? "NR" : gt15}</td><td>${gt16 == 0 ? "NR" : gt16}</td><td>${gt17 == 0 ? "NR" : gt17}</td><td>${gt18 == 0 ? "NR" : gt18}</td><td>${gt19 == 0 ? "NR" : gt19}</td><td>${gt20 == 0 ? "NR" : gt20}</td><td>${gt21.toString() == "" ? "NR" : gt21}</td><td>${gt22.toString() == "" ? "NR" : gt22}</td><td>${gt23.toString() == "" ? "NR" : gt23}</td><td>${gt24.toString() == "" ? "NR" : gt24}</td><td>${gt25 == 0 ? "NR" : gt25}</td><td>${gt26.toString() == "" ? "NR" : gt26}</td><td>${gt27.toString() == "" ? "NR" : gt27}</td><td>${gt28.toString() == "" ? "NR" : gt28}</td><td>${gt29.toString() == "" ? "NR" : gt29}</td><td>${gt30.toString() == "" ? "NR" : gt30}</td><td>${gt31.toString() == "" ? "NR" : gt31}</td><td>${gt32.toString() == "" ? "NR" : gt32}</td><td>${gt33.toString() == "" ? "NR" : gt33}</td><td>${gt34.toString() == "" ? "NR" : gt34}</td><td>${gt35}</td><td>${gt36.toString() == "" ? "NR" : gt36}</td><td>${gt37.toString() == "" ? "NR" : gt37}</td><td>${globalTotal['UXbyOqpRzfR']}</td><td>${gt39.toString() == "" ? "NR" : gt39}</td><td>${gt40.toString() == "" ? "NR" : gt40}</td><td>${globalTotal['N1LLcjiou4k']}</td><td>${gt42.toString() == "" ? "NR" : gt42}</td><td>${gt43.toString() == "" ? "NR" : gt43}</td><td>${gt44.toString() == "" ? "NR" : gt44}</td><td>${gt45.toString() == "" ? "NR" : gt45}</td><td>${gt46.toString() == "" ? "NR" : gt46}</td><td>${gt47.toString() == "" ? "NR" : gt47}</td><td>${gt48.toString() == "" ? "NR" : gt48}</td><td>${gt49.toString() == "" ? "NR" : gt49}</td><td>${gt50.toString() == "" ? "NR" : gt50}</td><td>${gt51.toString() == "" ? "NR" : gt51}</td><td>${gt52.toString() == "" ? "NR" : gt52}</td><td>${gt53.toString() == "" ? "NR" : gt53}</td><td>${globalTotal['XTB7Rh8VRfL']}</td><td>${gt55.toString() == "" ? "NR" : gt55}</td><td>${gt56.toString() == "" ? "NR" : gt56}</td><td>${gt57.toString() == "" ? "NR" : gt57}</td><td>${globalTotal['KKNyMmqR1un']}</td><td>${gt59.toString() == "" ? "NR" : gt59}</td><td>${gt60.toString() == "" ? "NR" : gt60}</td><td>${gt61.toString() == "" ? "NR" : gt61}</td><td>${globalTotal['IXp7eeh9yNU']}</td><td>${gt63.toString() == "" ? "NR" : gt63}</td></tr>`)
+        }
+        $('#loader').hide()
+        document.getElementById("allDiv").style.display = "block";
+        gt = 0, gt1 = 0, gt2 = 0, gt3 = 0, gt4 = 0, gt5 = 0, gt6 = 0, gt7 = 0, gt8 = 0, gt9 = 0, gt10 = 0, gt11 = 0, gt12 = 0, gt13 = 0, gt14 = 0, gt15 = 0, gt16 = 0, gt17 = 0, gt18 = 0, gt19 = 0, gt20 = 0, gt21 = 0, gt22 = 0, gt23 = 0, gt24 = 0, gt25 = 0, gt26 = 0, gt27 = 0, gt28 = 0, gt29 = 0, gt30 = 0, gt31 = 0, gt32 = 0, gt33 = 0, gt34 = 0, gt35 = 0, gt36 = 0, gt37 = 0, gt38 = 0, gt39 = 0, gt40 = 0, gt41 = 0, gt42 = 0, gt43 = 0, gt44 = 0, gt45 = 0, gt46 = 0, gt47 = 0, gt48 = 0, gt49 = 0, gt50 = 0, gt51 = 0, gt52 = 0, gt53 = 0, gt54 = 0, gt55 = 0, gt56 = 0, gt57 = 0, gt58 = 0, gt59 = 0, gt60 = 0, gt61 = 0, gt62 = 0, gt63 = 0;
+
+    }
+
+
+
+</script>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>

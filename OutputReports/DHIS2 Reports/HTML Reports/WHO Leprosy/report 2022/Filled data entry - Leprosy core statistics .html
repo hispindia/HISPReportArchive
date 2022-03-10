@@ -1,0 +1,711 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    /* Center the loader  */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Leprosy Core Statistics', 'Leprosy Core Statistics.xls')"><span
+        class="glyphicon glyphicon-download-alt" ></span>Download As Excel</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Leprosy Core Statistics', 'Leprosy Core Statistics.doc')"><span
+        class="glyphicon glyphicon-download-alt" ></span>Download As Doc</button>
+<br><br>
+<div id="loader" style="display: block;"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state' style="display: none;">
+        <table id="dataTable" border="1" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style=" text-align: center;width:100%">
+
+            <tr style=" font:bold; text-align:center;">
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Core statistics on leprosy</td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: left">WHO Region <span
+                        id="selected-ParentOrgUnit"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: left">Country <span
+                        id="selected-orgUnit"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: left">Year : <span
+                        id="selectedYear"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: left">Population : <span
+                        id="d1d6EWQZJGB-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: left">Child population : <span
+                        id="EnQPW5xZDPX-DGU1CWAZ6qw"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Case detection during the year
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="background-color: #dce6f1; text-align: left">New Cases</td>
+                <td style="background-color: #dce6f1; text-align: center">Adult</td>
+                <td style="background-color: #dce6f1; text-align: center">Child</td>
+                <td style="background-color: #dce6f1; text-align: center">Age Unknown</td>
+                <td style="background-color: #dce6f1; text-align: center">Subtotal</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New multibacillary (MB) leprosy cases
+                </td>
+                <td style="border:1px solid black;  text-align: center"><span id="evXyDr6c7eu-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="evXyDr6c7eu-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="evXyDr6c7eu-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="total-evXyDr6c7eu"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New paucibacillary (PB) leprosy cases
+                </td>
+                <td style="border:1px solid black;  text-align: center"><span id="gVmFx873rdZ-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="gVmFx873rdZ-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="gVmFx873rdZ-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="total-gVmFx873rdZ"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New unclassified cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="IQgrP2W9gTV-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="IQgrP2W9gTV-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="IQgrP2W9gTV-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="total-IQgrP2W9gTV"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Total new cases</td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="total-cases"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New case detection rate (per 1 000 000
+                    population)
+                </td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="case-detection"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Total new child cases</td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="childTotal-cases"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Percentage of children among new cases
+                </td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="percentage-child"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Child case detection rate (per 1 000
+                    000 child
+                    population)</td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="child-detection"></span>
+                </td>
+            </tr>
+            <span id="child-cases" style="display:none">
+                <tr>
+                    <td colspan="7" style="background-color: #dce6f1; text-align: center">Child cases by age </td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="background-color: #dce6f1; text-align: left"></td>
+                    <td style="background-color: #dce6f1; text-align: center">MB</td>
+                    <td style="background-color: #dce6f1; text-align: center">PB</td>
+                    <td style="background-color: #dce6f1; text-align: center">unclassified</td>
+                    <td style="background-color: #dce6f1; text-align: center">Total</td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border:1px solid black; text-align: left">New child cases ≤ 5 years of age
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="MiHLzmsVFPf-xC5PhT2YVtr"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="ubgNtdy3h9H-xC5PhT2YVtr"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="tyHgOKrZsMJ-xC5PhT2YVtr"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="total-xC5PhT2YVtr"></span></td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border:1px solid black; text-align: left">New child cases between 6-14 years
+                        of
+                        age</td>
+                    <td style="border:1px solid black;  text-align: center"><span id="MiHLzmsVFPf-GcQ4Ep0wmnH"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="ubgNtdy3h9H-GcQ4Ep0wmnH"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="tyHgOKrZsMJ-GcQ4Ep0wmnH"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="total-GcQ4Ep0wmnH"></span></td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border:1px solid black; text-align: left">New child cases of unknown age</td>
+                    <td style="border:1px solid black;  text-align: center"><span id="child-MB"></span></td>
+                    <td style="border:1px solid black;  text-align: center"><span id="child-PB"></span></td>
+                    <td style="border:1px solid black;  text-align: center"><span id="child-Unclassified"></span></td>
+                    <td style="border:1px solid black;  text-align: center"><span id="child-total"></span></td>
+                </tr>
+            </span>
+
+            <tr>
+                <td colspan="2" style="background-color: #dce6f1; text-align: left"></td>
+                <td style="background-color: #dce6f1; text-align: center">Female</td>
+                <td style="background-color: #dce6f1; text-align: center">Gender Unknown</td>
+                <td style="background-color: #dce6f1; text-align: center">Male</td>
+                <td colspan="2" style="background-color: #dce6f1; text-align: center"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black;  text-align: left">New cases by gender</td>
+                <td style="border:1px solid black;  text-align: center"><span id="xdbnQxRVTBq-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="coycFHeZ257-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="case-gender"></span></td>
+                <td style="border:1px solid black;  text-align: left">Percentage of female</td>
+                <td style="border:1px solid black;  text-align: center"><span id="percentage-female"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Grade-2 disability (G2D) </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="background-color: #dce6f1; text-align: left"></td>
+                <td style="background-color: #dce6f1; text-align: center">Adult</td>
+                <td style="background-color: #dce6f1; text-align: center">Child</td>
+                <td style="background-color: #dce6f1; text-align: center">Age unknown</td>
+                <td style="background-color: #dce6f1; text-align: center">Subtotal</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New cases with G2D</td>
+                <td style="border:1px solid black;  text-align: center"><span id="xl4EXfRMBrK-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="xl4EXfRMBrK-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="xl4EXfRMBrK-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="total-xl4EXfRMBrK"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black;  text-align: left">Percentage of G2D in new cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="percentage-G2D"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: left">G2D rate (per 1 000 000 population)
+                </td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="rate-G2D"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="background-color: #dce6f1; text-align: left"></td>
+                <td style="background-color: #dce6f1; text-align: center">Female</td>
+                <td style="background-color: #dce6f1; text-align: center">% of female</td>
+                <td style="background-color: #dce6f1; text-align: center">Gender unknown</td>
+                <td style="background-color: #dce6f1; text-align: center">Male</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New cases with G2D by gender </td>
+                <td style="border:1px solid black;  text-align: center"><span id="RcRolaLXGcw-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="percentageFemale-G2D"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="k2P4B19IWxU-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="male-G2D"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Non-autochthonous cases </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black;  text-align: left">New non-autochthonous cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="nbDlMYKljTK-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: left">Percentage of non-autochthonous cases
+                </td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="precentage-nonAut"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Retreatment cases </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="background-color: #dce6f1; text-align: left"></td>
+                <td style="background-color: #dce6f1; text-align: center">Relapses</td>
+                <td style="background-color: #dce6f1; text-align: center">Other retreatments</td>
+                <td colspan="2" style="background-color: #dce6f1; text-align: center">Subtotal</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of MB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="VBEhMPsLu53-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="lhSRNgfsxYC-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="VBEhMPsLu53-HllvX50cXC0;lhSRNgfsxYC-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of PB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="YVj2PYy0Slj-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="EHT4ON2ZtNl-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="YVj2PYy0Slj-HllvX50cXC0;EHT4ON2ZtNl-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of unclassified cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="KJtRiyeoCGx-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="vp8pxtgYBL2-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="KJtRiyeoCGx-HllvX50cXC0;vp8pxtgYBL2-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Total retreatment cases</td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="retreatment-cases"></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Cases registered for treatment at
+                    the end of year (both new and retreatment cases) </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="background-color: #dce6f1; text-align: left"></td>
+                <td style="background-color: #dce6f1; text-align: center">Adult</td>
+                <td style="background-color: #dce6f1; text-align: center">Child</td>
+                <td colspan="2" style="background-color: #dce6f1; text-align: center">Subtotal</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left"> MB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="bLR7YvL1f5O-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="bLR7YvL1f5O-ZZFiCRpT37i"></span>
+                </td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="bLR7YvL1f5O-Te9RyzefSAz;bLR7YvL1f5O-ZZFiCRpT37i"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left"> PB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="mdupOTsRJ58-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="mdupOTsRJ58-ZZFiCRpT37i"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="mdupOTsRJ58-Te9RyzefSAz;mdupOTsRJ58-ZZFiCRpT37i"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Unclassified</td>
+                <td style="border:1px solid black;  text-align: center"><span id="lzbsUQJvvJB-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="lzbsUQJvvJB-ZZFiCRpT37i"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="lzbsUQJvvJB-Te9RyzefSAz;lzbsUQJvvJB-ZZFiCRpT37i"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Total cases registered for treatment
+                </td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="registered-cases"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Registered prevalence rate (per 1 000
+                    000 population)</td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="prevelence-rate"></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Case detection method </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background-color: #dce6f1; text-align: left"></td>
+                <td style="background-color: #dce6f1; text-align: left">Number of people enumerated /estimated</td>
+                <td style="background-color: #dce6f1; text-align: center">Number of people Examined</td>
+                <td style="background-color: #dce6f1; text-align: center">Percentage examined</td>
+                <td style="background-color: #dce6f1; text-align: center">Cases detected</td>
+                <td style="background-color: #dce6f1; text-align: center">Percentage detected among new cases</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Contact examination</td>
+                <td style="border:1px solid black;  text-align: center"><span id="qHIGkVqSItK-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="GuZ5MKrfrBp-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="qHIGkVqSItK;GuZ5MKrfrBp"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="Xzuid5sSSg3-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="percentage-Xzuid5sSSg3"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">School child examination for leprosy
+                </td>
+                <td style="border:1px solid black;  text-align: center"><span id="hcmT8KR85PW-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="zZcTJntCnMe-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="hcmT8KR85PW;zZcTJntCnMe"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="lk5YKbM2SEu-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="percentage-lk5YKbM2SEu"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Active case detection campaigns
+                    (general population)</td>
+                <td style="border:1px solid black;  text-align: center"><span id="v7CDzOUjTE6-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="ztfAqeY7ruz-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="v7CDzOUjTE6;ztfAqeY7ruz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="NlyC1FwJWy9-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="percentage-NlyC1FwJWy9"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Active case detection campaigns(special
+                    population group) e.g., migrants, urban slum population, refugees, prison inmates</td>
+                <td style="border:1px solid black;  text-align: center"><span id="g04IY5svOKO-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="FNTigvSTOVL-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="g04IY5svOKO;FNTigvSTOVL"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="uhtjTobhtHO-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="percentage-uhtjTobhtHO"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Treatment outcome</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid black; text-align: left">New MB cases who started treatment in
+                    (two years before) 2018</td>
+                <td colspan="3" style="border:1px solid black;  text-align: center"><span
+                        id="VVBrsKiEqdh-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, how many completed treatment
+                    within 18 months ?</td>
+                <td style="border:1px solid black;  text-align: center"><span id="TCJv5BNVYCw-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">MB treatment completion rate (%)</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="percentage-MB"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, how many were lost to
+                    follow-up?
+                </td>
+                <td style="border:1px solid black;  text-align: center"><span id="bjLIfOy4KuR-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">MB loss to follow up rate (%)</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="follow-MB"></span></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid black; text-align: left">New PB cases who started treatment in
+                    (one year before) 2019</td>
+                <td colspan="3" style="border:1px solid black;  text-align: center"><span
+                        id="PFNL3BPu3A6-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, how many completed treatment
+                    within 9 months ?</td>
+                <td style="border:1px solid black;  text-align: center"><span id="t5AmFhGyKw9-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">PB treatment completion rate (%)</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="percentage-PB"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, how many were 'lost to
+                    follow-up' ?
+                </td>
+                <td style="border:1px solid black;  text-align: center"><span id="IW3BXD1xO0E-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">PB loss to follow-up case rate (%)</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="follow-PB"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #dce6f1; text-align: center">Antimicrobial surveillance</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background-color: #dce6f1; text-align: center"></td>
+                <td colspan="3" style="background-color: #dce6f1; text-align: center">Number of patients with resistance
+                    strain to any one drug</td>
+                <td colspan="2" style="background-color: #dce6f1; text-align: center">Number of patients with resistance
+                    strains to more than one drug</td>
+            </tr>
+            <tr>
+                <td style="background-color: #dce6f1; text-align: center"></td>
+                <td style="background-color: #dce6f1; text-align: center">Number of patients tested</td>
+                <td style="background-color: #dce6f1; text-align: center">Rifampicin</td>
+                <td style="background-color: #dce6f1; text-align: center">Dapsone</td>
+                <td style="background-color: #dce6f1; text-align: center">Ofloxacin</td>
+                <td style="background-color: #dce6f1; text-align: center">Rifampicin and Dapsone</td>
+                <td style="background-color: #dce6f1; text-align: center">Rifampicin and Ofloxacin</td>
+            </tr>
+            <tr>
+                <td style="background-color: #dce6f1; text-align: left">Relapse/other retreatment cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="JK1VCsNhg6x-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span
+                        id="sgdAybfDzTl-oSHl2cUvHmk"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="sgdAybfDzTl-qqJwrOzkzcz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="sgdAybfDzTl-G0EY8ZnkmVI"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="sgdAybfDzTl-Vi7NufwLzKs"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="ej7YYjvhLmR-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td style="background-color: #dce6f1; text-align: left">New cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="MJGjCnCK8qJ-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="CAwisvSGkaj-oSHl2cUvHmk"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="CAwisvSGkaj-qqJwrOzkzcz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="CAwisvSGkaj-G0EY8ZnkmVI"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="CAwisvSGkaj-Vi7NufwLzKs"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="DAs6FtLcYz1-HllvX50cXC0"></span></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
+
+<!-- Main Script -->
+
+<script type="text/javascript">
+
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var selectedOrgUnitHierarchy = dhis2.report.organisationUnitHierarchy;
+    var period = dhis2.report.periods[0];
+    var dataValues = {};
+    var hasTotalValues = { 'evXyDr6c7eu': true, 'gVmFx873rdZ': true, 'IQgrP2W9gTV': true, 'xC5PhT2YVtr': true, 'GcQ4Ep0wmnH': true, 'xl4EXfRMBrK': true }
+    var totalValues = {};
+
+    if (selectedOrgUnitHierarchy.length >= 2) document.getElementById('selected-ParentOrgUnit').innerHTML = `: ${selectedOrgUnitHierarchy[1].name}`;
+    document.getElementById('selected-orgUnit').innerHTML = `: ${selectedOrgUnit.name}`
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: `../api/dataValueSets.json?dataSet=m4Hy2QZbW9p&orgUnit=${selectedOrgUnit.id}&period=${period}&skipMeta=true&paging=false`,
+        data: JSON,
+        success: function (response, status) {
+            response.dataValues.forEach(data => {
+                if (hasTotalValues[data.dataElement]) {
+                    if (!totalValues[`total-${data.dataElement}`] && !data.comment) totalValues[`total-${data.dataElement}`] = Number(data.value);
+                    else if (!data.comment) totalValues[`total-${data.dataElement}`] += Number(data.value);
+                }
+                if (hasTotalValues[data.categoryOptionCombo]) {
+                    if (!totalValues[`total-${data.categoryOptionCombo}`] && !data.comment) totalValues[`total-${data.categoryOptionCombo}`] = Number(data.value);
+                    else if (!data.comment) totalValues[`total-${data.categoryOptionCombo}`] += Number(data.value);
+                }
+                if (data.dataElement && data.categoryOptionCombo) {
+                    if (data.comment) dataValues[`${data.dataElement}-${data.categoryOptionCombo}`] = data.comment;
+                    else dataValues[`${data.dataElement}-${data.categoryOptionCombo}`] = data.value;
+                }
+            })
+        }
+    });
+
+    for (let val in hasTotalValues) {
+        if (totalValues[`total-${val}`] || totalValues[`total-${val}`] == 0) document.getElementById(`total-${val}`).innerHTML = totalValues[`total-${val}`]
+    }
+
+    var population = (dataValues["d1d6EWQZJGB-HllvX50cXC0"] ? Number(dataValues["d1d6EWQZJGB-HllvX50cXC0"]) : 0);
+    var childPopulation = (dataValues["EnQPW5xZDPX-DGU1CWAZ6qw"] ? Number(dataValues["EnQPW5xZDPX-DGU1CWAZ6qw"]) : 0);
+    var genderFemale = (dataValues["xdbnQxRVTBq-HllvX50cXC0"] ? Number(dataValues["xdbnQxRVTBq-HllvX50cXC0"]) : 0);
+    var femaleG2D = (dataValues["RcRolaLXGcw-HllvX50cXC0"] ? Number(dataValues["RcRolaLXGcw-HllvX50cXC0"]) : 0);
+    var totalG2DCases = (totalValues['total-xl4EXfRMBrK'] ? totalValues['total-xl4EXfRMBrK'] : 0);
+    var nonAutochthonous = (dataValues['nbDlMYKljTK-HllvX50cXC0'] ? Number(dataValues['nbDlMYKljTK-HllvX50cXC0']) : 0);
+    document.getElementById("selectedYear").innerHTML = period;
+    var totalCases = (totalValues[`total-evXyDr6c7eu`] ? totalValues[`total-evXyDr6c7eu`] : 0) + (totalValues[`total-gVmFx873rdZ`] ? totalValues[`total-gVmFx873rdZ`] : 0) + (totalValues[`total-IQgrP2W9gTV`] ? totalValues[`total-IQgrP2W9gTV`] : 0);
+    document.getElementById("total-cases").innerHTML = totalCases;
+     
+    var childCases = (dataValues['evXyDr6c7eu-ZZFiCRpT37i'] ? Number(dataValues['evXyDr6c7eu-ZZFiCRpT37i']) : 0) + (dataValues['gVmFx873rdZ-ZZFiCRpT37i'] ? Number(dataValues['gVmFx873rdZ-ZZFiCRpT37i']) : 0) + (dataValues['IQgrP2W9gTV-ZZFiCRpT37i'] ? Number(dataValues['IQgrP2W9gTV-ZZFiCRpT37i']) : 0);
+    document.getElementById('childTotal-cases').innerHTML = childCases;
+    var percentageChild = (childCases / totalCases) || (childCases / totalCases) != "Infinity" ? ((childCases / totalCases) * 100).toFixed(2) : "";
+    document.getElementById('percentage-child').innerHTML = percentageChild != "NaN"  ? percentageChild : "";
+    var childDetection = (childCases / childPopulation) || (childCases / childPopulation) != "Infinity" ? ((childCases / childPopulation) * 1000000).toFixed(2) : "";
+    document.getElementById('child-detection').innerHTML = childDetection != "NaN" ?childDetection: "";
+    var caseDetection = ((totalCases ? totalCases : 0) / population) || ((totalCases ? totalCases : 0) / population) != "Infinity" ? (((totalCases ? totalCases : 0) / population) * 100000).toFixed(2) : '';
+    document.getElementById('case-detection').innerHTML = caseDetection != "NaN" ? caseDetection: '';
+
+
+    var childMB = (dataValues['evXyDr6c7eu-ZZFiCRpT37i'] ? Number(dataValues['evXyDr6c7eu-ZZFiCRpT37i']) : 0) - (dataValues['MiHLzmsVFPf-xC5PhT2YVtr'] ? Number(dataValues['MiHLzmsVFPf-xC5PhT2YVtr']) : 0) - (dataValues['MiHLzmsVFPf-GcQ4Ep0wmnH'] ? Number(dataValues['MiHLzmsVFPf-GcQ4Ep0wmnH']) : 0);
+    document.getElementById('child-MB').innerHTML = childMB;
+    var childPB =  (dataValues['gVmFx873rdZ-ZZFiCRpT37i'] ? Number(dataValues['gVmFx873rdZ-ZZFiCRpT37i']) : 0) - (dataValues['ubgNtdy3h9H-xC5PhT2YVtr'] ? Number(dataValues['ubgNtdy3h9H-xC5PhT2YVtr']) : 0) - (dataValues['ubgNtdy3h9H-GcQ4Ep0wmnH'] ? Number(dataValues['ubgNtdy3h9H-GcQ4Ep0wmnH']) : 0);
+    document.getElementById('child-PB').innerHTML = childPB;
+    var childUnclass =(dataValues['IQgrP2W9gTV-ZZFiCRpT37i'] ? Number(dataValues['IQgrP2W9gTV-ZZFiCRpT37i']) : 0)- (dataValues['tyHgOKrZsMJ-xC5PhT2YVtr'] ? Number(dataValues['tyHgOKrZsMJ-xC5PhT2YVtr']) : 0) - (dataValues['tyHgOKrZsMJ-GcQ4Ep0wmnH'] ? Number(dataValues['tyHgOKrZsMJ-GcQ4Ep0wmnH']) : 0);
+    document.getElementById('child-Unclassified').innerHTML = childUnclass;
+    var childTotal = (childMB ? childMB : 0) + (childPB ? childPB : 0) + (childUnclass ? childUnclass : 0);
+    document.getElementById('child-total').innerHTML = childTotal;
+
+    var genderMale = totalCases - genderFemale;
+    document.getElementById('case-gender').innerHTML = genderMale;
+
+    var percentageFemale = genderFemale / ((genderMale ? genderMale : 0) + genderFemale) || genderFemale / ((genderMale ? genderMale : 0) + genderFemale) != "Infinity" ? ((genderFemale / ((genderMale ? genderMale : 0) + genderFemale)) * 100).toFixed(2) : '';
+    document.getElementById('percentage-female').innerHTML = percentageFemale != "NaN" ? percentageChild: '';
+
+    var percentageG2D = (totalG2DCases / totalCases) || (totalG2DCases / totalCases) != 'Infinity' ? (((totalG2DCases / totalCases)) * 100).toFixed(2) : "";
+    document.getElementById('percentage-G2D').innerHTML = percentageG2D != "NaN" ? percentageG2D: '';
+
+    var rateG2D = (totalG2DCases / population) || (totalG2DCases / totalCases) != 'Infinity' ? (((totalG2DCases / population)) * 1000000).toFixed(2) : "";
+    document.getElementById('rate-G2D').innerHTML = rateG2D != "NaN" ? rateG2D: '';
+
+    var percentageFemaleG2D = (femaleG2D / totalG2DCases) || (femaleG2D / totalG2DCases) != 'Infinity' ? (((femaleG2D / totalG2DCases)) * 100).toFixed(2) : "";
+    document.getElementById('percentageFemale-G2D').innerHTML = percentageFemaleG2D != "NaN" ?percentageFemaleG2D: '';
+
+    var maleG2D = totalG2DCases - femaleG2D;
+    document.getElementById('male-G2D').innerHTML = maleG2D;
+
+    var perNonAutochthonous = (nonAutochthonous / totalCases) || (nonAutochthonous / totalCases) != "Infinity" ? ((nonAutochthonous / totalCases) * 100).toFixed(2) : ""
+    document.getElementById('precentage-nonAut').innerHTML = perNonAutochthonous != "NaN" ? perNonAutochthonous: '';
+
+    var totalRetreatmentCases = 0;
+    var totalRegisteredCases = 0;
+
+    ["VBEhMPsLu53-HllvX50cXC0;lhSRNgfsxYC-HllvX50cXC0", "YVj2PYy0Slj-HllvX50cXC0;EHT4ON2ZtNl-HllvX50cXC0", "KJtRiyeoCGx-HllvX50cXC0;vp8pxtgYBL2-HllvX50cXC0", "bLR7YvL1f5O-Te9RyzefSAz;bLR7YvL1f5O-ZZFiCRpT37i", "mdupOTsRJ58-Te9RyzefSAz;mdupOTsRJ58-ZZFiCRpT37i", "lzbsUQJvvJB-Te9RyzefSAz;lzbsUQJvvJB-ZZFiCRpT37i"].forEach((id, index) => {
+        let ids = id.split(';');
+        let value = '';
+        if (dataValues[ids[0]] || dataValues[ids[1]]) {
+            if (dataValues[ids[0]] && dataValues[ids[1]]) value = Number(dataValues[ids[0]]) + Number(dataValues[ids[1]]);
+
+            else if (dataValues[ids[0]]) {
+                value = Number(dataValues[ids[0]]);
+            }
+            else if (dataValues[ids[1]]) {
+                value = Number(dataValues[ids[1]]);
+            }
+            if (value) {
+                if (index > 2) totalRegisteredCases += value;
+                else totalRetreatmentCases += value;
+                document.getElementById(id).innerHTML = value;
+            }
+
+        }
+    });
+    document.getElementById('retreatment-cases').innerHTML = totalRetreatmentCases;
+    document.getElementById('registered-cases').innerHTML = totalRegisteredCases;
+
+    var totalPrevelenceRate = (totalRegisteredCases / population) || (totalRegisteredCases / population) != "Infinity" ? ((totalRegisteredCases / population) * 1000000).toFixed(2) : "";
+    document.getElementById('prevelence-rate').innerHTML = totalPrevelenceRate != "NaN" ? totalPrevelenceRate: '';
+
+    ["qHIGkVqSItK;GuZ5MKrfrBp;Xzuid5sSSg3", "hcmT8KR85PW;zZcTJntCnMe;lk5YKbM2SEu", "v7CDzOUjTE6;ztfAqeY7ruz;NlyC1FwJWy9", "g04IY5svOKO;FNTigvSTOVL;uhtjTobhtHO"].forEach(id => {
+        let ids = id.split(";")
+        let valueFirst = dataValues[`${ids[0]}-HllvX50cXC0`] ? Number(dataValues[`${ids[0]}-HllvX50cXC0`]) : 0;
+        let valueSecond = dataValues[`${ids[1]}-HllvX50cXC0`] ? Number(dataValues[`${ids[1]}-HllvX50cXC0`]) : 0;
+        let valueThird = dataValues[`${ids[2]}-HllvX50cXC0`] ? Number(dataValues[`${ids[2]}-HllvX50cXC0`]) : 0;
+        totalCases = totalCases ? totalCases : 0;
+        let percentageExamined = ((valueSecond / valueFirst) || (valueSecond / valueFirst != "Infinity")) ? (valueSecond / valueFirst * 100).toFixed(2) : "";
+
+        let percentageDetected = ((valueThird / totalCases) || (valueThird / totalCases != "Infinity")) ? (valueThird / totalCases * 100).toFixed(2) : "";
+        document.getElementById(`${ids[0]};${ids[1]}`).innerHTML = percentageExamined != "NaN" ? percentageExamined : "";
+        document.getElementById(`percentage-${ids[2]}`).innerHTML = percentageDetected != "NaN" ? percentageDetected : "";
+
+    })
+
+
+    var newMBCases = dataValues["VVBrsKiEqdh-HllvX50cXC0"] ? Number(dataValues["VVBrsKiEqdh-HllvX50cXC0"]) : 0;
+    var monthsTreatment = dataValues["TCJv5BNVYCw-HllvX50cXC0"] ? Number(dataValues["TCJv5BNVYCw-HllvX50cXC0"]) : 0;
+    var followUP18 = dataValues["bjLIfOy4KuR-HllvX50cXC0"] ? Number(dataValues["bjLIfOy4KuR-HllvX50cXC0"]) : 0;
+    var percentMB = (monthsTreatment / newMBCases) || (monthsTreatment / newMBCases) != "Infinity" ? ((monthsTreatment / newMBCases) * 100).toFixed(2) : '';
+    var followMB = (followUP18 / newMBCases) || (followUP18 / newMBCases) != "Infinity" ? ((followUP18 / newMBCases) * 100).toFixed(2) : '';
+
+    document.getElementById(`percentage-MB`).innerHTML = percentMB != "NaN" ? percentMB : "";
+    document.getElementById(`follow-MB`).innerHTML = followMB != "NaN" ? followMB : "";
+
+
+    var newPBCases = dataValues["PFNL3BPu3A6-HllvX50cXC0"] ? Number(dataValues["PFNL3BPu3A6-HllvX50cXC0"]) : 0;
+    var monthsPBTreatment = dataValues["t5AmFhGyKw9-HllvX50cXC0"] ? Number(dataValues["t5AmFhGyKw9-HllvX50cXC0"]) : 0;
+    var followPB18 = dataValues["IW3BXD1xO0E-HllvX50cXC0"] ? Number(dataValues["IW3BXD1xO0E-HllvX50cXC0"]) : 0;
+    var percentPB = (monthsPBTreatment / newPBCases) || (monthsPBTreatment / newPBCases) != "Infinity" ? ((monthsPBTreatment / newPBCases) * 100).toFixed(2) : '';
+    var followPB = (followPB18 / newPBCases) || (followPB18 / newPBCases) != "Infinity" ? ((followPB18 / newPBCases) * 100).toFixed(2) : '';
+
+    document.getElementById(`percentage-PB`).innerHTML = percentPB != "NaN" ? percentPB : "";
+    document.getElementById(`follow-PB`).innerHTML = followPB != "NaN" ? followPB : "";
+
+
+    for (let values in dataValues) {
+        document.getElementById(values).innerHTML = dataValues[values];
+    }
+
+    if (dataValues['evXyDr6c7eu-ZZFiCRpT37i']) document.getElementById('child-cases').style.display = '';
+
+    document.getElementById('loader').style.display = "none";
+    document.getElementById('state').style.display = "block";
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>

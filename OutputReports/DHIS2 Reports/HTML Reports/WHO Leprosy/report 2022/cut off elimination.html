@@ -1,0 +1,512 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    /* Center the loader  */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+        display: none;
+        text-align: center;
+    }
+
+    .box {
+        background-color: rgb(236, 238, 239);
+        height: 150px;
+        width: 380px;
+        border-radius: 5px;
+        border: ivory 1px;
+        margin-left: 300px;
+    }
+</style>
+<a id="dlink" style="display:none;"></a>
+<div align="center">
+    <label>
+        <strong>Start Year : </strong>
+        <input type="number" id="startDate" min="1990" step="1">
+    </label>
+    <label>
+        <strong>End Year : </strong>
+        <input type="number" id="endDate" min="1990" step="1">
+    </label>
+    <button id="tap" class="btn btn-success" onclick="submitData()">Generate Report</button>
+
+</div>
+<div id="btn">
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('allContent')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allContent', 'cut off elimination', 'cut off elimination.xls')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Excel</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allContent', 'cut off elimination', 'cut off  elimination.doc')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Doc</button>
+ </div>
+
+<div id="loader"></div>
+<div id="allContent">
+    <table border="1" class="table  table-hover text-center" id="dataTable1">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <table border="1" class="table  table-hover text-center" id="dataTable2">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <table border="1" class="table  table-hover text-center" id="dataTable3">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $('#startDate').val('2015')
+    $('#endDate').val('2020')
+    $('#btn').hide()
+    document.getElementById("loader").style.display = "none";
+    var orgUnit = {id:'x3i5oi4axNu', name:'World'};    
+    function submitData(){
+        if (parseInt(document.getElementById("startDate").value) > parseInt(document.getElementById("endDate").value)) return alert("Please Select dates Correctly!");
+          else {
+            // $('#allContent').hide()
+            document.getElementById("allContent").display ="none"
+            $('#table1').empty()
+            $('#table2').empty()
+            $('#table3').empty()
+            $('#loader').show();
+            setTimeout(() => {
+                loadData()
+            }, 1000)
+        }
+    }
+  
+    function loadData() {
+        let startDate = document.getElementById('startDate').value
+        let endDate = document.getElementById('endDate').value
+        var level2OrgUnitsList = []
+        var dataList = []
+        var dataElementsObj = {'evXyDr6c7eu-ZZFiCRpT37i':'','gVmFx873rdZ-ZZFiCRpT37i':'','IQgrP2W9gTV-ZZFiCRpT37i':'', 'evXyDr6c7eu-Te9RyzefSAz':'', 'gVmFx873rdZ-Te9RyzefSAz':'', 'evXyDr6c7eu-sdMU6tpPki6':'', 'gVmFx873rdZ-sdMU6tpPki6':'', 'IQgrP2W9gTV-sdMU6tpPki6':'','IQgrP2W9gTV-Te9RyzefSAz':'','TBTHguhWty1-HllvX50cXC0':'', }
+        var dates = []
+       for(let i = endDate; i>startDate-1; i--){
+             dates.push(i)
+        }
+        dates.reverse();
+       $('#btn').show()
+       function getCountryData( id, name) {
+            let dataValArr = []
+            for(let i =0 ; i<dates.length; i++){
+                let objDataSet2 = Object.assign({}, dataElementsObj)
+                let objDataSet1 = Object.assign({}, dataElementsObj)
+                let obj1 ={}
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/dataValueSets.json?orgUnit=" + id + "&period=" + dates[i] + "&dataSet=m4Hy2QZbW9p",
+                data: JSON,
+                success: function (data, status) {
+                    if (data.dataValues) {
+                        for(let de in objDataSet1){
+                        for (let ele of data.dataValues) {
+                            if(de == (ele.dataElement + "-" + ele.categoryOptionCombo)){
+                                objDataSet1[de] = ele.value == undefined ? "" : Number(ele.value)
+                            }
+                        }
+                       }
+                      obj1= {...objDataSet1, "period": dates[i], 'name':name}
+                    }
+                }
+            });
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/dataValueSets.json?orgUnit=" + id + "&period=" + dates[i] + "&dataSet=c8Q3QiX5He3",
+                data: JSON,
+                success: function (data, status) {
+                    if (data.dataValues) {
+                        // for(let de in objDataSet2){
+                        for (let ele of data.dataValues) {
+                            if((ele.dataElement + "-" + ele.categoryOptionCombo) == "TBTHguhWty1-HllvX50cXC0"){
+                                obj1["TBTHguhWty1-HllvX50cXC0"] =  ele.value == undefined ? "" : Number(ele.value)
+                            }
+                        }
+                    //    }
+                    }
+                }
+            });
+            dataValArr.push(obj1)
+         }
+         if(dataValArr.length > 0) return dataValArr
+        }
+        function arraySorting(a, b) {
+            return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
+        }
+        $.ajax(
+        {
+            type: "GET",
+            async: false,
+            url: "../api/organisationUnits/" + orgUnit.id + ".json?fields=id,name,children[id,name,code]&paging=false",
+            data: JSON,
+            success: function (data, status) {
+                allOrgUnits = data;
+                for (var i = 0; i < allOrgUnits.children.length; i++) {
+                    level2OrgUnitsList.push({ "id": allOrgUnits.children[i].id, "name": allOrgUnits.children[i].name, "code": allOrgUnits.children[i].code });
+                }
+            }
+        });
+        level2OrgUnitsList.sort(arraySorting);
+            for (var j = 0; j < level2OrgUnitsList.length; j++) {
+                let gObj = { region: level2OrgUnitsList[j].name }
+                var level3OrgUnitsList = [];
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "../api/organisationUnits/" + level2OrgUnitsList[j].id + ".json?fields=id,name,children[id,name,code]&paging=false",
+                    data: JSON,
+                    success: function (data, status) {
+                        for (var i = 0; i < data.children.length; i++) {
+                                let val = getCountryData(data.children[i].id, data.children[i].name)
+                                level3OrgUnitsList.push(val);
+    
+                        }
+                        gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+                        /// dynamically  
+                    }
+                });
+                dataList.push(gObj)
+             }
+            console.log(dataList)
+            var gsum = {}
+            var gsum1 = {}
+            var gsum2 = {}
+
+            var dateVal =""
+               dates.forEach((ele, i )=>{
+                  gsum[i] = 0
+                  gsum1[i] = 0
+                  gsum2[i] = 0
+                dateVal+=`<td style="border:1px solid black;background:#ADD8E6;">${ele}</td>`
+              })
+             $('#dataTable1').find("thead").append(`<tr >
+                <td colspan=${dates.length+1} width="100%" style="border:1px solid black;background:#ADD8E6; ">Cut off elimination report</td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td colspan=${dates.length+1} width="100%" style="border:1px solid black;background:#ADD8E6; "> Table 1: Zero new autochthonous child cases (<15 years of age) <span class="currentPeriod">&nbsp;</span></td>
+            </tr>
+            <tr id='tp1' style=" font-weight:400; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6; ">Region and Country</td>${dateVal}
+             </tr>`)
+            $('#dataTable2').find("thead").append(`<tr style=" font-weight:400; text-align:center;">
+                <td colspan=${dates.length+1} width="100%" style="border:1px solid black;background:#ADD8E6; ">Table 2: Zero new autochthonous cases (adult cases) during <span class="currentPeriod">&nbsp;</span></td>
+            </tr>
+            <tr id='tp2' style=" font-weight:400; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6; ">Region and Country</td>${dateVal}
+            </tr>`)
+             $('#dataTable3').find("thead").append(`<tr style=" font-weight:400; text-align:center;">
+                <td colspan=${dates.length+1} width="100%" style="border:1px solid black;background:#ADD8E6; ">Table 3: Zero new cases (all ages) during<span class="currentPeriod">&nbsp;</span></td>
+            </tr>
+            <tr id='tp3' style=" font-weight:400; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6; ">Region and Country</td>${dateVal}
+                
+             </tr>`)
+                dataList.forEach((data, i)=>{
+                $('#dataTable1').find("tbody").append(`<tr style="background-color:#DCDCDC; text-align: left"><td  colspan=${dates.length+1}>${data.region}</td></tr>`)
+                $('#dataTable2').find("tbody").append(`<tr style="background-color:#DCDCDC; text-align: left"><td  colspan=${dates.length+1}>${data.region}</td></tr>`)
+                $('#dataTable3').find("tbody").append(`<tr style="background-color:#DCDCDC; text-align: left"><td  colspan=${dates.length+1}>${data.region}</td></tr>`)
+                var rsum = {}
+                var rsum1 = {}
+                var rsum2 = {}
+                dates.forEach((ele, i)=>{
+                    rsum[i]= 0
+                    rsum1[i]= 0
+                    rsum2[i]= 0
+                })
+                data.countrylist.forEach((ele, i)=>{
+                    let arr = []
+                    let arr1 = []
+                    let arr2 = []
+                    let isZeroVal = false
+                    let isZeroVal1 = false
+                    let isZeroVal2 = false
+                    let isZeroCount = true
+                    let isZeroCount1 = true
+                    let isZeroCount2 = true
+                    if(ele){
+                    ele.forEach((e, i)=>{
+                     let sum =e['evXyDr6c7eu-ZZFiCRpT37i']+e['gVmFx873rdZ-ZZFiCRpT37i']+e['IQgrP2W9gTV-ZZFiCRpT37i']+e['TBTHguhWty1-HllvX50cXC0']
+                     let sum1 =e['evXyDr6c7eu-Te9RyzefSAz']+ e['gVmFx873rdZ-Te9RyzefSAz']+ e['IQgrP2W9gTV-Te9RyzefSAz']+ e['evXyDr6c7eu-sdMU6tpPki6'] +e['gVmFx873rdZ-sdMU6tpPki6']+e['IQgrP2W9gTV-sdMU6tpPki6']
+                     let sum2 =e['evXyDr6c7eu-Te9RyzefSAz']+e['gVmFx873rdZ-Te9RyzefSAz']+e['IQgrP2W9gTV-Te9RyzefSAz']+e['evXyDr6c7eu-sdMU6tpPki6']+e['gVmFx873rdZ-sdMU6tpPki6']+e['IQgrP2W9gTV-sdMU6tpPki6']+e['evXyDr6c7eu-ZZFiCRpT37i']+e['gVmFx873rdZ-ZZFiCRpT37i']+e['IQgrP2W9gTV-ZZFiCRpT37i']+e['TBTHguhWty1-HllvX50cXC0']
+                     if(sum == ''){
+                        arr.push(sum)
+                     }else{
+                        arr.push(Number(sum))
+                     }
+                     if(sum1 == ""){
+                        arr1.push(sum1)
+                     }else{
+                        arr1.push(Number(sum1))
+                     }
+                     if(sum2 == ""){
+                        arr2.push(sum2)
+                     }else{
+                        arr2.push(Number(sum2))
+                     }
+                     })
+                    }
+                     var isZero =false
+                     arr.forEach(element => {
+                        if (element == 0)  isZero =true 
+                    });
+                    var isZero1 =false
+                     arr1.forEach(element => {
+                        if (element == 0)  isZero1 =true 
+                    });
+                    var isZero2 =false
+                     arr2.forEach(element => {
+                        if (element == 0)  isZero2 =true 
+                    });
+                    if (isZero){
+                      let tdval =''
+                       arr.forEach(e =>{
+                        if(e>0){
+                            isZeroCount = false
+                        }
+                       })
+                     if(isZeroCount){
+                      arr.forEach((eleVal, i) =>{
+                        for(let p in rsum){
+                            if(eleVal === 0 && i == p ){
+                            isZeroVal = true
+                              rsum[p] +=1
+                            }
+                           }
+                      tdval += `<td >${eleVal === 0 ? 0 : ""}</td>`
+                     })
+                     if(isZeroVal){
+                        $('#dataTable1').find("tbody").append(`<tr style="font-weight: bold;"><td>${ele[0]['name']}</td> ${tdval}</tr>`)
+                       }
+                     }
+                    } 
+                    if (isZero1){
+                      let tdval1 =''
+                      arr1.forEach(e =>{
+                        if(e>0){
+                            isZeroCount1 = false
+                        }
+                       })
+                     if(isZeroCount1){
+                      arr1.forEach((eleVal, i) =>{
+                        for(let p in rsum1){
+                            if(eleVal === 0 && i == p ){
+                                isZeroVal1 = true
+                              rsum1[p] +=1
+                            }
+                        }
+                      tdval1 += `<td >${eleVal === 0 ? 0 : ""}</td>`
+                     })
+                     if(isZeroVal1){
+                     $('#dataTable2').find("tbody").append(`<tr style="font-weight: bold;"><td>${ele[0]['name']}</td> ${tdval1}</tr>`)
+                     }
+                    }
+                    } 
+                    if (isZero2){
+                      let tdval2 =''
+                      arr2.forEach(e =>{
+                        if(e>0){
+                            isZeroCount2 = false
+                        }
+                       })
+                     if(isZeroCount2){
+                      arr2.forEach((eleVal, i) =>{
+                        for(let p in rsum2){
+                            if(eleVal === 0 && i == p ){
+                                isZeroVal2 = true
+                              rsum2[p] +=1
+                            }
+                        }
+                      tdval2 += `<td>${eleVal === 0 ? 0 : ""}</td>`
+                     })
+                     if(isZeroVal2){
+                        $('#dataTable3').find("tbody").append(`<tr style="font-weight: bold;"><td>${ele[0]['name']}</td> ${tdval2}</tr>`)
+                     }
+                    }
+                    }                 
+                  })
+                   let totVal =''
+                      for(let t in rsum){
+                      totVal += `<td >${Number(rsum[t])}</td>`
+                     }
+                $('#dataTable1').find("tbody").append(`<tr style="font-weight: bold;"><td>Total</td>${totVal}</tr>`)
+                for(let p in gsum){
+                    for(let i in rsum){
+                     if(p == i){
+                         gsum[p]+=rsum[i]
+                     }
+                   }
+                 }
+                dates.forEach((ele, i)=>{
+                    rsum[i]= 0
+                })
+                
+                let totVal1 =''
+                      for(let t in rsum1){
+                      totVal1 += `<td >${Number(rsum1[t])}</td>`
+                     }
+                $('#dataTable2').find("tbody").append(`<tr style="font-weight: bold;"><td>Total</td>${totVal1}</tr>`)
+                for(let p in gsum1){
+                    for(let i in rsum1){
+                     if(p == i){
+                         gsum1[p]+=rsum1[i]
+                     }
+                   }
+                 }
+                dates.forEach((ele, i)=>{
+                    rsum1[i]= 0
+                })
+                let totVal2 =''
+                      for(let t in rsum2){
+                      totVal2 += `<td >${Number(rsum2[t])}</td>`
+                     }
+                $('#dataTable3').find("tbody").append(`<tr style="font-weight: bold;"><td>Total</td>${totVal2}</tr>`)
+                for(let p in gsum2){
+                    for(let i in rsum2){
+                     if(p == i){
+                         gsum2[p]+=rsum2[i]
+                     }
+                   }
+                 }
+                dates.forEach((ele, i)=>{
+                    rsum2[i]= 0
+                })
+
+                $('#loader').hide();
+                // $('#allContent').show()
+                document.getElementById("allContent").display ='block'
+                    
+            })
+            let gtotVal =''
+                for(let t in gsum){
+                gtotVal += `<td >${Number(gsum[t])}</td>`
+                }
+               $('#dataTable1').find("tbody").append(`<tr style="font-weight: bold;"><td>Global Total</td>${gtotVal}</tr>`)
+              let gtotVal1 =''
+                for(let t in gsum1){
+                gtotVal1 += `<td >${Number(gsum1[t])}</td>`
+                }
+               $('#dataTable2').find("tbody").append(`<tr style="font-weight: bold;"><td>Global Total</td>${gtotVal1}</tr>`)
+               let gtotVal2=''
+                for(let t in gsum2){
+                gtotVal2 += `<td >${Number(gsum2[t])}</td>`
+                }
+               $('#dataTable3').find("tbody").append(`<tr style="font-weight: bold;"><td>Global Total</td>${gtotVal2}</tr>`)
+    }
+</script>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>
