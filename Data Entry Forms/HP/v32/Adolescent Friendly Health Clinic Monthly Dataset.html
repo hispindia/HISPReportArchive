@@ -1,0 +1,791 @@
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		//alert( " hh ");
+		var selectedISOPeriod = $('#selectedPeriodId').val();
+		var selectedOrgUnit = dhis2.de.getCurrentOrganisationUnit();
+		var selectedDataSet = $("#selectedDataSetId").val();
+		var nextISOPeriod = "";
+		var year = $('#selectedPeriodId').val().substring(0, 4).trim();
+		var month = $('#selectedPeriodId').val().substring(4, 6).trim();
+
+		//alert( "selectedISOPeriod " + selectedISOPeriod + " selectedOrgUnit " + selectedOrgUnit + " selectedDataSet " + selectedDataSet);
+		if (parseInt(month) >= 1 && parseInt(month) < 12) {
+			var nextMonth = parseInt(month) + 1;
+
+			if (parseInt(nextMonth) >= 1 && parseInt(nextMonth) <= 9) {
+				nextISOPeriod = year + "0" + parseInt(nextMonth);
+			} else if (parseInt(nextMonth) >= 10 && parseInt(nextMonth) <= 12) {
+				nextISOPeriod = year + nextMonth;
+			}
+		} else if (parseInt(month) == 12) {
+			var nextYear = parseInt(year) + 1;
+			nextISOPeriod = parseInt(nextYear) + "0" + 1;
+		}
+
+		var dataElementsMapping = [
+			{
+				"dataElement": "JnCjFmXXrhY"
+			},
+			{
+				"dataElement": "ganAXDpQAjA"
+			},
+			{
+				"dataElement": "Zx8ib0MIkvx"
+			},
+			{
+				"dataElement": "HH1ToIb5GCl"
+			},
+			{
+				"dataElement": "UXqyr1l3s1T"
+			}
+		];
+
+		var cocMapping = [
+			{
+				"categoryOptionCombo": "YoFrUhlbyvP"
+			},
+			{
+				"categoryOptionCombo": "MO7HEFrtEML"
+			}
+		];
+
+		$.ajax({
+			type: "GET",
+			async: false,
+			url: '../api/dataValueSets.json?orgUnit=' + selectedOrgUnit + "&period=" + selectedISOPeriod + "&dataSet= " + selectedDataSet + "&paging=false",
+			success: function (dataValueSetResponse) {
+				var responseDataValues = dataValueSetResponse.dataValues;
+				let dataValues = [];
+				for (var i = 0; i < responseDataValues.length; i++) {
+					for (var j = 0; j < dataElementsMapping.length; j++) {
+						for (var k = 0; k < cocMapping.length; k++) {
+							let dataValue = {};
+							if (responseDataValues[i].dataElement === dataElementsMapping[j].dataElement
+									&& responseDataValues[i].categoryOptionCombo === cocMapping[k].categoryOptionCombo) {
+								dataValue.categoryOptionCombo = responseDataValues[i].categoryOptionCombo;
+								dataValue.period = nextISOPeriod;
+								dataValue.orgUnit = selectedOrgUnit;
+								dataValue.dataElement = responseDataValues[i].dataElement;
+								dataValue.value = responseDataValues[i].value;
+								dataValues.push(dataValue);
+							}
+						}
+					}
+				}
+
+				let dataValueSet = {};
+				dataValueSet.dataValues = dataValues;
+				console.log(" final dataValues length : " + dataValues.length + " final dataValueSet length : " + dataValueSet.length);
+				console.log(" final dataValueSet : " + JSON.stringify(dataValueSet));
+				let dataJSON = JSON.stringify(dataValueSet);
+				$.ajax({
+					type: "POST",
+					async: false,
+					dataType: "json",
+					contentType: "application/json",
+					data: dataJSON,
+					url: '../api/dataValueSets',
+					success: function (response) {
+						//console.log( __rowNum__ + " -- "+ row.event + "Event updated with " + row.value + "response: " + response );
+
+						console.log("response : " + response);
+						console.log("conflicts : " + response.conflicts);
+
+						let impCount = response.importCount.imported;
+						let upCount = response.importCount.updated;
+						let igCount = response.importCount.ignored;
+						let conflictsDetails = response.conflicts;
+
+						console.log("impCount - " + impCount + " upCount - " + upCount + " igCount - " + igCount + " conflictsDetails - " + conflictsDetails);
+					},
+					error: function (response) {
+						console.log("error : " + response.conflicts);
+					},
+					warning: function (response) {
+						console.log("warning : " + response.conflicts);
+					}
+				});
+
+			},
+			error: function (dataValueSetResponse) {
+				console.log(JSON.stringify(row.uid) + " -- " + "Error!: " + JSON.stringify(dataValueSetResponse));
+			},
+			warning: function (dataValueSetResponse) {
+				console.log(JSON.stringify(row.uid) + " -- " + "Error!: " + JSON.stringify(dataValueSetResponse));
+			}
+
+		});
+	});
+</script>
+<table border="1" cellpadding="0" cellspacing="0">
+	<colgroup>
+		<col width="56" />
+		<col width="394" />
+		<col width="100" />
+		<col width="100" />
+		<col width="100" />
+		<col width="100" />
+		<col width="100" />
+		<col width="100" />
+		<col width="100" />
+		<col width="100" />
+	</colgroup>
+	<tbody>
+		<tr>
+			<td colspan="10" data-sheets-value="{'1':2,'2':'Adolescent Friendly Health Clinics'}" height="52" rowspan="1" style="background-color: rgb(153, 102, 51); text-align: center;">
+			<p style="font-size:16px;"><span style="font-family:Verdana,Geneva,sans-serif;"><span style="font-size:16px;"><strong><span style="color:#ffffff;">Adolescent Friendly Health Clinics Dataset </span></strong><span style="color:#ffffff;"><strong>(Nayi Disha Kendra)</strong></span></span></span></p>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="5" data-sheets-value="{'1':2,'2':'Training Status of staffs on AFHS'}" rowspan="1" style="background-color: rgb(153, 102, 0);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Training status of staffs on AFHS</span></strong></span></td>
+			<td align="center" colspan="2" data-sheets-value="{'1':2,'2':'Number trained'}" rowspan="1" style="background-color: rgb(153, 102, 0);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Number trained</span></strong></span></td>
+			<td align="center" colspan="3" data-sheets-value="{'1':2,'2':'Number Untrained'}" rowspan="1" style="background-color: rgb(153, 102, 0);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Number Untrained</span></strong></span></td>
+		</tr>
+		<tr>
+			<td colspan="5" data-sheets-value="{'1':2,'2':'No. of Medical Officers (male) trained on AFHS'}" rowspan="1"><span style="font-family:Verdana,Geneva,sans-serif;">No. of Medical Officers (male) trained on AFHS</span></td>
+			<td align="center" colspan="2" rowspan="1"><input id="ganAXDpQAjA-YoFrUhlbyvP-val" name="entryfield" title="Medical officers (male)-AFHS_AFHC Trained" value="[ Medical officers (male)-AFHS_AFHC Trained ]" /></td>
+			<td align="center" colspan="3" rowspan="1"><input id="ganAXDpQAjA-MO7HEFrtEML-val" name="entryfield" title="Medical officers (male)-AFHS_AFHC Untrained" value="[ Medical officers (male)-AFHS_AFHC Untrained ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="5" data-sheets-value="{'1':2,'2':'No. of Medical Officers (female) trained on AFHS'}" rowspan="1"><span style="font-family:Verdana,Geneva,sans-serif;">No. of Medical Officers (female) trained on AFHS</span></td>
+			<td align="center" colspan="2" rowspan="1"><input id="JnCjFmXXrhY-YoFrUhlbyvP-val" name="entryfield" title="Medical officers (female)-AFHS_AFHC Trained" value="[ Medical officers (female)-AFHS_AFHC Trained ]" /></td>
+			<td align="center" colspan="3" rowspan="1"><input id="JnCjFmXXrhY-MO7HEFrtEML-val" name="entryfield" title="Medical officers (female)-AFHS_AFHC Untrained" value="[ Medical officers (female)-AFHS_AFHC Untrained ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="5" data-sheets-value="{'1':2,'2':'No. of ANMs/LHVs trained on AFHS'}" rowspan="1"><span style="font-family:Verdana,Geneva,sans-serif;">No. of ANMs/LHVs trained on AFHS</span></td>
+			<td align="center" colspan="2" rowspan="1"><input id="Zx8ib0MIkvx-YoFrUhlbyvP-val" name="entryfield" title="ANMs/LHVs-AFHS_AFHC Trained" value="[ ANMs/LHVs-AFHS_AFHC Trained ]" /></td>
+			<td align="center" colspan="3" rowspan="1"><input id="Zx8ib0MIkvx-MO7HEFrtEML-val" name="entryfield" title="ANMs/LHVs-AFHS_AFHC Untrained" value="[ ANMs/LHVs-AFHS_AFHC Untrained ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="5" data-sheets-value="{'1':2,'2':'No. of MPW (male) trained on AFHS'}" rowspan="1"><span style="font-family:Verdana,Geneva,sans-serif;">No. of MPW (male) trained on AFHS</span></td>
+			<td align="center" colspan="2" rowspan="1"><input id="HH1ToIb5GCl-YoFrUhlbyvP-val" name="entryfield" title="MPW (male)-AFHS_AFHC Trained" value="[ MPW (male)-AFHS_AFHC Trained ]" /></td>
+			<td align="center" colspan="3" rowspan="1"><input id="HH1ToIb5GCl-MO7HEFrtEML-val" name="entryfield" title="MPW (male)-AFHS_AFHC Untrained" value="[ MPW (male)-AFHS_AFHC Untrained ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="5" data-sheets-value="{'1':2,'2':'No. of Counsellors trained on AFHS'}" rowspan="1"><span style="font-family:Verdana,Geneva,sans-serif;">No. of Counsellors trained on AFHS</span></td>
+			<td align="center" colspan="2" rowspan="1"><input id="UXqyr1l3s1T-YoFrUhlbyvP-val" name="entryfield" title="Counsellors-AFHS_AFHC Trained" value="[ Counsellors-AFHS_AFHC Trained ]" /></td>
+			<td align="center" colspan="3" rowspan="1"><input id="UXqyr1l3s1T-MO7HEFrtEML-val" name="entryfield" title="Counsellors-AFHS_AFHC Untrained" value="[ Counsellors-AFHS_AFHC Untrained ]" /></td>
+		</tr>
+		<tr>
+			<td colspan="1" data-sheets-value="{'1':2,'2':'S.No.'}" rowspan="3" style="background-color: rgb(102, 102, 102);" width="47">
+			<div style="text-align: center;"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">S.No.</span></strong></span></div>
+			</td>
+			<td data-sheets-value="{'1':2,'2':'Indicators'}" rowspan="3" style="background-color: rgb(102, 102, 102);" width="307">
+			<div style="text-align: center;"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Indicators</span></strong></span></div>
+			</td>
+			<td colspan="4" data-sheets-value="{'1':2,'2':'Male'}" rowspan="1" style="text-align: center; background-color: rgb(102, 102, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Male</span></strong></span></td>
+			<td colspan="4" data-sheets-value="{'1':2,'2':'Female'}" rowspan="1" style="text-align: center; background-color: rgb(102, 102, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Female</span></strong></span></td>
+		</tr>
+		<tr>
+			<td colspan="2" data-sheets-value="{'1':2,'2':'Unmarried'}" rowspan="1" style="text-align: center; background-color: rgb(102, 102, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Unmarried</span></strong></span></td>
+			<td colspan="2" data-sheets-value="{'1':2,'2':'Married'}" rowspan="1" style="text-align: center; background-color: rgb(102, 102, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Married</span></strong></span></td>
+			<td colspan="2" data-sheets-value="{'1':2,'2':'Unmarried'}" rowspan="1" style="text-align: center; background-color: rgb(102, 102, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Unmarried</span></strong></span></td>
+			<td colspan="2" data-sheets-value="{'1':2,'2':'Married'}" rowspan="1" style="text-align: center; background-color: rgb(102, 102, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Married</span></strong></span></td>
+		</tr>
+		<tr>
+			<td align="center" data-sheets-value="{'1':2,'2':'10-14 yrs'}" style="text-align: center; background-color: rgb(102, 102, 102);" width="130"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">10-14 yrs</span></strong></span></td>
+			<td align="center" data-sheets-value="{'1':2,'2':'15-19 yrs'}" style="text-align: center; background-color: rgb(102, 102, 102);" width="124"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">15-19 yrs</span></strong></span></td>
+			<td align="center" data-sheets-value="{'1':2,'2':'10-14 yrs'}" style="text-align: center; background-color: rgb(102, 102, 102);" width="97"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">10-14 yrs</span></strong></span></td>
+			<td align="center" data-sheets-value="{'1':2,'2':'15-19 yrs'}" style="text-align: center; background-color: rgb(102, 102, 102);" width="113"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">15-19 yrs</span></strong></span></td>
+			<td align="center" data-sheets-value="{'1':2,'2':'10-14 yrs'}" style="text-align: center; background-color: rgb(102, 102, 102);" width="105"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">10-14 yrs</span></strong></span></td>
+			<td align="center" data-sheets-value="{'1':2,'2':'15-19 yrs'}" style="text-align: center; background-color: rgb(102, 102, 102);" width="89"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">15-19 yrs</span></strong></span></td>
+			<td align="center" data-sheets-value="{'1':2,'2':'10-14 yrs'}" style="text-align: center; background-color: rgb(102, 102, 102);" width="92"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">10-14 yrs</span></strong></span></td>
+			<td align="center" data-sheets-value="{'1':2,'2':'15-19 yrs'}" style="text-align: center; background-color: rgb(102, 102, 102);" width="77"><strong><span style="font-family:Verdana,Geneva,sans-serif;"><span style="color:#ffffff;">15-19 y</span>rs</span></strong></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'A'}"><span style="font-family:Verdana,Geneva,sans-serif;">A</span></td>
+			<td data-sheets-value="{'1':2,'2':'Total no. of clients registered in AFHCs during reporting period'}"><span style="font-family:Verdana,Geneva,sans-serif;">Total no. of clients registered in AFHCs during reporting period&nbsp;</span></td>
+			<td style="text-align: center;"><input id="eP6tKBLfRgM-cXTQmvsxRm9-val" name="entryfield" title="Total clients registered_AFHC Male, 10-14 years, Unmarried" value="[ Total clients registered_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td style="text-align: center;"><input id="eP6tKBLfRgM-Zr2ruuqvNTO-val" name="entryfield" title="Total clients registered_AFHC Male, 15-19 years, Unmarried" value="[ Total clients registered_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td style="text-align: center;"><input id="eP6tKBLfRgM-qWuxKEtXWdv-val" name="entryfield" title="Total clients registered_AFHC Male, 10-14 years, Married" value="[ Total clients registered_AFHC Male, 10-14 years, Married ]" /></td>
+			<td style="text-align: center;"><input id="eP6tKBLfRgM-dtwMheBtNhC-val" name="entryfield" title="Total clients registered_AFHC Male, 15-19 years, Married" value="[ Total clients registered_AFHC Male, 15-19 years, Married ]" /></td>
+			<td style="text-align: center;"><input id="eP6tKBLfRgM-jF3iAo0p6zo-val" name="entryfield" title="Total clients registered_AFHC Female, 10-14 years, Unmarried" value="[ Total clients registered_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td style="text-align: center;"><input id="eP6tKBLfRgM-w2nLCFyeWEP-val" name="entryfield" title="Total clients registered_AFHC Female, 15-19 years, Unmarried" value="[ Total clients registered_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td style="text-align: center;"><input id="eP6tKBLfRgM-DI82ZusfWF9-val" name="entryfield" title="Total clients registered_AFHC Female, 10-14 years, Married" value="[ Total clients registered_AFHC Female, 10-14 years, Married ]" /></td>
+			<td style="text-align: center;"><input id="eP6tKBLfRgM-C0tkoTsdWEY-val" name="entryfield" title="Total clients registered_AFHC Female, 15-19 years, Married" value="[ Total clients registered_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':3,'3':1}"><span style="font-family:Verdana,Geneva,sans-serif;">1</span></td>
+			<td data-sheets-value="{'1':2,'2':'Anemia testing'}" style="background-color: rgb(255, 255, 255);"><span style="font-family:Verdana,Geneva,sans-serif;">Anemia testing</span></td>
+			<td align="center"><input id="hOeTwemwLX1-cXTQmvsxRm9-val" name="entryfield" title="Anemia testing_AFHC Male, 10-14 years, Unmarried" value="[ Anemia testing_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="hOeTwemwLX1-Zr2ruuqvNTO-val" name="entryfield" title="Anemia testing_AFHC Male, 15-19 years, Unmarried" value="[ Anemia testing_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="hOeTwemwLX1-qWuxKEtXWdv-val" name="entryfield" title="Anemia testing_AFHC Male, 10-14 years, Married" value="[ Anemia testing_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="hOeTwemwLX1-dtwMheBtNhC-val" name="entryfield" title="Anemia testing_AFHC Male, 15-19 years, Married" value="[ Anemia testing_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="hOeTwemwLX1-jF3iAo0p6zo-val" name="entryfield" title="Anemia testing_AFHC Female, 10-14 years, Unmarried" value="[ Anemia testing_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="hOeTwemwLX1-w2nLCFyeWEP-val" name="entryfield" title="Anemia testing_AFHC Female, 15-19 years, Unmarried" value="[ Anemia testing_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="hOeTwemwLX1-DI82ZusfWF9-val" name="entryfield" title="Anemia testing_AFHC Female, 10-14 years, Married" value="[ Anemia testing_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="hOeTwemwLX1-C0tkoTsdWEY-val" name="entryfield" title="Anemia testing_AFHC Female, 15-19 years, Married" value="[ Anemia testing_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td style="background-color: rgb(0, 153, 153);">&nbsp;</td>
+			<td colspan="9" data-sheets-value="{'1':2,'2':'Clinical services provided to the Clients out of total no. of registered clients during the reporting period'}" rowspan="1" style="background-color: rgb(0, 153, 153);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Clinical services provided to the clients out of total no. of registered clients during the reporting period</span></strong></span></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'B'}"><span style="font-family:Verdana,Geneva,sans-serif;">B</span></td>
+			<td data-sheets-value="{'1':2,'2':'Total no. of clients who received clinical services out of total no. of registered clients in AFHCs during reporting period'}"><span style="font-family:Verdana,Geneva,sans-serif;">Total no. of clients who received clinical services out of total no. of registered clients in AFHCs during reporting period</span></td>
+			<td align="center"><input id="cBeBtSJSIZJ-cXTQmvsxRm9-val" name="entryfield" title="Clinical services given to clients out of registered clients_AFHC Male, 10-14 years, Unmarried" value="[ Clinical services given to clients out of registered clients_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="cBeBtSJSIZJ-Zr2ruuqvNTO-val" name="entryfield" title="Clinical services given to clients out of registered clients_AFHC Male, 15-19 years, Unmarried" value="[ Clinical services given to clients out of registered clients_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="cBeBtSJSIZJ-qWuxKEtXWdv-val" name="entryfield" title="Clinical services given to clients out of registered clients_AFHC Male, 10-14 years, Married" value="[ Clinical services given to clients out of registered clients_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="cBeBtSJSIZJ-dtwMheBtNhC-val" name="entryfield" title="Clinical services given to clients out of registered clients_AFHC Male, 15-19 years, Married" value="[ Clinical services given to clients out of registered clients_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="cBeBtSJSIZJ-jF3iAo0p6zo-val" name="entryfield" title="Clinical services given to clients out of registered clients_AFHC Female, 10-14 years, Unmarried" value="[ Clinical services given to clients out of registered clients_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="cBeBtSJSIZJ-w2nLCFyeWEP-val" name="entryfield" title="Clinical services given to clients out of registered clients_AFHC Female, 15-19 years, Unmarried" value="[ Clinical services given to clients out of registered clients_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="cBeBtSJSIZJ-DI82ZusfWF9-val" name="entryfield" title="Clinical services given to clients out of registered clients_AFHC Female, 10-14 years, Married" value="[ Clinical services given to clients out of registered clients_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="cBeBtSJSIZJ-C0tkoTsdWEY-val" name="entryfield" title="Clinical services given to clients out of registered clients_AFHC Female, 15-19 years, Married" value="[ Clinical services given to clients out of registered clients_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':3,'3':2}" style="background-color: rgb(51, 102, 51);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">2</span></strong></span></td>
+			<td colspan="9" data-sheets-value="{'1':2,'2':'Clinical Services'}" rowspan="1" style="background-color: rgb(51, 102, 51);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Clinical services</span></strong></span></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.a'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.a</span></td>
+			<td data-sheets-value="{'1':2,'2':'Menstrual Problems'}"><span style="font-family:Verdana,Geneva,sans-serif;">Menstrual problems</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="oQmnz1jJwUI-jF3iAo0p6zo-val" name="entryfield" title="Menstrual problems (Clinical services)_AFHC Female, 10-14 years, Unmarried" value="[ Menstrual problems (Clinical services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="oQmnz1jJwUI-w2nLCFyeWEP-val" name="entryfield" title="Menstrual problems (Clinical services)_AFHC Female, 15-19 years, Unmarried" value="[ Menstrual problems (Clinical services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="oQmnz1jJwUI-DI82ZusfWF9-val" name="entryfield" title="Menstrual problems (Clinical services)_AFHC Female, 10-14 years, Married" value="[ Menstrual problems (Clinical services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="oQmnz1jJwUI-C0tkoTsdWEY-val" name="entryfield" title="Menstrual problems (Clinical services)_AFHC Female, 15-19 years, Married" value="[ Menstrual problems (Clinical services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.b'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.b</span></td>
+			<td data-sheets-value="{'1':2,'2':'RTI/ STI Management'}"><span style="font-family:Verdana,Geneva,sans-serif;">RTI/ STI management</span></td>
+			<td align="center"><input id="xZYCliEOqgq-cXTQmvsxRm9-val" name="entryfield" title="RTI/STI management (Clinical services)_AFHC Male, 10-14 years, Unmarried" value="[ RTI/STI management (Clinical services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="xZYCliEOqgq-Zr2ruuqvNTO-val" name="entryfield" title="RTI/STI management (Clinical services)_AFHC Male, 15-19 years, Unmarried" value="[ RTI/STI management (Clinical services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="xZYCliEOqgq-qWuxKEtXWdv-val" name="entryfield" title="RTI/STI management (Clinical services)_AFHC Male, 10-14 years, Married" value="[ RTI/STI management (Clinical services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="xZYCliEOqgq-dtwMheBtNhC-val" name="entryfield" title="RTI/STI management (Clinical services)_AFHC Male, 15-19 years, Married" value="[ RTI/STI management (Clinical services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="xZYCliEOqgq-jF3iAo0p6zo-val" name="entryfield" title="RTI/STI management (Clinical services)_AFHC Female, 10-14 years, Unmarried" value="[ RTI/STI management (Clinical services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="xZYCliEOqgq-w2nLCFyeWEP-val" name="entryfield" title="RTI/STI management (Clinical services)_AFHC Female, 15-19 years, Unmarried" value="[ RTI/STI management (Clinical services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="xZYCliEOqgq-DI82ZusfWF9-val" name="entryfield" title="RTI/STI management (Clinical services)_AFHC Female, 10-14 years, Married" value="[ RTI/STI management (Clinical services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="xZYCliEOqgq-C0tkoTsdWEY-val" name="entryfield" title="RTI/STI management (Clinical services)_AFHC Female, 15-19 years, Married" value="[ RTI/STI management (Clinical services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.c'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.c</span></td>
+			<td data-sheets-value="{'1':2,'2':'Skin Problems'}"><span style="font-family:Verdana,Geneva,sans-serif;">Skin problems</span></td>
+			<td align="center"><input id="KPdRY4QnGgc-cXTQmvsxRm9-val" name="entryfield" title="Skin problems (Clinical services)_AFHC Male, 10-14 years, Unmarried" value="[ Skin problems (Clinical services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="KPdRY4QnGgc-Zr2ruuqvNTO-val" name="entryfield" title="Skin problems (Clinical services)_AFHC Male, 15-19 years, Unmarried" value="[ Skin problems (Clinical services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="KPdRY4QnGgc-qWuxKEtXWdv-val" name="entryfield" title="Skin problems (Clinical services)_AFHC Male, 10-14 years, Married" value="[ Skin problems (Clinical services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="KPdRY4QnGgc-dtwMheBtNhC-val" name="entryfield" title="Skin problems (Clinical services)_AFHC Male, 15-19 years, Married" value="[ Skin problems (Clinical services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="KPdRY4QnGgc-jF3iAo0p6zo-val" name="entryfield" title="Skin problems (Clinical services)_AFHC Female, 10-14 years, Unmarried" value="[ Skin problems (Clinical services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="KPdRY4QnGgc-w2nLCFyeWEP-val" name="entryfield" title="Skin problems (Clinical services)_AFHC Female, 15-19 years, Unmarried" value="[ Skin problems (Clinical services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="KPdRY4QnGgc-DI82ZusfWF9-val" name="entryfield" title="Skin problems (Clinical services)_AFHC Female, 10-14 years, Married" value="[ Skin problems (Clinical services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="KPdRY4QnGgc-C0tkoTsdWEY-val" name="entryfield" title="Skin problems (Clinical services)_AFHC Female, 15-19 years, Married" value="[ Skin problems (Clinical services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.d'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.d</span></td>
+			<td data-sheets-value="{'1':2,'2':'ANC'}"><span style="font-family:Verdana,Geneva,sans-serif;">ANC</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="W3DKJV8gE3y-jF3iAo0p6zo-val" name="entryfield" title="ANC (Clinical services)_AFHC Female, 10-14 years, Unmarried" value="[ ANC (Clinical services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="W3DKJV8gE3y-w2nLCFyeWEP-val" name="entryfield" title="ANC (Clinical services)_AFHC Female, 15-19 years, Unmarried" value="[ ANC (Clinical services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="W3DKJV8gE3y-DI82ZusfWF9-val" name="entryfield" title="ANC (Clinical services)_AFHC Female, 10-14 years, Married" value="[ ANC (Clinical services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="W3DKJV8gE3y-C0tkoTsdWEY-val" name="entryfield" title="ANC (Clinical services)_AFHC Female, 15-19 years, Married" value="[ ANC (Clinical services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.e'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.e</span></td>
+			<td data-sheets-value="{'1':2,'2':'Number of Adolescent provided IFA tablets'}"><span style="font-family:Verdana,Geneva,sans-serif;">Number of adolescent provided IFA tablets</span></td>
+			<td align="center"><input id="LBrES1GFLnD-cXTQmvsxRm9-val" name="entryfield" title="Adolescents given IFA tablets_AFHC Male, 10-14 years, Unmarried" value="[ Adolescents given IFA tablets_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="LBrES1GFLnD-Zr2ruuqvNTO-val" name="entryfield" title="Adolescents given IFA tablets_AFHC Male, 15-19 years, Unmarried" value="[ Adolescents given IFA tablets_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="LBrES1GFLnD-qWuxKEtXWdv-val" name="entryfield" title="Adolescents given IFA tablets_AFHC Male, 10-14 years, Married" value="[ Adolescents given IFA tablets_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="LBrES1GFLnD-dtwMheBtNhC-val" name="entryfield" title="Adolescents given IFA tablets_AFHC Male, 15-19 years, Married" value="[ Adolescents given IFA tablets_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="LBrES1GFLnD-jF3iAo0p6zo-val" name="entryfield" title="Adolescents given IFA tablets_AFHC Female, 10-14 years, Unmarried" value="[ Adolescents given IFA tablets_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="LBrES1GFLnD-w2nLCFyeWEP-val" name="entryfield" title="Adolescents given IFA tablets_AFHC Female, 15-19 years, Unmarried" value="[ Adolescents given IFA tablets_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="LBrES1GFLnD-DI82ZusfWF9-val" name="entryfield" title="Adolescents given IFA tablets_AFHC Female, 10-14 years, Married" value="[ Adolescents given IFA tablets_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="LBrES1GFLnD-C0tkoTsdWEY-val" name="entryfield" title="Adolescents given IFA tablets_AFHC Female, 15-19 years, Married" value="[ Adolescents given IFA tablets_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.f'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.f</span></td>
+			<td data-sheets-value="{'1':2,'2':'Number of Adolescent provided Albendazole tablets'}"><span style="font-family:Verdana,Geneva,sans-serif;">Number of adolescent provided Albendazole tablets</span></td>
+			<td align="center"><input id="QgiOM8QnHYr-cXTQmvsxRm9-val" name="entryfield" title="Adolescents given Albendazole tablets_AFHC Male, 10-14 years, Unmarried" value="[ Adolescents given Albendazole tablets_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="QgiOM8QnHYr-Zr2ruuqvNTO-val" name="entryfield" title="Adolescents given Albendazole tablets_AFHC Male, 15-19 years, Unmarried" value="[ Adolescents given Albendazole tablets_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="QgiOM8QnHYr-qWuxKEtXWdv-val" name="entryfield" title="Adolescents given Albendazole tablets_AFHC Male, 10-14 years, Married" value="[ Adolescents given Albendazole tablets_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="QgiOM8QnHYr-dtwMheBtNhC-val" name="entryfield" title="Adolescents given Albendazole tablets_AFHC Male, 15-19 years, Married" value="[ Adolescents given Albendazole tablets_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="QgiOM8QnHYr-jF3iAo0p6zo-val" name="entryfield" title="Adolescents given Albendazole tablets_AFHC Female, 10-14 years, Unmarried" value="[ Adolescents given Albendazole tablets_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="QgiOM8QnHYr-w2nLCFyeWEP-val" name="entryfield" title="Adolescents given Albendazole tablets_AFHC Female, 15-19 years, Unmarried" value="[ Adolescents given Albendazole tablets_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="QgiOM8QnHYr-DI82ZusfWF9-val" name="entryfield" title="Adolescents given Albendazole tablets_AFHC Female, 10-14 years, Married" value="[ Adolescents given Albendazole tablets_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="QgiOM8QnHYr-C0tkoTsdWEY-val" name="entryfield" title="Adolescents given Albendazole tablets_AFHC Female, 15-19 years, Married" value="[ Adolescents given Albendazole tablets_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.g'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.g</span></td>
+			<td data-sheets-value="{'1':2,'2':'Number of Adolescent provided Sanitary Napkin'}"><span style="font-family:Verdana,Geneva,sans-serif;">Number of adolescent provided sanitary napkin&#39;s</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="eyr6i7rB8Kh-jF3iAo0p6zo-val" name="entryfield" title="Adolescents given sanitary napkin_AFHC Female, 10-14 years, Unmarried" value="[ Adolescents given sanitary napkin_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="eyr6i7rB8Kh-w2nLCFyeWEP-val" name="entryfield" title="Adolescents given sanitary napkin_AFHC Female, 15-19 years, Unmarried" value="[ Adolescents given sanitary napkin_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="eyr6i7rB8Kh-DI82ZusfWF9-val" name="entryfield" title="Adolescents given sanitary napkin_AFHC Female, 10-14 years, Married" value="[ Adolescents given sanitary napkin_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="eyr6i7rB8Kh-C0tkoTsdWEY-val" name="entryfield" title="Adolescents given sanitary napkin_AFHC Female, 15-19 years, Married" value="[ Adolescents given sanitary napkin_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><strong>2.h</strong></td>
+			<td data-sheets-value="{'1':2,'2':'Condoms'}"><strong><span style="color:#000000;"><span style="font-family:Verdana,Geneva,sans-serif;">Contraceptives</span></span></strong></td>
+			<td align="center"><input id="indicatorPmcI7RTq0DX" indicatorid="PmcI7RTq0DX" name="indicator" readonly="readonly" title="Contraceptives used (10-14 yrs,Unmarried Male) (total)_AFHC" value="[ Contraceptives used (10-14 yrs,Unmarried Male) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorq8sCZ54exQj" indicatorid="q8sCZ54exQj" name="indicator" readonly="readonly" title="Contraceptives used (15-19 yrs,Unmarried Male) (total)_AFHC" value="[ Contraceptives used (15-19 yrs,Unmarried Male) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicators2Y9581t7dJ" indicatorid="s2Y9581t7dJ" name="indicator" readonly="readonly" title="Contraceptives used (10-14 yrs,Married Male) (total)_AFHC" value="[ Contraceptives used (10-14 yrs,Married Male) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorKf5jSL62zbW" indicatorid="Kf5jSL62zbW" name="indicator" readonly="readonly" title="Contraceptives used (15-19 yrs,Married Male) (total)_AFHC" value="[ Contraceptives used (15-19 yrs,Married Male) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorimquZUdxa50" indicatorid="imquZUdxa50" name="indicator" readonly="readonly" title="Contraceptives used (10-14 yrs,Unmarried Female) (total)_AFHC" value="[ Contraceptives used (10-14 yrs,Unmarried Female) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorwZjOs7tQCUR" indicatorid="wZjOs7tQCUR" name="indicator" readonly="readonly" title="Contraceptives used (15-19 yrs,Unmarried Female) (total)_AFHC" value="[ Contraceptives used (15-19 yrs,Unmarried Female) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorAaljxI4a3K9" indicatorid="AaljxI4a3K9" name="indicator" readonly="readonly" title="Contraceptives used (10-14 yrs,Married Female) (total)_AFHC" value="[ Contraceptives used (10-14 yrs,Married Female) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorNoEvDHhNncT" indicatorid="NoEvDHhNncT" name="indicator" readonly="readonly" title="Contraceptives used (15-19 yrs,Married Female) (total)_AFHC" value="[ Contraceptives used (15-19 yrs,Married Female) (total)_AFHC ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'Condoms'}"><span style="font-family:Verdana,Geneva,sans-serif;">Condoms</span></td>
+			<td align="center"><input id="p9DJLVkkGuE-cXTQmvsxRm9-val" name="entryfield" title="Contraceptives-Condoms_AFHC Male, 10-14 years, Unmarried" value="[ Contraceptives-Condoms_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="p9DJLVkkGuE-Zr2ruuqvNTO-val" name="entryfield" title="Contraceptives-Condoms_AFHC Male, 15-19 years, Unmarried" value="[ Contraceptives-Condoms_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="p9DJLVkkGuE-qWuxKEtXWdv-val" name="entryfield" title="Contraceptives-Condoms_AFHC Male, 10-14 years, Married" value="[ Contraceptives-Condoms_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="p9DJLVkkGuE-dtwMheBtNhC-val" name="entryfield" title="Contraceptives-Condoms_AFHC Male, 15-19 years, Married" value="[ Contraceptives-Condoms_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="p9DJLVkkGuE-jF3iAo0p6zo-val" name="entryfield" title="Contraceptives-Condoms_AFHC Female, 10-14 years, Unmarried" value="[ Contraceptives-Condoms_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="p9DJLVkkGuE-w2nLCFyeWEP-val" name="entryfield" title="Contraceptives-Condoms_AFHC Female, 15-19 years, Unmarried" value="[ Contraceptives-Condoms_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="p9DJLVkkGuE-DI82ZusfWF9-val" name="entryfield" title="Contraceptives-Condoms_AFHC Female, 10-14 years, Married" value="[ Contraceptives-Condoms_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="p9DJLVkkGuE-C0tkoTsdWEY-val" name="entryfield" title="Contraceptives-Condoms_AFHC Female, 15-19 years, Married" value="[ Contraceptives-Condoms_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'OCP'}"><span style="font-family:Verdana,Geneva,sans-serif;">OCP</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="JkxvNQufSdg-jF3iAo0p6zo-val" name="entryfield" title="Contraceptives-OCP_AFHC Female, 10-14 years, Unmarried" value="[ Contraceptives-OCP_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="JkxvNQufSdg-w2nLCFyeWEP-val" name="entryfield" title="Contraceptives-OCP_AFHC Female, 15-19 years, Unmarried" value="[ Contraceptives-OCP_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="JkxvNQufSdg-DI82ZusfWF9-val" name="entryfield" title="Contraceptives-OCP_AFHC Female, 10-14 years, Married" value="[ Contraceptives-OCP_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="JkxvNQufSdg-C0tkoTsdWEY-val" name="entryfield" title="Contraceptives-OCP_AFHC Female, 15-19 years, Married" value="[ Contraceptives-OCP_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'ECP'}"><span style="font-family:Verdana,Geneva,sans-serif;">ECP</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="Rxn8HW8PINg-jF3iAo0p6zo-val" name="entryfield" title="Contraceptives-ECP_AFHC Female, 10-14 years, Unmarried" value="[ Contraceptives-ECP_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="Rxn8HW8PINg-w2nLCFyeWEP-val" name="entryfield" title="Contraceptives-ECP_AFHC Female, 15-19 years, Unmarried" value="[ Contraceptives-ECP_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="Rxn8HW8PINg-DI82ZusfWF9-val" name="entryfield" title="Contraceptives-ECP_AFHC Female, 10-14 years, Married" value="[ Contraceptives-ECP_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="Rxn8HW8PINg-C0tkoTsdWEY-val" name="entryfield" title="Contraceptives-ECP_AFHC Female, 15-19 years, Married" value="[ Contraceptives-ECP_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'IUD'}"><span style="font-family:Verdana,Geneva,sans-serif;">IUD</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="GeJiNRTuGCf-jF3iAo0p6zo-val" name="entryfield" title="Contraceptives-IUD_AFHC Female, 10-14 years, Unmarried" value="[ Contraceptives-IUD_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="GeJiNRTuGCf-w2nLCFyeWEP-val" name="entryfield" title="Contraceptives-IUD_AFHC Female, 15-19 years, Unmarried" value="[ Contraceptives-IUD_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="GeJiNRTuGCf-DI82ZusfWF9-val" name="entryfield" title="Contraceptives-IUD_AFHC Female, 10-14 years, Married" value="[ Contraceptives-IUD_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="GeJiNRTuGCf-C0tkoTsdWEY-val" name="entryfield" title="Contraceptives-IUD_AFHC Female, 15-19 years, Married" value="[ Contraceptives-IUD_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.i'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.i</span></td>
+			<td data-sheets-value="{'1':2,'2':'Immunization'}"><span style="font-family:Verdana,Geneva,sans-serif;">Immunization</span></td>
+			<td align="center"><input id="x3paWPnvdyC-cXTQmvsxRm9-val" name="entryfield" title="Immunization_AFHC Male, 10-14 years, Unmarried" value="[ Immunization_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="x3paWPnvdyC-Zr2ruuqvNTO-val" name="entryfield" title="Immunization_AFHC Male, 15-19 years, Unmarried" value="[ Immunization_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="x3paWPnvdyC-qWuxKEtXWdv-val" name="entryfield" title="Immunization_AFHC Male, 10-14 years, Married" value="[ Immunization_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="x3paWPnvdyC-dtwMheBtNhC-val" name="entryfield" title="Immunization_AFHC Male, 15-19 years, Married" value="[ Immunization_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="x3paWPnvdyC-jF3iAo0p6zo-val" name="entryfield" title="Immunization_AFHC Female, 10-14 years, Unmarried" value="[ Immunization_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="x3paWPnvdyC-w2nLCFyeWEP-val" name="entryfield" title="Immunization_AFHC Female, 15-19 years, Unmarried" value="[ Immunization_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="x3paWPnvdyC-DI82ZusfWF9-val" name="entryfield" title="Immunization_AFHC Female, 10-14 years, Married" value="[ Immunization_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="x3paWPnvdyC-C0tkoTsdWEY-val" name="entryfield" title="Immunization_AFHC Female, 15-19 years, Married" value="[ Immunization_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'2.j'}"><span style="font-family:Verdana,Geneva,sans-serif;">2.j</span></td>
+			<td data-sheets-value="{'1':2,'2':'Others'}"><span style="font-family:Verdana,Geneva,sans-serif;">Others</span></td>
+			<td align="center"><input id="CgSaY8P3Jt6-cXTQmvsxRm9-val" name="entryfield" title="Others (Clinical services)_AFHC Male, 10-14 years, Unmarried" value="[ Others (Clinical services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="CgSaY8P3Jt6-Zr2ruuqvNTO-val" name="entryfield" title="Others (Clinical services)_AFHC Male, 15-19 years, Unmarried" value="[ Others (Clinical services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="CgSaY8P3Jt6-qWuxKEtXWdv-val" name="entryfield" title="Others (Clinical services)_AFHC Male, 10-14 years, Married" value="[ Others (Clinical services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="CgSaY8P3Jt6-dtwMheBtNhC-val" name="entryfield" title="Others (Clinical services)_AFHC Male, 15-19 years, Married" value="[ Others (Clinical services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="CgSaY8P3Jt6-jF3iAo0p6zo-val" name="entryfield" title="Others (Clinical services)_AFHC Female, 10-14 years, Unmarried" value="[ Others (Clinical services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="CgSaY8P3Jt6-w2nLCFyeWEP-val" name="entryfield" title="Others (Clinical services)_AFHC Female, 15-19 years, Unmarried" value="[ Others (Clinical services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="CgSaY8P3Jt6-DI82ZusfWF9-val" name="entryfield" title="Others (Clinical services)_AFHC Female, 10-14 years, Married" value="[ Others (Clinical services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="CgSaY8P3Jt6-C0tkoTsdWEY-val" name="entryfield" title="Others (Clinical services)_AFHC Female, 15-19 years, Married" value="[ Others (Clinical services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td style="background-color: rgb(51, 51, 51);">&nbsp;</td>
+			<td colspan="9" data-sheets-value="{'1':2,'2':'Counselling Services provided to the clients out of total no. of registered clients during the reporting month'}" rowspan="1" style="background-color: rgb(51, 51, 51);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Counselling services provided to the clients out of total no. of registered clients during the reporting month</span></strong></span></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'C'}"><span style="font-family:Verdana,Geneva,sans-serif;">C</span></td>
+			<td data-sheets-value="{'1':2,'2':'Total no. of clients who received counselling services in AFHCs out of total no. of registered clients in AFHCs during reporting period'}"><span style="font-family:Verdana,Geneva,sans-serif;">Total no. of clients who received counselling services in AFHCs out of total no. of registered clients in AFHCs during reporting period</span></td>
+			<td align="center"><input id="msvIkES8pID-cXTQmvsxRm9-val" name="entryfield" title="Counselling services given to clients out of registered clients_AFHC Male, 10-14 years, Unmarried" value="[ Counselling services given to clients out of registered clients_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="msvIkES8pID-Zr2ruuqvNTO-val" name="entryfield" title="Counselling services given to clients out of registered clients_AFHC Male, 15-19 years, Unmarried" value="[ Counselling services given to clients out of registered clients_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="msvIkES8pID-qWuxKEtXWdv-val" name="entryfield" title="Counselling services given to clients out of registered clients_AFHC Male, 10-14 years, Married" value="[ Counselling services given to clients out of registered clients_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="msvIkES8pID-dtwMheBtNhC-val" name="entryfield" title="Counselling services given to clients out of registered clients_AFHC Male, 15-19 years, Married" value="[ Counselling services given to clients out of registered clients_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="msvIkES8pID-jF3iAo0p6zo-val" name="entryfield" title="Counselling services given to clients out of registered clients_AFHC Female, 10-14 years, Unmarried" value="[ Counselling services given to clients out of registered clients_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="msvIkES8pID-w2nLCFyeWEP-val" name="entryfield" title="Counselling services given to clients out of registered clients_AFHC Female, 15-19 years, Unmarried" value="[ Counselling services given to clients out of registered clients_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="msvIkES8pID-DI82ZusfWF9-val" name="entryfield" title="Counselling services given to clients out of registered clients_AFHC Female, 10-14 years, Married" value="[ Counselling services given to clients out of registered clients_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="msvIkES8pID-C0tkoTsdWEY-val" name="entryfield" title="Counselling services given to clients out of registered clients_AFHC Female, 15-19 years, Married" value="[ Counselling services given to clients out of registered clients_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':3,'3':3}" style="background-color: rgb(0, 102, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">3</span></strong></span></td>
+			<td colspan="9" data-sheets-value="{'1':2,'2':'Counselling services'}" rowspan="1" style="background-color: rgb(0, 102, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Counselling services</span></strong></span></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.a'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.a</span></td>
+			<td data-sheets-value="{'1':2,'2':'Nutrition'}"><span style="font-family:Verdana,Geneva,sans-serif;">Nutrition</span></td>
+			<td align="center"><input id="Vi4fpcwd9l2-cXTQmvsxRm9-val" name="entryfield" title="Nutrition (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Nutrition (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="Vi4fpcwd9l2-Zr2ruuqvNTO-val" name="entryfield" title="Nutrition (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Nutrition (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="Vi4fpcwd9l2-qWuxKEtXWdv-val" name="entryfield" title="Nutrition (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Nutrition (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="Vi4fpcwd9l2-dtwMheBtNhC-val" name="entryfield" title="Nutrition (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Nutrition (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="Vi4fpcwd9l2-jF3iAo0p6zo-val" name="entryfield" title="Nutrition (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Nutrition (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="Vi4fpcwd9l2-w2nLCFyeWEP-val" name="entryfield" title="Nutrition (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Nutrition (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="Vi4fpcwd9l2-DI82ZusfWF9-val" name="entryfield" title="Nutrition (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Nutrition (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="Vi4fpcwd9l2-C0tkoTsdWEY-val" name="entryfield" title="Nutrition (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Nutrition (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.b'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.b</span></td>
+			<td data-sheets-value="{'1':2,'2':'Skin'}"><span style="font-family:Verdana,Geneva,sans-serif;">Skin</span></td>
+			<td align="center"><input id="CBXfX9TSNaj-cXTQmvsxRm9-val" name="entryfield" title="Skin problems (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Skin problems (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="CBXfX9TSNaj-Zr2ruuqvNTO-val" name="entryfield" title="Skin problems (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Skin problems (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="CBXfX9TSNaj-qWuxKEtXWdv-val" name="entryfield" title="Skin problems (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Skin problems (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="CBXfX9TSNaj-dtwMheBtNhC-val" name="entryfield" title="Skin problems (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Skin problems (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="CBXfX9TSNaj-jF3iAo0p6zo-val" name="entryfield" title="Skin problems (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Skin problems (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="CBXfX9TSNaj-w2nLCFyeWEP-val" name="entryfield" title="Skin problems (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Skin problems (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="CBXfX9TSNaj-DI82ZusfWF9-val" name="entryfield" title="Skin problems (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Skin problems (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="CBXfX9TSNaj-C0tkoTsdWEY-val" name="entryfield" title="Skin problems (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Skin problems (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.c'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.c</span></td>
+			<td data-sheets-value="{'1':2,'2':'Menstrual Problems'}"><span style="font-family:Verdana,Geneva,sans-serif;">Menstrual problems</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="vTPRh98hS2t-jF3iAo0p6zo-val" name="entryfield" title="Menstrual problems (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Menstrual problems (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="vTPRh98hS2t-w2nLCFyeWEP-val" name="entryfield" title="Menstrual problems (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Menstrual problems (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="vTPRh98hS2t-DI82ZusfWF9-val" name="entryfield" title="Menstrual problems (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Menstrual problems (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="vTPRh98hS2t-C0tkoTsdWEY-val" name="entryfield" title="Menstrual problems (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Menstrual problems (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.d'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.d</span></td>
+			<td data-sheets-value="{'1':2,'2':'Pre-marital Counselling'}"><span style="font-family:Verdana,Geneva,sans-serif;">Pre-marital counselling</span></td>
+			<td align="center"><input id="IHdSHGLhxE9-cXTQmvsxRm9-val" name="entryfield" title="Pre-marital (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Pre-marital (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="IHdSHGLhxE9-Zr2ruuqvNTO-val" name="entryfield" title="Pre-marital (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Pre-marital (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="IHdSHGLhxE9-qWuxKEtXWdv-val" name="entryfield" title="Pre-marital (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Pre-marital (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="IHdSHGLhxE9-dtwMheBtNhC-val" name="entryfield" title="Pre-marital (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Pre-marital (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="IHdSHGLhxE9-jF3iAo0p6zo-val" name="entryfield" title="Pre-marital (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Pre-marital (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="IHdSHGLhxE9-w2nLCFyeWEP-val" name="entryfield" title="Pre-marital (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Pre-marital (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="IHdSHGLhxE9-DI82ZusfWF9-val" name="entryfield" title="Pre-marital (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Pre-marital (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="IHdSHGLhxE9-C0tkoTsdWEY-val" name="entryfield" title="Pre-marital (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Pre-marital (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.e'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.e</span></td>
+			<td data-sheets-value="{'1':2,'2':'Sexual problem'}"><span style="font-family:Verdana,Geneva,sans-serif;">Sexual problem</span></td>
+			<td align="center"><input id="IA6fmNb7H1M-cXTQmvsxRm9-val" name="entryfield" title="Sexual problems (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Sexual problems (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="IA6fmNb7H1M-Zr2ruuqvNTO-val" name="entryfield" title="Sexual problems (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Sexual problems (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="IA6fmNb7H1M-qWuxKEtXWdv-val" name="entryfield" title="Sexual problems (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Sexual problems (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="IA6fmNb7H1M-dtwMheBtNhC-val" name="entryfield" title="Sexual problems (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Sexual problems (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="IA6fmNb7H1M-jF3iAo0p6zo-val" name="entryfield" title="Sexual problems (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Sexual problems (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="IA6fmNb7H1M-w2nLCFyeWEP-val" name="entryfield" title="Sexual problems (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Sexual problems (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="IA6fmNb7H1M-DI82ZusfWF9-val" name="entryfield" title="Sexual problems (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Sexual problems (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="IA6fmNb7H1M-C0tkoTsdWEY-val" name="entryfield" title="Sexual problems (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Sexual problems (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.f'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.f</span></td>
+			<td data-sheets-value="{'1':2,'2':'Contraceptives'}"><span style="font-family:Verdana,Geneva,sans-serif;">Contraceptives</span></td>
+			<td align="center"><input id="aSfj4h1rEyR-cXTQmvsxRm9-val" name="entryfield" title="Contraceptives (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Contraceptives (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="aSfj4h1rEyR-Zr2ruuqvNTO-val" name="entryfield" title="Contraceptives (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Contraceptives (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="aSfj4h1rEyR-qWuxKEtXWdv-val" name="entryfield" title="Contraceptives (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Contraceptives (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="aSfj4h1rEyR-dtwMheBtNhC-val" name="entryfield" title="Contraceptives (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Contraceptives (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="aSfj4h1rEyR-jF3iAo0p6zo-val" name="entryfield" title="Contraceptives (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Contraceptives (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="aSfj4h1rEyR-w2nLCFyeWEP-val" name="entryfield" title="Contraceptives (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Contraceptives (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="aSfj4h1rEyR-DI82ZusfWF9-val" name="entryfield" title="Contraceptives (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Contraceptives (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="aSfj4h1rEyR-C0tkoTsdWEY-val" name="entryfield" title="Contraceptives (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Contraceptives (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.g'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.g</span></td>
+			<td data-sheets-value="{'1':2,'2':'Abortion'}"><span style="font-family:Verdana,Geneva,sans-serif;">Abortion</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="A63pfaHrurn-jF3iAo0p6zo-val" name="entryfield" title="Abortion (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Abortion (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="A63pfaHrurn-w2nLCFyeWEP-val" name="entryfield" title="Abortion (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Abortion (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="A63pfaHrurn-DI82ZusfWF9-val" name="entryfield" title="Abortion (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Abortion (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="A63pfaHrurn-C0tkoTsdWEY-val" name="entryfield" title="Abortion (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Abortion (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.h'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.h</span></td>
+			<td data-sheets-value="{'1':2,'2':'RTI/STI'}"><span style="font-family:Verdana,Geneva,sans-serif;">RTI/STI</span></td>
+			<td align="center"><input id="iWsqq3t6IyQ-cXTQmvsxRm9-val" name="entryfield" title="RTI/STI management (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ RTI/STI management (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="iWsqq3t6IyQ-Zr2ruuqvNTO-val" name="entryfield" title="RTI/STI management (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ RTI/STI management (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="iWsqq3t6IyQ-qWuxKEtXWdv-val" name="entryfield" title="RTI/STI management (Counselling services)_AFHC Male, 10-14 years, Married" value="[ RTI/STI management (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="iWsqq3t6IyQ-dtwMheBtNhC-val" name="entryfield" title="RTI/STI management (Counselling services)_AFHC Male, 15-19 years, Married" value="[ RTI/STI management (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="iWsqq3t6IyQ-jF3iAo0p6zo-val" name="entryfield" title="RTI/STI management (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ RTI/STI management (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="iWsqq3t6IyQ-w2nLCFyeWEP-val" name="entryfield" title="RTI/STI management (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ RTI/STI management (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="iWsqq3t6IyQ-DI82ZusfWF9-val" name="entryfield" title="RTI/STI management (Counselling services)_AFHC Female, 10-14 years, Married" value="[ RTI/STI management (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="iWsqq3t6IyQ-C0tkoTsdWEY-val" name="entryfield" title="RTI/STI management (Counselling services)_AFHC Female, 15-19 years, Married" value="[ RTI/STI management (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><strong>3.i</strong></td>
+			<td data-sheets-value="{'1':2,'2':'Tobacco'}"><strong>Substance abuse</strong></td>
+			<td align="center"><input id="indicatorftanP3EoviX" indicatorid="ftanP3EoviX" name="indicator" readonly="readonly" title="Substance abuse (Male, 10-14 years, Unmarried) (total)_AFHC" value="[ Substance abuse (Male, 10-14 years, Unmarried) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatormN9oTqARNqd" indicatorid="mN9oTqARNqd" name="indicator" readonly="readonly" title="Substance abuse (Male, 15-19 years, Unmarried) (total)_AFHC" value="[ Substance abuse (Male, 15-19 years, Unmarried) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorb1h7OBC0uDS" indicatorid="b1h7OBC0uDS" name="indicator" readonly="readonly" title="Substance abuse (Male, 10-14 years, Married) (total)_AFHC" value="[ Substance abuse (Male, 10-14 years, Married) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatortmpl7QlR2oK" indicatorid="tmpl7QlR2oK" name="indicator" readonly="readonly" title="Substance abuse (Male, 15-19 years, Married) (total)_AFHC" value="[ Substance abuse (Male, 15-19 years, Married) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorYVq82feOqBn" indicatorid="YVq82feOqBn" name="indicator" readonly="readonly" title="Substance abuse (Female, 10-14 years, Unmarried) (total)_AFHC" value="[ Substance abuse (Female, 10-14 years, Unmarried) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorTeMnlB4wHZl" indicatorid="TeMnlB4wHZl" name="indicator" readonly="readonly" title="Substance abuse (Female, 15-19 years, Unmarried) (total)_AFHC" value="[ Substance abuse (Female, 15-19 years, Unmarried) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorUnapkM53LSs" indicatorid="UnapkM53LSs" name="indicator" readonly="readonly" title="Substance abuse (Female, 10-14 years, Married) (total)_AFHC" value="[ Substance abuse (Female, 10-14 years, Married) (total)_AFHC ]" /></td>
+			<td align="center"><input id="indicatorOoPo6nttQDM" indicatorid="OoPo6nttQDM" name="indicator" readonly="readonly" title="Substance abuse (Female, 15-19 years, Married) (total)_AFHC" value="[ Substance abuse (Female, 15-19 years, Married) (total)_AFHC ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'Tobacco'}"><span style="font-family:Verdana,Geneva,sans-serif;">Tobacco</span></td>
+			<td align="center"><input id="FsS5hwrzmyp-cXTQmvsxRm9-val" name="entryfield" title="Tobacco use (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Tobacco use (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="FsS5hwrzmyp-Zr2ruuqvNTO-val" name="entryfield" title="Tobacco use (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Tobacco use (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="FsS5hwrzmyp-qWuxKEtXWdv-val" name="entryfield" title="Tobacco use (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Tobacco use (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="FsS5hwrzmyp-dtwMheBtNhC-val" name="entryfield" title="Tobacco use (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Tobacco use (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="FsS5hwrzmyp-jF3iAo0p6zo-val" name="entryfield" title="Tobacco use (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Tobacco use (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="FsS5hwrzmyp-w2nLCFyeWEP-val" name="entryfield" title="Tobacco use (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Tobacco use (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="FsS5hwrzmyp-DI82ZusfWF9-val" name="entryfield" title="Tobacco use (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Tobacco use (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="FsS5hwrzmyp-C0tkoTsdWEY-val" name="entryfield" title="Tobacco use (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Tobacco use (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'Alcohol'}"><span style="font-family:Verdana,Geneva,sans-serif;">Alcohol</span></td>
+			<td align="center"><input id="PdHW6vebTCI-cXTQmvsxRm9-val" name="entryfield" title="Alcohol use (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Alcohol use (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="PdHW6vebTCI-Zr2ruuqvNTO-val" name="entryfield" title="Alcohol use (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Alcohol use (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="PdHW6vebTCI-qWuxKEtXWdv-val" name="entryfield" title="Alcohol use (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Alcohol use (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="PdHW6vebTCI-dtwMheBtNhC-val" name="entryfield" title="Alcohol use (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Alcohol use (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="PdHW6vebTCI-jF3iAo0p6zo-val" name="entryfield" title="Alcohol use (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Alcohol use (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="PdHW6vebTCI-w2nLCFyeWEP-val" name="entryfield" title="Alcohol use (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Alcohol use (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="PdHW6vebTCI-DI82ZusfWF9-val" name="entryfield" title="Alcohol use (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Alcohol use (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="PdHW6vebTCI-C0tkoTsdWEY-val" name="entryfield" title="Alcohol use (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Alcohol use (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'Opium or its derivatives'}" style="background-color: rgb(255, 255, 255);"><span style="font-family:Verdana,Geneva,sans-serif;">Opium or its derivatives</span></td>
+			<td align="center"><input id="Vza0j77hMSf-cXTQmvsxRm9-val" name="entryfield" title="Opium derivatives (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Opium derivatives (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="Vza0j77hMSf-Zr2ruuqvNTO-val" name="entryfield" title="Opium derivatives (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Opium derivatives (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="Vza0j77hMSf-qWuxKEtXWdv-val" name="entryfield" title="Opium derivatives (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Opium derivatives (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="Vza0j77hMSf-dtwMheBtNhC-val" name="entryfield" title="Opium derivatives (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Opium derivatives (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="Vza0j77hMSf-jF3iAo0p6zo-val" name="entryfield" title="Opium derivatives (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Opium derivatives (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="Vza0j77hMSf-w2nLCFyeWEP-val" name="entryfield" title="Opium derivatives (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Opium derivatives (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="Vza0j77hMSf-DI82ZusfWF9-val" name="entryfield" title="Opium derivatives (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Opium derivatives (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="Vza0j77hMSf-C0tkoTsdWEY-val" name="entryfield" title="Opium derivatives (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Opium derivatives (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'Marijuana or its derivatives'}" style="background-color: rgb(255, 255, 255);"><span style="font-family:Verdana,Geneva,sans-serif;">Marijuana or its derivatives</span></td>
+			<td align="center"><input id="wCl7QwHGCeA-cXTQmvsxRm9-val" name="entryfield" title="Marijuana derivatives (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Marijuana derivatives (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="wCl7QwHGCeA-Zr2ruuqvNTO-val" name="entryfield" title="Marijuana derivatives (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Marijuana derivatives (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="wCl7QwHGCeA-qWuxKEtXWdv-val" name="entryfield" title="Marijuana derivatives (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Marijuana derivatives (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="wCl7QwHGCeA-dtwMheBtNhC-val" name="entryfield" title="Marijuana derivatives (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Marijuana derivatives (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="wCl7QwHGCeA-jF3iAo0p6zo-val" name="entryfield" title="Marijuana derivatives (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Marijuana derivatives (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="wCl7QwHGCeA-w2nLCFyeWEP-val" name="entryfield" title="Marijuana derivatives (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Marijuana derivatives (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="wCl7QwHGCeA-DI82ZusfWF9-val" name="entryfield" title="Marijuana derivatives (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Marijuana derivatives (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="wCl7QwHGCeA-C0tkoTsdWEY-val" name="entryfield" title="Marijuana derivatives (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Marijuana derivatives (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'Solvents/ Inhalants'}"><span style="font-family:Verdana,Geneva,sans-serif;">Solvents/Inhalants</span></td>
+			<td align="center"><input id="MtBvvIcO1EP-cXTQmvsxRm9-val" name="entryfield" title="Solvents/Inhalants (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Solvents/Inhalants (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="MtBvvIcO1EP-Zr2ruuqvNTO-val" name="entryfield" title="Solvents/Inhalants (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Solvents/Inhalants (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="MtBvvIcO1EP-qWuxKEtXWdv-val" name="entryfield" title="Solvents/Inhalants (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Solvents/Inhalants (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="MtBvvIcO1EP-dtwMheBtNhC-val" name="entryfield" title="Solvents/Inhalants (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Solvents/Inhalants (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="MtBvvIcO1EP-jF3iAo0p6zo-val" name="entryfield" title="Solvents/Inhalants (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Solvents/Inhalants (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="MtBvvIcO1EP-w2nLCFyeWEP-val" name="entryfield" title="Solvents/Inhalants (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Solvents/Inhalants (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="MtBvvIcO1EP-DI82ZusfWF9-val" name="entryfield" title="Solvents/Inhalants (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Solvents/Inhalants (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="MtBvvIcO1EP-C0tkoTsdWEY-val" name="entryfield" title="Solvents/Inhalants (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Solvents/Inhalants (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'Medicines Misused'}"><span style="font-family:Verdana,Geneva,sans-serif;">Medicines misused</span></td>
+			<td align="center"><input id="R0XbGHOkXMR-cXTQmvsxRm9-val" name="entryfield" title="Medicines misused (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Medicines misused (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="R0XbGHOkXMR-Zr2ruuqvNTO-val" name="entryfield" title="Medicines misused (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Medicines misused (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="R0XbGHOkXMR-qWuxKEtXWdv-val" name="entryfield" title="Medicines misused (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Medicines misused (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="R0XbGHOkXMR-dtwMheBtNhC-val" name="entryfield" title="Medicines misused (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Medicines misused (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="R0XbGHOkXMR-jF3iAo0p6zo-val" name="entryfield" title="Medicines misused (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Medicines misused (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="R0XbGHOkXMR-w2nLCFyeWEP-val" name="entryfield" title="Medicines misused (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Medicines misused (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="R0XbGHOkXMR-DI82ZusfWF9-val" name="entryfield" title="Medicines misused (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Medicines misused (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="R0XbGHOkXMR-C0tkoTsdWEY-val" name="entryfield" title="Medicines misused (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Medicines misused (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'*'}"><span style="font-family:Verdana,Geneva,sans-serif;">*</span></td>
+			<td data-sheets-value="{'1':2,'2':'Multiple/ others'}"><span style="font-family:Verdana,Geneva,sans-serif;">Multiple/others</span></td>
+			<td align="center"><input id="x2CM8QzV8gp-cXTQmvsxRm9-val" name="entryfield" title="Multiple/Other substance abuse (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Multiple/Other substance abuse (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="x2CM8QzV8gp-Zr2ruuqvNTO-val" name="entryfield" title="Multiple/Other substance abuse (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Multiple/Other substance abuse (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="x2CM8QzV8gp-qWuxKEtXWdv-val" name="entryfield" title="Multiple/Other substance abuse (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Multiple/Other substance abuse (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="x2CM8QzV8gp-dtwMheBtNhC-val" name="entryfield" title="Multiple/Other substance abuse (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Multiple/Other substance abuse (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="x2CM8QzV8gp-jF3iAo0p6zo-val" name="entryfield" title="Multiple/Other substance abuse (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Multiple/Other substance abuse (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="x2CM8QzV8gp-w2nLCFyeWEP-val" name="entryfield" title="Multiple/Other substance abuse (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Multiple/Other substance abuse (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="x2CM8QzV8gp-DI82ZusfWF9-val" name="entryfield" title="Multiple/Other substance abuse (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Multiple/Other substance abuse (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="x2CM8QzV8gp-C0tkoTsdWEY-val" name="entryfield" title="Multiple/Other substance abuse (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Multiple/Other substance abuse (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.j'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.j</span></td>
+			<td data-sheets-value="{'1':2,'2':'Learning Problems'}"><span style="font-family:Verdana,Geneva,sans-serif;">Learning problems</span></td>
+			<td align="center"><input id="SJyOEu5hdSO-cXTQmvsxRm9-val" name="entryfield" title="Learning problems (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Learning problems (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="SJyOEu5hdSO-Zr2ruuqvNTO-val" name="entryfield" title="Learning problems (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Learning problems (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="SJyOEu5hdSO-qWuxKEtXWdv-val" name="entryfield" title="Learning problems (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Learning problems (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="SJyOEu5hdSO-dtwMheBtNhC-val" name="entryfield" title="Learning problems (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Learning problems (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="SJyOEu5hdSO-jF3iAo0p6zo-val" name="entryfield" title="Learning problems (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Learning problems (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="SJyOEu5hdSO-w2nLCFyeWEP-val" name="entryfield" title="Learning problems (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Learning problems (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="SJyOEu5hdSO-DI82ZusfWF9-val" name="entryfield" title="Learning problems (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Learning problems (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="SJyOEu5hdSO-C0tkoTsdWEY-val" name="entryfield" title="Learning problems (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Learning problems (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.k'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.k</span></td>
+			<td data-sheets-value="{'1':2,'2':'Stress'}"><span style="font-family:Verdana,Geneva,sans-serif;">Stress</span></td>
+			<td align="center"><input id="bmckohNIZ3b-cXTQmvsxRm9-val" name="entryfield" title="Stress management (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Stress management (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="bmckohNIZ3b-Zr2ruuqvNTO-val" name="entryfield" title="Stress management (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Stress management (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="bmckohNIZ3b-qWuxKEtXWdv-val" name="entryfield" title="Stress management (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Stress management (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="bmckohNIZ3b-dtwMheBtNhC-val" name="entryfield" title="Stress management (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Stress management (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="bmckohNIZ3b-jF3iAo0p6zo-val" name="entryfield" title="Stress management (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Stress management (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="bmckohNIZ3b-w2nLCFyeWEP-val" name="entryfield" title="Stress management (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Stress management (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="bmckohNIZ3b-DI82ZusfWF9-val" name="entryfield" title="Stress management (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Stress management (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="bmckohNIZ3b-C0tkoTsdWEY-val" name="entryfield" title="Stress management (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Stress management (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.l'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.l</span></td>
+			<td data-sheets-value="{'1':2,'2':'Depression'}"><span style="font-family:Verdana,Geneva,sans-serif;">Depression</span></td>
+			<td align="center"><input id="iBjMqWsC1ka-cXTQmvsxRm9-val" name="entryfield" title="Depression (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Depression (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="iBjMqWsC1ka-Zr2ruuqvNTO-val" name="entryfield" title="Depression (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Depression (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="iBjMqWsC1ka-qWuxKEtXWdv-val" name="entryfield" title="Depression (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Depression (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="iBjMqWsC1ka-dtwMheBtNhC-val" name="entryfield" title="Depression (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Depression (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="iBjMqWsC1ka-jF3iAo0p6zo-val" name="entryfield" title="Depression (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Depression (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="iBjMqWsC1ka-w2nLCFyeWEP-val" name="entryfield" title="Depression (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Depression (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="iBjMqWsC1ka-DI82ZusfWF9-val" name="entryfield" title="Depression (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Depression (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="iBjMqWsC1ka-C0tkoTsdWEY-val" name="entryfield" title="Depression (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Depression (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.m'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.m</span></td>
+			<td data-sheets-value="{'1':2,'2':'Suicidal Tendency'}"><span style="font-family:Verdana,Geneva,sans-serif;">Suicidal tendency</span></td>
+			<td align="center"><input id="tpahQK4PS7z-cXTQmvsxRm9-val" name="entryfield" title="Suicidal tendency (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Suicidal tendency (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="tpahQK4PS7z-Zr2ruuqvNTO-val" name="entryfield" title="Suicidal tendency (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Suicidal tendency (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="tpahQK4PS7z-qWuxKEtXWdv-val" name="entryfield" title="Suicidal tendency (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Suicidal tendency (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="tpahQK4PS7z-dtwMheBtNhC-val" name="entryfield" title="Suicidal tendency (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Suicidal tendency (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="tpahQK4PS7z-jF3iAo0p6zo-val" name="entryfield" title="Suicidal tendency (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Suicidal tendency (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="tpahQK4PS7z-w2nLCFyeWEP-val" name="entryfield" title="Suicidal tendency (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Suicidal tendency (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="tpahQK4PS7z-DI82ZusfWF9-val" name="entryfield" title="Suicidal tendency (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Suicidal tendency (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="tpahQK4PS7z-C0tkoTsdWEY-val" name="entryfield" title="Suicidal tendency (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Suicidal tendency (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.n'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.n</span></td>
+			<td data-sheets-value="{'1':2,'2':'Violence'}"><span style="font-family:Verdana,Geneva,sans-serif;">Violence</span></td>
+			<td align="center"><input id="TpqspX56Nhl-cXTQmvsxRm9-val" name="entryfield" title="Violence (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Violence (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="TpqspX56Nhl-Zr2ruuqvNTO-val" name="entryfield" title="Violence (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Violence (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="TpqspX56Nhl-qWuxKEtXWdv-val" name="entryfield" title="Violence (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Violence (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="TpqspX56Nhl-dtwMheBtNhC-val" name="entryfield" title="Violence (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Violence (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="TpqspX56Nhl-jF3iAo0p6zo-val" name="entryfield" title="Violence (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Violence (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="TpqspX56Nhl-w2nLCFyeWEP-val" name="entryfield" title="Violence (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Violence (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="TpqspX56Nhl-DI82ZusfWF9-val" name="entryfield" title="Violence (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Violence (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="TpqspX56Nhl-C0tkoTsdWEY-val" name="entryfield" title="Violence (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Violence (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.o'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.o</span></td>
+			<td data-sheets-value="{'1':2,'2':'Sexual Abuse'}"><span style="font-family:Verdana,Geneva,sans-serif;">Sexual abuse</span></td>
+			<td align="center"><input id="TdQkW0kFE7J-cXTQmvsxRm9-val" name="entryfield" title="Sexual abuse (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Sexual abuse (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="TdQkW0kFE7J-Zr2ruuqvNTO-val" name="entryfield" title="Sexual abuse (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Sexual abuse (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="TdQkW0kFE7J-qWuxKEtXWdv-val" name="entryfield" title="Sexual abuse (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Sexual abuse (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="TdQkW0kFE7J-dtwMheBtNhC-val" name="entryfield" title="Sexual abuse (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Sexual abuse (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="TdQkW0kFE7J-jF3iAo0p6zo-val" name="entryfield" title="Sexual abuse (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Sexual abuse (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="TdQkW0kFE7J-w2nLCFyeWEP-val" name="entryfield" title="Sexual abuse (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Sexual abuse (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="TdQkW0kFE7J-DI82ZusfWF9-val" name="entryfield" title="Sexual abuse (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Sexual abuse (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="TdQkW0kFE7J-C0tkoTsdWEY-val" name="entryfield" title="Sexual abuse (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Sexual abuse (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.p'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.p</span></td>
+			<td data-sheets-value="{'1':2,'2':'Other Mental Health Issues'}"><span style="font-family:Verdana,Geneva,sans-serif;">Other mental health issues</span></td>
+			<td align="center"><input id="LYAC98Tb5bn-cXTQmvsxRm9-val" name="entryfield" title="Other mental health issues (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Other mental health issues (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="LYAC98Tb5bn-Zr2ruuqvNTO-val" name="entryfield" title="Other mental health issues (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Other mental health issues (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="LYAC98Tb5bn-qWuxKEtXWdv-val" name="entryfield" title="Other mental health issues (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Other mental health issues (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="LYAC98Tb5bn-dtwMheBtNhC-val" name="entryfield" title="Other mental health issues (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Other mental health issues (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="LYAC98Tb5bn-jF3iAo0p6zo-val" name="entryfield" title="Other mental health issues (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Other mental health issues (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="LYAC98Tb5bn-w2nLCFyeWEP-val" name="entryfield" title="Other mental health issues (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Other mental health issues (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="LYAC98Tb5bn-DI82ZusfWF9-val" name="entryfield" title="Other mental health issues (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Other mental health issues (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="LYAC98Tb5bn-C0tkoTsdWEY-val" name="entryfield" title="Other mental health issues (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Other mental health issues (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'3.q'}"><span style="font-family:Verdana,Geneva,sans-serif;">3.q</span></td>
+			<td data-sheets-value="{'1':2,'2':'Others'}"><span style="font-family:Verdana,Geneva,sans-serif;">Others</span></td>
+			<td align="center"><input id="J1H5ZpbEnTS-cXTQmvsxRm9-val" name="entryfield" title="Others (Counselling services)_AFHC Male, 10-14 years, Unmarried" value="[ Others (Counselling services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="J1H5ZpbEnTS-Zr2ruuqvNTO-val" name="entryfield" title="Others (Counselling services)_AFHC Male, 15-19 years, Unmarried" value="[ Others (Counselling services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="J1H5ZpbEnTS-qWuxKEtXWdv-val" name="entryfield" title="Others (Counselling services)_AFHC Male, 10-14 years, Married" value="[ Others (Counselling services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="J1H5ZpbEnTS-dtwMheBtNhC-val" name="entryfield" title="Others (Counselling services)_AFHC Male, 15-19 years, Married" value="[ Others (Counselling services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="J1H5ZpbEnTS-jF3iAo0p6zo-val" name="entryfield" title="Others (Counselling services)_AFHC Female, 10-14 years, Unmarried" value="[ Others (Counselling services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="J1H5ZpbEnTS-w2nLCFyeWEP-val" name="entryfield" title="Others (Counselling services)_AFHC Female, 15-19 years, Unmarried" value="[ Others (Counselling services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="J1H5ZpbEnTS-DI82ZusfWF9-val" name="entryfield" title="Others (Counselling services)_AFHC Female, 10-14 years, Married" value="[ Others (Counselling services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="J1H5ZpbEnTS-C0tkoTsdWEY-val" name="entryfield" title="Others (Counselling services)_AFHC Female, 15-19 years, Married" value="[ Others (Counselling services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td style="background-color: rgb(102, 153, 102);">&nbsp;</td>
+			<td colspan="9" data-sheets-value="{'1':2,'2':'Referral Services provided to the clients out of total no. of registered clients during the reporting month'}" rowspan="1" style="background-color: rgb(102, 153, 102);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Referral services provided to the clients out of total no. of registered clients during the reporting month</span></strong></span></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'D'}"><span style="font-family:Verdana,Geneva,sans-serif;">D</span></td>
+			<td data-sheets-value="{'1':2,'2':'Total no. of clients referred (from AFHCs) to other facilities out of total no. of registered clients during reporting period'}" style="background-color: rgb(255, 255, 255);"><span style="font-family:Verdana,Geneva,sans-serif;">Total no. of clients referred (from AFHCs) to other facilities out of total no. of registered clients during reporting period</span></td>
+			<td align="center"><input id="DRe28XT8Zvf-cXTQmvsxRm9-val" name="entryfield" title="Clients referred from AFHCs out of registered clients_AFHC Male, 10-14 years, Unmarried" value="[ Clients referred from AFHCs out of registered clients_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="DRe28XT8Zvf-Zr2ruuqvNTO-val" name="entryfield" title="Clients referred from AFHCs out of registered clients_AFHC Male, 15-19 years, Unmarried" value="[ Clients referred from AFHCs out of registered clients_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="DRe28XT8Zvf-qWuxKEtXWdv-val" name="entryfield" title="Clients referred from AFHCs out of registered clients_AFHC Male, 10-14 years, Married" value="[ Clients referred from AFHCs out of registered clients_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="DRe28XT8Zvf-dtwMheBtNhC-val" name="entryfield" title="Clients referred from AFHCs out of registered clients_AFHC Male, 15-19 years, Married" value="[ Clients referred from AFHCs out of registered clients_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="DRe28XT8Zvf-jF3iAo0p6zo-val" name="entryfield" title="Clients referred from AFHCs out of registered clients_AFHC Female, 10-14 years, Unmarried" value="[ Clients referred from AFHCs out of registered clients_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="DRe28XT8Zvf-w2nLCFyeWEP-val" name="entryfield" title="Clients referred from AFHCs out of registered clients_AFHC Female, 15-19 years, Unmarried" value="[ Clients referred from AFHCs out of registered clients_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="DRe28XT8Zvf-DI82ZusfWF9-val" name="entryfield" title="Clients referred from AFHCs out of registered clients_AFHC Female, 10-14 years, Married" value="[ Clients referred from AFHCs out of registered clients_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="DRe28XT8Zvf-C0tkoTsdWEY-val" name="entryfield" title="Clients referred from AFHCs out of registered clients_AFHC Female, 15-19 years, Married" value="[ Clients referred from AFHCs out of registered clients_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':3,'3':4}" style="background-color: rgb(102, 102, 51);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">4</span></strong></span></td>
+			<td colspan="9" data-sheets-value="{'1':2,'2':'Referral services'}" rowspan="1" style="background-color: rgb(102, 102, 51);"><span style="color:#ffffff;"><strong><span style="font-family:Verdana,Geneva,sans-serif;">Referral services</span></strong></span></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'4.a'}"><span style="font-family:Verdana,Geneva,sans-serif;">4.a</span></td>
+			<td data-sheets-value="{'1':2,'2':'ICTC'}"><span style="font-family:Verdana,Geneva,sans-serif;">ICTC</span></td>
+			<td align="center"><input id="eX7VHho70Bk-cXTQmvsxRm9-val" name="entryfield" title="ICTC (Referral services)_AFHC Male, 10-14 years, Unmarried" value="[ ICTC (Referral services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="eX7VHho70Bk-Zr2ruuqvNTO-val" name="entryfield" title="ICTC (Referral services)_AFHC Male, 15-19 years, Unmarried" value="[ ICTC (Referral services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="eX7VHho70Bk-qWuxKEtXWdv-val" name="entryfield" title="ICTC (Referral services)_AFHC Male, 10-14 years, Married" value="[ ICTC (Referral services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="eX7VHho70Bk-dtwMheBtNhC-val" name="entryfield" title="ICTC (Referral services)_AFHC Male, 15-19 years, Married" value="[ ICTC (Referral services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="eX7VHho70Bk-jF3iAo0p6zo-val" name="entryfield" title="ICTC (Referral services)_AFHC Female, 10-14 years, Unmarried" value="[ ICTC (Referral services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="eX7VHho70Bk-w2nLCFyeWEP-val" name="entryfield" title="ICTC (Referral services)_AFHC Female, 15-19 years, Unmarried" value="[ ICTC (Referral services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="eX7VHho70Bk-DI82ZusfWF9-val" name="entryfield" title="ICTC (Referral services)_AFHC Female, 10-14 years, Married" value="[ ICTC (Referral services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="eX7VHho70Bk-C0tkoTsdWEY-val" name="entryfield" title="ICTC (Referral services)_AFHC Female, 15-19 years, Married" value="[ ICTC (Referral services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'4.b'}"><span style="font-family:Verdana,Geneva,sans-serif;">4.b</span></td>
+			<td data-sheets-value="{'1':2,'2':'Suraksha/ RTI/ STI Clinic'}"><span style="font-family:Verdana,Geneva,sans-serif;">Suraksha/ RTI/ STI clinic</span></td>
+			<td align="center"><input id="pEE2z4gG9aG-cXTQmvsxRm9-val" name="entryfield" title="Suraksha/RTI/STI clinic (Referral services)_AFHC Male, 10-14 years, Unmarried" value="[ Suraksha/RTI/STI clinic (Referral services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="pEE2z4gG9aG-Zr2ruuqvNTO-val" name="entryfield" title="Suraksha/RTI/STI clinic (Referral services)_AFHC Male, 15-19 years, Unmarried" value="[ Suraksha/RTI/STI clinic (Referral services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="pEE2z4gG9aG-qWuxKEtXWdv-val" name="entryfield" title="Suraksha/RTI/STI clinic (Referral services)_AFHC Male, 10-14 years, Married" value="[ Suraksha/RTI/STI clinic (Referral services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="pEE2z4gG9aG-dtwMheBtNhC-val" name="entryfield" title="Suraksha/RTI/STI clinic (Referral services)_AFHC Male, 15-19 years, Married" value="[ Suraksha/RTI/STI clinic (Referral services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="pEE2z4gG9aG-jF3iAo0p6zo-val" name="entryfield" title="Suraksha/RTI/STI clinic (Referral services)_AFHC Female, 10-14 years, Unmarried" value="[ Suraksha/RTI/STI clinic (Referral services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="pEE2z4gG9aG-w2nLCFyeWEP-val" name="entryfield" title="Suraksha/RTI/STI clinic (Referral services)_AFHC Female, 15-19 years, Unmarried" value="[ Suraksha/RTI/STI clinic (Referral services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="pEE2z4gG9aG-DI82ZusfWF9-val" name="entryfield" title="Suraksha/RTI/STI clinic (Referral services)_AFHC Female, 10-14 years, Married" value="[ Suraksha/RTI/STI clinic (Referral services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="pEE2z4gG9aG-C0tkoTsdWEY-val" name="entryfield" title="Suraksha/RTI/STI clinic (Referral services)_AFHC Female, 15-19 years, Married" value="[ Suraksha/RTI/STI clinic (Referral services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'4.c'}"><span style="font-family:Verdana,Geneva,sans-serif;">4.c</span></td>
+			<td data-sheets-value="{'1':2,'2':'Skin OPD'}"><span style="font-family:Verdana,Geneva,sans-serif;">Skin OPD</span></td>
+			<td align="center"><input id="ZrWAtvgnbgY-cXTQmvsxRm9-val" name="entryfield" title="Skin OPD (Referral services)_AFHC Male, 10-14 years, Unmarried" value="[ Skin OPD (Referral services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="ZrWAtvgnbgY-Zr2ruuqvNTO-val" name="entryfield" title="Skin OPD (Referral services)_AFHC Male, 15-19 years, Unmarried" value="[ Skin OPD (Referral services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="ZrWAtvgnbgY-qWuxKEtXWdv-val" name="entryfield" title="Skin OPD (Referral services)_AFHC Male, 10-14 years, Married" value="[ Skin OPD (Referral services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="ZrWAtvgnbgY-dtwMheBtNhC-val" name="entryfield" title="Skin OPD (Referral services)_AFHC Male, 15-19 years, Married" value="[ Skin OPD (Referral services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="ZrWAtvgnbgY-jF3iAo0p6zo-val" name="entryfield" title="Skin OPD (Referral services)_AFHC Female, 10-14 years, Unmarried" value="[ Skin OPD (Referral services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="ZrWAtvgnbgY-w2nLCFyeWEP-val" name="entryfield" title="Skin OPD (Referral services)_AFHC Female, 15-19 years, Unmarried" value="[ Skin OPD (Referral services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="ZrWAtvgnbgY-DI82ZusfWF9-val" name="entryfield" title="Skin OPD (Referral services)_AFHC Female, 10-14 years, Married" value="[ Skin OPD (Referral services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="ZrWAtvgnbgY-C0tkoTsdWEY-val" name="entryfield" title="Skin OPD (Referral services)_AFHC Female, 15-19 years, Married" value="[ Skin OPD (Referral services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'4.d'}"><span style="font-family:Verdana,Geneva,sans-serif;">4.d</span></td>
+			<td data-sheets-value="{'1':2,'2':'Ob/ Gyn Department'}"><span style="font-family:Verdana,Geneva,sans-serif;">Obs/Gynae department</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="tQilID1PUqm-jF3iAo0p6zo-val" name="entryfield" title="Ob/Gyn department (Referral services)_AFHC Female, 10-14 years, Unmarried" value="[ Ob/Gyn department (Referral services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="tQilID1PUqm-w2nLCFyeWEP-val" name="entryfield" title="Ob/Gyn department (Referral services)_AFHC Female, 15-19 years, Unmarried" value="[ Ob/Gyn department (Referral services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="tQilID1PUqm-DI82ZusfWF9-val" name="entryfield" title="Ob/Gyn department (Referral services)_AFHC Female, 10-14 years, Married" value="[ Ob/Gyn department (Referral services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="tQilID1PUqm-C0tkoTsdWEY-val" name="entryfield" title="Ob/Gyn department (Referral services)_AFHC Female, 15-19 years, Married" value="[ Ob/Gyn department (Referral services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'4.e'}"><span style="font-family:Verdana,Geneva,sans-serif;">4.e</span></td>
+			<td data-sheets-value="{'1':2,'2':'MTP'}"><span style="font-family:Verdana,Geneva,sans-serif;">MTP</span></td>
+			<td align="center" bgcolor="#000000" colspan="4">&nbsp;</td>
+			<td align="center"><input id="WNE2iT5HVq6-jF3iAo0p6zo-val" name="entryfield" title="MTP (Referral services)_AFHC Female, 10-14 years, Unmarried" value="[ MTP (Referral services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="WNE2iT5HVq6-w2nLCFyeWEP-val" name="entryfield" title="MTP (Referral services)_AFHC Female, 15-19 years, Unmarried" value="[ MTP (Referral services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="WNE2iT5HVq6-DI82ZusfWF9-val" name="entryfield" title="MTP (Referral services)_AFHC Female, 10-14 years, Married" value="[ MTP (Referral services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="WNE2iT5HVq6-C0tkoTsdWEY-val" name="entryfield" title="MTP (Referral services)_AFHC Female, 15-19 years, Married" value="[ MTP (Referral services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'4.f'}"><span style="font-family:Verdana,Geneva,sans-serif;">4.f</span></td>
+			<td data-sheets-value="{'1':2,'2':'Psychiatrist'}"><span style="font-family:Verdana,Geneva,sans-serif;">Psychiatrist</span></td>
+			<td align="center"><input id="lhIYiA6cF0k-cXTQmvsxRm9-val" name="entryfield" title="Psychiatrist (Referral services)_AFHC Male, 10-14 years, Unmarried" value="[ Psychiatrist (Referral services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="lhIYiA6cF0k-Zr2ruuqvNTO-val" name="entryfield" title="Psychiatrist (Referral services)_AFHC Male, 15-19 years, Unmarried" value="[ Psychiatrist (Referral services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="lhIYiA6cF0k-qWuxKEtXWdv-val" name="entryfield" title="Psychiatrist (Referral services)_AFHC Male, 10-14 years, Married" value="[ Psychiatrist (Referral services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="lhIYiA6cF0k-dtwMheBtNhC-val" name="entryfield" title="Psychiatrist (Referral services)_AFHC Male, 15-19 years, Married" value="[ Psychiatrist (Referral services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="lhIYiA6cF0k-jF3iAo0p6zo-val" name="entryfield" title="Psychiatrist (Referral services)_AFHC Female, 10-14 years, Unmarried" value="[ Psychiatrist (Referral services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="lhIYiA6cF0k-w2nLCFyeWEP-val" name="entryfield" title="Psychiatrist (Referral services)_AFHC Female, 15-19 years, Unmarried" value="[ Psychiatrist (Referral services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="lhIYiA6cF0k-DI82ZusfWF9-val" name="entryfield" title="Psychiatrist (Referral services)_AFHC Female, 10-14 years, Married" value="[ Psychiatrist (Referral services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="lhIYiA6cF0k-C0tkoTsdWEY-val" name="entryfield" title="Psychiatrist (Referral services)_AFHC Female, 15-19 years, Married" value="[ Psychiatrist (Referral services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+		<tr>
+			<td data-sheets-value="{'1':2,'2':'4.g'}"><span style="font-family:Verdana,Geneva,sans-serif;">4.g</span></td>
+			<td data-sheets-value="{'1':2,'2':'Others'}"><span style="font-family:Verdana,Geneva,sans-serif;">Others</span></td>
+			<td align="center"><input id="A8njsfN21SA-cXTQmvsxRm9-val" name="entryfield" title="Others (Referral services)_AFHC Male, 10-14 years, Unmarried" value="[ Others (Referral services)_AFHC Male, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="A8njsfN21SA-Zr2ruuqvNTO-val" name="entryfield" title="Others (Referral services)_AFHC Male, 15-19 years, Unmarried" value="[ Others (Referral services)_AFHC Male, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="A8njsfN21SA-qWuxKEtXWdv-val" name="entryfield" title="Others (Referral services)_AFHC Male, 10-14 years, Married" value="[ Others (Referral services)_AFHC Male, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="A8njsfN21SA-dtwMheBtNhC-val" name="entryfield" title="Others (Referral services)_AFHC Male, 15-19 years, Married" value="[ Others (Referral services)_AFHC Male, 15-19 years, Married ]" /></td>
+			<td align="center"><input id="A8njsfN21SA-jF3iAo0p6zo-val" name="entryfield" title="Others (Referral services)_AFHC Female, 10-14 years, Unmarried" value="[ Others (Referral services)_AFHC Female, 10-14 years, Unmarried ]" /></td>
+			<td align="center"><input id="A8njsfN21SA-w2nLCFyeWEP-val" name="entryfield" title="Others (Referral services)_AFHC Female, 15-19 years, Unmarried" value="[ Others (Referral services)_AFHC Female, 15-19 years, Unmarried ]" /></td>
+			<td align="center"><input id="A8njsfN21SA-DI82ZusfWF9-val" name="entryfield" title="Others (Referral services)_AFHC Female, 10-14 years, Married" value="[ Others (Referral services)_AFHC Female, 10-14 years, Married ]" /></td>
+			<td align="center"><input id="A8njsfN21SA-C0tkoTsdWEY-val" name="entryfield" title="Others (Referral services)_AFHC Female, 15-19 years, Married" value="[ Others (Referral services)_AFHC Female, 15-19 years, Married ]" /></td>
+		</tr>
+	</tbody>
+</table>
