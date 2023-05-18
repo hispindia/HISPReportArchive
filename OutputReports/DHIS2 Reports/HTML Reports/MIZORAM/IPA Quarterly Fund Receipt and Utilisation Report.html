@@ -1,0 +1,647 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
+    integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+    crossorigin="anonymous"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+<style>
+    /* Absolute Center Spinner */
+    * {
+        font-family: 'Times New Roman', Times, serif;
+    }
+
+    .borderless,
+    .borderless th,
+    .borderless td {
+        border: 0;
+        border-collapse: collapse;
+    }
+
+    .loading {
+        position: fixed;
+        z-index: 999;
+        height: 2em;
+        width: 2em;
+        overflow: show;
+        margin: auto;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        display: none;
+    }
+
+    /* Transparent Overlay */
+
+    .loading:before {
+        content: '';
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* :not(:required) hides these rules from IE9 and below */
+
+    .loading:not(:required) {
+        /* hide "loading..." text */
+        font: 0/0 a;
+        color: transparent;
+        text-shadow: none;
+        background-color: transparent;
+        border: 0;
+    }
+
+    .loading:not(:required):after {
+        content: '';
+        display: block;
+        font-size: 10px;
+        width: 1em;
+        height: 1em;
+        margin-top: -0.5em;
+        -webkit-animation: spinner 1500ms infinite linear;
+        -moz-animation: spinner 1500ms infinite linear;
+        -ms-animation: spinner 1500ms infinite linear;
+        -o-animation: spinner 1500ms infinite linear;
+        animation: spinner 1500ms infinite linear;
+        border-radius: 0.5em;
+        -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+        box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+    }
+
+    /* Animation */
+
+    @-webkit-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @-moz-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @-o-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    .box {
+        width: 50%;
+        float: left;
+    }
+</style>
+
+</head>
+
+<body>
+
+    <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+        onclick="tableToExcel('main', 'IPA Quaterly Fund', 'IPA Quaterly Fund')"><span
+            class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+    <div class="loading" id="loader"></div>
+    <a id="dlink" style="display:none;"></a>
+
+    <div id="main">
+
+        <div id="date-count" style="text-align: center;">
+
+        </div>
+        <table class="table table-hover borderless" style="width:100%;">
+            <thead>
+                <tr>
+                    <td colspan="9" style="text-align: center;">
+                        <h5> Report generated on: <span id="curr-date"></span> <br />Report ID:<span
+                                id="curr-count"></span>
+                        </h5>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="9" style="text-align:center;font-weight:bold;background:#ADD8E6 ">Mizoram Health
+                        Systems
+                        Strengthening Project (MHSSP)<br />
+                        Health &amp; Family Welfare Department, Govt of Mizoram</td>
+                </tr>
+                <tr>
+                    <td colspan="9" style="text-align:center;font-weight:bold;background:#ADD8E6 ">
+                        <span id="facility-period"></span><br />
+                        Quarterly Expenditure Reporting Format <br />
+                        (Three Monthly
+                        Expenditure Report &ndash; TMER)<br />
+                        Statement of IPA Fund Status <br />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="9" style="border:0">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td colspan="9" style="font-family:Tahoma,Geneva,sans-serif;font-weight:bold;background:#F3EFEF">
+                        Sheet 1: Activity-wise Statement of IPA Fund/Budget Received</td>
+                </tr>
+                <tr>
+                    <td rowspan="2" style="background:#ECEAEA"> S.No. </td>
+                    <td rowspan="2" style="background:#ECEAEA">Activities (approved in the Action Plan) </td>
+                    <td rowspan="2" style="text-align: center;background:#ECEAEA">Activity Details</td>
+                    <td rowspan="2" style="background:#ECEAEA">Approved Budget (Rs.) </td>
+                    <td colspan="2" style="text-align: center;background:#ECEAEA">Funds Received </td>
+                    <td colspan="2" style="text-align: center;background:#ECEAEA">Funds Utilised</td>
+                    <td rowspan="2" style="background:#ECEAEA">Remarks </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;background:#ECEAEA">Date of Receipt</td>
+                    <td style="text-align: center;background:#ECEAEA">Current Quarter Receipts (Rs.)</td>
+                    <td style="text-align: center;background:#ECEAEA">Date of Payment</td>
+                    <td style="text-align: center;background:#ECEAEA">Current Quarter Payments (Rs.)</td>
+                </tr>
+            </thead>
+            <tbody id="table-body"> </tbody>
+        </table>
+        <table class="table table-hover borderless" style="width:100%;">
+            <thead>
+                <tr>
+                    <td colspan="7" style="text-align:center;font-weight:bold;background:#ADD8E6 ">Financial Details of
+                        Funds Received under Different Schemes/Projects/User Fee (Current Quarter)</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Sl No</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Particulars</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 "> Opening Balance</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Receipts</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Payments</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 "> Closing Balance</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Remarks</td>
+                </tr>
+            </thead>
+            <tbody id="tableBody-financialDetails"></tbody>
+        </table>
+        <table class="table table-hover borderless" style="width:100%;">
+            <thead>
+                <tr>
+                    <td colspan="2" style="text-align:center;font-weight:bold;background:#ADD8E6 ">Statement of IPA Fund
+                        Status</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Bank</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Cash</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 "></td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Particulars</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Amount (Rs.)</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Amount (Rs.)</td>
+                </tr>
+            </thead>
+            <tbody id="tableBody-ipaStatement"></tbody>
+        </table>
+        <table class="table table-hover borderless" style="width:100%;">
+            <thead>
+                <tr>
+                    <td colspan="5" style="text-align:center;font-weight:bold;background:#ADD8E6 ">Bank Reconciliation
+                        Statement (BRS)</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Sl No</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Particulars</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Cheque No.</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Date</td>
+                    <td style="text-align:center;font-weight:bold;background:#ADD8E6 ">Amount(Rs)</td>
+                </tr>
+            </thead>
+            <tbody id="tableBody-bankReconciliation"></tbody>
+        </table>
+        <table class="table table-hover borderless" style="width:100%;">
+            <thead>
+                <tr>
+                    <td colspan="4" style="text-align:center;font-weight:bold;background:#ADD8E6;line-height:2">
+                        <strong>Proforma 'A'</strong><br />
+                        <strong>FORMS</strong><br />
+                        <strong>GFR 12 C</strong><br />
+                        <strong>[See Rule 239]</strong><br />
+                        <strong>FORM UTILIZATION CERTIFICATE</strong>
+                    </td>
+                </tr>
+            </thead>
+            <tbody id="tableBody-perfoma"></tbody>
+        </table>
+    </div>
+</body>
+
+<script>
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var period = dhis2.report.periods[0];
+    var quaters = [
+        "January-March",
+        "April-June",
+        "July-September",
+        "October-December"
+    ]
+
+    var excelName = selectedOrgUnit.name + '-Quaterly Fund Receipt and Utilization Report'
+    var dataStoreCount = 0;
+    $.ajax({
+        async: false,
+        type: "GET",
+        url: '../api/dataStore/reportCounts/quaterlyFund',
+        success: function (data) {
+            dataStoreCount = data;
+        }
+    });
+    $.ajax({
+        async: false,
+        type: "put",
+        url: '../api/dataStore/reportCounts/quaterlyFund',
+        data: JSON.stringify(++dataStoreCount),
+        contentType: "application/json"
+    });
+    debugger;
+    var date = new Date();
+    date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
+    excelName += `(${date})-${dataStoreCount}`;
+
+    document.getElementById("curr-date").innerHTML = date;
+    document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
+
+    var dataValues = {};
+    var dataElements = {
+        activityWiseReport: [
+            ['gSBdCnyDeqq', 'vG8QKhAyRhT', 'g2p3BV8FNFL', 'cbJnfvmI1r6', 'ukiRq2gleA9', 'hhrMb81LXs9', 'iDZNTrtvLFJ', 'LW4XMT2hDg4'],
+            ['FVHUlTBANzb', 'YKFEKXk4Aig', 'Z6Ox4nk8Qod', 'EFi82nm5TUz', 'mQBEQiXgCUX', 'teNzC2LMTKj', 'IxbYVGZ1ERo', 'JwzHcf0N5JN'],
+            ['XcLMeGSw4le', 'zQV9DTso2bN', 'KSJKop3do1u', 'qFOgEBn6VG9', 'WAVUVCtgQkg', 'lNmuVfaMLpz', 'V6pn1XiwWmZ', 'dfkeRde7bzn'],
+            ['D7KpUIK1OSg', 'ps4OBkuYE47', 'fatMmzmEj3w', 'oQWXlpWkvbW', 'yfrbWCdH02Z', 'vpjzMhzarcb', 't2Z6dXifJ6N', 'k3drQ8cVQLu'],
+            ['sEthKFLrh47', 'lbQsVwe61tI', 'gkvvO3fdAbE', 'uSzAfsjrlWA', 'AOAqXrjm8sI', 'ifTyalSuh04', 'fD8feI290wX', 'abTWzIYdpYm'],
+            ['Xrj0aEDwmp3', 'ONADcVTlZtj', 'mrMTq2yiltT', 'GKBRw9wHx9I', 'vSGHAtD4np0', 'dKTD9TvHpb9', 'dKhRKgdJ4qK', 'X69GXa98S4M'],
+            ['jjty60QLhlp', 'xcBtxPUYQAN', 'K7zeyLaMCl2', 'IAroed8pnv9', 'wdhNBKRp928', 'KSJJTyyf798', 'GmOHVjX5RyD', 'YPNBFoaNnCZ'],
+            ['GrF2xpXt8wl', 'sNBdm2p4dko', 'TNMa7Aye2vK', 'ivJuzyImBZ4', 'V0sDvcWZchC', 'LPpLwwRaIVU', 'KcOepDJ2I6P', 'vMjdLnTAtiM'],
+            ['W3Giak0ktvm', 'jacGn6QIDyu', 'tYkeyP9WIfm', 'HcQ2EZ7RKtd', 'mry3YXmsu04', 'Odh31RsfikQ', 'VmMx8RLlBbL', 'AacPx4u22GN'],
+            ['bIsKpW1I4Wk', 'gyCvqVkcyuf', 'Dg4CDjlZTmV', 'C7iksQEivdB', 'jDbWR4imXOJ', 'r1tzDTbwEPS', 'B494KumJqJy', 'UTS4xqTOdPl'],
+            ['Kye29mJpfac', 'G6l6F1Hjrig', 'XEGVpeUaXiH', 'exgGmRnpJCN', 'BJQ3sDnzqJk', 'pKSxniCX5QJ', 'TAZeubDI3wq', 'o7FfJPgxzel'],
+            ['MNOaT2uXu0X', 'S7DtErytP5n', 'Q7pk9foY39c', 'qBz1nrQjXMC', 'f3XiosaJdGb', 'NZeul5XJS9C', 'PWQ2YifF82d', 'ae1drUDyUQs'],
+            ['rdVUnzLGeSw', 'X4JrI7jEj7X', 'PmNPox1tri6', 'UcmWNZb7q4C', 'tk3BP3q9xUo', 'ZSMQsuesrb1', 'wxhlz7x6mQN', 'kFajD8V7XLt'],
+            ['tBLMQGbS2oH', 'U8W8FZzOkcv', 'Z5kGODYAluN', 'NZvUkHTev5e', 'yyx4AADIMlk', 'kNHbICDjIKG', 'n0ntNNHQxQN', 's2yon3hcAcZ'],
+            ['EWT6RmSD8De', 'v4ZPSG5eIhu', 'ljpzOqSOrhs', 'GoSM9H1mI7X', 'aDxy5n0hHKa', 'v1KZozC8OdT', 'jPc2i2OYq28', 'WF0ReddcwqH'],
+            ['U235SRVuvlb', 'U4SBmJsURjp', 'lYmmhqLRrCy', 'UxXcxy6gZ29', 'OCkzjuz1U1b', 'jAvt7PkI6Dk', 'JiQFAUodWcb', 'nBmgjjkyPkz'],
+            ['IhkcK8aUHgy', 'cZTxcz3qVLv', 'qLXGAxQBxMj', 'TJbfPnLv6Bz', 'MgVXfCweZDf', 'mrCF1hYgfzl', 'loW0eBKEpQR', 'PrCcxAF6LJP'],
+            ['o9uWQ0ctsDw', 'NCvv7N3nJw2', 'dq3hAk9ZF6L', 'GEWDV2lZplv', 'LqYgQd08nDi', 'dOdyv93w6lD', 'himz7qbGy7x', 'AVi4yviDxdb'],
+            ['MXm1YvSsx2M', 'TuOZ6Xd0ccY', 'xUxZVIob4ay', 'jvBldSj5gn4', 'UNp4wMVeeZe', 'Vb9rXLKKU6V', 'bhcB0DhF1uu', 'Nidmeo23noA'],
+            ['aivKnYd0YCJ', 'go8w36rvyzT', 'cWLOWWpdg99', 'pE9aVH7evhq', 'p1SEMifOaiZ', 'zWMNmoH4fab', 'QRup2BDgZ8s', 'v0kyWbpGu4w'],
+            ['H5anG3gmdGl', 'c9aSocO2A5k', 'X5lor05BadI', 'ttXh2b9GKaK', 'UkDT3plut99', 'ThcyLq9ChIv', 'obEv73ewbr5', 'dTnGjJIIO8O'],
+            ['c4mMTgcJQfO', 'GKGo7J8OdLo', 'Z9PQmvMthMt', 'K3jQx0wz3tK', 'vL5YhuF8tDI', 'v9pQ3UuVpH4', 'WZ5MJg1mxAg', 'oP2z6V32JUL'],
+            ['WvZXp66YteN', 'gv7ypAMglHn', 'ecZ7GVmroZX', 'zYpNxgtBONv', 'oOZl0EgyS5U', 'AdXJrXv0dz8', 'vqn7yxUFA06', 'UIC4RvtCOnX'],
+            ['UK2grcJfh4k', 'eaNZpI7sdgh', 'uFQjrIqohdK', 'gaTTatcFQgz', 'fFmADEj0xil', 'F5FvMwD6Dwl', 'YjLf2Ama5A0', 'Bsruhy74cK7'],
+            ['MAH678Pk1wE', 'ocbVzbFPJaU', 'NiXESA6VIbv', 'H5zA0QttZKY', 'b5Em3xwExJh', 'KKAyTHpwXci', 'FCCuxVdiuK5', 'ARxlQOeoL5l'],
+            ['mzO4IsiNLr9', 'K0QTe3FbZQW', 'gJxjIsmRKmG', 'VsMIOORV1z5', 'BBVHK38qD0m', 'hi0FGRwY4NP', 'b4fLSxZeWmS', 'esJPHzycLnV'],
+            ['UdiYL8dtVJ2', 'vK5dhkpYtFZ', 'cjGyYJdh0Nw', 'oYo5I53WwId', 'F9k85AXbT8Y', 'LaCokwo2LB6', 'bPWrMqoIZTL', 'bufJXn8BjfN'],
+            ['I6ePBqQS6Yu', 'gTlDMAxLrVe', 'QbM8EoJwMas', 'Se5W0DoCFN2', 'L9whtHr0jof', 'tygokjwPPAN', 'uDpAWx5NtEG', 'M7WH0j9Aav0'],
+            ['twXwrMJLXff', 'zrYNrRnHUJ9', 'k4smRKxPZBw', 'uYZMFNJGcaL', 'NCsmmPDj9IB', 'zR6XJRZx9Ko', 'pysR1rHYLIs', 'U66RfD0zmBw'],
+            ['mFqlbQyqIkK', 'PQKG80KWWQ1', 'llB9tBX1ucx', 'fwNWS9VB6at', 'tkLu3RVQK2O', 'AFBlkY8PeiJ', 'eZyAFioXcK0', 'R6JFPOLzZp4'],
+            ['uFUpRHlBHyW', 'qxT7OdXpezK', 'Qt5SNGEmUFi', 'XP7H71xfHPs', 'JJj2NIo4RaU', 'FzxO0UnrfoP', 'U18vROet3YU', 'ajzC1BhzpdP'],
+            ['kV6Wg2Ywh84', 'ORc3lnnrri0', 'vX7Gf8OmiGO', 'drsNxjlwC3f', 'hKAN3h5JYyB', 'Elp47FE5Ori', 'BzoAsbJ1LCU', 'kqGUSYP7U8k'],
+            ['hXWunI8p7uc', 'J7y3Gdgi5OI', 'GVESXE6G6Pq', 'RGJR3XnRACs', 'cymlOzmo39B', 'YLoAfl0Mspf', 'D7qGWnLxw7g', 'MS8EWdKYtNZ'],
+            ['A6oLCUxE4at', 'wReWf7GZlVG', 'dWsl4urkQXK', 'NlBgi6djJfb', 'Re5VTzeapjL', 'thBVUfGD6FU', 'hbAWWo5PkwW', 'H5A3GWv7QXK'],
+            ['FcVzqce2l7k', 'w0QcN9uqxVh', 'rh5YZ6pgFZ3', 'D5bkZiX2nLV', 'YoYX8Qy6aVK', 'Oti8tJrBnwW', 'ovfwqkf92vm', 'WsniLTtLNf9'],
+            ['Ah5Mv0VLe1h', 'YDy3J1C58JA', 'ylPxWUYXJFF', 'm3gNvwjGRaJ', 'w4QZZmOlM2h', 'v9k808KNwCy', 'BJxJKG5rOLG', 'VtYHvhKhlok'],
+            ['MzszjK4T4gm', 'KgCofHptkMz', 'BX2lpKTZEYo', 'XY1FFFNXqod', 'gjaPDkL87vD', 'RyCoxl0SFzh', 'btDndI3ObMv', 'DwPLmqDCF08'],
+            ['onWMkWnLaNj', 'liPwyy6bwkV', 'yst7NKDWLvM', 'eFVbiAlZ66g', 'sJ43C2eJdIi', 'lquo31az3V7', 'fZlYQeJpgru', 'K0zk6gn5QVI'],
+            ['gdgcmaPuLXh', 'eHEQG8WybwC', 'MHEaSaXldEm', 'xSNXeliXKpJ', 'fbG5Fs8PIBe', 'uDx6LhHD1H3', 'iwpSYLXsZCZ', 'UKhhvnZIEoM'],
+            ['o7G8rdZ2npQ', 'cDkodEeb96U', 'olKCgvu1az8', 'adTU5NrVxlh', 'tgVRUjRej4g', 'xVYyzZlQuwT', 'olNNhEzCLMj', 'LIgDwcIFSY6'],
+            ['Jl7tomtd0K2', 'iSiUxRZPtZC', 'T1jM0zZIkyk', 'IQPJJRRvClK', 'fQwILCxgbAr', 'TA2CNpAuagW', 'fSGwtbWEUva', 'xqkskh0xtIz'],
+            ['wuO16HXA6Xt', 'N1RrNNkbees', 'kvBY86rxQwv', 'dDayPhrSwFu', 'jdCQcGaavDR', 'azFABYypxUA', 'bowWm1K3EvE', 'Ig1hDJJQDaO'],
+            ['fciZo3vwyJT', 'yDMkzwDkVsu', 'AKe9VxkpLba', 'qTmnMY88tP4', 'OIimnDslZJE', 'GaSFXDeaetI', 'a1zSkTFtPdD', 'GXqToFR3hQG'],
+            ['yfeCWX4dgs6', 'ECTkJxBzdqt', 'inq8jfNklPG', 'NICdacdd9pr', 'XIuQt690cvw', 'YmG32D4jlIx', 'VDPVx9Zrdpn', 'lYtaHzrze3j'],
+            ['cVEWnFtHbKA', 'Nyvg2Cp1jwe', 'SOQ3Xmj7RAt', 'C0lRkjBOETZ', 'X9Igb1uSwzh', 'ObaJuX39vcI', 'M7ZwNaCmaBx', 'pTny1chCLel'],
+            ['UUP3UPTunzy', 'uc8RwdtR8pC', 'al7rN8xRUHN', 'St8P15G2B3d', 'SdK8WgD57RE', 'TimUXeyedv1', 'rUYjJZlpLF3', 'W4dXXGxSwL7'],
+            ['gmvzkl5zVfH', 'MT3n06zYSnc', 'BOUwGWDwyZM', 'ChAkZrO1kZI', 'EiAQQwCuP30', 'uwqzPk2jx9W', 'p3xIOj5y3PL', 'mKItcVkxcck'],
+            ['Y3GIproGZyO', 'fUIo7poz1Ha', 'GJlYR8zEKxy', 'ghBF3Gr0lUR', 'niqK6viUgGF', 'P3ZfCOvOWq8', 'FPIu0E8w1xk', 'ml6XXz1axL9'],
+            ['sAuWHzlDscM', 'Hz4hc2oFInO', 'ZnQSVzSKfMe', 'cTb7BhasHWW', 'UD8X8XKmWJs', 'GnEHWcs8RRH', 'EiGYY8OXIjY', 'VT9j9mRS41r'],
+            ['bP7sn8zb7Q3', 'kaK9Bya4Vs3', 'KtXUgEZdHNX', 'byAeWsKmrCx', 'EH0zDYpDdVc', , 'mnkX5LXNs5', 'XCs39Wx4p3Q', 'M265ckd14JV']
+        ],
+        financialDetails: [
+            'Vfh0GEcc39N', 'PXHOGLuZzFk', 'spakGSjnoJz', 'V05uwaEJOwv', 'Cld4psDYkaG',
+            'WDrCkrnMFLd', 'Pl3oBvJtbkF', 'YDfRZ3VSW7o', 'Y7OWp1gHJvL', 'cNzF6SXYm25',
+            'TsH0GMHNouq', 'txsnETYuLQu', 'GRFIQXGw4z9', 'LTt7KyjHzq2', 'dmA63YLxRxd',
+            'JSidzmtvACX', 'QR9jYaPsO7D', 'qjzZgvOSilI', 'eKIK4OZCSa6', 'IizcLcC4eFn',
+            'HtB7uYt7F1p', 'P1Hcm32Olaw', 'oGaYG2sfAJY', 'l8adymQ1uDv', 'PiYFngP1lPN'
+        ],
+        ipaStatement: [
+            'pruqL3yxefO', 'PerpmFri8RS',
+            'f0a2dQQiU1s', '',
+            'C1mFbYzA80C', 'XK1bK2fHgrv',
+            'BJr6LxgHJck', 'tJdtrqUv1WX',
+            'sdoMh3e7puX', 'HSkhJ8tcjM7',
+            'guHFzrvkVLf', 'lCiveC8qOBi',
+            'ul7BDdSk6TL', 'xOgrzAWA7n5',
+
+        ],
+        bankReconciliation: [
+            [
+                'GGbPcDxiu8t', 'X8JR6Vs2dSn', 'v1ZbthozYXd', 'KYsEj8jFZQn',
+                'sp48dQNpNIM', 'J8pJ3f6As69', 'tZFxwNccSHp', 'C8jWf1Mo4BD',
+                'PySTmSK1UGL', 'N6h3lacPB4y', 'v53lKsQ5EMv', 'Q8hGrVe0gao',
+                'kw8tmVvqQKv', 'SBQ4WzXFWeA', 'pQZdIxnLOnt', 'jxviXaWR5VD',
+                'ZaZa8CSqiHO', 'nZLHgVp8khz', 'bR31GbfkuVq', 'nMDySfftiCN'
+            ],
+            [
+                'oBBVImnLYuf', 'vu5y2DeWFcu', 'v8vuzDwl1kI', 'Tzq0cLLpeWG',
+                'LkdqANXEeu6', 'gf1AdCRFpXj', 'I18ItQkahv0', 'DrU6xEyvYRv',
+                'Wm5JpIuamjB', 'xSEZw0wHzSD', 'SJRD97GEaR9', 'kNRrGgpuFep',
+                'dH4Xq2uyL36', 'h7H6UqON8C5', 'Q5BVKmf3o2F', 'aioIZSYs8rH',
+                'SF2eLyuVvuw', 'DyZgmo0Quhk', 'QZstqkklH1b', 'R33AHvfVa8C'
+            ]
+
+        ],
+        perfoma: [
+            'vPxeT17m4mP', 'UgvfhemC4bX',
+            'lyICaWLJUAA', 'JyLAnrCt0gu',
+            'QUTkWv8YNGY', 'fzzHPlaHgxz',
+            'SOlSXfhbE0S', 'GPXByW8tLht',
+            'CdWRdUCn7Dz', 'SQMFppitHcz'
+        ]
+
+    }
+
+    document.getElementById("loader").style.display = "block";
+    document.getElementById("facility-period").innerHTML = `${selectedOrgUnit.name} (${period.split('Q')[0]} ${quaters[(period.split('Q')[1] - 1)]})`
+
+    displayData();
+    async function displayData() {
+        var resAnalytics = await (await fetch(`../api/analytics.json?dimension=dx:t8T4uOjrcGx;NP1DT9Wv3KU;g7BpEj08sCF;hZP3yMW6DrW;nKylfBE3GZg;W54WaupIpFN;gAbkcRGw0oc;miqd2Td6pdy;adV6wRr8pSw;IzDnyREd2QB;KJPVAwpIk0y;Vi2LScZPmG2&dimension=pe:${period}&dimension=ou:${selectedOrgUnit.id}&paging=false`)).json();
+        resAnalytics.rows.forEach(row => {
+            dataValues[row[0]] = row[3];
+        })
+        debugger;
+        var response = await (await fetch(`../api/dataValueSets.json?period=${period}&orgUnit=${selectedOrgUnit.id}&dataSet=XV12eKZar28`)).json();
+        response.dataValues.forEach(dv => dataValues[dv.dataElement] = dv.value)
+        console.log(response);
+        var tableRow = '';
+        dataElements.activityWiseReport.forEach((deIds, sno) => {
+            let row = ''
+            let hasValue = false;
+            row += `<tr><td>${(sno + 1)}</td>`
+            deIds.forEach(de => {
+                if (dataValues[de]) {
+                    row += `<td>${dataValues[de]}</td>`
+                    hasValue = true;
+                } else {
+                    row += `<td></td>`
+                }
+
+            })
+            row += '</tr>'
+            if (hasValue) tableRow += row;
+        })
+        tableRow += `<tr>
+            <td colspan="2" style="font-weight:bold"> Total </td>
+            <td style="font-weight:bold"></td>
+            <td style="font-weight:bold">${(dataValues['NP1DT9Wv3KU'] ? Number(dataValues['NP1DT9Wv3KU']) : '')}</td>
+            <td style="font-weight:bold"></td>
+            <td style="font-weight:bold">${(dataValues['g7BpEj08sCF'] ? Number(dataValues['g7BpEj08sCF']) : '')}</td>
+            <td style="font-weight:bold"></td>
+            <td style="font-weight:bold">${(dataValues['hZP3yMW6DrW'] ? Number(dataValues['hZP3yMW6DrW']) : '')}</td>
+            <td style="font-weight:bold"></td>
+            </tr>`;
+        document.getElementById('table-body').innerHTML = tableRow;
+
+        tableRow = '';
+        var count = 0;
+        var chars = ['A', 'B', 'C', 'D', 'E'];
+        var financialDetails = ['Nationa Health Mission', 'AB - PMJAY', 'RKS', 'User Fee', 'State']
+        dataElements.financialDetails.forEach((id, index) => {
+            if (index % 5 == 0) {
+                tableRow += `<tr><td>${chars[count]}</td><td>${financialDetails[count]}</td>`
+                count++;
+            }
+            tableRow += `<td>${dataValues[id] ? dataValues[id] : ''}</td>`;
+        });
+
+        document.getElementById('tableBody-financialDetails').innerHTML = tableRow;
+        var ipaStatement = [
+            'Opening Balance',
+            'Sheet 1: Activity-wise IPA Fund Received',
+            'Contra (Cash to Bank)',
+            'Other Receipts (Pls Specify)',
+            'Total Fund Available (A+B+C+D)',
+            'Sheet 2: Activity-wise IPA Fund Utilized',
+            'Contra (Bank to Cash)',
+            'Other Payments (Pls Specify)',
+            'Total Fund Utilized (E+F+G)',
+            'Closing Balance*'
+        ];
+        tableRow = '';
+        count = 0;
+        var val = {
+            val1: 0,
+            val2: 0
+        };
+        var totalVal = {
+            val1: 0,
+            val2: 0
+        };
+        ipaStatement.forEach((name, sno) => {
+            if (sno == 4 || sno == 8) {
+
+                tableRow += `<tr>
+                    <td>${sno + 1}</td>
+                    <td>${name}</td>
+                    <td>${val.val1}</td>
+                    <td>${val.val2}</td>
+                    </tr>`;
+
+                if (sno == 4) {
+                    totalVal.val1 = val.val1;
+                    totalVal.val2 = val.val2;
+                } else {
+                    totalVal.val1 -= val.val1;
+                    totalVal.val2 -= val.val2;
+                }
+                val = {
+                    val1: 0,
+                    val2: 0
+                };
+            } else if (sno == 9) {
+                tableRow += `<tr>
+                    <td>${sno + 1}</td>
+                    <td>${name}</td>
+                    <td>${totalVal.val1}</td>
+                    <td>${totalVal.val2}</td>
+                    </tr>`;
+            } else {
+
+                let val1 = dataValues[dataElements.ipaStatement[count]] ? dataValues[dataElements.ipaStatement[count]] : ''; count++;
+                let val2 = dataValues[dataElements.ipaStatement[count]] ? dataValues[dataElements.ipaStatement[count]] : ''; count++;
+                val.val1 += Number(val1)
+                val.val2 += Number(val2);
+                tableRow += `<tr>
+                    <td>${sno + 1}</td>
+                    <td>${name}</td>
+                    <td>${val1}</td>
+                    <td>${val2}</td>
+                    </tr>`;
+            }
+        })
+        document.getElementById('tableBody-ipaStatement').innerHTML = tableRow;
+        chars = ['a', 'b', 'c', 'd', 'e'];
+        var count = 0;
+        var totalCol = 0;
+        var totalCols = 0;
+        var tableRow = `<tr>
+            <td>1</td>
+            <td>Balance as per Bank Statement as on (Row 1)</td>
+            <td></td>
+            <td>${(dataValues['KTaELdyr7qR'] ? dataValues['KTaELdyr7qR'] : '')}</td>
+            <td>${(dataValues['hIQ7ajZBPDY'] ? Number(dataValues['hIQ7ajZBPDY']) : '')}</td>
+            </tr>
+            <tr>
+                <td style="background-color: rgb(238, 238, 238);">2</td><td style="background-color: rgb(238, 238, 238);" colspan="4">Add:</td>
+            </tr>
+            <tr>
+                <td style="background-color: rgb(238, 238, 238);" colspan="5">Amount Debited in Bank Statement but not entered in Cashbook as on (Row 1)</td>
+            </tr>
+            `;
+        dataElements.bankReconciliation.forEach((deids, idx) => {
+            count = 0;
+            let val = 0;
+            deids.forEach((id, index) => {
+                if (index == 0) tableRow += `<tr><td>${chars[count++]}</td>`;
+                else if (index % 4 == 0) {
+                    tableRow += `</tr><tr><td>${chars[count++]}</td>`;
+                    totalCol += Number(val);
+                }
+                tableRow += `<td>${dataValues[id] ? dataValues[id] : ''}</td>`;
+                val = dataValues[id] ? dataValues[id] : '';
+            })
+            if (idx == 0) {
+                tableRow += `<tr>
+                <td colspan="4" style="font-weight:bold">Total (sum of 2)</td> 
+                <td style="font-weight:bold">${(dataValues['nKylfBE3GZg'] ? dataValues['nKylfBE3GZg'] : '')}</td>
+                </tr>
+                <tr>
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold">3</td>
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" colspan="4">Less:</td> 
+                </tr>
+                <tr>
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" colspan="5">Cheque issued and entered in cashbook but not cleared from bank as on (Row 1)</td> 
+                </tr>`
+            } else {
+
+                tableRow += `<tr>
+                <td colspan="4" style="font-weight:bold">Total (sum of 3)</td> 
+                <td style="font-weight:bold">${(dataValues['W54WaupIpFN'] ? Number(dataValues['W54WaupIpFN']) : '')}</td>
+                </tr>
+                <tr>
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold">4</td>
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" colspan="4">Balance as per Cashbook as on (Row 1)</td> 
+                </tr>
+                <tr>
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" colspan="4">(4=1+2-3)</td> 
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" >${(dataValues['gAbkcRGw0oc'] ? Number(dataValues['gAbkcRGw0oc']) : '')}</td>
+                </tr>
+                <tr>
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" colspan="4">Cashbook Balance as on (Row 1)</td> 
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" >${(dataValues['miqd2Td6pdy'] ? Number(dataValues['miqd2Td6pdy']) : '')}</td>
+                </tr>
+                <tr>
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" colspan="4">Difference in BRS</td> 
+                <td style="background-color: rgb(238, 238, 238);font-weight:bold" >${(dataValues['adV6wRr8pSw'] ? Number(dataValues['adV6wRr8pSw']) : '')}</td>
+                </tr>`
+            }
+        })
+
+        document.getElementById('tableBody-bankReconciliation').innerHTML = tableRow;
+
+        var tableRow = `<tr>
+                    <td style="text-align:center;font-family:Tahoma,Geneva,sans-serif;font-weight:bold;background-color: rgb(238, 238, 238);line-height:2"><strong>SI.</strong></td>
+                    <td style="text-align:center;font-family:Tahoma,Geneva,sans-serif;font-weight:bold;background-color: rgb(238, 238, 238);line-height:2"><strong>Letter No. &amp; Date</strong></td>
+                    <td style="text-align:center;font-family:Tahoma,Geneva,sans-serif;font-weight:bold;background-color: rgb(238, 238, 238);line-height:2"><strong>Amount (Rs)</strong></td>
+                    <td rowspan="7">Certified that out of INR <span style="font-weight:bold"> ${(dataValues['IzDnyREd2QB'] ? dataValues['IzDnyREd2QB'] : '')}</span> grants sanctioned/released in favour of IPA Unit under Mizoram Health Systems Strengthening Project Letter No. given in the margin, a sum of INR <span style="font-weight:bold"> ${(dataValues['KJPVAwpIk0y'] ? dataValues['KJPVAwpIk0y'] : '')}</span> has been utilized for the purpose of assigned activities for which it was sanctioned and the balance of INR <span style="font-weight:bold"> ${(dataValues['Vi2LScZPmG2'] ? dataValues['Vi2LScZPmG2'] : '')}</span>remains unutilized.</td>
+                </tr>`
+        count = 1;
+        dataElements.perfoma.forEach((id, index) => {
+            if (index == 0) tableRow += `<tr><td>${count++}</td>`
+            else if (index % 2 == 0) tableRow += `</tr><tr><td>${count++}</td>`
+            tableRow += `<td>${dataValues[id] ? dataValues[id] : ''}</td>`
+
+        })
+        tableRow += `<tr><td colspan="2">Total</td><td><span style="font-weight:bold">${(dataValues['t8T4uOjrcGx'] ? dataValues['t8T4uOjrcGx'] : '')}</span></td></tr>`
+        document.getElementById('tableBody-perfoma').innerHTML = tableRow;
+
+        document.getElementById("loader").style.display = "none";
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = `${excelName}.xls`;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
