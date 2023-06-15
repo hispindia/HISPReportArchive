@@ -1,0 +1,1341 @@
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+</head>
+
+<body>
+
+    <a id="dlink" style="display:none;"></a>
+
+    <div style="width: 40%; margin-left:30%;">
+        <!-- <table class="table table-borderless table-striped" style="text-align: center;">
+            <tr>
+                <td style="font-size: 15px;padding-top: 15px;">Select Format :</td>
+
+                <td style="width: 60%;"><select class="form-control" id="select-format"
+                        onchange="displayFormat(this.value)">
+                        <option value="nepali">Nepali</option>
+                        <option value="english">English</option>
+                    </select>
+
+            </tr>
+        </table> -->
+        <!-- <div id="nepali-format">
+            <table class="table table-borderless table-striped" style="text-align: center;">
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td style="font-size: 15px;padding-top: 15px;">Select Year :</td>
+                    <td style="width: 60%;"><select class="form-control" id="select-year"
+                            onchange="getMonths(this.value)"></select>
+                </tr>
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td style="font-size: 15px;padding-top: 15px;">Select Month :</td>
+                    <td style="width: 60%;"><select class="form-control" id="select-month"></select>
+                </tr>
+
+            </table>
+
+        </div> -->
+        <div id="english-format">
+            <table class="table table-borderless table-striped" style="text-align: center;">
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td style="font-size: 15px;padding-top: 15px;">Start Date :</td>
+                    <td style="width: 60%;">
+                        <input type="date" class="form-control" id="start-date">
+                    </td>
+                </tr>
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td style="font-size: 15px;padding-top: 15px;">End Date :</td>
+                    <td><input type="date" class="form-control" id="end-date">
+                    </td>
+                </tr>
+
+            </table>
+        </div>
+        <div>
+            <table class="table">
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td><button onClick="submitValues()" class="btn" id="tap">Submit</button></td>
+                    <td style="text-align: right">
+                        <img src="https://img.icons8.com/color/35/000000/ms-excel.png"
+                            onmouseover="this.style.cursor='pointer'"
+                            onClick="tableToExcel('dataTable', 'ART Report', 'ART Report.xls')" alt="xls">
+                        <img src="https://img.icons8.com/ultraviolet/35/000000/print.png" alt="print"
+                            onmouseover="this.style.cursor='pointer'" onclick="printContent('#printData')">
+                        <!-- <span id="csv-download">
+                            <img src="https://img.icons8.com/dusk/35/000000/export-csv.png" alt="print"
+                                onmouseover="this.style.cursor='pointer'" onclick="downloadCSV()">
+                        </span> -->
+                    </td>
+                </tr>
+                <tr id="loader" style="display:none">
+                    <td>
+                        <h2>Loading...</h2>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+    <div id="printData">
+        <table class="table table-bordered reportTable" id="dataTable" style="width:98%;display:none" align="center">
+            <thead id="tableHead">
+            </thead>
+
+            <tbody id="tableBody" style="background:#FBFAFA">
+
+            </tbody>
+
+        </table>
+    </div>
+    <script>
+
+        var tableHeadEng = `<tr>
+                    <td colspan="16"
+                        style="text-align:center; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        12. HIV/AIDS Program
+                    </td>
+                </tr>
+
+                <tr style="text-align:left; color:white">
+                    <td style="background: rgb(39, 102, 150);" colspan="5">
+                        Name of the Facility: &nbsp;<span id="ouName"></span>
+                    </td>
+                    <td style="background: rgb(39, 102, 150);" colspan="4">
+                        Reporting Month: <span id="nepali-date"></span>
+                    </td>
+                    <td style="background: rgb(39, 102, 150);" colspan="3">
+                        Period from: &nbsp;<span id="periodFrom"></span>
+                    </td>
+                    <td style="background: rgb(39, 102, 150);" colspan="4">
+                        Period to: &nbsp;<span id="periodTo"></span>
+                    </td>
+                </tr>
+
+                <tr style="background:#f2f2f2">
+                    <td colspan="2" rowspan="3"> Anteretroviral Tretment:<br> Status of HIV Care </td>
+                    <td rowspan="3" style="text-align:center;"> of This Month</td>
+                    <td colspan="5" style="text-align:center;"> Age Group in Years</td>
+                    <td rowspan="3"> Total </td>
+                    <td colspan="6" style="text-align:center;"> By Target population</td>
+                    <td rowspan="3"> Total </td>
+                </tr>
+
+                <tr style="text-align:center; background:#f2f2f2">
+                    <td colspan="3" style="width:63px;">Adult (15+ years)</td>
+                    <td colspan="2" style="width:63px;">Child (<15 years)</td>
+                    <td rowspan="2" style="width:63px;">SW</td>
+                    <td rowspan="2" style="width:63px;">PWID</td>
+                    <td rowspan="2" style="width:63px;">MSM</td>
+                    <td rowspan="2" style="width:80px;">Migrant</td>
+                    <td rowspan="2" style="width:80px;">Prison inmates</td>
+                    <td rowspan="2" style="width:63px;">others</td>
+                </tr>
+
+                <tr style="background:#f2f2f2">
+                    <td style="width:63px;">F</td>
+                    <td style="width:63px;">M</td>
+                    <td style="width:63px;">TG</td>
+                    <td style="width:63px;">F</td>
+                    <td style="width:63px;">M</td>
+                </tr>
+
+                <tr style="background:#f2f2f2">
+                    <td colspan="2">1</td>
+                    <td style="width:63px;">2</td>
+                    <td style="width:63px;">3</td>
+                    <td style="width:63px;">4</td>
+                    <td style="width:63px;">5</td>
+                    <td style="width:63px;">6</td>
+                    <td style="width:63px;">7</td>
+                    <td style="width:63px;">8</td>
+                    <td style="width:63px;">9</td>
+                    <td style="width:63px;">10</td>
+                    <td style="width:63px;">11</td>
+                    <td style="width:63px;">12</td>
+                    <td style="width:63px;">13</td>
+                    <td style="width:63px;">14</td>
+                    <td style="width:63px;">15</td> 
+                </tr>`
+        // var tableHeadNep = ` <tr>
+        //             <td colspan="16"
+        //                 style="text-align:center; background: rgb(39, 102, 150);font-size:20px; color:white">
+        //                 १२. एचआईभी एड्स कार्यक्रम (ए आर टि केन्द्रले मात्र रिपोर्ट गर्ने )	
+        //             </td>
+        //         </tr>
+
+        //         <tr style="text-align:left; color:white">
+        //             <td style="background: rgb(39, 102, 150);" colspan="5">
+        //                 एआरटी केन्द्रको नाम: &nbsp;<span id="ouName"></span>
+        //             </td>
+        //             <td style="background: rgb(39, 102, 150);" colspan="4">
+        //                 रिपोटिंग महिना: <span id="nepali-date"></span>
+        //             </td>
+        //             <td style="background: rgb(39, 102, 150);" colspan="3">
+        //                 मिति देखी: &nbsp;<span id="periodFrom"></span>
+        //             </td>
+        //             <td style="background: rgb(39, 102, 150);" colspan="4">
+        //                 मिति सम्म: &nbsp;<span id="periodTo"></span>
+        //             </td>
+        //         </tr>
+
+        //         <tr style="background:#f2f2f2">
+        //             <td colspan="2" rowspan="3"> "एन्टिरेट्रोभाइरल उपचार:<br> एचआईभी हेरचाहको स्थिति </td>
+        //             <td rowspan="3" style="text-align:center;"> यस महिनाको</td>
+        //             <td colspan="5" style="text-align:center;"> उमेर समूह वर्षमा</td>
+        //             <td rowspan="3"> जम्मा </td>
+        //             <td colspan="6" style="text-align:center;"> By Target population</td>
+        //             <td rowspan="3"> जम्मा </td>
+        //         </tr>
+
+        //         <tr style="text-align:center; background:#f2f2f2">
+        //             <td colspan="3" style="width:63px;">Adult (15+ years)</td>
+        //             <td colspan="2" style="width:63px;">Child (<15 years)</td>
+        //             <td rowspan="2" style="width:63px;">यौनकर्मी</td>
+        //             <td rowspan="2" style="width:63px;">सुईद्वारा लागू पदार्थ प्रयोग गर्नेहरु</td>
+        //             <td rowspan="2" style="width:63px;">पुरुष समलिगीं तथा तेस्रोलिगीहरु</td>
+        //             <td rowspan="2" style="width:80px;">आप्रवासीहरू वा रोजगारीका लागि विदेशिनेहरु</td>
+        //             <td rowspan="2" style="width:80px;">जेलका कैदी बन्दीहरु</td>
+        //             <td rowspan="2" style="width:63px;">अन्य</td>
+        //         </tr>
+
+        //         <tr style="background:#f2f2f2">
+        //             <td style="width:63px;">महिला</td>
+        //             <td style="width:63px;">पुरुष</td>
+        //             <td style="width:63px;">तेस्रोलिगी</td>
+        //             <td style="width:63px;">महिला</td>
+        //             <td style="width:63px;">पुरुष</td>
+        //         </tr>
+
+        //         <tr style="background:#f2f2f2">
+        //             <td colspan="2">1</td>
+        //             <td style="width:63px;">2</td>
+        //             <td style="width:63px;">3</td>
+        //             <td style="width:63px;">4</td>
+        //             <td style="width:63px;">5</td>
+        //             <td style="width:63px;">6</td>
+        //             <td style="width:63px;">7</td>
+        //             <td style="width:63px;">8</td>
+        //             <td style="width:63px;">9</td>
+        //             <td style="width:63px;">10</td>
+        //             <td style="width:63px;">11</td>
+        //             <td style="width:63px;">12</td>
+        //             <td style="width:63px;">13</td>
+        //             <td style="width:63px;">14</td>
+        //             <td style="width:63px;">15</td> 
+        //         </tr>`
+        var startWeek, endWeek, nepaliDate, CSVNepaliDate, checkValidDate = 1, displayDate = "", CSVFile, username, orgUnit;
+        var CSVFirstRow = "dataelement, period, orgunit, categoryoptioncombo, attroptioncombo, value,	storedby, lastupd, comment";
+
+        // $.ajax({
+        //     async: false,
+        //     type: "GET",
+        //     url: "../../me.json",
+        //     success: function (data) {
+        //         username = data.userCredentials.username;
+        //     }
+        // });
+
+        // var year = "";
+        // var dates = [
+        //     ["2076", "1", "Baisakh", "2019-04-14", "2019-05-14"],
+        //     ["2076", "2", "Jestha", "2019-05-15", "2019-06-15"],
+        //     ["2076", "3", "Asadh", "2019-06-16", "2019-07-16"],
+        //     ["2076", "4", "Shrawan", "2019-07-17", "2019-08-17"],
+        //     ["2076", "5", "Bharda ", "2019-08-18", "2019-09-17"],
+        //     ["2076", "6", "Ashwin", "2019-09-18", "2019-10-17"],
+        //     ["2076", "7", "Kartik", "2019-10-18", "2019-11-16"],
+        //     ["2076", "8", "Mansir", "2019-11-17", "2019-12-16"],
+        //     ["2076", "9", "Poush", "2019-12-17", "2020-01-14"],
+        //     ["2076", "10", "Magh", "2020-01-15", "2020-02-12"],
+        //     ["2076", "11", "Falgun", "2020-02-13", "2020-03-13"],
+        //     ["2076", "12", "Chaitra", "2020-03-14", "2020-04-12"],
+        //     ["2077", "1", "Baisakh", "2020-04-13", "2020-05-13"],
+        //     ["2077", "2", "Jestha", "2020-05-14", "2020-06-14"],
+        //     ["2077", "3", "Asadh", "2020-06-15", "2020-07-15"],
+        //     ["2077", "4", "Shrawan", "2020-07-16", "2020-08-16"],
+        //     ["2077", "5", "Bharda", "2020-08-17", "2020-09-16"],
+        //     ["2077", "6", "Ashwin", "2020-09-17", "2020-10-16"],
+        //     ["2077", "7", "Kartik", "2020-10-17", "2020-11-15"],
+        //     ["2077", "8", "Mansir", "2020-11-16", "2020-12-15"],
+        //     ["2077", "9", "Poush", "2020-12-16", "2021-01-13"],
+        //     ["2077", "10", "Magh", "2021-01-14", "2021-02-12"],
+        //     ["2077", "11", "Falgun", "2021-02-13", "2021-03-13"],
+        //     ["2077", "12", "Chaitra", "2021-03-14", "2021-04-13"],
+        //     ["2078", "1", "Baisakh", "2021-04-14", "2021-05-14"],
+        //     ["2078", "2", "Jestha", "2021-05-15", "2021-06-14"],
+        //     ["2078", "3", "Asar", "2021-06-15", "2021-07-15"],
+        //     ["2078", "4", "Shrawan", "2021-07-16", "2021-08-16"],
+        //     ["2078", "5", "Bhadra", "2021-08-17", "2021-09-16"],
+        //     ["2078", "6", "Ashwin", "2021-09-17", "2021-10-17"],
+        //     ["2078", "7", "Kartik", "2021-10-18", "2021-11-16"],
+        //     ["2078", "8", "Mansir", "2021-11-17", "2021-12-15"],
+        //     ["2078", "9", "Poush", "2021-12-16", "2022-01-14"],
+        //     ["2078", "10", "Magh", "2022-01-15", "2022-02-12"],
+        //     ["2078", "11", "Falgun", "2022-02-13", "2022-03-14"],
+        //     ["2078", "12", "Chaitra", "2022-03-15", "2022-04-13"],
+        //     ["2079", "1", "Baisakh", "2022-04-14", "2022-05-14"],
+        //     ["2079", "2", "Jestha", "2022-05-15", "2022-06-14"],
+        //     ["2079", "3", "Asar", "2022-06-15", "2022-07-16"],
+        //     ["2079", "4", "Shrawan", "2022-07-17", "2022-08-16"],
+        //     ["2079", "5", "Bhadra", "2022-08-17", "2022-09-16"],
+        //     ["2079", "6", "Ashwin", "2022-09-17", "2022-10-17"],
+        //     ["2079", "7", "Kartik", "2022-10-18", "2022-11-16"],
+        //     ["2079", "8", "Mansir", "2022-11-17", "2022-12-15"],
+        //     ["2079", "9", "Poush", "2022-12-16", "2023-01-14"],
+        //     ["2079", "10", "Magh", "2023-01-15", "2023-02-12"],
+        //     ["2079", "11", "Falgun", "2023-02-13", "2023-03-14"],
+        //     ["2079", "12", "Chaitra", "2023-03-15", "2023-04-13"]
+        // ];
+
+
+
+
+        // dates.forEach(date => {
+        //     if (year != date["0"]) {
+        //         document.querySelector("#select-year").innerHTML += '<option>' + date["0"] + '</option>';
+        //         year = date["0"]
+        //     }
+        // });
+
+        // dates.forEach(date => {
+        //     if (date["0"] == document.querySelector("#select-year").value) document.querySelector("#select-month").innerHTML += '<option>' + date["2"] + '</option>';
+
+        // });
+
+        // function getMonths(value) {
+        //     document.querySelector("#select-month").innerHTML = ''
+        //     dates.forEach(date => {
+        //         if (date["0"] == value) document.querySelector("#select-month").innerHTML += '<option>' + date["2"] + '</option>';
+        //     });
+        // }
+
+        // displayFormat("nepali")
+        // function displayFormat(value) {
+        //     if (value == "nepali") {
+        //         document.getElementById('nepali-format').style.display = '';
+        //         document.getElementById('english-format').style.display = 'none';
+        //         // document.getElementById('csv-download').style.display = '';
+        //     }
+        //     else if (value == "english") {
+        //         document.getElementById('nepali-format').style.display = 'none';
+        //         document.getElementById('english-format').style.display = '';
+        //         // document.getElementById('csv-download').style.display = 'none';
+        //     }
+        // }
+
+        function submitValues() {
+            // var formatSelection = document.querySelector("#select-format").value;
+
+            // if (formatSelection == "english") 
+            document.getElementById('tableHead').innerHTML = tableHeadEng;
+            // else document.getElementById('tableHead').innerHTML = tableHeadNep;
+
+            // if (formatSelection == "english") {
+                startWeek = document.querySelector("#start-date").value;
+                endWeek = document.querySelector("#end-date").value;
+            // }
+            // else {
+            //     dates.forEach(date => {
+            //         if (document.querySelector("#select-year").value == date["0"] && document.querySelector("#select-month").value == date["2"]) {
+            //             startWeek = date["3"];
+            //             endWeek = date["4"];
+            //         }
+            //     });
+            // }
+
+
+            if (new Date(startWeek) > new Date(endWeek) || !startWeek || !endWeek) {
+                alert("Please select dates correctly");
+                return;
+            }
+
+            // for (let i = 0; i < dates.length; i++) {
+
+            //     if (dates[i]["3"] == startWeek && dates[i]["4"] == endWeek) {
+            //         nepaliDate = dates[i]["2"] + " " + dates[i]["0"];
+            //         //CSVNepaliDate = dates[i]["1"] >= 10 ? dates[i]["1"] + "" + dates[i]["0"] : "0" + dates[i]["1"] + "" + dates[i]["0"];
+            //         CSVNepaliDate = dates[i]["1"] >= 10 ? dates[i]["0"] + dates[i]["1"] : dates[i]["0"] + "0" + dates[i]["1"];
+            //         document.querySelector("#nepali-date").innerHTML = nepaliDate
+            //         checkValidDate = 0;
+            //     }
+
+            // }
+
+
+            // if (checkValidDate && formatSelection == 'nepali') {
+            //     alert("Please select dates according to chart");
+            //     return;
+            // }
+
+            document.querySelector("#loader").style.display = "block";
+            document.querySelector(".reportTable").style.display = "none";
+            setTimeout(() => getData(), 1000);
+        }
+
+        function getData() {
+
+            //DHIS2
+            orgUnit = dhis2.report.organisationUnit;
+
+            ////Initializing and defining dates
+
+
+            document.querySelector("#periodFrom").innerHTML = startWeek;
+            document.querySelector("#periodTo").innerHTML = endWeek;
+            document.querySelector("#ouName").innerHTML = orgUnit.name;
+
+            var getBetweenDates = function (startDate, endDate) {
+                var arr = [], lastDay, start, end;
+                var startYear = startDate.split("-");
+                var endYear = endDate.split("-");
+
+                for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+
+                    startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                    endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                    for (var j = startMonth; j <= endMonth; j++) {
+                        startDay = (i == startYear["0"] && startMonth == j) ? parseInt(startYear["2"]) : 1;
+                        lastDay = (endYear["0"] == i && endMonth == j) ? endYear["2"] : new Date(i, j, 0).getDate();
+
+                        for (var k = startDay; k <= lastDay; k++) {
+                            let checkMonth = j < 10 ? i + "0" + j : i + "" + j;
+                            let value = k < 10 ? checkMonth + "0" + k : checkMonth + "" + k;
+                            arr.push(value);
+                        }
+                    }
+                }
+
+                return arr;
+            }
+
+            //getting between dates
+            var swToEw = getBetweenDates(startWeek, endWeek);
+
+            //Initializing and defining Variables
+            var variables = [];
+
+            var characters = getChar("a", "n");
+            characters.forEach(char => {
+                variables[char + "firstTotal"] = 0;
+                variables[char + "secondTotal"] = 0;
+                for (let i = 1; i <= 11; i++) {                
+                    variables[char + "Col" + i] = 0;
+                }
+            })
+debugger;
+            var indexCSV = -1;
+            CSVFile = [
+                [
+                    ["Dfpwp9Bp6eg", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["Dfpwp9Bp6eg", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["Dfpwp9Bp6eg", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["y5KckCYZzfS", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["y5KckCYZzfS", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["y5KckCYZzfS", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["y5KckCYZzfS", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["y5KckCYZzfS", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["y5KckCYZzfS", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["yNQQGHTXTJ0", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["HIptswXE1BW", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["wWvhqyh4vbC", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["nGNG0BdF8n3", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["BAsklhJD8MV", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["dhe017xyLsC", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["dhe017xyLsC", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["dhe017xyLsC", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["vdqRk3zgt2G", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["vdqRk3zgt2G", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["vdqRk3zgt2G", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["vdqRk3zgt2G", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["vdqRk3zgt2G", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["vdqRk3zgt2G", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["s3HgfClbHwP", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["u14mcG0S7Bb", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["I5NP2ZQ4u6S", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["iInDBX9R80V", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["JntGaiMvUt3", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["ytgVG27rddi", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["ytgVG27rddi", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["ytgVG27rddi", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["EhYb3Av3q4w", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["EhYb3Av3q4w", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["EhYb3Av3q4w", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["EhYb3Av3q4w", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["EhYb3Av3q4w", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["EhYb3Av3q4w", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["UnAxEwAERW6", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["fI8krtWBrDy", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["q8icrHhC7Rx", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["t9ndcF9Blws", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["ZZxwqAk6JY9", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["IjLRIs9Ufuc", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["IjLRIs9Ufuc", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["IjLRIs9Ufuc", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["z0sS4EB9Ee6", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["z0sS4EB9Ee6", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["z0sS4EB9Ee6", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["z0sS4EB9Ee6", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["z0sS4EB9Ee6", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["z0sS4EB9Ee6", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["dHByAgYhC7S", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["QcE23uiZsyB", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["jkfyO0k1muV", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["i2aiZ4X5Opg", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["JuxMk2Cv48W", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["VTPzgOy8v1J", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["VTPzgOy8v1J", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["VTPzgOy8v1J", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["cjFUJWOxWXK", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["cjFUJWOxWXK", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["cjFUJWOxWXK", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["cjFUJWOxWXK", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["cjFUJWOxWXK", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["cjFUJWOxWXK", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["TuFfRWcs4q5", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["u0qs29j6kak", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["bq8d6lLt9of", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["kXDDtBNaahy", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["Ju2H03xV5MB", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["f1lLrBqfG9H", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["f1lLrBqfG9H", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["f1lLrBqfG9H", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["RYF4gSRzLf8", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["RYF4gSRzLf8", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["RYF4gSRzLf8", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["RYF4gSRzLf8", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["RYF4gSRzLf8", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["RYF4gSRzLf8", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["WTHz5Cl7hCn", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["R9uDOsijczt", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["QDOFx4zCqKl", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["HYFNlUaleZp", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["HuNoTsZbMqg", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["rUm8EqPUGFg", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["rUm8EqPUGFg", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["rUm8EqPUGFg", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["PyfHIBmtYJJ", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["PyfHIBmtYJJ", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["PyfHIBmtYJJ", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["PyfHIBmtYJJ", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["PyfHIBmtYJJ", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["PyfHIBmtYJJ", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["XXKLiqGFslF", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["sDBMum0WaXH", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["iOshqCeXzeJ", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["bSoW68OH9o9", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["fXUjU2NENoE", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["ef8SIyhwKuJ", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["ef8SIyhwKuJ", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["ef8SIyhwKuJ", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["SwSGrR1H1Q5", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["SwSGrR1H1Q5", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["SwSGrR1H1Q5", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["SwSGrR1H1Q5", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["SwSGrR1H1Q5", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["SwSGrR1H1Q5", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["cOx1pmWIru1", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["zrVbajhx7yX", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["TZ9aaMnvACx", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["lXFDjVbzyXb", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["FTR1una7T31", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["nd8jYqTaOHg", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["nd8jYqTaOHg", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["nd8jYqTaOHg", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["RiQVQ2iw4mS", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["RiQVQ2iw4mS", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["RiQVQ2iw4mS", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["RiQVQ2iw4mS", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["RiQVQ2iw4mS", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["RiQVQ2iw4mS", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["gGvbNsMJPQm", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["W5TR7MU9QyU", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["RlQlOXbiM84", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["LaOClghgney", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["oWUU4DqJmqw", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["AbTEuaoSELE", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["AbTEuaoSELE", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["AbTEuaoSELE", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["mUZIMjC5Lgl", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["mUZIMjC5Lgl", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["mUZIMjC5Lgl", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["mUZIMjC5Lgl", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["mUZIMjC5Lgl", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["mUZIMjC5Lgl", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["A1gm00vf1Te", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["aVCKMtrYtFZ", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["aNkEjtuVgHB", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["DhfcAxfAzkM", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["a0nSz81Kqrn", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["tn9cjpz0wlM", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["tn9cjpz0wlM", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["tn9cjpz0wlM", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["zQCYGGlopTX", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["zQCYGGlopTX", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["zQCYGGlopTX", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["zQCYGGlopTX", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["zQCYGGlopTX", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["zQCYGGlopTX", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["MWfKyF6FNtA", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["pIlsfv2R02U", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["YqsjYvJGx6n", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["R1KIAa1xf9c", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["OcbmNiw5Nco", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["NIncJFoC5jz", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["NIncJFoC5jz", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["NIncJFoC5jz", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["gEDED3iBK4Z", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["gEDED3iBK4Z", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["gEDED3iBK4Z", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["gEDED3iBK4Z", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["gEDED3iBK4Z", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["gEDED3iBK4Z", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["Gwu4BiIvzEv", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["EjsqZXWFJeO", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["V7eiaUjZQe7", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["eRtJ0TCUrlq", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["qy51dae19sp", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["gxVkm6Ghk2O", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["gxVkm6Ghk2O", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["gxVkm6Ghk2O", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["tpENHoi7ADL", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["tpENHoi7ADL", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["tpENHoi7ADL", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["tpENHoi7ADL", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["tpENHoi7ADL", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["tpENHoi7ADL", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["QL8FSy9fzq0", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["UEUGYee9ID6", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["WPpHBI4jIGe", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["WPAb4c9wE4a", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["z0VIwr257te", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["WGiO1rltR47", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["WGiO1rltR47", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["WGiO1rltR47", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["MsTypY9oSsR", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["MsTypY9oSsR", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["MsTypY9oSsR", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["MsTypY9oSsR", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["MsTypY9oSsR", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["MsTypY9oSsR", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["fMg4iCAHIOU", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["YVzMXYirLes", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["FYU7BAIF9Uc", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["lkoaDxBxZ0U", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["QEk1Ya41KHa", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["NpxUtD1P3Q5", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["NpxUtD1P3Q5", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["NpxUtD1P3Q5", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["oJ74Pwc6hoc", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["oJ74Pwc6hoc", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["oJ74Pwc6hoc", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["oJ74Pwc6hoc", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["oJ74Pwc6hoc", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["oJ74Pwc6hoc", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["MbcqGfPrGeX", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["Vb6GP5jTqmJ", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["TIm9nN6JbSm", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["ULrl1kUhUQc", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["I9xOzLn6cve", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["rtjkj8mjGrP", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["rtjkj8mjGrP", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["rtjkj8mjGrP", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["DOWjmqnYeCK", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["DOWjmqnYeCK", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["DOWjmqnYeCK", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["DOWjmqnYeCK", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["DOWjmqnYeCK", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["DOWjmqnYeCK", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["aeFlWw91sZY", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["p01aRb1qhnU", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["oduOaeVMfK0", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["pwS4W4mkGgw", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["VBXVd9cE6OG", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["VX8FGeSFvco", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["VX8FGeSFvco", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["VX8FGeSFvco", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["QjnWn1kMHgO", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["QjnWn1kMHgO", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["QjnWn1kMHgO", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["QjnWn1kMHgO", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["QjnWn1kMHgO", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["QjnWn1kMHgO", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["wF6U6thyYxA", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["Dkm3mX78c9p", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["TqA1ck80DH9", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["cE4xfNTvEd1", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["HVH7nMpAcIV", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["nMRD1gR2CSk", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["nMRD1gR2CSk", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["nMRD1gR2CSk", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["eapa1RBdrE6", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["eapa1RBdrE6", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["eapa1RBdrE6", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["eapa1RBdrE6", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["eapa1RBdrE6", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["eapa1RBdrE6", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["PCRKhf3x2zK", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["FeUQY7koyPp", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["XpPsC2o79PK", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["WcmGlwN4mTT", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["FWNKU2gsaXU", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["k2zV9h0cjHX", CSVNepaliDate, orgUnit.id, "fWqT46wDX5G", "kdsirVNKdhm"],
+                    ["k2zV9h0cjHX", CSVNepaliDate, orgUnit.id, "mF1o6p14lxL", "kdsirVNKdhm"],
+                    ["k2zV9h0cjHX", CSVNepaliDate, orgUnit.id, "YDmqM7oj6C1", "kdsirVNKdhm"],
+                    ["aJ7Yz5biMlK", CSVNepaliDate, orgUnit.id, "PDouOXBnSPw", "kdsirVNKdhm"],
+                    ["aJ7Yz5biMlK", CSVNepaliDate, orgUnit.id, "YfCTLZmiY5T", "kdsirVNKdhm"],
+                    ["aJ7Yz5biMlK", CSVNepaliDate, orgUnit.id, "o0134THTQXy", "kdsirVNKdhm"],
+                    ["aJ7Yz5biMlK", CSVNepaliDate, orgUnit.id, "z2bxJhWhMcM", "kdsirVNKdhm"],
+                    ["aJ7Yz5biMlK", CSVNepaliDate, orgUnit.id, "trnKpl8MJbO", "kdsirVNKdhm"],
+                    ["aJ7Yz5biMlK", CSVNepaliDate, orgUnit.id, "d75tEyYSaqe", "kdsirVNKdhm"],
+                    ["X6IpOy252QM", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["ediJk8gwwEZ", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["JxlKc8ZxPq4", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["Vqu5QiAlI6j", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["wmSwfKdHcD4", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"]
+                ], [
+                    ["zg74KFtP35J", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["BHkkuYXJJKJ", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["xTml3SOhUqn", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["eSdaK3mmfLU", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                ], [
+                    [], [], [], [], [],
+                    [], [], [], [], [],
+                    // ["XRueRJcjPwo", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["DuGZ1dIDECT", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["SaA50p3D7fU", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["fUQfm6qWDpP", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["gmAXDsUFOYO", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["tYwL7EwnE7u", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["FBYoe7zvMXs", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["Zk8ph98kqdc", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["Tl0FNaECmny", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["HFDZ7kN5pmT", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+
+                    ["igAXw5g35fh", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["d2vSY1hagFc", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["G7rsumOBlCN", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["yDkMJ0U8OVG", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [], [], [], [],
+                    [], [], [], [], [],
+                    [], [],
+                    // ["FW5oGJifMt6", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["EzUytGFVzka", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [],
+                    [], [],
+                    // ["QQV5hQUnOrs", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["glKZpzMTC7w", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [],
+                    [], [],
+                    // ["n6PojEQIPEs", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["lsoDFxP8MQ8", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [], [], [], [], [],
+                    [], [], [], [],
+
+                    ["Tl0FNaECmny", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["HFDZ7kN5pmT", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["pay1yrIOr5q", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["nSyYEGGJHTj", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [], [], [], [],
+                    [], [], [], [], [],
+                    ["XRueRJcjPwo", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    ["DuGZ1dIDECT", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [], [], [], [], [],
+                    //Second line
+                    [], [], [], [],
+                    // ["jBs4xeN8Byq", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["L0W3iL5hAHF", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["O3jeNHjDpyH", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["VeBMBJ0ej7B", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+
+                    [], [],
+                    [], [], [], [],
+                    // ["KPxlkDs4VFT", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["wJDEG6KeoAW", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["xHbpUWi1b8l", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["IHriOClCNae", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+
+                    [], [],
+                    [], [], [], [], [], [],
+                    // ["pqoyUH67k8N", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["NBdUF36UV5L", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["ONiyYjKy5Gq", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["AyeMRrseKy9", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["LnfcGKfW3vJ", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["FFovJBtMWsP", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [],
+                    [], [], [], [], [], [],
+                    // ["Lh4QKG8M43V", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["cWaqQJgP74O", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["S3WI0dv2eCQ", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["rZtoL0JEhdz", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["kvlhQVZ7mMc", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["HfmyedobQSN", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [], [], [],
+                    [], [], [], [],
+                    [], [],
+                    // ["SZEM8OJfp6x", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    // ["aBJmSkPPmGQ", CSVNepaliDate, orgUnit.id, "kdsirVNKdhm", "kdsirVNKdhm"],
+                    [], [],
+                    [], [],
+                    //Third Line 
+                    [], [],
+
+                ]]
+            var ids = [
+                ['AM2UlJTIv3T', 'YKKQmj4ENTy', 'VaYBFHfr5vB', 'UjYFHNozrnW', 'h6UU7fJNkez', 'ht5UD6UweLi', 'jAyHNleIeUF', 'xPbkfVnHnAb', 'YTyfolsnUhh', 'OIUpE0k1Fzz', 'vcFk6C2BZCx'],
+                ['EnyIfapFjUC', 'cxsT6EjD6LV', 'NgYO0OJ1oAG', 'e7rqQ7Ddm5A', 'Nw3AcYkPU8w', 'HWjz7YHMITl', 'YtlCoCY1ltY', 'T2OpeejXpuL', 'aBmjlD0eg4s', 'I6ZMnMP684A', 'CecNeo7hkGo'],
+                ['U21pDtZtbxi', 'JTduG9YPNA5', 'Z8DZtrI3BZv', 'gS7lLoG9yHw', 'kJxyWNRNF0X', 'fUvMOz0wuNX', 'nfGFWgshr4U', 'vwrkiA4PKFK', 'TbHkK20qbeM', 'ugqJH18S01P', 'ibybYd8z32D'],
+                ['l1d9sTLwCgX', 'ifi0a9k73Vw', 'WAH1jG2hDhH', 'k0hVBkN586K', 'qDsEW2JUFSZ', 'JE0LFd2GdF1', 'GWPn6mjRIaX', 'tbrIDEtHlUr', 'QWsmb8ICHNJ', 'zzPFQ97N5FF', 'fBUuRJaHx8x'],
+
+
+                ['GpimHf3unU2', 'JzTtdtE5Wr3', 'mLXhL0oCwur', 'xywrRfx7QYj', 'nIIRCtsRIjC', 'xXmLBmFdZzP', 'vOEbj9TujS9', 'a4WIwYx4k4H', 'iFxDyUBnTSI', 'fnfsZHs1EdT', 'bx4PuunRFpu'],
+                ['L5O5wVlVb05', 'zvujU2nQcmu', 'Uj9puvAVgkl', 'rdPudqDl4kV', 'BkIyBwTSN95', 'TTt6gMLDHwN', 'tte14jf71XS', 'kivKlxbZ8am', 'swz2j3Ez5YX', 'L1yVVbueNx0', 'lR9R5bMDZH2'],
+                ['yhYeFtkYX6z', 'pc4vovrEE4E', 'G2275NXGNpb', 'wgHp2ZEhXpf', 'xnvcuNvdyZj', 'PBfvSshtMu0', 'IBzyNXDIqet', 'PRiYmYAw4y7', 'le5C8HSvkfb', 'G3RrvAnstvd', 'dUzAe3ZsP15'],
+                ['IB0JsseZlyh', 'JjrlIVGOymH', 'gwK6uHC7lI2', 'elHuI7ZMO8v', 'C1UMFKLTUiu', 'Z2Os14Ljyrs', 'M09klseBWm7', 'HhGkrnVf4br', 'LtNQDUzmFAQ', 'ywHa5onLRQT', 'YhgpeJxmld8'],
+                ['PpsyxjQyUmU', 'OLbzri3COhr', 'GRLuyIWM0Fr', 'Fkt7oF7dBvJ', 'VEzj4Tea0yK', 'OGhyxH6RBKi', 'FV5VCAz6VuI', 'BZc1ECoag5l', 'jET16btk8U3', 'znV0MwvS7r5', 'WN3Skp3lxhz'],
+
+
+                ['YoBiNF506Ks', 'K19GgWmvdrZ', 'F9cu0Va5iTu', 'xeA69SRHS4Z', 'FxnfftDYKSQ', 'eREozACQBiT', 'ShNGGyv2wdN', 'iv5YFd6rVsz', 'PNQypwiL9L6', 'Z1zAp1DZhSi', 'Q5KTt9Hin1m'],
+                ['PkOsES9bGuT', 'lrqZlSW6W0H', 'psjqsWhQs0L', 'gk6If3lhewL', 'h8T80dnreMO', 'OImXFT0oWWC', 'tL6O27RrD3a', 'XAA0uynb0lj', 'dwwNCiKwNMC', 'CTzd9pUhAhc', 'Ls8lruVXIHr'],
+                ['JYyIvml15hX', 'x0Vf0VUQHW9', 'tRLfBlWF9sD', 'jBBtr3lWKhB', 'hFr3k4NgFAu', 'vXZmYo8JeAY', 'w6hMkcrQjf3', 'godcLbdmPc0', 'KIQkC60aF7T', 'H1sAZdDaNCa', 'WO3IoBGMQyx'],
+                ['QDFQy9TQCIY', 'jMwWTNUMIZf', 'RUZXpiiktUQ', 'FZAVFxJioMS', 'r9gyDFAcdD1', 'ZqqmYwl5Uy2', 'Gn0SZzQzD63', 'bHgLLgZAHc3', 'u7guH06NmNG', 'WXy5IX2ddou', 'lYKiX3TFKR7'],
+                ['lqC4lmEUuNl', 'gTBojEyEct5', 'zq1UvB4v6U4', 'mVibwiDu0uR', 'DGyQDQ0a9S5', 'Kanh4QquasJ', 'vht5ZGaMr89', 'QrxuAJMaQ5F', 'cCAG6PbceHY', 'QZSAFAxjjXi', 'AOPpfpRKaI9'],
+
+            ];
+
+
+            var dimension = [...ids["0"], ...ids["1"], ...ids["2"], ...ids["3"], ...ids["4"], ...ids["5"], ...ids["6"],
+            ...ids["7"], ...ids["8"], ...ids["9"], ...ids["10"], ...ids["11"]].join(";");
+
+            var col = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"];
+            var period = swToEw.reverse().join(";");
+
+            storeData(orgUnit.id, dimension, period, col);
+
+
+
+            var col2 = ["m", "n"];
+            dimension1 = [...ids["12"], ...ids["13"]].join(";");
+
+debugger;
+            storeData(orgUnit.id, dimension1, period, col2);
+
+
+            function storeData(ou, dimension, period, col) {
+
+                $.ajax({
+                    async: false,
+                    type: "GET",
+                    url: "../../analytics.json?dimension=ou:" + ou + "&dimension=dx:" + dimension + "&filter=pe:" + period + "&displayProperty=NAME&outputIdScheme=UID",
+                    success: function (res) {
+                        var ids = dimension.split(";")
+                        assignData(ids, res.rows, col);
+                    }
+                });
+
+                function assignData(ids, res, col) {
+                    var count = -1, counter = 0;
+                    ids.forEach((id, index) => {
+                        if (index % 11 == 0) {
+                            count++;
+                            counter = 0;
+                        }
+                        counter++;
+
+                        for (let i = 0; i < res.length; i++) {
+                            let data = res[i];
+
+                            if (id == data["0"]) {
+                                variables[col[count] + "Col" + counter] = Number(data["2"]);
+                                counter <= 5 ? variables[col[count] + "firstTotal"] += Number(data["2"]) : variables[col[count] + "secondTotal"] += Number(data["2"]);
+                                break;
+                            }
+                        }
+                    });
+                }
+
+            }
+            debugger;
+            var rowTotalFirst = [];
+            var rowTotalSecondItem = [];
+            var rowTotalSecond = [];
+            var rowTotalThird = [];
+            var printTable = '';
+
+            // if (formatSelection == 'english') 
+            printTable = '<tr>\
+                                <td colspan="2"> Clients currently on ART at the end of last month </td>\
+                                <td> Beginning (1a) </td>'
+                + createVariable("a") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2"> New clients started ART </td>\
+                                <td> New (1b) </td>'
+                + createVariable("b") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2"> Clients on ART transferred in </td>\
+                                <td> New (1c) </td>'
+                + createVariable("c") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2"> Clients rejoined/restarted from T.Out/MIS/LFU/ST </td>\
+                                <td> New (1d) </td>'
+                + createVariable("d") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2" > Number of Clients currently on ART at the beginning of this month </td>\
+                                <td> Cumulative (2)= 1a+1b+1c+1d </td>'
+                + createVariable("rowTotalFirst") +
+                '</tr>\
+                            <tr>\
+                                <td rowspan="5" >Deduction </td>\
+                                <td> New Clients on ART transfer-out (T.Out) during this month </td>\
+                                <td> New T.Out (3a) </td>'
+                + createVariable("e") +
+                '</tr>\
+                            <tr>\
+                                <td> New Deaths reported (D) during this month </td>\
+                                <td> New Death (3b) </td>'
+                + createVariable("f") +
+                '</tr>\
+                            <tr>\
+                                <td> New Clients Missing (MIS) during this month </td>\
+                                <td> New MIS (3c) </td>'
+                + createVariable("g") +
+                '</tr>\
+                            <tr>\
+                                <td> Total Clients lost to follow-up (LFU) </td>\
+                                <td> New LFU (3d) </td>'
+                + createVariable("h") +
+                '</tr>\
+                            <tr>\
+                                <td> New Clients Stopping Treatment (ST) ART during this month </td>\
+                                <td> New ST (3E) </td>'
+                + createVariable("i") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2" > Number of Clients currently on ART at the end of this month </td>\
+                                <td> End (4)=(2)-(3a+3b+3c+3d+3e) </td>'
+                + createVariable("rowTotalSecond") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2" > Number of PLHIV who know their HIV status based on treatment data (auto calculate) </td>\
+                                <td> Alive (5)=4+3c+3d+3e </td>'
+                + createVariable("rowTotalThird") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2"> Cummulative number of clients tested for viral load among currently on ART </td>\
+                                <td> Cummulative number (6) </td>'
+                + createVariable("j") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2"> Cummulative number of clients with suppressed viral load (Viral Load less than 1000 copies/ml) among currently on ART </td>\
+                                <td> Cummulative number (7) </td>'
+                + createVariable("k") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2" > Cumulative number of clients diagnosed with Hepatitis "C" among currently on ARTat the end of this month </td>\
+                                <td> (HCV/HIV coinfection) Cumulative number (8) </td>'
+                + createVariable("l") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2" > Number of people living with HIV newly initiated on ART who were screened for TB during this month </td>\
+                                <td> TB Screening among New on ART (9) </td>'
+                + createVariable("m") +
+                '</tr>\
+                            <tr>\
+                                <td colspan="2" > Number of people living with HIV newly initiated on ART who were diagnosed with TB during this month </td>\
+                                <td> TB Diagnosed among New on ART (10) </td>'
+                + createVariable("n") +
+                '</tr>';
+
+
+            // if (formatSelection == 'nepali') printTable = '<tr>\
+            //                     <td colspan="2"> गत महिनाको अन्त्यमा एआरटीमा रहेका सेवाग्राही </td>\
+            //                     <td> शुरुमा  (१ ए ) </td>'
+            //     + createVariable("a") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2"> नयाँ एआरटी शुरु गरेका  सेवाग्राही	 </td>\
+            //                     <td> नयाँ  (१ बी ) </td>'
+            //     + createVariable("b") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2"> अन्य एआरटी केन्द्रबाट स्थानान्तरण भएर आएका सेवाग्राहीहरु  ( clients transferred in)	 </td>\
+            //                     <td> नयाँ  (१ सी ) </td>'
+            //     + createVariable("c") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2">  पुन: उपचारमा (T.Out/MIS/LFU/ST) सामेल भएका सेवाग्राहीहरू</td>\
+            //                     <td> नयाँ (१ डी ) </td>'
+            //     + createVariable("d") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2" > यस महिनाको शुरुमा एआरटीमा रहेका सेवाग्राहीको  संख्या	 </td>\
+            //                     <td> शुरुमा  (२ )= १ ए +१ बी +१ सी+१डी  </td>'
+            //     + createVariable("rowTotalFirst") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td rowspan="5" >कटौती गर्ने /घटाउने संख्या 	 </td>\
+            //                     <td> यस महिनामा एआरटी केन्द्रबाट बाहिर  स्थानान्तरण (T.Out) भएका  नयाँ सेवाग्राहीहरु  </td>\
+            //                     <td> नयाँ  T.Out (३ ए )	</td>'
+            //     + createVariable("e") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td> यस महिनामा नयाँ मृत्यु रिपोर्ट भएका सेवाग्राहीहरु  </td>\
+            //                     <td> नयाँ  Death (३ बी ) </td>'
+            //     + createVariable("f") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td> यस महिनामा  हराइरहेका  नयाँ सेवाग्राहीहरु  </td>\
+            //                     <td> नयाँ  Missing (३ सी ) </td>'
+            //     + createVariable("g") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td> यस महिनामा फलो-अपमा  हराइरहेका  नयाँ सेवाग्राहीहरु  </td>\
+            //                     <td> नयाँ  Lost to Follow  Up </td>'
+            //     + createVariable("h") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td> यस महिनामा  उपचार रोकिएका  नयाँ सेवाग्राहीहरु </td>\
+            //                     <td> नयाँ  ST (३ ई ) </td>'
+            //     + createVariable("i") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2" > यस महिनाको अन्त्यमा एआरटीमा रहेका सेवाग्राहीको  संख्या	 </td>\
+            //                     <td> अन्त्यमा (४ )=(२ )-(३ ए +३ बी +३ सी +३ डी +३ई ) </td>'
+            //     + createVariable("rowTotalSecond") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2" > आफ्नो एचआइभीको  अवस्था  थाहा पाउने पीएलएचआईभीको संख्या (स्वत: गणना) </td>\
+            //                     <td> Alive (५) =४ +३ सी +३ डी +३ ई 	</td>'
+            //     + createVariable("rowTotalThird") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2"> हाल एआरटीमा भाइरल लोडको लागि परीक्षण गरिएका ग्राहकहरूको संचयी संख्या	 </td>\
+            //                     <td> संचयी संख्या (cumulative number) (६ ) </td>'
+            //     + createVariable("j") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2"> हाल एआरटीमा रहेको भाइरल लोड (भाइरल लोड 1000 प्रति/एमएल भन्दा कम) भएका ग्राहकहरूको संचयी संख्या </td>\
+            //                     <td> संचयी संख्या (cumulative number) (७ ) </td>'
+            //     + createVariable("k") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2" > यस महिनाको अन्त्यमा एआरटीमा रहेका मध्य हेपाटाइटिस "सि" (HCV) पत्ता लागेका जम्मा सेवाग्राहीहरुको संख्या </td>\
+            //                     <td> HCV पत्ता लागेको संख्या (HCV/HIV coninfection) (cumulative number) (८)	 </td>'
+            //     + createVariable("l") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2" > यस महिनामा नयाँ एआरटी शुरु गरेका मध्य टि. वि. परिक्षण गरिएका सेवाग्राहीहरुको संख्या </td>\
+            //                     <td> टि. वि. परिक्षण गरिएका (TB Screening among New on ART) (९)	 </td>'
+            //     + createVariable("m") +
+            //     '</tr>\
+            //                 <tr>\
+            //                     <td colspan="2" > यस महिनामा नयाँ एआरटी शुरु गरेका मध्य टि. वि. पत्ता लागेका सेवाग्राहीहरुको संख्या </td>\
+            //                     <td> टि. वि. पत्ता लागेका (TB Diagnosed among New on ART) (१०) </td>'
+            //     + createVariable("n") +
+            //     '</tr>';
+
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../../analytics.json?dimension=ou:" + orgUnit.id + "&dimension=dx:JuNaeGvISfC;aIVUAfbejZR;DESWdVvfFNo;Sl0Vj0BnyjB;tffOJY09Muw;Qh6hzXWbUKV;YFFIGLUBj2F;zEAecfT598r;M0Wr490TBEh;tHXYobOavmA;f8XwO1FpWFq;iZNQ2sbvojL;d5vM2FLxv7A;cMTugvu6oE8;ZwesOS3HeTq;UW0XJzugxVe;u9ivXTrqmjV;Tf8XgMhnb1S;N2Ob4zQRGsE;bdJwWvkvHjz;iOxAKFWCPwg;ebq0TEJtiGg;rkZIYGlqDLO;cGWods0Ct0M;BPdXtiPSbim;AB61EsKJMyA;Yc71ePn1qjJ;bVh9Ou12qRM;r3n70BDDpQH;MFNG10rRvt1;uK1K7dkrtn0;pg2BN9xFHLW;XZeAaA6f9i1;p2rBtQ2VQfv;FimUxH0a052;QADHWjQmewS;XrhdaR5PW92;YFYupq4YCuR;Mw4wCgLVA5R;z8Wwy5Jr0bU;dVvYvOEAVa0;kTkxBuIqx5L;fN7ffxV3Kqm;bI5JsITSQGX;GNHo6fibQtH;SCK1pMLZRFA;FbLhjMmTY5d;MufP04CW5FM;qubLKxJWbYk;j0mPnWM7qRS;CUe5hA1U3oe;RsQ3EJotkmB;NVWdiytVgC8;Cgss4vnPBF2;OOgwaTSUeqs;HRphhE4n5jN;uoWLFwXpRj3;QFBa1trjb7a;n6TyePOjC0o;odezj1evL1Y;XE5UV6MnzBn;z1rLcfwupR1;toA2KNarvHP;FurWqyTvnOG;hFi6NTdnOZK;fGUw559311t;zvPcdWTn8TY;u0yQESpNtOi;HqFs2I6vtgy;oLB6cMyPjtb;XtLJeCUWoj7;Tp4Gs7jcbNO;nuHFD43SAz9;EydSs2HhIlu;PrypJBf9yv0;Hzc2UO0S7dT;oqjyDmHkaRR;QlAjZrcGzen;hmjMvTcLXV9;NuR5zx2PRog;mdzPjvEvbpB;OaWSdLx1XDX;bQeLA8SyVLZ;R1Lp6xhgBJU;inrkZNIDqdB;PEx775Zonii;V4SV1ibjwfA;jW8IBRGGDeZ;Y98h8b29bf9;ZPzdiUH9dwC;lxXlX6e7OES;sUNu9RwwAkv;qaMAsQkniF2;Pf2zB3K9Cpj;eemHGml1YWb;hk0LyBm3IrR;oeml9aYJ3dg;ONaz3ykRhq6&filter=pe:" + period + "&displayProperty=NAME",
+                success: function (data) {
+
+                    var nw1col4 = 0, nw1col3 = 0, nw1col2 = 0, nw1col1 = 0;
+                    var idFirst = ["JuNaeGvISfC", "aIVUAfbejZR", "DESWdVvfFNo", "Sl0Vj0BnyjB"];
+
+                    for (i = 0; i < data.rows.length; i++) {
+                        if (data.rows[i][0] == idFirst["0"]) {
+                            nw1col1 += parseInt(data.rows[i][2]);
+
+                        }
+                        if (data.rows[i][0] == idFirst["1"]) {
+                            nw1col2 += parseInt(data.rows[i][2]);
+
+                        }
+                        if (data.rows[i][0] == idFirst["2"]) {
+                            nw1col3 += parseInt(data.rows[i][2]);
+
+                        }
+                        if (data.rows[i][0] == idFirst["3"]) {
+                            nw1col4 += parseInt(data.rows[i][2]);
+
+                        }
+                    }
+
+
+
+
+                    var value = [], count = -1;
+                    var child = [
+                        "ABC/3TC+DTG", "ABC/3TC/DTG", "ABC/3TC+EFV", "ABC/3TC+LPV/r",
+                        "ABC/3TC+NVP", "ABC+3TC+TDF", "ABC+TDF+EFV", "AZT/3TC/NVP",
+                        "AZT/3TC+ABC", "AZT/3TC+DTG", "AZT/3TC+EFV", "TDF/3TC+DRV/r",
+                        "TDF/3TC+DTG", "TDF/3TC/DTG", "TDF/3TC/EFV", "TDF/3TC+NVP",
+                        "TDF/3TC+ATV/r", "TDF/3TC+LPV/r", "TDF/3TC+RAL", "TDF/FTC+ATV/r",
+                        "TDF/FTC+DRV/r", "TDF/FTC+DTG", "TDF/FTC+LPV/r", "TDF/FTC+NVP",
+                        "TDF/FTC+RAL", "TDF/FTC+EFV", "Others regimen",
+
+
+                        "ABC/3TC+ATV/r", "ABC/3TC+DRV/r", "ABC/3TC+RAL", "ABC/3TC+LPV/r",
+                        "AZT/3TC+DRV/r", "AZT/3TC+ABC", "AZT/3TC+ATV/r", "AZT/3TC+LPV/r",
+                        "AZT/3TC+RAL", "TDF/3TC+DRV/r", "TDF/3TC+ATV/r", "TDF/3TC+LPV/r",
+                        "TDF/3TC+RAL", "TDF/FTC+ATV/r", "TDF/FTC+DRV/r", "TDF/FTC+LPV/r",
+                        "TDF/FTC+RAL", "TDF/3TC/DTG", "Others regimen",
+
+                        "RAL+3TC+DRV/r"
+                    ];
+
+                    var id = [
+                        "tffOJY09Muw", "Qh6hzXWbUKV", "YFFIGLUBj2F", "zEAecfT598r", "M0Wr490TBEh", "tHXYobOavmA",
+                        "f8XwO1FpWFq", "iZNQ2sbvojL", "d5vM2FLxv7A", "cMTugvu6oE8", "ZwesOS3HeTq", "UW0XJzugxVe",
+                        "u9ivXTrqmjV", "Tf8XgMhnb1S", "N2Ob4zQRGsE", "bdJwWvkvHjz", "iOxAKFWCPwg", "ebq0TEJtiGg",
+                        "rkZIYGlqDLO", "cGWods0Ct0M", "BPdXtiPSbim", "AB61EsKJMyA", "Yc71ePn1qjJ", "bVh9Ou12qRM",
+                        "r3n70BDDpQH", "MFNG10rRvt1", "uK1K7dkrtn0", "pg2BN9xFHLW", "XZeAaA6f9i1", "p2rBtQ2VQfv",
+                        "FimUxH0a052", "QADHWjQmewS", "XrhdaR5PW92", "YFYupq4YCuR", "Mw4wCgLVA5R", "z8Wwy5Jr0bU",
+                        "dVvYvOEAVa0", "kTkxBuIqx5L", "fN7ffxV3Kqm", "bI5JsITSQGX", "GNHo6fibQtH", "SCK1pMLZRFA",
+                        "FbLhjMmTY5d", "MufP04CW5FM", "qubLKxJWbYk", "j0mPnWM7qRS", "CUe5hA1U3oe", "RsQ3EJotkmB",
+                        "NVWdiytVgC8", "Cgss4vnPBF2", "OOgwaTSUeqs", "HRphhE4n5jN", "uoWLFwXpRj3", "QFBa1trjb7a",
+
+                        "n6TyePOjC0o", "odezj1evL1Y", "XE5UV6MnzBn", "z1rLcfwupR1", "toA2KNarvHP", "FurWqyTvnOG",
+                        "hFi6NTdnOZK", "fGUw559311t", "zvPcdWTn8TY", "u0yQESpNtOi", "HqFs2I6vtgy", "oLB6cMyPjtb",
+                        "XtLJeCUWoj7", "Tp4Gs7jcbNO", "nuHFD43SAz9", "EydSs2HhIlu", "PrypJBf9yv0", "Hzc2UO0S7dT",
+                        "oqjyDmHkaRR", "QlAjZrcGzen", "hmjMvTcLXV9", "NuR5zx2PRog", "mdzPjvEvbpB", "OaWSdLx1XDX",
+                        "bQeLA8SyVLZ", "R1Lp6xhgBJU", "inrkZNIDqdB", "PEx775Zonii", "V4SV1ibjwfA", "jW8IBRGGDeZ",
+                        "Y98h8b29bf9", "ZPzdiUH9dwC", "lxXlX6e7OES", "sUNu9RwwAkv", "qaMAsQkniF2", "Pf2zB3K9Cpj",
+                        "eemHGml1YWb", "hk0LyBm3IrR",
+
+                        "oeml9aYJ3dg", "ONaz3ykRhq6",
+                    ]
+                    //For creating variables
+                    for (var j = 0; j < id.length; j++) {
+                        if (j % 2 == 0) count++;
+                        value[child[count] + "_" + id[j]] = 0;
+                    }
+
+                    //For adding values
+                    for (var i = 0; i < data.rows.length; i++) {
+
+                        count = -1;
+                        for (var j = 0; j < id.length; j++) {
+                            if (j % 2 == 0) count++;
+                            if (data.rows[i][0] == id[j]) {
+                                value[child[count] + "_" + id[j]] += parseInt(data.rows[i][2]);
+                            }
+
+                        }
+                    }
+
+                    //For printing values
+                    count = -1;
+                    var printData = '<tr>\
+                                        <td colspan="3" style="text-align: center; background: rgb(39, 102, 150); color:white;">Treatment Adherence on ART (No of Cases)</td>\
+                                    </tr>\
+                                    <tr>\
+                                        <td style="height: 30px;width: 200px;">Accessed</td>\
+                                        <td colspan="2"  id="nw1col1">' + nw1col1 + '</td>\
+                                    </tr>\
+                                    <tr >\
+                                        <td style="height: 30px;width: 200px;">&gt; 95% (A)</td>\
+                                        <td colspan="2" id="nw1col2">' + nw1col2 + '</td>\
+                                    </tr>\
+                                    <tr>\
+                                        <td style="height: 30px;width: 200px;">80-95% (B)</td>\
+                                        <td colspan="2" id="nw1col3">' + nw1col3 + '</td>\
+                                    </tr>\
+                                    <tr>\
+                                        <td style="height: 30px;width: 200px;">&lt; 80% (C )</td>\
+                                        <td colspan="2" id="nw1col4">' + nw1col4 + '</td>\
+                                    </tr>\
+                                    <tr>\
+                                        <td style="height: 30px;width: 200px; background: rgb(39, 102, 150); color:white;">Regimen</td>\
+                                        <td style="height: 30px;width: 200px; background: rgb(39, 102, 150); color:white;">Adult</td>\
+                                        <td style="height: 30px;width: 200px; background: rgb(39, 102, 150); color:white;">Child</td>\
+                                    </tr>\
+                                    <tr><td colspan="3" style="height: 30px;width: 200px; background: rgb(39, 102, 150); color:white;">First Line</td></tr>';
+
+                    //CSV File for Second Row
+                    CSVFile["19"]["0"].push((nw1col1 ? nw1col1 : ''));
+                    CSVFile["19"]["1"].push((nw1col2 ? nw1col2 : ''));
+                    CSVFile["19"]["2"].push((nw1col3 ? nw1col3 : ''));
+                    CSVFile["19"]["3"].push((nw1col4 ? nw1col4 : ''));
+
+                    let csvCount = -1;
+                    for (var j = 0; j < id.length; j += 2) {
+                        if (j % 2 == 0) count++;
+                        if (j == 54) printData += '<tr><td colspan="3" style="height: 30px;width: 200px; background: rgb(39, 102, 150); color:white;">Second Line</td></tr>';
+                        if (j == 92) printData += '<tr><td colspan="3" style="height: 30px;width: 200px; background: rgb(39, 102, 150); color:white;">Third Line</td></tr>';
+                        printData += '<tr>\
+                                <td style="height: 30px;width: 200px;">'+ child[count] + '</td>\
+                                <td>'+ value[child[count] + "_" + id[j]] + '</td>\
+                                <td>'+ value[child[count] + "_" + id[j + 1]] + '</td></tr>'
+
+                        ++csvCount
+                        if (CSVFile["20"][csvCount].length) CSVFile["20"][csvCount].push((value[child[count] + "_" + id[j]] ? value[child[count] + "_" + id[j]] : ''));
+                        ++csvCount
+                        if (CSVFile["20"][csvCount].length) CSVFile["20"][csvCount].push((value[child[count] + "_" + id[j + 1]] ? value[child[count] + "_" + id[j + 1]] : ''));
+                    }
+                    printTable += printData;
+                }
+            })
+
+            document.querySelector("#tableBody").innerHTML = printTable;
+            document.querySelector("#loader").style.display = "none";
+            document.querySelector(".reportTable").style.display = "block";
+
+            function getChar(firstChar, lastChar) {
+                var arr = [];
+                for (var i = firstChar.charCodeAt(); i <= lastChar.charCodeAt(); i++) {
+                    arr.push(String.fromCharCode(i));
+                }
+                return arr;
+            }
+
+            function createVariable(char) {
+                var tableData = "";
+                var totals = 0;
+                var column = ["Col1", "Col2", "Col3", "Col4", "Col5",
+                    "firstTotal", "Col6", "Col7", "Col8", "Col9", "Col10",
+                    "Col11", "secondTotal"];
+
+                if (char != "d" && char != "o") indexCSV++;
+                column.forEach((col, index) => {
+                    if (char == 'rowTotalFirst') {
+                        let val = rowTotalFirst[index]
+                        if (col == "firstTotal" || col == "secondTotal") {
+                            tableData += '<td>' + totals + '</td>';
+                            if (col == 'firstTotal') totals = 0;
+                        }
+                        else {
+                            totals += val;
+                            tableData += '<td>' + val + '</td>';
+                        }
+                    }
+                    else if (char == 'rowTotalSecond') {
+                        let val1 = rowTotalFirst[index] ? rowTotalFirst[index] : 0;
+                        let val2 = rowTotalSecondItem[index] ? rowTotalSecondItem[index] : 0;
+                        let val3 = val1 - val2;
+                        if (col == "firstTotal" || col == "secondTotal") {
+                            tableData += '<td>' + totals + '</td>';
+                            if (col == 'firstTotal') totals = 0;
+                        }
+                        else {
+                            totals += val3;
+                            tableData += '<td>' + val3 + '</td>';
+
+                            if (!rowTotalSecond[index]) rowTotalSecond[index] = 0;
+                            rowTotalSecond[index] += Number(val3);
+                        }
+                    }
+                    else if (char == 'rowTotalThird') {
+                        let val1 = rowTotalSecond[index] ? rowTotalSecond[index] : 0;
+                        let val2 = rowTotalThird[index] ? rowTotalThird[index] : 0;
+                        let val3 = val1 + val2;
+                        if (col == "firstTotal" || col == "secondTotal") {
+                            tableData += '<td>' + totals + '</td>';
+                            if (col == 'firstTotal') totals = 0;
+                        }
+                        else {
+                            totals += val3;
+                            tableData += '<td>' + val3 + '</td>';
+                        }
+                        debugger;
+                    }
+                    else {
+                        tableData += '<td>' + variables[char + col] + '</td>';
+                    }
+
+                    if (char == "a" || char == "b" || char == "c" || char == "d") {
+                        if (!rowTotalFirst[index]) rowTotalFirst[index] = 0;
+                        rowTotalFirst[index] += Number(variables[char + col]);
+                    }
+                    if (char == "e" || char == "f" || char == "g" || char == "h" || char == "i") {
+                        if (!rowTotalSecondItem[index]) rowTotalSecondItem[index] = 0;
+                        rowTotalSecondItem[index] += Number(variables[char + col]);
+                    }
+                    if (char == "f" || char == "g" || char == "h" || char == "i") {
+                        if (!rowTotalThird[index]) rowTotalThird[index] = 0;
+                        rowTotalThird[index] += Number(variables[char + col]);
+                    }
+                    // if (index != 9 && index <= 14 && char != "d" && char != "o") {
+                    //     index <= 8 ? CSVFile[indexCSV][index].push((variables[char + col] ? variables[char + col] : "")) : CSVFile[indexCSV][index - 1].push((variables[char + col] ? variables[char + col] : ""));
+                    // }
+                })
+                return tableData;
+            }
+        }
+
+        function downloadCSV() {
+
+            var reportName = orgUnit.name + "-" + nepaliDate;
+            var today = new Date();
+            var year = today.getFullYear();
+            var month = today.getMonth() + 1;
+            var date = today.getDate();
+
+            // var currentDate = year + "-" + month + "-" + date;
+            var hiddenElement = document.createElement('a');
+            hiddenElement.href = 'data:text/csv;charset=utf-8,' + CSVFirstRow;
+
+            let arr = "";
+            CSVFile.forEach(rowArray => {
+                rowArray.forEach(row => {
+                    if (row.length) arr += "\n" + row.join(","); // + "," + username + "," + currentDate;
+                })
+            });
+            hiddenElement.href += arr;
+            hiddenElement.target = '_blank';
+            hiddenElement.download = reportName + '.csv';
+            hiddenElement.click();
+        }
+
+        var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,'
+                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+            return function (table, name, filename) {
+                if (!table.nodeType) table = document.getElementById(table)
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+                document.getElementById("dlink").href = uri + base64(format(template, ctx));
+                document.getElementById("dlink").download = filename;
+                document.getElementById("dlink").click();
+            }
+        })()
+
+
+        function printContent(el) {
+            var restorePage = document.body.innerHTML;
+            var table = document.querySelector(el).innerHTML;
+            document.body.innerHTML = table;
+            window.print();
+            document.body.innerHTML = restorePage;
+        }
+    </script>
+</body>
