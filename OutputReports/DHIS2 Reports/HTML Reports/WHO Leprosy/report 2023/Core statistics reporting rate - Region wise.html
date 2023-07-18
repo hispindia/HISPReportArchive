@@ -1,0 +1,375 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    /* Center the loader  */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+        display: none;
+        text-align: center;
+    }
+</style>
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('allContent')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allContent', 'Leprosy Core Statistics  Region wise reporting rate', 'Leprosy Core Statistics  Region wise reporting rate.xls')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Excel</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('allContent', 'Leprosy Core Statistics  Region wise reporting rate', 'Leprosy Core Statistics  Region wise reporting rate.doc')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Doc</button>
+<br><br>
+
+<div id="loader"></div>
+<div id="allContent">
+    <table border="1" class="table  table-hover text-center" id="dataTable"
+        style="border-collapse: collapse; font-size: 15px; width: 100%;">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+</div>
+
+<script>
+    $('#loader').show();
+    $('#allContent').hide()
+    var orgUnit = { id: 'x3i5oi4axNu', name:"World" }
+    var obj = {};
+    var level2OrgUnitsList = []
+    var dataList = []
+    var period = dhis2.report.date.split("-")[0];
+    var mandatoryDataElements = [
+        'evXyDr6c7eu-Te9RyzefSAz',
+        'evXyDr6c7eu-ZZFiCRpT37i',
+        'evXyDr6c7eu-sdMU6tpPki6',
+        'gVmFx873rdZ-Te9RyzefSAz',
+        'gVmFx873rdZ-ZZFiCRpT37i',
+        'gVmFx873rdZ-sdMU6tpPki6',
+        'IQgrP2W9gTV-Te9RyzefSAz',
+        'IQgrP2W9gTV-ZZFiCRpT37i',
+        'IQgrP2W9gTV-sdMU6tpPki6',
+        'xdbnQxRVTBq-HllvX50cXC0',
+        'coycFHeZ257-HllvX50cXC0',
+        'xl4EXfRMBrK-Te9RyzefSAz',
+        'xl4EXfRMBrK-ZZFiCRpT37i',
+        'xl4EXfRMBrK-sdMU6tpPki6',
+        'RcRolaLXGcw-HllvX50cXC0',
+        'k2P4B19IWxU-HllvX50cXC0',
+        'nbDlMYKljTK-HllvX50cXC0',
+        'bLR7YvL1f5O-Te9RyzefSAz',
+        'bLR7YvL1f5O-ZZFiCRpT37i',
+        'mdupOTsRJ58-Te9RyzefSAz',
+        'mdupOTsRJ58-ZZFiCRpT37i',
+        'lzbsUQJvvJB-Te9RyzefSAz',
+        'lzbsUQJvvJB-ZZFiCRpT37i',
+        'qHIGkVqSItK-HllvX50cXC0',
+        'GuZ5MKrfrBp-HllvX50cXC0',
+        'Xzuid5sSSg3-HllvX50cXC0',
+    ]
+
+    let otherDataElements = [
+        'MiHLzmsVFPf-xC5PhT2YVtr',
+        'ubgNtdy3h9H-xC5PhT2YVtr',
+        'tyHgOKrZsMJ-xC5PhT2YVtr',
+        'MiHLzmsVFPf-GcQ4Ep0wmnH',
+        'ubgNtdy3h9H-GcQ4Ep0wmnH',
+        'tyHgOKrZsMJ-GcQ4Ep0wmnH',
+        'VBEhMPsLu53-HllvX50cXC0',
+        'YVj2PYy0Slj-HllvX50cXC0',
+        'KJtRiyeoCGx-HllvX50cXC0',
+        'lhSRNgfsxYC-HllvX50cXC0',
+        'EHT4ON2ZtNl-HllvX50cXC0',
+        'vp8pxtgYBL2-HllvX50cXC0',
+        'hcmT8KR85PW-HllvX50cXC0',
+        'zZcTJntCnMe-HllvX50cXC0',
+        'lk5YKbM2SEu-HllvX50cXC0',
+        'v7CDzOUjTE6-HllvX50cXC0',
+        'ztfAqeY7ruz-HllvX50cXC0',
+        'NlyC1FwJWy9-HllvX50cXC0',
+        'g04IY5svOKO-HllvX50cXC0',
+        'FNTigvSTOVL-HllvX50cXC0',
+        'uhtjTobhtHO-HllvX50cXC0',
+        'VVBrsKiEqdh-HllvX50cXC0',
+        'TCJv5BNVYCw-HllvX50cXC0',
+        'bjLIfOy4KuR-HllvX50cXC0',
+        'PFNL3BPu3A6-HllvX50cXC0',
+        't5AmFhGyKw9-HllvX50cXC0',
+        'IW3BXD1xO0E-HllvX50cXC0',
+        'JK1VCsNhg6x-HllvX50cXC0',
+        'sgdAybfDzTl-oSHl2cUvHmk',
+        'sgdAybfDzTl-qqJwrOzkzcz',
+        'sgdAybfDzTl-G0EY8ZnkmVI',
+        'ej7YYjvhLmR-HllvX50cXC0',
+        'sgdAybfDzTl-Vi7NufwLzKs',
+        'MJGjCnCK8qJ-HllvX50cXC0',
+        'CAwisvSGkaj-oSHl2cUvHmk',
+        'CAwisvSGkaj-qqJwrOzkzcz',
+        'CAwisvSGkaj-G0EY8ZnkmVI',
+        'DAs6FtLcYz1-HllvX50cXC0',
+        'CAwisvSGkaj-Vi7NufwLzKs',
+        'XAQepu1Zi18-HllvX50cXC0',
+        'doyMvQWxmOJ-HllvX50cXC0'
+    ]
+
+    var indicators = []
+    setTimeout(() => {
+        loadData()
+    }, 1000)
+    function loadData() {
+        function getCountryData(id) {
+            let objOthers = { countODEwithData: 0, countODEwithNA: 0, countODEwithNoData: 0, totalOtherDataElement: otherDataElements.length }
+            let objMandatory = { countMDEwithData: 0, countMDEwithNA: 0, countMDEwithNoData: 0, totalMandatoryDataElement: mandatoryDataElements.length, completeDate: "" }
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "../api/dataValueSets.json?orgUnit=" + id + "&period=" + period + "&dataSet=m4Hy2QZbW9p",
+                data: JSON,
+                success: function (data, status) {
+                    if (data.dataValues) {
+                        if(data.completeDate){
+                            objOthers.completeDate = data.completeDate.split("T")["0"]
+                        }
+                        for (let mde of mandatoryDataElements) {
+                            for (let ele of data.dataValues) {
+                                if (mde == (ele.dataElement + "-" + ele.categoryOptionCombo)) {
+                                    if(ele.comment && ele.value){
+                                        objMandatory.countMDEwithData += 1
+                                    }else{
+                                      ele.comment ? objMandatory.countMDEwithNA += 1 : objMandatory.countMDEwithData += 1
+                                    }
+                                    // ele.comment ? objMandatory.countMDEwithNA += 1 : objMandatory.countMDEwithData += 1
+                                }
+                            }
+                        }
+                        objMandatory.countMDEwithNoData = mandatoryDataElements.length - (objMandatory.countMDEwithNA + objMandatory.countMDEwithData)
+                        for (let ode of otherDataElements) {
+                            for (let ele of data.dataValues) {
+                                if (ode == (ele.dataElement + "-" + ele.categoryOptionCombo)) {
+                                    if(ele.comment && ele.value){
+                                      objOthers.countODEwithData += 1
+                                    }else{
+                                        ele.comment ? objOthers.countODEwithNA += 1 : objOthers.countODEwithData += 1
+                                    }
+                                    // ele.comment ? objOthers.countODEwithNA += 1 : objOthers.countODEwithData += 1
+                                }
+                            }
+                        }
+                        objOthers.countODEwithNoData = otherDataElements.length - (objOthers.countODEwithNA + objOthers.countODEwithData)
+                    }
+                }
+            });
+            return { ...objMandatory, ...objOthers }
+        }
+        function arraySorting(a, b) {
+            return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
+        }
+        $.ajax(
+            {
+                type: "GET",
+                async: false,
+                url: "../api/organisationUnits/" + orgUnit.id + ".json?fields=id,name,children[id,name,code]&paging=false",
+                data: JSON,
+                success: function (data, status) {
+                    allOrgUnits = data;
+                    for (var i = 0; i < allOrgUnits.children.length; i++) {
+                        level2OrgUnitsList.push({ "id": allOrgUnits.children[i].id, "name": allOrgUnits.children[i].name, "code": allOrgUnits.children[i].code });
+                    }
+                }
+            });
+        level2OrgUnitsList.sort(arraySorting);
+            for (var j = 0; j < level2OrgUnitsList.length; j++) {
+                let gObj = { region: level2OrgUnitsList[j].name }
+                var level3OrgUnitsList = [];
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "../api/organisationUnits/" + level2OrgUnitsList[j].id + ".json?fields=id,name,children[id,name,code]&paging=false",
+                    data: JSON,
+                    success: function (data, status) {
+                        for (var i = 0; i < data.children.length; i++) {
+                            let val = getCountryData(data.children[i].id)
+                            let oo = { ...val, "id": data.children[i].id, "name": data.children[i].name, }
+                            level3OrgUnitsList.push(oo);
+                        }
+                        gObj['countrylist'] = level3OrgUnitsList.sort(arraySorting)
+                    }
+                });
+                dataList.push(gObj)
+            }
+        
+        $('#dataTable').find("thead").append(` <tr style=" font-weight:400; text-align:center;">
+                <td colspan="12" width="100%" style="border:1px solid black;background:#ADD8E6; ">Leprosy Core Statistics  Region wise reporting rate <span class="currentPeriod">&nbsp;</span></td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td colspan="12" style="border:1px solid black;background:#ADD8E6; ">Reporting Year : - <span id="period">${period}</span></td>
+            </tr>
+            <tr style=" font-weight:400; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6; ">Region</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Countries completed form submission</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Total number of countries</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Reporting rate</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Forms submitted on time</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Reporting rate on time</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Countries reporting data not available for a mandatory field</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Countries with no data for a mandatory field</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Mandatory field completion rate- country  (%)</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Countries reporting data not available for other field</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Countries with no data for other field</td>
+                <td style="border:1px solid black;background:#ADD8E6; ">Other field completion rate- country (%)</td>
+             </tr>`)
+        var gt = 0, gt1 = 0, gt2 = 0, gt3 = 0, gt4 = 0, gt5 = 0, gt6 = 0, gt7 = 0, gt8 = 0, gt9 = 0, gt10 = 0, gt11 = 0, gt12 = 0;
+        for (let data of dataList) {
+            var total1 = 0
+            var t = 0, t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, onTime = 0, MDRHPC = 0, ODRHPC = 0;
+            for (let ele of data.countrylist) {
+                if (ele.completeDate) {
+                    let cd = 0816 // august 15
+                    t1 += 1
+                    let md = ele.completeDate.split("-")["1"] + ele.completeDate.split("-")["2"]
+                    if (Number(md) < 0816) {
+                        onTime += 1
+                    }
+                }
+                let MDR = ((ele.countMDEwithData + ele.countMDEwithNA) / ele.totalMandatoryDataElement) * 100
+                let ODR = ((ele.countODEwithData + ele.countODEwithNA) / ele.totalOtherDataElement) * 100
+                if (MDR.toFixed(0) == 100) MDRHPC += 1
+                if (ODR.toFixed(0) == 100) ODRHPC += 1
+                t2 = data.countrylist.length
+                t3 += ele.countMDEwithNA
+               if(ele.countMDEwithNoData === 0) t4 += 1
+                t7 += ele.countODEwithNA
+                if(ele.countODEwithNoData === 0) t8 += 1
+            }
+            let reportingRate = (t1 / t2) * 100
+            let reportingRateOnTime = (onTime / t2) * 100
+            let MFCC = (MDRHPC / t2) * 100
+            let OFCC = (ODRHPC / t2) * 100
+            $('#dataTable').find("tbody").append(`<tr style="font-weight: bold;"><td>${data.region}</td><td>${t1}</td><td>${t2}</td><td>${reportingRate.toFixed(2)}</td><td>${onTime}</td><td>${reportingRateOnTime.toFixed(2)}</td><td>${t3}</td><td>${t4}</td><td>${MFCC.toFixed(2)}</td><td>${t7}</td><td>${t8}</td><td>${OFCC.toFixed(2)}</td></tr>`)
+            gt1 += t1
+            gt2 += t2
+            gt3 += t3
+            gt4 += t4
+            gt5 += onTime
+            gt7 += t7
+            gt8 += t8
+            gt11 += MDRHPC
+            gt12 += ODRHPC
+
+            $('#loader').hide();
+            $('#allContent').show()
+        }
+        gt9 = (gt1 / gt2) * 100
+        gt10 = (gt5 / gt2) * 100
+        let mfcg = (gt11 / gt2) * 100
+        let ofcg = (gt12 / gt2) * 100
+        $('#dataTable').find("tbody").append(`<tr style="font-weight: bold;"><td>Global Total</td><td>${gt1}</td><td>${gt2}</td><td>${gt9.toFixed(2)}</td><td>${gt5}</td><td>${gt10.toFixed(2)}</td><td>${gt3}</td><td>${gt4}</td><td>${mfcg.toFixed(2)}</td><td>${gt7}</td><td>${gt8}</td><td>${ofcg.toFixed(2)}</td></tr>`)
+    }
+
+</script>
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>
