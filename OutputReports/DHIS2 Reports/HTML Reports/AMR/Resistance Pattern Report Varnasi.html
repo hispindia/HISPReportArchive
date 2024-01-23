@@ -1,0 +1,879 @@
+<link
+  rel="stylesheet"
+  href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+  integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+  crossorigin="anonymous"
+/>
+
+<style>
+  table {
+    border-collapse: collapse;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+  }
+
+  /* Center the loader  */
+  #loader {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #34b4db;
+    width: 120px;
+    height: 120px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+  }
+
+  @-webkit-keyframes spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+      -webkit-transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Add animation to "page content" */
+
+  .animate-bottom {
+    position: relative;
+    -webkit-animation-name: animatebottom;
+    -webkit-animation-duration: 1s;
+    animation-name: animatebottom;
+    animation-duration: 1s;
+  }
+
+  @-webkit-keyframes animatebottom {
+    from {
+      bottom: -100px;
+      opacity: 0;
+    }
+
+    to {
+      bottom: 0px;
+      opacity: 1;
+    }
+  }
+
+  @keyframes animatebottom {
+    from {
+      bottom: -100px;
+      opacity: 0;
+    }
+
+    to {
+      bottom: 0;
+      opacity: 1;
+    }
+  }
+
+  #printing {
+    text-align: center;
+  }
+</style>
+
+<a id="dlink" style="display: none"></a>
+
+<button
+  type="button"
+  class="btn btn-success btn-sm"
+  style="vertical-align: middle; cursor: pointer"
+  id="btnExport"
+  onclick="tableToExcel('output', 'Resistance Pattern Report', 'Resistance Pattern Report')"
+>
+  <span class="glyphicon glyphicon-download-alt" style="font-size: 15px"></span
+  >Download As Excel
+</button>
+
+<button
+  type="button"
+  class="btn btn-primary btn-sm"
+  style="vertical-align: middle"
+  onclick="printContent('output')"
+>
+  <span class="glyphicon glyphicon-print" style="font-size: 15px"></span> &nbsp;
+  Print
+</button>
+
+<div style="width: 40%; margin-left: 30%">
+  <table class="table table-borderless table-striped">
+    <tr style="border: 1px solid #dddddd">
+      <td style="font-size: 15px; padding-top: 15px">
+        <strong>Start Month : </strong>
+      </td>
+      <td style="width: 60%">
+        <input type="month" class="form-control" id="startDate" />
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 15px; padding-top: 15px">
+        <strong>End Month : </strong>
+      </td>
+      <td style="width: 60%">
+        <input type="month" class="form-control" id="endDate" />
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 15px; padding-top: 15px">
+        <strong>Department Name : </strong>
+      </td>
+      <td style="width: 60%">
+        <select id="department-name" class="form-control"></select>
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 15px; padding-top: 15px">
+        <strong>Sample Type : </strong>
+      </td>
+      <td style="width: 60%">
+        <select id="sampleTypeName-name" class="form-control"></select>
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 15px; padding-top: 15px">
+        <strong>Location : </strong>
+      </td>
+      <td style="width: 60%">
+        <select id="locationType-name" class="form-control"></select>
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="2">
+        <button onClick="submitData()" class="btn btn-primary" id="tap">
+          Submit
+        </button>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+  <div id="output" style="display: none">
+    <table class="table table-hover" style="width: 100%; text-align: center">
+      <thead>
+        <tr>
+          <th
+            colspan="10"
+            style="
+              text-align: center;
+              background: rgb(39, 102, 150);
+              font-size: 20px;
+              color: white;
+            "
+          >
+            MDR- 3 or more antibiotic groups resistant
+          </th>
+        </tr>
+        <tr>
+          <th colspan="10" style="text-align: center">Syndrome</th>
+        </tr>
+        <tr>
+          <th>Organism</th>
+          <th>Risk Factor</th>
+          <th>Duration of hospitalization</th>
+          <th>BSI</th>
+          <th>CLABSI</th>
+          <th>GI infection</th>
+          <th>Meningitis</th>
+          <th>UTI/SSI</th>
+          <th>VAP</th>
+          <th>NA</th>
+        </tr>
+      </thead>
+
+      <tbody id="block-1"></tbody>
+    </table>
+    <table class="table table-hover" style="width: 100%; text-align: center">
+      <thead>
+        <tr>
+          <th
+            colspan="10"
+            style="
+              text-align: center;
+              background: rgb(39, 102, 150);
+              font-size: 20px;
+              color: white;
+            "
+          >
+            PDR- sensitive only to 1 or 2 antibiotic groups
+          </th>
+        </tr>
+        <tr>
+          <th colspan="10" style="text-align: center">Syndrome</th>
+        </tr>
+        <tr>
+          <th>Organism</th>
+          <th>Risk Factor</th>
+          <th>Duration of hospitalization</th>
+          <th>BSI</th>
+          <th>CLABSI</th>
+          <th>GI infection</th>
+          <th>Meningitis</th>
+          <th>UTI/SSI</th>
+          <th>VAP</th>
+          <th>NA</th>
+        </tr>
+      </thead>
+
+      <tbody id="block-2"></tbody>
+    </table>
+    <table class="table table-hover" style="width: 100%; text-align: center">
+      <thead>
+        <tr>
+          <th
+            colspan="10"
+            style="
+              text-align: center;
+              background: rgb(39, 102, 150);
+              font-size: 20px;
+              color: white;
+            "
+          >
+            XDR- Resistant to all antibiotic group
+          </th>
+        </tr>
+        <tr>
+          <th colspan="10" style="text-align: center">Syndrome</th>
+        </tr>
+        <tr>
+          <th>Organism</th>
+          <th>Risk Factor</th>
+          <th>Duration of hospitalization</th>
+          <th>BSI</th>
+          <th>CLABSI</th>
+          <th>GI infection</th>
+          <th>Meningitis</th>
+          <th>UTI/SSI</th>
+          <th>VAP</th>
+          <th>NA</th>
+        </tr>
+      </thead>
+
+      <tbody id="block-3"></tbody>
+    </table>
+  </div>
+</div>
+<script type="text/javascript">
+  document.getElementById("loader").style.display = "none";
+  var months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  var selectedOrgUnit = dhis2.report.organisationUnit;
+
+  var department = [];
+  var departmentId = "";
+  var sampleType = [];
+  var sampleTypeId = "";
+  var locationType = [];
+  var locationTypeId = "";
+  var OrganismType = [];
+  var OrganismTypeId = "";
+  var riskFactor = [];
+  var riskFactorId = "";
+  var departmentIds = "";
+  var groupwiseAnti = {};
+  var organismGroupSet = [];
+  var organismAWGroupSet = [];
+
+  $.get(
+    "../api/29/optionSets/s1UF1wpUrpB.json?fields=id,name,options[id,name]",
+    function (res) {
+      let departmentName = `<option value='ALL'>ALL</option>`;
+      department = res.options;
+      console.log("-----------", res);
+
+      for (let opt of res.options) {
+        departmentId += opt.id + ";";
+        departmentName += `<option value='${opt.name}'>${opt.name}</option>`;
+        // console.log("departmentId", departmentId);
+      }
+
+      document.getElementById("department-name").innerHTML = departmentName;
+    }
+  );
+
+  $.get(
+    "../api/29/optionSets/tdtBR9OdXMJ.json?fields=id,name,options[id,name]",
+    function (res) {
+      let sampleTypeName = `<option value='ALL'>ALL</option>`;
+      sampleType = res.options;
+
+      for (let opt of res.options) {
+        sampleTypeId += opt.id + ";";
+        sampleTypeName += `<option   value='${opt.name}'>${opt.name}</option>`;
+      }
+
+      document.getElementById("sampleTypeName-name").innerHTML = sampleTypeName;
+    }
+  );
+
+  $.get(
+    "../api/29/optionSets/Ann08p13CZQ.json?fields=id,name,options[id,name]",
+    function (res) {
+      let locationTypeName = `<option value='ALL'>ALL</option>`;
+      locationType = res.options;
+
+      for (let i = 1; i < res.options.length; i++) {
+        let opt = res.options[i];
+        locationTypeId += opt.id + ";";
+        locationTypeName += `<option value='${opt.name}'>${opt.name}</option>`;
+      }
+
+      document.getElementById("locationType-name").innerHTML = locationTypeName;
+    }
+  );
+
+  function submitData() {
+    document.getElementById("loader").style.display = "block";
+
+    var startDate = document.getElementById("startDate").value;
+    var endDate = document.getElementById("endDate").value;
+
+    var data = {
+      startDate: startDate,
+      endDate: endDate,
+    };
+    if (new Date(startDate) > new Date(endDate) || !startDate || !endDate) {
+      alert("Please Select dates Correctly!");
+      document.getElementById("loader").style.display = "none";
+      return;
+    } else {
+      $("#loader").show();
+      setTimeout(function () {
+        getData(data);
+      }, 1000);
+    }
+  }
+
+  function getData(data) {
+    var includedOrgUnitGroups = [];
+    var organismWise = {};
+    var printTotalValue = [];
+    var orgUnitArr = [];
+
+    function calculateDuraton(dur) {
+      // console.log('dur :>> ', dur, Number(dur));
+      switch (true) {
+        case dur >= 0 && dur <= 7:
+          return "1 week";
+        case dur >= 8 && dur <= 28:
+          return "1-4 week";
+        case dur >= 29:
+          return "4 or more week";
+
+        default:
+          return "";
+      }
+    }
+
+    $.ajax({
+      type: "GET",
+      async: false,
+      url: `../api/29/analytics/events/query/dzizG8i1cmP.json?startDate=${data.startDate}&endDate=${data.endDate}&dimension=ou:ANGhR1pa8I5&dimension=Q3UjBKHk5St.dRKIjwIDab4&dimension=Q3UjBKHk5St.mp5MeJ2dFQz&dimension=Q3UjBKHk5St.B7XuDaXPv10&dimension=Q3UjBKHk5St.SaQe2REkGVw&dimension=Q3UjBKHk5St.OXeciPflD7w&dimension=Q3UjBKHk5St.rPP1KYVmDJy&dimension=Q3UjBKHk5St.dH31Mxv0Qlc&dimension=Q3UjBKHk5St.ziOMarQiX1S&dimension=Q3UjBKHk5St.mOMWw59PvKU&dimension=Q3UjBKHk5St.p4w4PQc42hj&stage=Q3UjBKHk5St&displayProperty=SHORTNAME&outputType=EVENT&desc=eventdate&paging=false&outputIdScheme=UID`,
+      // url: `../api/29/analytics/events/query/dzizG8i1cmP.json?startDate=${data.startDate}&endDate=${data.endDate}&dimension=ou:h7fXhILHCAO&dimension=Q3UjBKHk5St.dRKIjwIDab4&dimension=Q3UjBKHk5St.mp5MeJ2dFQz&dimension=Q3UjBKHk5St.B7XuDaXPv10&dimension=Q3UjBKHk5St.SaQe2REkGVw&dimension=Q3UjBKHk5St.OXeciPflD7w&dimension=Q3UjBKHk5St.ziOMarQiX1S&dimension=Q3UjBKHk5St.mOMWw59PvKU&dimension=Q3UjBKHk5St.p4w4PQc42hj&stage=Q3UjBKHk5St&displayProperty=SHORTNAME&totalPages=false&outputType=EVENT&desc=eventdate&pageSize=100&page=1&outputIdScheme=UID`,
+      // url: `../api/29/analytics/events/query/dzizG8i1cmP.json?startDate=${data.startDate}&endDate=${data.endDate}&dimension=ou:ANGhR1pa8I5&department=${data.departmentName}&sample_type=${data.sampleTypeName}&location=${data.locationTypeName}&dimension=Q3UjBKHk5St.SaQe2REkGVw&dimension=Q3UjBKHk5St.OXeciPflD7w&dimension=Q3UjBKHk5St.rPP1KYVmDJy&dimension=Q3UjBKHk5St.dH31Mxv0Qlc&dimension=Q3UjBKHk5St.ziOMarQiX1S&dimension=Q3UjBKHk5St.mOMWw59PvKU&dimension=Q3UjBKHk5St.p4w4PQc42hj&stage=Q3UjBKHk5St&displayProperty=SHORTNAME&totalPages=false&outputType=EVENT&desc=eventdate&pageSize=100&page=1&outputIdScheme=UID`,
+      // url: `../api/29/analytics/events/query/dzizG8i1cmP.json?startDate=${data.startDate}&endDate=${data.endDate}&dimension=ou:ANGhR1pa8I5&department=${data.departmentName}&sample_type=${data.sampleTypeName}&location=${data.locationTypeName}&dimension=Q3UjBKHk5St.SaQe2REkGVw&dimension=Q3UjBKHk5St.OXeciPflD7w&dimension=Q3UjBKHk5St.rPP1KYVmDJy&dimension=Q3UjBKHk5St.dH31Mxv0Qlc&dimension=Q3UjBKHk5St.ziOMarQiX1S&dimension=Q3UjBKHk5St.mOMWw59PvKU&dimension=Q3UjBKHk5St.p4w4PQc42hj&stage=Q3UjBKHk5St&displayProperty=SHORTNAME&totalPages=false&outputType=EVENT&desc=eventdate&pageSize=100&page=1&outputIdScheme=UID`,
+      // url:`../api/29/analytics/events/query/dzizG8i1cmP.json?dimension=pe:LAST_12_MONTHS&dimension=ou:ANGhR1pa8I5&dimension=Q3UjBKHk5St.dRKIjwIDab4&dimension=Q3UjBKHk5St.mp5MeJ2dFQz&dimension=Q3UjBKHk5St.B7XuDaXPv10&dimension=Q3UjBKHk5St.SaQe2REkGVw&dimension=Q3UjBKHk5St.OXeciPflD7w&dimension=Q3UjBKHk5St.rPP1KYVmDJy&dimension=Q3UjBKHk5St.dH31Mxv0Qlc&dimension=Q3UjBKHk5St.ziOMarQiX1S&dimension=Q3UjBKHk5St.mOMWw59PvKU&dimension=Q3UjBKHk5St.p4w4PQc42hj&stage=Q3UjBKHk5St&displayProperty=SHORTNAME&totalPages=false&outputType=EVENT&desc=eventdate&pageSize=100&page=1&outputIdScheme=UID`,
+      data: JSON,
+      success: function (res, status) {
+        const headerKeys = Object.keys(res.headers);
+        var filteredData = [];
+
+        res?.rows?.forEach((rowData) => {
+          const filteredRow = {};
+          headerKeys.forEach((key, index) => {
+            filteredRow[key] = rowData[index];
+          });
+          filteredData.push(filteredRow);
+        });
+
+        let ifBsiExist = {
+          BSI: 0,
+          CLABSI: 0,
+          "GI infection": 0,
+          Meningitis: 0,
+          "UTI/SSI": 0,
+          VAP: 0,
+          NA: 0,
+        };
+
+        var result = {};
+
+        let tableRow1 = "";
+        let tableRow2 = "";
+        let tableRow3 = "";
+
+        var obj = {};
+        var obj1 = {};
+        var obj2 = {};
+        const dept = document.getElementById("department-name").value;
+        const sample = document.getElementById("sampleTypeName-name").value;
+        const loc = document.getElementById("locationType-name").value;
+
+        filteredData = filteredData.filter((item) => {
+          if (
+            ((dept === "ALL" || item[19] === dept) &&
+              (loc === "ALL" || item[21] === loc) &&
+              (sample === "ALL" || item[20] === sample)) ||
+            loc == "OPD"
+          ) {
+            return item;
+          }
+        });
+
+        filteredData.forEach((row) => {
+          var org = row[22];
+          var risk1 = row[23];
+          var risk2 = row[24];
+          var risk3 = row[25];
+          var syndrome = row[27];
+          var dur = row[26];
+          var dur1 = calculateDuraton(row[26]);
+          var resistance = row[28];
+
+          if (dur.length == 0) return;
+          if (!(risk1.length > 0 || risk2.length > 0 || risk3.length > 0))
+            return;
+
+          if (resistance == "MDR") {
+            if (!obj[org]) obj[org] = {};
+            if (!obj[org][risk1] && risk1) {
+              obj[org][risk1] = {};
+            }
+            if (!obj[org][risk2] && risk2) {
+              obj[org][risk2] = {};
+            }
+
+            if (!obj[org][risk3] && risk3) {
+              obj[org][risk3] = {};
+            }
+
+            if (dur1) {
+              if (obj[org][risk1] && risk1) {
+                if (!obj[org][risk1][dur1]) obj[org][risk1][dur1] = {};
+                if (!obj[org][risk1][dur1][syndrome]) {
+                  obj[org][risk1][dur1][syndrome] = 1;
+                } else {
+                  obj[org][risk1][dur1][syndrome] += 1;
+                }
+              }
+              if (obj[org][risk2] && risk2) {
+                if (!obj[org][risk2][dur1]) obj[org][risk2][dur1] = {};
+                if (!obj[org][risk2][dur1][syndrome]) {
+                  obj[org][risk2][dur1][syndrome] = 1;
+                } else {
+                  obj[org][risk2][dur1][syndrome] += 1;
+                }
+              }
+              if (obj[org][risk3] && risk3) {
+                if (!obj[org][risk3][dur1]) obj[org][risk3][dur1] = {};
+                if (!obj[org][risk3][dur1][syndrome]) {
+                  obj[org][risk3][dur1][syndrome] = 1;
+                } else {
+                  obj[org][risk3][dur1][syndrome] += 1;
+                }
+              }
+            }
+          } else if (resistance == "PDR") {
+            if (!obj1[org]) obj1[org] = {};
+            if (!obj1[org][risk1] && risk1) {
+              obj1[org][risk1] = {};
+            }
+            if (!obj1[org][risk2] && risk2) {
+              obj1[org][risk2] = {};
+            }
+
+            if (!obj1[org][risk3] && risk3) {
+              obj1[org][risk3] = {};
+            }
+
+            if (dur1) {
+              if (obj1[org][risk1] && risk1) {
+                if (!obj1[org][risk1][dur1]) obj1[org][risk1][dur1] = {};
+                if (!obj1[org][risk1][dur1][syndrome]) {
+                  obj1[org][risk1][dur1][syndrome] = 1;
+                } else {
+                  obj1[org][risk1][dur1][syndrome] += 1;
+                }
+              }
+              if (obj1[org][risk2] && risk2) {
+                if (!obj1[org][risk2][dur1]) obj1[org][risk2][dur1] = {};
+                if (!obj1[org][risk2][dur1][syndrome]) {
+                  obj1[org][risk2][dur1][syndrome] = 1;
+                } else {
+                  obj1[org][risk2][dur1][syndrome] += 1;
+                }
+              }
+              if (obj1[org][risk3] && risk3) {
+                if (!obj1[org][risk3][dur1]) obj1[org][risk3][dur1] = {};
+                if (!obj1[org][risk3][dur1][syndrome]) {
+                  obj1[org][risk3][dur1][syndrome] = 1;
+                } else {
+                  obj1[org][risk3][dur1][syndrome] += 1;
+                }
+              }
+            }
+          } else if (resistance == "XDR") {
+            if (!obj2[org]) obj2[org] = {};
+            if (!obj2[org][risk1] && risk1) {
+              obj2[org][risk1] = {};
+            }
+            if (!obj2[org][risk2] && risk2) {
+              obj2[org][risk2] = {};
+            }
+
+            if (!obj2[org][risk3] && risk3) {
+              obj2[org][risk3] = {};
+            }
+
+            if (dur1) {
+              if (obj2[org][risk1] && risk1) {
+                if (!obj2[org][risk1][dur1]) obj2[org][risk1][dur1] = {};
+                if (!obj2[org][risk1][dur1][syndrome]) {
+                  obj2[org][risk1][dur1][syndrome] = 1;
+                } else {
+                  obj2[org][risk1][dur1][syndrome] += 1;
+                }
+              }
+              if (obj2[org][risk2] && risk2) {
+                if (!obj2[org][risk2][dur1]) obj2[org][risk2][dur1] = {};
+                if (!obj2[org][risk2][dur1][syndrome]) {
+                  obj2[org][risk2][dur1][syndrome] = 1;
+                } else {
+                  obj2[org][risk2][dur1][syndrome] += 1;
+                }
+              }
+              if (obj2[org][risk3] && risk3) {
+                if (!obj2[org][risk3][dur1]) obj2[org][risk3][dur1] = {};
+                if (!obj2[org][risk3][dur1][syndrome]) {
+                  obj2[org][risk3][dur1][syndrome] = 1;
+                } else {
+                  obj2[org][risk3][dur1][syndrome] += 1;
+                }
+              }
+            }
+          }
+        });
+
+        if (Object.keys(obj).length > 0 && obj) {
+          for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              const Risks = obj[key];
+              const riskCount = Object.keys(Risks).length;
+
+              // Flag to check if key cell has been added for rowspan
+              let keyCellAdded = false;
+              let orgRowCount = 0;
+              for (riskCnt in Risks) {
+                orgRowCount += Object.keys(Risks[riskCnt]).length;
+              }
+
+              for (const Risk in Risks) {
+                if (Risks.hasOwnProperty(Risk)) {
+                  tableRow1 += "<tr>";
+                  let rowspanAdded1 = false;
+
+                  const durations = Risks[Risk];
+                  const durationcount = Object.keys(durations).length;
+
+                  // let riskRowCount = 0
+                  // for (durCnt in durations) {
+                  //   console.log('Object.keys(durations[durCnt]).length:>>>>>>', Object.keys(durations[durCnt]).length, durations[durCnt])
+                  //   riskRowCount += Object.keys(durations[durCnt]).length
+                  // }
+
+                  // for (const syndrom in durations[duration]) {
+                  if (!keyCellAdded) {
+                    tableRow1 += `<td style='text-align:left' rowspan='${orgRowCount}'>${key}</td>`;
+                    keyCellAdded = true;
+                  }
+
+                  if (!rowspanAdded1) {
+                    tableRow1 += `<td style='text-align:left'  rowspan='${
+                      durationcount == 0 ? 1 : durationcount
+                    }' >${Risk}</td>`;
+                    rowspanAdded1 = true;
+                  }
+
+                  for (const duration in durations) {
+                    tableRow1 += `<td style='text-align:left'  >${duration}</td>`;
+
+                    tableRow1 += `<td style='text-align:left' >${
+                      durations[duration]["BSI"] ?? ""
+                    }</td>`;
+                    tableRow1 += `<td style='text-align:left' >${
+                      durations[duration]["CLABSI"] ?? ""
+                    }</td>`;
+                    tableRow1 += `<td style='text-align:left' >${
+                      durations[duration]["GI"] ?? ""
+                    }</td>`;
+                    tableRow1 += `<td style='text-align:left' >${
+                      durations[duration]["Meningitis"] ?? ""
+                    }</td>`;
+                    tableRow1 += `<td style='text-align:left' >${
+                      durations[duration]["UTI/SSI"] ?? ""
+                    }</td>`;
+                    tableRow1 += `<td style='text-align:left' >${
+                      durations[duration]["VAP"] ?? ""
+                    }</td>`;
+                    tableRow1 += `<td style='text-align:left' >${
+                      durations[duration]["NA"] ?? ""
+                    }</td>`;
+                    // }
+
+                    tableRow1 += "</tr>";
+                  }
+                }
+              }
+            }
+          }
+
+          document.getElementById("block-1").innerHTML = tableRow1;
+          document.getElementById("output").style.display = "block";
+          document.getElementById("loader").style.display = "none";
+        } else {
+          document.getElementById("block-1").innerHTML = tableRow1;
+
+          document.getElementById("loader").style.display = "none";
+        }
+        if (Object.keys(obj1).length > 0 && obj1) {
+          for (const key in obj1) {
+            if (obj1.hasOwnProperty(key)) {
+              const Risks = obj1[key];
+              const riskCount = Object.keys(Risks).length;
+
+              // Flag to check if key cell has been added for rowspan
+              let keyCellAdded = false;
+              let orgRowCount = 0;
+              for (riskCnt in Risks) {
+                orgRowCount += Object.keys(Risks[riskCnt]).length;
+              }
+
+              for (const Risk in Risks) {
+                if (Risks.hasOwnProperty(Risk)) {
+                  tableRow2 += "<tr>";
+                  let rowspanAdded1 = false;
+
+                  const durations = Risks[Risk];
+                  const durationcount = Object.keys(durations).length;
+
+                  if (!keyCellAdded) {
+                    tableRow2 += `<td style='text-align:left' rowspan='${orgRowCount}'>${key}</td>`;
+                    keyCellAdded = true;
+                  }
+
+                  if (!rowspanAdded1) {
+                    tableRow2 += `<td style='text-align:left'  rowspan='${
+                      durationcount == 0 ? 1 : durationcount
+                    }' >${Risk}</td>`;
+                    rowspanAdded1 = true;
+                  }
+
+                  for (const duration in durations) {
+                    tableRow2 += `<td style='text-align:left'  >${duration}</td>`;
+
+                    tableRow2 += `<td style='text-align:left' >${
+                      durations[duration]["BSI"] ?? ""
+                    }</td>`;
+                    tableRow2 += `<td style='text-align:left' >${
+                      durations[duration]["CLABSI"] ?? ""
+                    }</td>`;
+                    tableRow2 += `<td style='text-align:left' >${
+                      durations[duration]["GI"] ?? ""
+                    }</td>`;
+                    tableRow2 += `<td style='text-align:left' >${
+                      durations[duration]["Meningitis"] ?? ""
+                    }</td>`;
+                    tableRow2 += `<td style='text-align:left' >${
+                      durations[duration]["UTI/SSI"] ?? ""
+                    }</td>`;
+                    tableRow2 += `<td style='text-align:left' >${
+                      durations[duration]["VAP"] ?? ""
+                    }</td>`;
+                    tableRow2 += `<td style='text-align:left' >${
+                      durations[duration]["NA"] ?? ""
+                    }</td>`;
+                    // }
+
+                    tableRow2 += "</tr>";
+                  }
+                }
+              }
+            }
+          }
+
+          document.getElementById("block-2").innerHTML = tableRow2;
+          document.getElementById("output").style.display = "block";
+          document.getElementById("loader").style.display = "none";
+        } else {
+          document.getElementById("block-2").innerHTML = tableRow2;
+
+          document.getElementById("loader").style.display = "none";
+        }
+        if (Object.keys(obj2).length > 0 && obj2) {
+          for (const key in obj2) {
+            if (obj2.hasOwnProperty(key)) {
+              const Risks = obj2[key];
+              const riskCount = Object.keys(Risks).length;
+
+              // Flag to check if key cell has been added for rowspan
+              let keyCellAdded = false;
+              let orgRowCount = 0;
+              for (riskCnt in Risks) {
+                orgRowCount += Object.keys(Risks[riskCnt]).length;
+              }
+
+              for (const Risk in Risks) {
+                if (Risks.hasOwnProperty(Risk)) {
+                  tableRow3 += "<tr>";
+                  let rowspanAdded1 = false;
+
+                  const durations = Risks[Risk];
+                  const durationcount = Object.keys(durations).length;
+
+                  if (!keyCellAdded) {
+                    tableRow3 += `<td style='text-align:left' rowspan='${orgRowCount}'>${key}</td>`;
+                    keyCellAdded = true;
+                  }
+
+                  if (!rowspanAdded1) {
+                    tableRow3 += `<td style='text-align:left'  rowspan='${
+                      durationcount == 0 ? 1 : durationcount
+                    }' >${Risk}</td>`;
+                    rowspanAdded1 = true;
+                  }
+
+                  for (const duration in durations) {
+                    tableRow3 += `<td style='text-align:left'  >${duration}</td>`;
+
+                    tableRow3 += `<td style='text-align:left' >${
+                      durations[duration]["BSI"] ?? ""
+                    }</td>`;
+                    tableRow3 += `<td style='text-align:left' >${
+                      durations[duration]["CLABSI"] ?? ""
+                    }</td>`;
+                    tableRow3 += `<td style='text-align:left' >${
+                      durations[duration]["GI"] ?? ""
+                    }</td>`;
+                    tableRow3 += `<td style='text-align:left' >${
+                      durations[duration]["Meningitis"] ?? ""
+                    }</td>`;
+                    tableRow3 += `<td style='text-align:left' >${
+                      durations[duration]["UTI/SSI"] ?? ""
+                    }</td>`;
+                    tableRow3 += `<td style='text-align:left' >${
+                      durations[duration]["VAP"] ?? ""
+                    }</td>`;
+                    tableRow3 += `<td style='text-align:left' >${
+                      durations[duration]["NA"] ?? ""
+                    }</td>`;
+                    // }
+
+                    tableRow3 += "</tr>";
+                  }
+                }
+              }
+            }
+          }
+
+          document.getElementById("block-3").innerHTML = tableRow3;
+          document.getElementById("output").style.display = "block";
+          document.getElementById("loader").style.display = "none";
+        } else {
+          document.getElementById("block-3").innerHTML = tableRow3;
+
+          document.getElementById("loader").style.display = "none";
+        }
+      },
+    });
+
+    var antibioticsValue = {};
+    var attrNames = {};
+  }
+
+  function arraySorting(a, b) {
+    return Number(a.value) > Number(b.value)
+      ? -1
+      : Number(a.value) < Number(b.value)
+      ? 1
+      : 0;
+  }
+
+  function arraySortName(a, b) {
+    if (a.id < b.id) {
+      return -1;
+    }
+    if (a.id > b.id) {
+      return 1;
+    }
+    return 0;
+  }
+
+  var tableToExcel = (function () {
+    var uri = "data:application/vnd.ms-excel;base64,",
+      template =
+        '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>',
+      base64 = function (s) {
+        return window.btoa(unescape(encodeURIComponent(s)));
+      },
+      format = function (s, c) {
+        return s.replace(/{(\w+)}/g, function (m, p) {
+          return c[p];
+        });
+      };
+    return function (table, name, filename) {
+      if (!table.nodeType) table = document.getElementById(table);
+      var ctx = { worksheet: name || "Worksheet", table: table.innerHTML };
+      document.getElementById("dlink").href =
+        uri + base64(format(template, ctx));
+      document.getElementById("dlink").download =
+        filename + "_" + selectedOrgUnit.name + ".xls";
+      document.getElementById("dlink").click();
+    };
+  })();
+</script>
+
+<!-- printing script -->
+<script type="text/javascript">
+  function printContent(el) {
+    var restorepage = document.body.innerHTML;
+    var printcontent = document.getElementById(el).innerHTML;
+    document.body.innerHTML = printcontent;
+    window.print();
+    document.body.innerHTML = restorepage;
+  }
+</script>
