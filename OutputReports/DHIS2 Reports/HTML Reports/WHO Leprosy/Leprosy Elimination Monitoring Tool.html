@@ -1,0 +1,704 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+  integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous" />
+<script src="https://code.highcharts.com/maps/highmaps.js"></script>
+<!-- <script src="https://code.highcharts.com/maps/modules/exporting.js"></script> -->
+<script src='https://code.highcharts.com/modules/exporting.js'></script>
+<script src='https://code.highcharts.com/modules/export-data.js'></script>
+
+<script src="https://code.highcharts.com/maps/modules/data.js"></script>
+<script src="https://code.highcharts.com/maps/modules/accessibility.js"></script>
+<script src="https://cdn.jsdelivr.net/lodash/4/lodash.min.js"></script>
+
+<!-- Add your CSS styles -->
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+  }
+
+  #container {
+    /* height: 500px;
+    min-width: 310px;
+    max-width: 800px; */
+    margin: 0 auto;
+  }
+
+  #csv {
+    display: none;
+  }
+</style>
+
+<style>
+  table {
+    border-collapse: collapse;
+  }
+
+  thead>tr>td {
+    font-weight: bold;
+  }
+
+  tbody>tr>td {
+    font-weight: bold;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+  }
+
+  /* Center the loader  */
+  #loader {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #34b4db;
+    width: 120px;
+    height: 120px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+  }
+
+  @-webkit-keyframes spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+      -webkit-transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
+<a id="dlink" style="display: none"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+  onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+  Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle" id="btnExport"
+  onclick="tableToExcel('dataTable', 'Leprosy Elmination Monitoring Record', 'Leprosy Elmination Monitoring Record')">
+  <span class="glyphicon glyphicon-download-alt" style="font-size: 15px"></span>Download As Excel
+</button>
+<div align="center" id="globalId">
+  <div id="loader" style="display: none"></div>
+  <div id="printing" class="animate-bottom">
+    <table border="1" id="dataTable" class="table table-hover text-center" cellspacing="6" cellpadding="4"
+      style="border-collapse: collapse; text-align: center ; width: 100%;">
+      <thead id="table-head"></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <pre id="csv">Leprosy Elimination Monitoring Tool-SEAR Map
+  <!-- ... (your CSV data here) ... -->
+</pre>
+
+  <div id="container"></div>
+
+</div>
+
+
+<script>
+  var selectedOrgUnit = dhis2.report.organisationUnit;
+  var period = dhis2.report.periods[0];
+  var ouHierarchy = dhis2?.report?.organisationUnitHierarchy?.length > 1 ? dhis2?.report?.organisationUnitHierarchy[1] : { id: "", code: "", name: "" };
+  const idforMoldive = "gYW1VSu9YsW"
+  var featuresLatLng = []
+  var maldiveData = []
+  const mapLbel = 'Maldives - '
+
+  // const xyz = fetch('../api/geoFeatures?includeGroupSets=false&ou=ou:gYW1VSu9YsW;LEVEL-3;LEVEL-4;LEVEL-5&displayProperty=NAME')
+  //   .then(response => response.json())
+  //   .then(data => {
+  //     // for (const feature of data) {
+
+  //     //   if (feature.id != idforMoldive) {
+  //     //     maldiveData.push(feature.id)
+
+  //     //     let finalRcd = {
+  //     //       "type": "Feature",
+  //     //     }
+
+  //     //     finalRcd.properties = {
+  //     //       name: feature.na,
+  //     //       id: feature.id,
+  //     //       code: feature.code,
+  //     //       type: feature.ty
+  //     //     }
+  //     //     finalRcd.geometry = {
+  //     //       type: 'Point',
+  //     //       // type: feature.id == idforMoldive ? 'Polygon' : "MultiPolygon",
+  //     //       // type: JSON.parse(feature.co)?.length > 2 ? 'Polygon' : "MultiPolygon",
+  //     //       coordinates: JSON.parse(feature.co)
+  //     //     }
+
+  //     //     featuresLatLng.push(finalRcd)
+  //     //   }
+  //     // }
+
+  //     featuresLatLng = _.sortBy(data, ['le'])
+  //       .map((ou) => {
+  //         maldiveData.push(ou.id)
+  //         const coord = JSON.parse(ou.co)
+  //         let gpid = ''
+  //         let gppg = ''
+  //         let type = 'Point'
+
+  //         if (ou.ty === 2) {
+  //           type = 'Polygon'
+  //           if (ou.co.substring(0, 4) === '[[[[') {
+  //             type = 'MultiPolygon'
+  //           }
+  //         }
+
+  //         // Grand parent
+  //         if (_.isString(ou.pg) && ou.pg.length) {
+  //           const ids = _.compact(ou.pg.split('/'))
+
+  //           // Grand parent id
+  //           if (ids.length >= 2) {
+  //             gpid = ids[ids.length - 2]
+  //           }
+
+  //           // Grand parent parent graph
+  //           if (ids.length > 2) {
+  //             gppg = '/' + ids.slice(0, ids.length - 2).join('/')
+  //           }
+  //         }
+
+  //         return {
+  //           type: 'Feature',
+  //           id: ou.id,
+  //           geometry: {
+  //             type,
+  //             coordinates: coord,
+  //           },
+  //           properties: {
+  //             type,
+  //             id: ou.id,
+  //             name: ou.na,
+  //             hasCoordinatesDown: ou.hcd,
+  //             hasCoordinatesUp: ou.hcu,
+  //             level: ou.le,
+  //             grandParentParentGraph: gppg,
+  //             grandParentId: gpid,
+  //             parentGraph: ou.pg,
+  //             parentId: ou.pi,
+  //             parentName: ou.pn,
+  //             dimensions: ou.dimensions,
+  //           },
+  //         }
+  //       })
+  //       .filter(
+  //         ({ geometry }) =>
+  //           Array.isArray(geometry.coordinates) &&
+  //           geometry.coordinates.length &&
+  //           geometry.coordinates.flat().length
+  //       )
+
+  //     featuresLatLng.shift()
+
+  //     // featuresLatLng.push(latLng)
+
+  //   });
+
+
+  var getYear = (currentYear, yearsBack) => {
+    let arrYear = [];
+    for (let i = yearsBack; i <= currentYear; i++) arrYear.push(i);
+    return arrYear;
+  };
+
+  var periods = getYear(period, 2000).join(";");
+  const yrPeriods = periods.split(";")
+
+  let moldivesColorIds = {}
+
+  $("#printing").hide();
+
+  // for (let yr = 0; yr <= yrPeriods?.length; yr += 5) {
+  //   moldivesColorIds = { ...moldivesColorIds, [yrPeriods[yr]]: [] }
+  // }
+
+
+  var tableHead = `<tr>
+    <td style="border: 1px solid black; background: #add8e6" colspan="${periods?.length + 2
+    }"">Leprosy Elimination Monitoring Tool-${selectedOrgUnit.name
+    } (2000 to ${period})</td>
+    </tr>
+    <tr>
+      <td colspan="${periods.length + 2}" >
+        <div style="text-align:left; ">
+         <span style="width: 20px;height: 20px;background:#ff114d;display:inline-block"></span> <span>Phase 1 - Until interruption of transmission (5 years no autochthonous child cases)</span> 
+        </div>
+        <div style="text-align:left">
+         <span style="width: 20px;height: 20px;background:#ffd067;display:inline-block"></span> <span>Phase 2 - Until elimination of leprosy disease (3 years no autochthonous cases)</span>
+        </div>
+        <div style="text-align:left">
+         <span style="width: 20px;height: 20px;background:#bae6b7;display:inline-block"></span> <span>Phase 3 - Post-elimination phase (10 years no autochthonous cases)</span>
+        </div>
+        <div style="text-align:left">
+         <span style="width: 20px;height: 20px;background:#68ce6a;display:inline-block"></span> <span>Non-endemic status</span>
+        </div>
+        <div style="text-align:left">
+         <span style="width: 20px;height: 20px;background:#e65a76;display:inline-block"></span> <span>Sporadic autochthonous adult case</span>
+        </div>
+        <div style="text-align:left">
+         <span style="width: 20px;height: 20px;background:#af5c99;display:inline-block"></span> <span>Sporadic autochthonous child case</span>
+        </div>
+        <div style="text-align:left">
+         <span style="width: 20px;height: 20px;background:#bfbfbf;display:inline-block"></span> <span>query operational cause of high number of new cases</span>
+        </div>
+        <div style="text-align:left">
+         <span style="width: 20px;height: 20px;background:#35c9f3;display:inline-block"></span> <span>3 or more cases on average in 3 consecutive years; possible re-emergence to be investigated</span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid black; background: #add8e6">Area L1</td>
+      <td style="border: 1px solid black; background: #add8e6">Area code L1</td>
+      <td style="border: 1px solid black; background: #add8e6">Area L2</td>
+      <td style="border: 1px solid black; background: #add8e6">Area code L2</td>
+      <td style="border: 1px solid black; background: #add8e6">Age group</td>`;
+  periods.split(";").forEach((pe) => (tableHead += `<td style="border: 1px solid black; background: #add8e6">${pe}</td>`));
+  tableHead += "</tr>";
+
+  // $('#table-head').val(tableHead);
+  document.getElementById("table-head").innerHTML = tableHead;
+
+  $("#loader").show();
+  $("#printing").hide();
+
+
+  async function displayData() {
+    var tableRow = "";
+    var orgUnitChildren = await getOUChilren();
+    if (!orgUnitChildren.length) {
+      document.getElementById("table-body").innerHTML = `<tr><td style="font-style:italic;" colspan="${periods.length + 2}">Organisation unit not found!!</td></tr>`;
+      $("#printing").show();
+      $("#loader").hide();
+      return;
+    }
+
+    // for (let ouChild of orgUnitChildren) {
+    //   if (ouChild?.parent?.id == idforMoldive) {
+    //     maldiveData.push(ouChild.id)
+    //   }
+    // }
+    // console.log('maldiveData:>>>>>>', maldiveData)
+
+    for (let ou of orgUnitChildren) {
+      let totalOU = "";
+      let rowChildren = "";
+      let rowAdult = "";
+      let rowYearChildren = [];
+      let rowYearAdult = [];
+
+      let passedYear = 0;
+      let otherAdult = "#e65a76"; //sporadic cases
+      let otherChild = "#af5c99";
+
+
+      let phases = {
+        phase1: {
+          color: "#ff114d",
+          exists: false,
+          count: 0,
+        },
+        phase2: {
+          color: "#ffd067",
+          exists: false,
+          count: 0,
+        },
+        phase3: {
+          color: "#bae6b7",
+          exists: false,
+          count: 0,
+        },
+        phase4: {
+          color: "#68ce6a",
+          exists: false,
+          count: 0,
+        },
+      };
+
+      let ouVal = await getData(periods, ou.id);
+
+      tableRow += `<tr><td rowspan='3'>${ou.id == selectedOrgUnit.id ? ouHierarchy.name : ou.parent.name}</td><td rowspan='3'>${ou.id == selectedOrgUnit.id ? ouHierarchy.code : ou.parent.code}</td><td rowspan='3'>${ou.name}</td><td rowspan='3'>${ou.code}</td><td>Children</td>`;
+
+      for (let period of yrPeriods) {
+        let valChild = ouVal["children"][period] ? Number(ouVal["children"][period]) : "";
+        let valAdult = ouVal["adult"][period] ? Number(ouVal["adult"][period]) : "";
+
+        if (!phases.phase1.exists) {
+
+          //For Phase 1
+          if (!valChild) {
+            phases.phase1.count += 1;
+            passedYear += 1;
+          } else {
+            passedYear = 0;
+            phases.phase1.count = 0;
+          }
+
+          rowChildren += `<td style="background:${phases.phase1.color};border:1px solid black;">${valChild}</td>`;
+          rowAdult += `<td style="background:${phases.phase1.color};border:1px solid black;">${valAdult}</td>`;
+
+          totalOU += `<td style="background:${phases.phase1.color};border:1px solid black;">${valAdult + valChild}</td>`;
+
+          if (phases.phase1.count == 5) phases.phase1.exists = true;
+        } else if (!phases.phase2.exists) {
+          //For Phase 2
+
+          if ((!valChild || valChild <= 1) && (!valAdult || valAdult <= 0)) {
+            passedYear += 1;
+            phases.phase2.count += 1;
+
+            rowYearAdult.push(valAdult);
+            rowYearChildren.push(valChild);
+          } else {
+            passedYear = 0;
+            phases.phase2.count = 0;
+            rowYearAdult.forEach((val, index) => {
+              rowChildren += `<td style="background:${rowYearChildren[index] ? otherChild : phases.phase2.color};border:1px solid black;">${rowYearChildren[index]}</td>`;
+              rowAdult += `<td style="background:${phases.phase2.color};border:1px solid black;">${val}</td>`;
+              totalOU += `<td style="background:${phases.phase2.color};border:1px solid black;">${rowYearChildren[index] + val}</td>`;
+            });
+            rowYearAdult = [];
+            rowYearChildren = [];
+
+            rowChildren += `<td style="background:${valChild ? otherChild : phases.phase2.color};border:1px solid black;">${valChild}</td>`;
+            rowAdult += `<td style="background:${phases.phase2.color};border:1px solid black;">${valAdult}</td>`;
+
+            totalOU += `<td style="background:${phases.phase2.color};border:1px solid black;">${valAdult + valChild}</td>`;
+          }
+
+          if (phases.phase2.count == 3) phases.phase2.exists = true;
+        } else if (!phases.phase3.exists) {
+          //For Phase 3
+
+          if (rowYearAdult.length) {
+            rowYearAdult.forEach((val, index) => {
+              rowChildren += `<td style="background:${passedYear == 8 ? phases.phase3.color : rowYearChildren[index] ? otherChild : phases.phase2.color};border:1px solid black;">${rowYearChildren[index]}</td>`;
+              rowAdult += `<td style="background:${passedYear == 8 ? phases.phase3.color : phases.phase2.color};border:1px solid black;">${val}</td>`;
+
+              totalOU += `<td style="background:${passedYear == 8 ? phases.phase3.color : val ? otherAdult : phases.phase2.color};border:1px solid black;">${rowYearChildren[index] + val}</td>`;
+            });
+            if (passedYear == 8) phases.phase3.count = 3;
+            rowYearAdult = [];
+          }
+
+          phases.phase3.count += 1;
+
+          rowChildren += `<td style="background:${valChild ? otherChild : phases.phase3.color};border:1px solid black;">${valChild}</td>`;
+          rowAdult += `<td style="background:${valAdult ? otherAdult : phases.phase3.color};border:1px solid black;">${valAdult}</td>`;
+
+          totalOU += `<td style="background:${phases.phase3.color};border:1px solid black;">${valAdult + valChild}</td>`;
+          if (phases.phase3.count == 10) phases.phase3.exists = true;
+        } else if (!phases.phase4.exists) {
+          //For Phase 4
+
+          rowChildren += `<td style="background:${valChild ? otherChild : phases.phase4.color};border:1px solid black;">${valChild}</td>`;
+          rowAdult += `<td style="background:${valAdult ? otherAdult : phases.phase4.color};border:1px solid black;">${valAdult}</td>`;
+
+          totalOU += `<td style="background:${phases.phase4.color};border:1px solid black;">${valAdult + valChild}</td>`;
+        }
+      }
+
+      if (rowYearAdult.length) {
+        rowYearAdult.forEach((val, index) => {
+          rowChildren += `<td style="background:${phases.phase2.color};border:1px solid black;">${rowYearChildren[index]}</td>`;
+          rowAdult += `<td style="background:${phases.phase2.color};border:1px solid black;">${val}</td>`;
+          totalOU += `<td style="background:${phases.phase2.color};border:1px solid black;">${rowYearChildren[index] + val}</td>`;
+        });
+        rowYearAdult = [];
+        rowYearChildren = [];
+      }
+
+      tableRow += rowChildren;
+      tableRow += "</tr><tr><td>Adult</td>";
+      tableRow += rowAdult;
+      tableRow += "</tr>";
+      tableRow += `<tr><td>Total new cases</td>${totalOU}</tr>`;
+
+      // calculate colour with 
+      // if (maldiveData.includes(ou.parent.id)) {
+      //   const str = totalOU.split('</td>')
+      //   for (let i = 0; i < str.length; i += 5) {
+      //     // moldivesColorIds = { ...moldivesColorIds, [yrPeriods[i]]: [...moldivesColorIds[yrPeriods[i]] ?? [], [ou.id, str[i].substring(22, 29)]] }
+      //     moldivesColorIds = { ...moldivesColorIds, [yrPeriods[i]]: [...moldivesColorIds[yrPeriods[i]] ?? [], [ou.id, Number(str[i].slice(-1)) ? str[i].slice(-1) : '', str[i].substring(22, 29)]] }
+      //     // moldivesColorIds = { ...moldivesColorIds, [yrPeriods[i]]: [...moldivesColorIds[yrPeriods[i]] ?? [], { code: ou.id, color: str[i].substring(22, 29) }] }
+
+      //   }
+      // }
+
+
+    }
+
+    /*
+    * flot map
+    
+    */
+    // plotMapData()
+
+    // console.log('tableRow:>>>>>>', tableRow)
+
+    document.getElementById("table-body").innerHTML = tableRow;
+    $("#printing").show();
+    $("#loader").hide();
+  }
+
+  displayData();
+
+  async function getOUChilren() {
+    var orgUnitChildren = [];
+
+    var regions = {};
+    var resRegions = await (
+      await fetch(
+        "../api/organisationUnitGroups/znpMvXHhbPX.json?fields=id,name,organisationUnits[id,name]&paging=false"
+      )
+    ).json();
+    resRegions.organisationUnits.forEach((ou) => (regions[ou.id] = true));
+
+    var url =
+      "../api/organisationUnits/" +
+      selectedOrgUnit.id +
+      ".json?paging=false&fields=id,name,level.code";
+
+    let response = await fetch("../api/organisationUnitLevels.json");
+    var orgUnitLevel = await response.json();
+
+
+    for (let i = 0; i < orgUnitLevel.organisationUnitLevels.length; i++)
+      url += ",children[id,name,level,code";
+    url += "]";
+
+    response = await fetch(url);
+    var data = await response.json();
+
+    treeDown(data);
+
+    function treeDown(arr, parent) {
+      var key = {
+        id: arr.id,
+        name: arr.name,
+        code: arr.code ? arr.code : "",
+        children: arr.children,
+      };
+      if (key?.children?.length)
+        for (let i = 0; i < key?.children?.length; i++)
+          treeDown(key.children[i], key);
+      if (regions[key.id]) orgUnitChildren.push({ ...key, parent });
+    }
+    return orgUnitChildren;
+  }
+
+  async function getData(periods, ou) {
+    var dataCategory = {
+      adult: {},
+      children: {},
+    };
+    var resData = await (
+      await fetch(
+        `../api/sqlViews/CdIfs0o6Vo2/data.json?var=ou:${ou}&var=startDate:2000-01-01&var=endDate:${period}-12-31&paging=false`
+      )
+    ).json();
+
+    resData.listGrid.rows.forEach((row) => {
+      if (row[0] == "SmZe6komFZU") {
+        dataCategory["children"][row[6]] = row[4];
+      } else {
+        if (!dataCategory["adult"][row[6]])
+          dataCategory["adult"][row[6]] = row[4];
+      }
+    });
+
+    return dataCategory;
+  }
+
+  var tableToExcel = (function () {
+    var uri = "data:application/vnd.ms-excel;base64,",
+      template =
+        '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>',
+      base64 = function (s) {
+        return window.btoa(unescape(encodeURIComponent(s)));
+      },
+
+      format = function (s, c) {
+        return s.replace(/{(\w+)}/g, function (m, p) {
+          return c[p];
+        });
+      };
+    return function (table, name, filename) {
+
+      if (!table.nodeType) table = document.getElementById(table);
+      var ctx = { worksheet: name || "Worksheet", table: table.innerHTML };
+      document.getElementById("dlink").href =
+        uri + base64(format(template, ctx));
+      document.getElementById("dlink").download =
+        filename + "-" + selectedOrgUnit.name + ".xls";
+      document.getElementById("dlink").click();
+    };
+  })();
+
+
+  function printContent(el) {
+    console.log('el:>>>>>>', el)
+    // var divToPrint = document.getElementById(el);
+    // console.log('divToPrint:>>>>>>', divToPrint)
+    // var divToPrintHTML = '<style type="text/css" media="print">@page { size: landscape; }</style>' + divToPrint.outerHTML;
+
+    // newWin = window.open();
+    // newWin.document.write(divToPrintHTML);
+
+    // newWin.print();
+    // newWin.close();
+
+
+    var restorepage = document.body.innerHTML;
+    var printcontent = document.getElementById(el).innerHTML;
+    var divToPrintHTML = '<style type="text/css" media="print">@page { size: landscape; }</style>' + printcontent;
+    document.body.innerHTML = divToPrintHTML;
+    window.print();
+    document.body.innerHTML = restorepage;
+  }
+
+
+  // async function plotMapData() {
+  //   // console.log('************************************************************************************************', moldivesColorIds, featuresLatLng)
+
+  //   var finalRecord = {
+  //     "type": "FeatureCollection",
+  //     "crs": {
+  //       "type": "name",
+  //       "properties": {
+  //         "name": "urn:ogc:def:crs:EPSG::31493"
+  //       }
+  //     },
+  //     features: featuresLatLng
+  //   }
+
+
+  //   // var data = [
+  //   //   ["V3cYb7bK5OQ", 1, '#ff114d'],
+  //   //   ["iVOUPKaRkdE", 2, '#ff114d'],
+  //   //   ["cjNS5uwU8ji", 3, '#ff114d'],
+  //   //   ["D2WAOW7NDgh", 4, 'yellow'],
+  //   //   ["sLF8mTjHII3", 5, '#ff114d'],
+  //   //   ["Dmd17jfJZUr", 6, '#ff114d'],
+  //   //   ["FOQqwRu1SyO", 7, '#ff114d'],
+  //   //   ["w7r6nQU7J7n", 8, '#ff114d'],
+  //   //   ["x8lpsLEdFAZ", 9, '#ff114d'],
+  //   //   ["BR4PJCc4nhw", 10, '#ff114d'],
+  //   //   ["ZlK6l0sZR6v", 11, '#ff114d'],
+  //   //   ["eODw51T1YWW", 12, '#ff114d'],
+  //   //   ["W5wcK37yAkm", 13, '#ff114d'],
+  //   //   ["RgppSIFuH6L", 14, '#ff114d'],
+  //   //   ["sl2aRa3tQ3m", 15, '#ff114d'],
+  //   //   ["ib74rcKIWGs", 16, '#ff114d'],
+  //   //   ["iTiw5kADwrj", 17, '#ff114d'],
+  //   //   ["pkxIAU9Zn0Z", 18, '#ff114d'],
+  //   //   ["gDSz8Dgcs1S", 19, 'yellow'],
+  //   //   ["ulazzOEqQ6n", 20, '#ff114d'],
+  //   //   ["RzaKKaEOUog", 21, '#ff114d'],
+  //   //   ["Cra6ViR4J7t", 22, '#ff114d'],
+  //   //   ["Fupj0ahgfDB", 23, '#ff114d'],
+  //   //   ["kAKTni6Qhvk", 24, '#ff114d'],
+  //   //   ["UQ82wkUoErQ", 25, 'yellow'],
+  //   //   ["vvs5INVbIjg", 26, '#ff114d']
+  //   // ];
+
+
+  //   var daString = "<div ></div>";
+
+  //   for (let yr in moldivesColorIds) {
+  //     daString = daString + `<div id='${yr}' style='padding-top: 25px; padding-bottom:25px;'></div>`
+  //   }
+  //   var daParent = document.getElementById("container");
+  //   daParent.innerHTML = daString;
+
+
+  //   for (let yr in moldivesColorIds) {
+
+  //     Highcharts.mapChart(yr, {
+
+  //       chart: {
+  //         map: finalRecord,
+  //         backgroundColor: '#4b96af',
+  //         height: 500
+
+  //       },
+
+  //       legend: {
+  //         enabled: false
+  //       },
+
+  //       creadit: {
+  //         enabled: false
+  //       },
+
+  //       title: {
+  //         text: mapLbel + yr,
+  //       },
+
+  //       mapNavigation: {
+  //         enabled: true,
+  //         enableDoubleClickZoomTo: true,
+  //         buttonOptions: {
+  //           verticalAlign: 'bottom'
+  //         }
+  //       },
+
+
+  //       series: [{
+  //         name: 'Maldives data',
+  //         data: moldivesColorIds[yr].reverse(),
+  //         keys: ['id', 'value', 'color'],
+  //         joinBy: 'id',
+  //         allowPointSelect: true,
+  //         cursor: 'pointer',
+  //         borderColor: '#555',
+  //         borderWidth: 1,
+
+  //         // tooltip: {
+  //         //   headerFormat: '',
+  //         //   pointFormat: '{point.name}'
+  //         // },
+
+  //         // dataLabels: {
+  //         //   enabled: true,
+  //         //   format: '{point.name}',
+  //         //   style: {
+  //         //     textOutline: false,
+  //         //     fontSize: '0px'
+  //         //   }
+  //         // },
+
+  //       }]
+  //     });
+
+  //   }
+
+  // }
+
+
+
+</script>
