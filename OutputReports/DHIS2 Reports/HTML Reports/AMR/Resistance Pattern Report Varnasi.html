@@ -308,6 +308,8 @@
   var groupwiseAnti = {};
   var organismGroupSet = [];
   var organismAWGroupSet = [];
+  var ORGCODE = [];
+  var OrgNameArray = {};
 
   $.get(
     "../api/29/optionSets/s1UF1wpUrpB.json?fields=id,name,options[id,name]",
@@ -356,6 +358,22 @@
       document.getElementById("locationType-name").innerHTML = locationTypeName;
     }
   );
+  $.get(
+    "../api/29/optionSets/TUCsBvqwTUV.json?fields=id,name,options[id,name,code]",
+    function (res) {
+      let Organism = {};
+      res?.options?.forEach((option) => {
+        Organism[option.code] = option.name;
+      });
+      OrgNameArray = Organism;
+      // for (let i = 1; i < res.options.length; i++) {
+      //   var option = res.options[i];
+      //   // ORGCODE = res.options.code[i];
+      //   OrgNameArray[option.code] = option.name;
+      // }
+      // processOrgNameArray();
+    }
+  );
 
   function submitData() {
     document.getElementById("loader").style.display = "block";
@@ -393,7 +411,7 @@
         case dur >= 8 && dur <= 28:
           return "1-4 week";
         case dur >= 29:
-          return "4 or more week";
+          return ">=4 weeks";
 
         default:
           return "";
@@ -456,7 +474,26 @@
         });
 
         filteredData.forEach((row) => {
-          var org = row[22];
+          var orgkey = row[22];
+          // const keyMapping = {
+          //   'KPN': "Klebsiella pneumoniae",
+          //   ECO: "Escherichia coli",
+          //   ECL: "Enterobacter cloacae",
+          //   ESC: "Escherichia sp.",
+          //   PMI: "Proteus mirabilis",
+          //   SAB: "Salmonella Paratyphi B",
+          //   KOX: "Klebsiella oxytoca",
+          //   "CI-": "Citrobacter sp.",
+          //   EDW: "Edwardsiella sp.",
+          //   CDI: "Citrobacter koseri",
+          //   KOX: "Klebsiella oxytoca",
+
+          // }
+
+          // Assuming OrgNameArray is your object containing code and name pairs
+          // const org = OrgNameArray.hasOwnProperty(orgkey) ? OrgNameArray[orgkey] : orgkey;
+
+          const org = OrgNameArray[orgkey] || orgkey;
           var risk1 = row[23];
           var risk2 = row[24];
           var risk3 = row[25];
