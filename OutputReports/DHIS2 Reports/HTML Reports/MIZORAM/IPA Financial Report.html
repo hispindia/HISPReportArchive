@@ -1,0 +1,522 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
+    integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+    crossorigin="anonymous"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+<style>
+    /* Absolute Center Spinner */
+    * {
+        font-family: 'Times New Roman', Times, serif;
+    }
+
+    .borderless,
+    .borderless th,
+    .borderless td {
+        border: 0;
+        border-collapse: collapse;
+    }
+
+    .loading {
+        position: fixed;
+        z-index: 999;
+        height: 2em;
+        width: 2em;
+        overflow: show;
+        margin: auto;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        display: none;
+    }
+
+    /* Transparent Overlay */
+
+    .loading:before {
+        content: '';
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* :not(:required) hides these rules from IE9 and below */
+
+    .loading:not(:required) {
+        /* hide "loading..." text */
+        font: 0/0 a;
+        color: transparent;
+        text-shadow: none;
+        background-color: transparent;
+        border: 0;
+    }
+
+    .loading:not(:required):after {
+        content: '';
+        display: block;
+        font-size: 10px;
+        width: 1em;
+        height: 1em;
+        margin-top: -0.5em;
+        -webkit-animation: spinner 1500ms infinite linear;
+        -moz-animation: spinner 1500ms infinite linear;
+        -ms-animation: spinner 1500ms infinite linear;
+        -o-animation: spinner 1500ms infinite linear;
+        animation: spinner 1500ms infinite linear;
+        border-radius: 0.5em;
+        -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+        box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+    }
+
+    /* Animation */
+
+    @-webkit-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @-moz-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @-o-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    .box {
+        width: 50%;
+        float: left;
+    }
+</style>
+
+</head>
+
+<body>
+    <div class="loading" id="loader"></div>
+
+    <a id="dlink" style="display:none;"></a>
+
+    <div id="downloads" style="display: none;">
+        <button class="btn btn-success"
+            onclick="tableToExcel('output', 'IPA Financial Report', 'IPA Financial Report')">Download as Excel
+        </button>
+    </div>
+
+    <div id="output" style="display: none;">
+        <table class="table table-hover" style="width:100%;text-align:center" id="report-table">
+            <thead style="font-weight: bold;">
+                <tr>
+                    <td colspan="13" style="text-align:center;">
+                        <h5> Report generated on: <span id="curr-date"></span> <br />Report ID:<span
+                                id="curr-count"></span>
+                        </h5>
+
+                    </td>
+                </tr>
+                <tr>
+
+                </tr>
+                <tr>
+                    <td colspan="13"
+                        style="text-align:center; background: rgb(39, 102, 150);font-size:20px; color:white">IPA
+                        Financial Report
+                        <br />
+                        <span id="quater-year"></span>
+                    </td>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+</body>
+
+<script>
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var periodQuarter = dhis2.report.periods[0];
+    var quarters = [
+        "January-March",
+        "April-June",
+        "July-September",
+        "October-December"
+    ]
+    var dateSelected = `${quarters[periodQuarter.split('Q')[1] - 1]}, ${periodQuarter.split('Q')[0]}`
+    var totalRows = {};
+    var check = true;
+    var percentCut = false;
+    var percentCutOUId = '';
+    var percentCutOUGroup = {};
+    var percentCutSHT= []
+    var dhtOUParent = {};
+    var dhtOrgunits = [];
+    var includedOrgUnitGroups = [];
+    var tableHead = `<tr>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Sl. No.</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">District</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Name of IPA Unit</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Health Facilities</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Ex-Ante Assessment Score (Prev. quarter)</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Ex-Post Counter Verification Score (Prev. quarter)</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Penalty Imposed from previous quarter</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Ex-Ante Assessment Score (Last quarter)</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Bank Account Number</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">IFSC</td>
+                        <td style="text-align:center; background:#f2f2f2;font-weight:bold">Last Quarter RBF Earned</td>
+                    </tr>`
+
+    const getQuaterYear = function (quarter) {
+        var thisQuater, prevQuater = ''
+        var year = periodQuarter.split('Q')[0];
+        var month = periodQuarter.split('Q')[1];
+        var prevYear = year;
+        if (month == 1) {
+            prevYear = year - 1;
+            prevQuater = '4'
+            thisQuater = '1';
+        }
+        if (month == 2) {
+            prevQuater = '1'
+            thisQuater = '2';
+        }
+        if (month == 3) {
+            prevQuater = '2'
+            thisQuater = '3';
+        }
+        if (month == 4) {
+            prevQuater = '3'
+            thisQuater = '4';
+        }
+        return [`${prevYear}Q${prevQuater}`, `${year}Q${thisQuater}`];
+    }
+    const getYears = (quarter) => {
+        var year = periodQuarter.split('Q')[0];
+        const period = []
+        for (let i = 2023; i <= year; i++)period.push(i);
+        return period;
+    }
+
+    //getting between dates
+    var smToEm = getQuaterYear(periodQuarter);
+    var years = getYears(periodQuarter);
+
+    var dataStoreCount = 0;
+    $.ajax({
+        async: false,
+        type: "GET",
+        url: '../api/dataStore/reportCounts/financial',
+        success: function (data) {
+            debugger;
+            dataStoreCount = data;
+        }
+    });
+
+    document.getElementById("downloads").style.display = "none";
+    document.getElementById("output").style.display = "none";
+    document.getElementById("loader").style.display = "block";
+    document.getElementById('quater-year').innerHTML = dateSelected;
+
+    const dhIds = {};
+    const dhtIds = {};
+    const orgUnitGroup = [{
+        id: 'u52bDIwLiOG',
+        name: 'PHC'
+    }, {
+        id: 'QbaIyUsVHJ9',
+        name: 'CHC/ SDH'
+    }, {
+        id: 'vTZ2yIeAi81',
+        name: 'UPHC'
+    }, {
+        id: 'qvN06qQw9Hr',
+        name: 'DH'
+    }, {
+        id: 'Y1P2f3awpzt',
+        name: 'SHT'
+    }, {
+        id: 'D5YO4NsZtSp',
+        name: 'DHT'
+    }, {
+        id: 'qsRLv1WjuiM',
+        name: 'INS'
+    }];
+
+    const promises = (ouGroup) => {
+        return ouGroup.map(ou => {
+            return new Promise(resolve => fetch(`../api/organisationUnitGroups/${ou.id}.json?fields=id,name,organisationUnits[id,name]&paging=false`).then(res => res.json()).then(res => resolve(res)))
+        })
+    }
+
+    Promise.all(promises(orgUnitGroup)).then((res, index) => {
+        res.map(group => {
+            if(group.id == 'qvN06qQw9Hr') group.organisationUnits.forEach(ou => dhIds[ou.id] = ou.name);
+            if(group.id == 'D5YO4NsZtSp') group.organisationUnits.forEach(ou => dhtIds[ou.id] = ou.name);
+            if(group.id == 'Y1P2f3awpzt') group.organisationUnits.forEach(ou => percentCutSHT.push({id: ou.id,name: ou.name}));
+            group.organisationUnits.forEach(ou => includedOrgUnitGroups[ou.id] = group.name)
+        })
+    }).then(() => getOU()).then(()=> {
+        check = false;
+        dhtOrgunits.forEach(ou => getData(ou,dhtIds[ou], dhtOUParent[ou]))
+    }).then(()=> {
+        check = false;
+        percentCutSHT.forEach(ou => getData(ou.id,ou.name, ''))
+    }).then(() => {
+        let displayData = ''
+        for (let group in totalRows) {
+            displayData += tableHead;
+            totalRows[group].forEach(row => displayData += row);
+        }
+        document.getElementById("table-body").innerHTML = displayData;
+        document.getElementById("output").style.display = "block";
+        document.getElementById("downloads").style.display = "block";
+        document.getElementById("loader").style.display = "none";
+    })
+
+
+
+    function getOU() {
+        $.ajax({
+            async: false,
+            type: "put",
+            url: '../api/dataStore/reportCounts/financial',
+            data: JSON.stringify(++dataStoreCount),
+            contentType: "application/json"
+        });
+        debugger;
+        var date = new Date();
+        date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
+
+
+        document.getElementById("curr-date").innerHTML = date;
+        document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
+
+        var url = '../api/organisationUnits/' + selectedOrgUnit.id + '.json?paging=false&fields=id,name,level,dataSets[id]';
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: '../api/organisationUnitLevels.json',
+            data: JSON,
+            success: function (data, status) {
+
+                for (let i = 0; i < data.organisationUnitLevels.length; i++) {
+                    url += ',children[id,name,level,dataSets[id]';
+                }
+                url += ']';
+            }
+        });
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: url,
+            data: JSON,
+            success: function (data, status) {
+                treeDown(data, '');
+            }
+        });
+
+    }
+
+    function treeDown(arr, district) {
+        var key = arr;
+        if(key.level == 3 && district=='Aizawl') {
+            if(percentCutOUId && percentCut) {
+                percentCutOUGroup[percentCutOUId] = true;
+            }
+            percentCut = false;
+            percentCutOUId = '';
+        } else if(key.level == 2) {
+            if(percentCutOUId && percentCut) {
+                percentCutOUGroup[percentCutOUId] = true;
+            }
+            percentCut = false;
+            percentCutOUId = '';
+        }
+
+        if (key.children.length) {
+            key.children.sort((a, b) => a.name.localeCompare(b.name))
+            for (let i = 0; i < key.children.length; i++) {
+                if (key.level == 2) district = key.name;
+
+                treeDown(key.children[i], district);
+            }
+        }
+
+
+        if (includedOrgUnitGroups[key.id]) {
+            getData(key.id, key.name, district);
+        }
+    }
+
+    function getData(orgUnitId, orgUnit, district) {
+        if(dhtIds[orgUnitId] && check) {
+            dhtOrgunits.push(orgUnitId);
+            dhtOUParent[orgUnitId] = district;
+            percentCutOUId = orgUnitId;
+            return;
+        }         
+        else if(orgUnitId == 'JqSk9VNED0G' && check) return;
+        if (!totalRows[includedOrgUnitGroups[orgUnitId]]) totalRows[includedOrgUnitGroups[orgUnitId]] = []
+
+        var rows = ''
+        var dataObj = {};
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/analytics.json?dimension=dx:Z3st0JwG3zw;FBPChtQy2qb;Co0xibg1j5g;pA7w46GZjFQ;CiLKJuIxMHh&dimension=pe:${smToEm.join(';')}&dimension=ou:${orgUnitId}&displayProperty=NAME&outputIdScheme=UID&&skipRounding=true&paging=false`,
+            data: JSON,
+            success: function (responseQuarter, status) {
+                responseQuarter.rows.forEach(row => {
+                    if (!dataObj[row[1]]) dataObj[row[1]] = {}
+                    dataObj[row[1]][row[0]] = row[3];
+                });
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/analytics.json?dimension=dx:iR5IAnxxMwX;ENKUJMXc7ZP&dimension=pe:${years.join(';')}&dimension=ou:${orgUnitId}&displayProperty=NAME&outputIdScheme=UID&&skipRounding=true&paging=false`,
+            data: JSON,
+            success: function (responseYear, status) {
+                responseYear.rows.forEach(row => {
+                    years.forEach(year => {
+                        if (year == row[1]) dataObj[row[0]] = row[3];
+                    })
+                })
+            }
+        });
+
+        var exAnteLast = dataObj[smToEm[1]] && dataObj[smToEm[1]]['Z3st0JwG3zw'] ? dataObj[smToEm[1]]['Z3st0JwG3zw'] : '';
+        var exAntePrev = dataObj[smToEm[0]] && dataObj[smToEm[0]]['Z3st0JwG3zw'] ? dataObj[smToEm[0]]['Z3st0JwG3zw'] : '';
+        var exPostPrev = dataObj[smToEm[0]] && dataObj[smToEm[0]]['FBPChtQy2qb'] ? dataObj[smToEm[0]]['FBPChtQy2qb'] : '';
+        var penalty = '';
+        if(percentCutOUGroup[orgUnitId]) {
+            penalty = 25;
+            percentCutOUGroup['JqSk9VNED0G'] = 25;
+        } else if (exPostPrev) {
+            let value = exPostPrev - exAntePrev;
+            if (value <= 0 && value >= -10) penalty = 0;
+            else if (value < -10 && value >= -25) {
+                penalty = 25;
+                percentCut = true;
+            }
+            else if (value < -25) {
+                penalty = 50;
+                percentCut = true;
+            }
+            else penalty = 0;
+        }
+        else {
+            penalty = 'No EPCV';
+        }
+        if(dhtIds[orgUnitId] && penalty==25) percentCutOUGroup['JqSk9VNED0G'] = 25;
+
+        var actualValue = '';
+        var quarterlybudget = dataObj[smToEm[1]] && dataObj[smToEm[1]]['CiLKJuIxMHh'] ? dataObj[smToEm[1]]['CiLKJuIxMHh'] : '';
+        if(exAnteLast && quarterlybudget) {
+            var budgetTotal = (Number(exAnteLast) && Number(quarterlybudget)) ? (exAnteLast * quarterlybudget)/100 : 0;
+            var penaltyValue = Number(penalty)  ? ((budgetTotal * penalty)/100 ) : 0;
+            actualValue = Number(budgetTotal - penaltyValue).toFixed(1);
+        }
+
+        var serialCount = totalRows[includedOrgUnitGroups[orgUnitId]].length;
+        rows += `<tr>
+                <td>${(++serialCount)}</td>
+                <td>${district}</td>
+                <td>${orgUnit}</td>
+                <td>${includedOrgUnitGroups[orgUnitId]}</td>
+                <td>${exAntePrev}</td>
+                <td>${exPostPrev}</td>
+                <td>${penalty}</td>
+                <td>${exAnteLast}</td>
+                <td>${dataObj['iR5IAnxxMwX'] ? Math.trunc(dataObj['iR5IAnxxMwX']) + ' ' : ''}</td>
+                <td>${dataObj['ENKUJMXc7ZP'] ? dataObj['ENKUJMXc7ZP'] : ''}</td>
+                <td>${new Intl.NumberFormat("en-IN").format(Number(actualValue).toFixed(1))}</td>
+                </tr>`
+                
+
+        totalRows[includedOrgUnitGroups[orgUnitId]].push(rows)
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = `${filename}-${selectedOrgUnit.name}-${dateSelected}.xls`;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+
+</script>
