@@ -163,45 +163,10 @@
 
     <a id="dlink" style="display:none;"></a>
     <div id="main">
-        <div style="width: 40%; margin-left:30%;">
-            <table class="table table-bordered">
-                <tr>
-                    <td style="font-size: 15px;padding-top: 15px;">
-                        Start Month </td>
-                    <td style="width: 60%;">
-                        <input type="date" class=" form-control" id="start-date">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="font-size: 15px;padding-top: 15px;">
-                        End Month
-                    </td>
-                    <td style="width: 60%;">
-                        <input type="date" class=" form-control" id="end-date">
-                    </td>
-                </tr>
-                <!-- <tr>
-                    <td style="font-size: 15px;padding-top: 15px;">
-                        Programs
-                    </td>
-                    <td style="width: 60%;">
-                        <select id="programs" class="form-control">
-                        </select>
-                    </td>
-                </tr> -->
-                <tr>
-                    <td><button onClick="submit()" class="btn btn-primary" id="tap">Submit</button></td>
-                    <td style="text-align: right;">
-                        <div id="downloads" style="display: none;">
-                            <img src="https://img.icons8.com/dusk/35/000000/pdf.png"
-                                onmouseover="this.style.cursor='pointer'" onclick="printContent('output')"
-                                style="cursor: pointer;">
-                        </div>
-                    </td>
+        <div id="downloads" style="display: none;">
+            <button class="btn btn-success" onclick="printContent('output')">Print
+            </button>
 
-
-                </tr>
-            </table>
         </div>
         <br>
         <div id="output" style="display: none;">
@@ -223,7 +188,7 @@
                 </h5>
             </div>
             <div style="text-align: center;">
-                <img src="../api/documents/GuFMaRbbVjN/data" alt="mizoram health strn project" height='100'
+                <img src="../api/documents/k6jP5EObI9Y/data" alt="mizoram health strn project" height='100'
                     width='100' />
             </div>
             <table class="table table-hover borderless" style="width:100%;text-align:center">
@@ -315,8 +280,13 @@
             </table>
 
             <div>
-                <h5 style="font-weight: 700;border-bottom:1px solid black;">Ex-Ante Assessment Notes</h5>
+                <h5 style="font-weight: 700;border-bottom:1px solid black;">Ex-Ante Assessment Observation</h5>
                 <p id="ex-anteNotes"></p>
+            </div>
+
+            <div>
+                <h5 style="font-weight: 700;border-bottom:1px solid black;">Ex-Ante Assessment Recommendation</h5>
+                <p id="ex-anteRec"></p>
             </div>
 
             <div>
@@ -334,21 +304,21 @@
             <div>
                 <div style="width:30%;float:left;">
                     <span id="assessorI-sign"></span>
-                    <br/>
+                    <br />
                     ________________
                     <br>
                     <p id="assessorI-designation"></p>
                 </div>
                 <div style="width:40%;float:left;">
                     <span id="assessorII-sign"></span>
-                    <br/>
+                    <br />
                     __________________________
                     <br>
                     <p id="assessorII-designation"></p>
                 </div>
                 <div style="width:30%;float:left;">
                     <span id="assessorIII-sign"></span>
-                    <br/>
+                    <br />
                     ________________
                     <br>
                     <p id="assessorIII-designation"></p>
@@ -357,14 +327,25 @@
             <div style="clear:both"></div>
             <div>
                 <p style="font-style: italic;">
-                    This document is computer generated and does not require the assessor’s physical sign in order to be considered valid.</p>
+                    This document is computer generated and does not require the assessor’s physical signature in order
+                    to be considered valid.</p>
             </div>
         </div>
     </div>
 </body>
 
 <script>
+    document.getElementById("loader").style.display = "block";
+    document.getElementById("date-count").style.display = "none";
+    document.getElementById("output").style.display = "none";
+
     var selectedOrgUnit = dhis2.report.organisationUnit;
+    var selectedDate = dhis2.report.date;
+    var dates = {
+        startDate: selectedDate,
+        endDate: `${selectedDate.split('-')[0]}-${('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2)}-${new Date(selectedDate.split('-')[0], ('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2), 0).getDate()}`
+    }
+
     var quaters = [
         "January-March",
         "April-June",
@@ -373,16 +354,6 @@
     ]
 
     var pdfName = selectedOrgUnit.name + ' Report'
-    var dataStoreCount = 0;
-    $.ajax({
-        async: false,
-        type: "GET",
-        url: '../api/dataStore/reportCounts/phc',
-        success: function (data) {
-            debugger;
-            dataStoreCount = data;
-        }
-    });
     var dataElement = [
         {
             id: 'KlrfpnCYJAj',
@@ -461,176 +432,122 @@
             name: 'PERCENTAGE'
         }
     ]
-    // var programs = [
-    //     {
-    //         "id": "k6OM7dIb2X6",
-    //         "displayName": "PHC 01 - Service Provision A + IPA Assessment"
-    //     },
-    //     {
-    //         "id": "IA0NVbbRZ1e",
-    //         "displayName": "PHC 02 - Patient's Rights B + IPA Assessment"
-    //     },
-    //     {
-    //         "id": "apkZqa2yqeC",
-    //         "displayName": "PHC 03 - Inputs C + IPA Assessment"
-    //     },
-    //     {
-    //         "id": "wpQQKp9Hy5E",
-    //         "displayName": "PHC 04 - Support Services D + IPA Assessment"
-    //     },
-    //     {
-    //         "id": "kZ1sTUuqdbJ",
-    //         "displayName": "PHC 05 - Clinical Services E + IPA Assessment"
-    //     },
-    //     {
-    //         "id": "go6Fw0IRk6Z",
-    //         "displayName": "PHC 06 - Infection Control F + IPA Assessment"
-    //     },
-    //     {
-    //         "id": "xil8ellyMgi",
-    //         "displayName": "PHC 07 - Quality Management G + IPA Assessment"
-    //     },
-    //     {
-    //         "id": "PJogjQhf9rJ",
-    //         "displayName": "PHC 08 - Outcomes H + IPA Assessment"
-    //     }
-    // ]
+    var dataStoreCount = 0;
+    $.ajax({
+        async: false,
+        type: "GET",
+        url: '../api/dataStore/reportCounts/phc',
+        success: function (data) {
+            debugger;
+            dataStoreCount = data;
+        }
+    });
+    $.ajax({
+        async: false,
+        type: "put",
+        url: '../api/dataStore/reportCounts/phc',
+        data: JSON.stringify(++dataStoreCount),
+        contentType: "application/json"
+    });
+    debugger;
+    var date = new Date();
+    date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
+    pdfName += `(${date})-${dataStoreCount}`;
 
-    // var pList = '';
-    // programs.forEach(program => {
-    //     pList += `<option value='${program.id}'>${program.displayName}</option>`
-    // })
-    // document.getElementById('programs').innerHTML = pList;
+    document.getElementById("curr-date").innerHTML = date;
+    document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
 
-    document.getElementById("loader").style.display = "none";
+    getData()
+    async function getData() {
+        var dataObj = {};
+        var selfAssessmentDate = ''
 
-    var submit = function () {
-        $.ajax({
-            async: false,
-            type: "put",
-            url: '../api/dataStore/reportCounts/phc',
-            data: JSON.stringify(++dataStoreCount),
-            contentType: "application/json"
+        var responseFirst = await (await fetch(`../api/events.json?fields=*&program=HoSWGbzZxF9&orgUnit=${selectedOrgUnit.id}&startDate=${dates.startDate}&endDate=${dates.endDate}&paging=false`)).json();
+        responseFirst.events.forEach(event => {
+            if (event.programStage == "VQkf0I3XtO3") {
+                let obj = {};
+                event.dataValues.forEach(dv => {
+                    obj[dv.dataElement] = dv.value;
+                    if (dv.dataElement == 'm50G1QGE4E8') {
+                        let value = event.eventDate.split("T")[0];
+                        let year = Number(value.split("-")[0]);
+                        value = Number(value.split("-")[1]);
+                        value = value >= 1 && value <= 3 ? 0 : value;
+                        value = value >= 4 && value <= 6 ? 1 : value;
+                        value = value >= 7 && value <= 9 ? 2 : value;
+                        value = value >= 10 && value <= 12 ? 3 : value;
+                        let quater = quaters[(value + '')].split('-');
+
+                        obj["exAnte-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
+                    }
+                })
+                if (obj['hqDoSMfLh8F'] == "Ex-Ante Assessment") dataObj = obj;
+            }
+            if (event.programStage == "cw2Wp2Vw4gJ") selfAssessmentDate = event.eventDate.split('T')[0]
         });
-        debugger;
-        var date = new Date();
-        date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
-        pdfName += `(${date})-${dataStoreCount}`;
 
-        document.getElementById("curr-date").innerHTML = date;
-        document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
-        document.getElementById("downloads").style.display = "none";
-        var startDate = document.getElementById("start-date").value;
-        var endDate = document.getElementById("end-date").value;
-        var dates = [startDate, endDate];
-        var data = {
-            startDate: startDate,
-            endDate: endDate
+        if (dataObj['HHUbvL1Z2aO']) {
+            document.getElementById("de-HHUbvL1Z2aO").innerHTML = dataObj['HHUbvL1Z2aO'];
         }
+        document.getElementById("ps-programStage1").innerHTML = selfAssessmentDate;
 
-        if (new Date(dates["0"]) > new Date(dates["1"]) || !dates["0"] || !dates["1"]) alert("Please select dates Correctly");
-        else {
-            document.getElementById("date-count").style.display = "none";
-            document.getElementById("output").style.display = "none";
-            document.getElementById("loader").style.display = "block";
-            // let program = programs.filter(ps => ((data.program == ps.id) ? ps : ''));
-
-            // document.getElementById("program-name").innerHTML = program[0].displayName;
-
-            setTimeout(function () {
-                getData(data)
-            }, 1000)
+        if (dataObj['wJ3A5NF5Acj']) {
+            document.getElementById("ps-programStage2").innerHTML = (dataObj['i2afLnjFrdh'] ? dataObj['i2afLnjFrdh'] : '')
+            document.getElementById("de-wJ3A5NF5Acj").innerHTML = Number(dataObj['wJ3A5NF5Acj']).toFixed(2);
         }
+        document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
+        document.getElementById('ou').innerHTML = selectedOrgUnit.name;
+        document.getElementById('quater-dates').innerHTML = (dataObj["exAnte-ev"] ? dataObj["exAnte-ev"] : '');
+        document.getElementById('exAnte-startDate').innerHTML = (dataObj['i2afLnjFrdh'] ? dataObj['i2afLnjFrdh'] : '');
+        document.getElementById('exAnte-endDate').innerHTML = (dataObj['MkkWs8MkL8C'] ? ` to ${dataObj['MkkWs8MkL8C']}` : '');
 
-        async function getData(data) {
-            var dataObj = {};
+        document.getElementById('ex-anteNotes').innerHTML = dataObj['kEmB5rxi38s'] ? dataObj['kEmB5rxi38s'] : '';
+        document.getElementById('ex-anteRec').innerHTML = dataObj['EZBZprxThUz'] ? dataObj['EZBZprxThUz'] : '';
 
-            var responseFirst = await (await fetch(`../api/events.json?fields=*&program=HoSWGbzZxF9&orgUnit=${selectedOrgUnit.id}&startDate=${data.startDate}&endDate=${data.endDate}&paging=false`)).json();
-            responseFirst.events.forEach(event => {
-                if (event.programStage == "VQkf0I3XtO3") {
-                    event.dataValues.forEach(dv => {
-                        dataObj[dv.dataElement] = dv.value;
-                        if (dv.dataElement == 'm50G1QGE4E8') {
+        document.getElementById('assessorI-nd').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '') + (dataObj['Bt7OvMO4KoD'] ? `, ${dataObj['Bt7OvMO4KoD']}` : '');
+        document.getElementById('assessorII-nd').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '') + (dataObj['PEUbEOT8VNV'] ? `, ${dataObj['PEUbEOT8VNV']}` : '');
+        document.getElementById('assessorIII-nd').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '') + (dataObj['Zrt7faR6v76'] ? `, ${dataObj['Zrt7faR6v76']}` : '');
+        document.getElementById('assessorI-sign').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '');
+        document.getElementById('assessorII-sign').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '');
+        document.getElementById('assessorIII-sign').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '');
+        document.getElementById('assessorI-designation').innerHTML = (dataObj['Bt7OvMO4KoD'] ? dataObj['Bt7OvMO4KoD'] : '');
+        document.getElementById('assessorII-designation').innerHTML = (dataObj['PEUbEOT8VNV'] ? dataObj['PEUbEOT8VNV'] : '');
+        document.getElementById('assessorIII-designation').innerHTML = (dataObj['Zrt7faR6v76'] ? dataObj['Zrt7faR6v76'] : '');
 
-                            let value = event.eventDate.split("T")[0];
-                            let year = Number(value.split("-")[0]);
-                            value = Number(value.split("-")[1]);
-                            value = value >= 1 && value <= 3 ? 0 : value;
-                            value = value >= 4 && value <= 6 ? 1 : value;
-                            value = value >= 7 && value <= 9 ? 2 : value;
-                            value = value >= 10 && value <= 12 ? 3 : value;
-                            let quater = quaters[(value + '')].split('-');
-
-                            dataObj["exAnte-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
-                        }
-
-                    })
-                }
-            });
-
-
-
-            if (dataObj['HHUbvL1Z2aO']) {
-                document.getElementById("ps-programStage1").innerHTML = (dataObj['i2afLnjFrdh'] ? dataObj['i2afLnjFrdh'] : '')
-                document.getElementById("de-HHUbvL1Z2aO").innerHTML = dataObj['HHUbvL1Z2aO'];
+        var codeScore = '';
+        dataElement.forEach(de => {
+            if (de.name == "PHC_1_NQAS") {
+                codeScore += `<tr><td>${de.name}</td><td style="text-align:center;">${dataObj[de.id] ? Math.round(dataObj[de.id]) : ''}</td></tr>`;
             }
-            if (dataObj['wJ3A5NF5Acj']) {
-                document.getElementById("ps-programStage2").innerHTML = (dataObj['i2afLnjFrdh'] ? dataObj['i2afLnjFrdh'] : '')
-                document.getElementById("de-wJ3A5NF5Acj").innerHTML = Number(dataObj['wJ3A5NF5Acj']).toFixed(2);
+            else if (de.name == "PHC_2_Meetings" || de.name == "PHC_12_CKSI") {
+                let totalValue = 0;
+                let des = de.id.split(" + ");
+                des.forEach(de => totalValue += dataObj[de] ? Number(dataObj[de]) : 0);
+                codeScore += `<tr><td >${de.name}</td><td style="text-align:center;">${totalValue}</td></tr>`;
+
+            } else if (de.id == "m50G1QGE4E8") {
+                let value = dataObj['m50G1QGE4E8'] ? changeDec(dataObj['m50G1QGE4E8'], 2) : '';
+                if (de.name == "PERCENTAGE") calculatedVal = value ? ((value / 1000) && value / 1000 != "Infinity" ? ((value / 1000) * 100).toFixed(2) : '') : '';
+                else calculatedVal = value;
+                codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center;font-weight:bold">${calculatedVal}</td></tr>`;
             }
-            document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
-            document.getElementById('ou').innerHTML = selectedOrgUnit.name;
-            document.getElementById('quater-dates').innerHTML = (dataObj["exAnte-ev"] ? dataObj["exAnte-ev"] : '');
-            document.getElementById('exAnte-startDate').innerHTML = (dataObj['i2afLnjFrdh'] ? dataObj['i2afLnjFrdh'] : '');
-            document.getElementById('exAnte-endDate').innerHTML = (dataObj['MkkWs8MkL8C'] ? ` to ${dataObj['MkkWs8MkL8C']}` : '');
+            else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
+        })
+        document.getElementById('code-score').innerHTML = codeScore;
 
-            document.getElementById('ex-anteNotes').innerHTML = dataObj['kEmB5rxi38s'] ? dataObj['kEmB5rxi38s'] : '';
+        document.getElementById("date-count").style.display = "block";
+        document.getElementById("output").style.display = "block";
+        document.getElementById("downloads").style.display = "block";
+        document.getElementById("loader").style.display = "none";
 
-            document.getElementById('assessorI-nd').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '') + (dataObj['Bt7OvMO4KoD'] ? `, ${dataObj['Bt7OvMO4KoD']}` : '');
-            document.getElementById('assessorII-nd').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '') + (dataObj['PEUbEOT8VNV'] ? `, ${dataObj['PEUbEOT8VNV']}` : '');
-            document.getElementById('assessorIII-nd').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '') + (dataObj['Zrt7faR6v76'] ? `, ${dataObj['Zrt7faR6v76']}` : '');
-            document.getElementById('assessorI-sign').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '');
-            document.getElementById('assessorII-sign').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '');
-            document.getElementById('assessorIII-sign').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '');
-            document.getElementById('assessorI-designation').innerHTML = (dataObj['Bt7OvMO4KoD'] ? dataObj['Bt7OvMO4KoD'] : '');
-            document.getElementById('assessorII-designation').innerHTML = (dataObj['PEUbEOT8VNV'] ? dataObj['PEUbEOT8VNV'] : '');
-            document.getElementById('assessorIII-designation').innerHTML = (dataObj['Zrt7faR6v76'] ? dataObj['Zrt7faR6v76'] : '');
-
-            var codeScore = '';
-            dataElement.forEach(de => {
-                if (de.name == "PHC_1_NQAS") {
-                    codeScore += `<tr><td>${de.name}</td><td style="text-align:center;">${dataObj[de.id] ? Math.round(dataObj[de.id]) : ''}</td></tr>`;
-                }
-                else if (de.name == "PHC_2_Meetings" || de.name == "PHC_12_CKSI") {
-                    let totalValue = 0;
-                    let des = de.id.split(" + ");
-                    des.forEach(de => totalValue += dataObj[de] ? Number(dataObj[de]) : 0);
-                    codeScore += `<tr><td >${de.name}</td><td style="text-align:center;">${totalValue}</td></tr>`;
-
-                } else if (de.id == "m50G1QGE4E8") {
-                    let value = dataObj['m50G1QGE4E8'] ? changeDec(dataObj['m50G1QGE4E8'], 2) : '';
-                    if (de.name == "PERCENTAGE") calculatedVal = value ? ((value / 1000) && value / 1000 != "Infinity" ? ((value / 1000) * 100).toFixed(2) : '') : '';
-                    else calculatedVal = value;
-                    codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center;font-weight:bold">${calculatedVal}</td></tr>`;
-                }
-                else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
-            })
-            document.getElementById('code-score').innerHTML = codeScore;
-
-            document.getElementById("date-count").style.display = "block";
-            document.getElementById("output").style.display = "block";
-            document.getElementById("downloads").style.display = "block";
-            document.getElementById("loader").style.display = "none";
-
-            function changeDec(val, index) {
-                var isDec = val.includes('.');
-                if (isDec) {
-                    return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
-                }
-                return val;
+        function changeDec(val, index) {
+            var isDec = val.includes('.');
+            if (isDec) {
+                return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
             }
+            return val;
         }
-    };
+    }
 
     function printContent(el) {
         window.parent.document.title = pdfName;

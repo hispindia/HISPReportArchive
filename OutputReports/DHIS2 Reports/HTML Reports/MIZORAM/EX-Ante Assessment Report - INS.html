@@ -159,37 +159,10 @@
 
     <a id="dlink" style="display:none;"></a>
     <div id="main">
-        <div style="width: 40%; margin-left:30%;">
-            <table class="table table-bordered">
-                <tr>
-                    <td style="font-size: 15px;padding-top: 15px;">
-                        Start Month
-                    </td>
-                    <td style="width: 60%;">
-                        <input type="date" class=" form-control" id="start-date">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="font-size: 15px;padding-top: 15px;">
-                        End Month
-                    </td>
-                    <td style="width: 60%;">
-                        <input type="date" class=" form-control" id="end-date">
-                    </td>
-                </tr>
-                <tr>
-                    <td><button onClick="submit()" class="btn btn-primary" id="tap">Submit</button></td>
-                    <td style="text-align: right;">
-                        <div id="downloads" style="display: none;">
-                            <img src="https://img.icons8.com/dusk/35/000000/pdf.png"
-                                onmouseover="this.style.cursor='pointer'" onclick="printContent('output')"
-                                style="cursor: pointer;">
-                        </div>
-                    </td>
+        <div id="downloads" style="display: none;">
+            <button class="btn btn-success" onclick="printContent('output')">Print
+            </button>
 
-
-                </tr>
-            </table>
         </div>
         <br>
         <div id="output" style="display: none;">
@@ -212,7 +185,7 @@
             </div>
 
             <div style="text-align: center;">
-                <img src="../api/documents/GuFMaRbbVjN/data" alt="mizoram health strn project" height='100'
+                <img src="../api/documents/k6jP5EObI9Y/data" alt="mizoram health strn project" height='100'
                     width='100' />
             </div>
             <table class="table table-hover borderless" style="width:100%;text-align:center">
@@ -264,8 +237,13 @@
             <br>
 
             <div>
-                <h5 style="font-weight: 700;border-bottom:1px solid black;">Ex-Ante Assessment Notes</h5>
+                <h5 style="font-weight: 700;border-bottom:1px solid black;">Ex-Ante Assessment Observation</h5>
                 <p id="ex-anteNotes"></p>
+            </div>
+
+            <div>
+                <h5 style="font-weight: 700;border-bottom:1px solid black;">Ex-Ante Assessment Recommendation</h5>
+                <p id="ex-anteRec"></p>
             </div>
 
             <div>
@@ -301,21 +279,21 @@
             <div>
                 <div style="width:30%;float:left;">
                     <span id="assessorI-sign"></span>
-                    <br/>
+                    <br />
                     ________________
                     <br>
                     <p id="assessorI-designation"></p>
                 </div>
                 <div style="width:40%;float:left;">
                     <span id="assessorII-sign"></span>
-                    <br/>
+                    <br />
                     __________________________
                     <br>
                     <p id="assessorII-designation"></p>
                 </div>
                 <div style="width:30%;float:left;">
                     <span id="assessorIII-sign"></span>
-                    <br/>
+                    <br />
                     ________________
                     <br>
                     <p id="assessorIII-designation"></p>
@@ -324,7 +302,8 @@
             <div style="clear:both"></div>
             <div>
                 <p style="font-style: italic;">
-                    This document is computer generated and does not require the assessor’s physical sign in order to be considered valid.</p>
+                    This document is computer generated and does not require the assessor’s physical signature in order
+                    to be considered valid.</p>
             </div>
 
         </div>
@@ -332,7 +311,17 @@
 </body>
 
 <script>
+    document.getElementById("loader").style.display = "block";
+    document.getElementById("date-count").style.display = "none";
+    document.getElementById("output").style.display = "none";
+
     var selectedOrgUnit = dhis2.report.organisationUnit;
+    var selectedDate = dhis2.report.date;
+    var dates = {
+        startDate: selectedDate,
+        endDate: `${selectedDate.split('-')[0]}-${('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2)}-${new Date(selectedDate.split('-')[0], ('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2), 0).getDate()}`
+    }
+
     var quaters = [
         "January-March",
         "April-June",
@@ -341,16 +330,6 @@
     ]
 
     var pdfName = selectedOrgUnit.name + ' Report'
-    var dataStoreCount = 0;
-    $.ajax({
-        async: false,
-        type: "GET",
-        url: '../api/dataStore/reportCounts/ins',
-        success: function (data) {
-            debugger;
-            dataStoreCount = data;
-        }
-    });
     var dataElement = [
         {
             id: 'WKkkB8T2jaV',
@@ -365,7 +344,7 @@
             name: 'INS_3_Audit'
         },
         {
-            id: 'ZrbcFBPwszo',
+            id: 'ZrbcFBPwszo + vcaSXsTLmX4',
             name: 'INS_4_Audit'
         },
         {
@@ -473,123 +452,111 @@
         }
     ];
 
-    document.getElementById("loader").style.display = "none";
-
-    var submit = function () {
-
-        $.ajax({
-            async: false,
-            type: "put",
-            url: '../api/dataStore/reportCounts/ins',
-            data: JSON.stringify(++dataStoreCount),
-            contentType: "application/json"
-        });
-        debugger;
-        var date = new Date();
-        date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
-        pdfName += `(${date})-${dataStoreCount}`;
-
-        document.getElementById("curr-date").innerHTML = date;
-        document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
-        document.getElementById("downloads").style.display = "none";
-
-        var startDate = document.getElementById("start-date").value;
-        var endDate = document.getElementById("end-date").value;
-        var dates = [startDate, endDate];
-        var data = {
-            startDate: startDate,
-            endDate: endDate
+    var dataStoreCount = 0;
+    $.ajax({
+        async: false,
+        type: "GET",
+        url: '../api/dataStore/reportCounts/ins',
+        success: function (data) {
+            debugger;
+            dataStoreCount = data;
         }
+    });
+    $.ajax({
+        async: false,
+        type: "put",
+        url: '../api/dataStore/reportCounts/ins',
+        data: JSON.stringify(++dataStoreCount),
+        contentType: "application/json"
+    });
+    debugger;
+    var date = new Date();
+    date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
+    pdfName += `(${date})-${dataStoreCount}`;
 
-        if (new Date(dates["0"]) > new Date(dates["1"]) || !dates["0"] || !dates["1"]) alert("Please select dates Correctly");
-        else {
-            document.getElementById("date-count").style.display = "none";
-            document.getElementById("output").style.display = "none";
-            document.getElementById("loader").style.display = "block";
+    document.getElementById("curr-date").innerHTML = date;
+    document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
 
-            setTimeout(function () {
-                getData(data)
-            }, 1000)
-        }
+    getData()
 
-        async function getData(data) {
-            var dataObj = {};
+    async function getData() {
+        var dataObj = {};
 
-            var responseFirst = await (await fetch(`../api/events.json?fields=*&program=iGBahjmdeUR&orgUnit=${selectedOrgUnit.id}&startDate=${data.startDate}&endDate=${data.endDate}&paging=false`)).json();
-            responseFirst.events.forEach(event => {
-                if (event.programStage == 'wPM1AethMll') {
-                    event.dataValues.forEach(dv => {
-                        dataObj[dv.dataElement] = dv.value;
-                    })
-                    let value = event.eventDate.split("T")[0];
-                    let year = Number(value.split("-")[0]);
-                    value = Number(value.split("-")[1]);
-                    value = value >= 1 && value <= 3 ? 0 : value;
-                    value = value >= 4 && value <= 6 ? 1 : value;
-                    value = value >= 7 && value <= 9 ? 2 : value;
-                    value = value >= 10 && value <= 12 ? 3 : value;
-                    let quater = quaters[(value + '')].split('-');
+        var responseFirst = await (await fetch(`../api/events.json?fields=*&program=iGBahjmdeUR&orgUnit=${selectedOrgUnit.id}&startDate=${dates.startDate}&endDate=${dates.endDate}&paging=false`)).json();
+        responseFirst.events.forEach(event => {
+            if (event.programStage == 'wPM1AethMll') {
+                event.dataValues.forEach(dv => {
+                    dataObj[dv.dataElement] = dv.value;
+                })
+                let value = event.eventDate.split("T")[0];
+                let year = Number(value.split("-")[0]);
+                value = Number(value.split("-")[1]);
+                value = value >= 1 && value <= 3 ? 0 : value;
+                value = value >= 4 && value <= 6 ? 1 : value;
+                value = value >= 7 && value <= 9 ? 2 : value;
+                value = value >= 10 && value <= 12 ? 3 : value;
+                let quater = quaters[(value + '')].split('-');
 
-                    dataObj["exAnte-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
-                }
-            });
-            document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
-            document.getElementById('ou').innerHTML = selectedOrgUnit.name;
-            document.getElementById('quater-dates').innerHTML = dataObj["exAnte-ev"];
-            document.getElementById('exAnte-startDate').innerHTML = (dataObj['WWekZ4prgf4'] ? dataObj['WWekZ4prgf4'] : '');
-            document.getElementById('exAnte-endDate').innerHTML = (dataObj['MkkWs8MkL8C'] ? ` to ${dataObj['MkkWs8MkL8C']}` : '');
-
-            document.getElementById('ex-anteNotes').innerHTML = dataObj['kEmB5rxi38s'] ? dataObj['kEmB5rxi38s'] : '';
-
-            document.getElementById('assessorI-nd').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '') + (dataObj['Bt7OvMO4KoD'] ? `, ${dataObj['Bt7OvMO4KoD']}` : '');
-            document.getElementById('assessorII-nd').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '') + (dataObj['PEUbEOT8VNV'] ? `, ${dataObj['PEUbEOT8VNV']}` : '');
-            document.getElementById('assessorIII-nd').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '') + (dataObj['Zrt7faR6v76'] ? `, ${dataObj['Zrt7faR6v76']}` : '');
-            document.getElementById('assessorI-sign').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '');
-            document.getElementById('assessorII-sign').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '');
-            document.getElementById('assessorIII-sign').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '');
-            document.getElementById('assessorI-designation').innerHTML = (dataObj['Bt7OvMO4KoD'] ? dataObj['Bt7OvMO4KoD'] : '');
-            document.getElementById('assessorII-designation').innerHTML = (dataObj['PEUbEOT8VNV'] ? dataObj['PEUbEOT8VNV'] : '');
-            document.getElementById('assessorIII-designation').innerHTML = (dataObj['Zrt7faR6v76'] ? dataObj['Zrt7faR6v76'] : '');
-
-            var codeScore = '';
-            dataElement.forEach(de => {
-                if (de.name == "INS_5_InsEff") {
-                    let totalValue = 0;
-                    let des = de.id.split(" + ");
-                    des.forEach(de => totalValue += dataObj[de] ? Number(dataObj[de]) : 0);
-                    codeScore += `<tr><td >${de.name}</td><td style="text-align:center;">${totalValue}</td></tr>`;
-
-                } else if (de.id == "m50G1QGE4E8") {
-                    let value = dataObj['m50G1QGE4E8'] ? changeDec(dataObj['m50G1QGE4E8'], 2) : '';
-                    if (de.name == "PERCENTAGE") calculatedVal = value ? ((value / 1000) && value / 1000 != "Infinity" ? ((value / 1000) * 100).toFixed(2) : '') : '';
-                    else calculatedVal = value;
-                    codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center;font-weight:bold">${calculatedVal}</td></tr>`;
-                }
-                else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
-            })
-            document.getElementById('code-score').innerHTML = codeScore;
-
-            var codeComments = '';
-            deComments.forEach(de => {
-                codeComments += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
-            })
-            document.getElementById('code-comments').innerHTML = codeComments;
-
-            document.getElementById("date-count").style.display = "block";
-            document.getElementById("output").style.display = "block";
-            document.getElementById("downloads").style.display = "block";
-            document.getElementById("loader").style.display = "none";
-
-            function changeDec(val, index) {
-                var isDec = val.includes('.');
-                if (isDec) {
-                    return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
-                }
-                return val;
+                dataObj["exAnte-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
             }
+        });
+        document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
+        document.getElementById('ou').innerHTML = selectedOrgUnit.name;
+        document.getElementById('quater-dates').innerHTML = dataObj["exAnte-ev"];
+        document.getElementById('exAnte-startDate').innerHTML = (dataObj['WWekZ4prgf4'] ? dataObj['WWekZ4prgf4'] : '');
+        document.getElementById('exAnte-endDate').innerHTML = (dataObj['MkkWs8MkL8C'] ? ` to ${dataObj['MkkWs8MkL8C']}` : '');
 
+        document.getElementById('ex-anteNotes').innerHTML = dataObj['kEmB5rxi38s'] ? dataObj['kEmB5rxi38s'] : '';
+        document.getElementById('ex-anteRec').innerHTML = dataObj['EZBZprxThUz'] ? dataObj['EZBZprxThUz'] : '';
+
+        document.getElementById('assessorI-nd').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '') + (dataObj['Bt7OvMO4KoD'] ? `, ${dataObj['Bt7OvMO4KoD']}` : '');
+        document.getElementById('assessorII-nd').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '') + (dataObj['PEUbEOT8VNV'] ? `, ${dataObj['PEUbEOT8VNV']}` : '');
+        document.getElementById('assessorIII-nd').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '') + (dataObj['Zrt7faR6v76'] ? `, ${dataObj['Zrt7faR6v76']}` : '');
+        document.getElementById('assessorI-sign').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '');
+        document.getElementById('assessorII-sign').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '');
+        document.getElementById('assessorIII-sign').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '');
+        document.getElementById('assessorI-designation').innerHTML = (dataObj['Bt7OvMO4KoD'] ? dataObj['Bt7OvMO4KoD'] : '');
+        document.getElementById('assessorII-designation').innerHTML = (dataObj['PEUbEOT8VNV'] ? dataObj['PEUbEOT8VNV'] : '');
+        document.getElementById('assessorIII-designation').innerHTML = (dataObj['Zrt7faR6v76'] ? dataObj['Zrt7faR6v76'] : '');
+
+        var codeScore = '';
+        dataElement.forEach(de => {
+            if (de.name == "INS_5_InsEff" || de.name == "INS_4_Audit") {
+                let totalValue = 0;
+                let des = de.id.split(" + ");
+                des.forEach(de => totalValue += dataObj[de] ? Number(dataObj[de]) : 0);
+                codeScore += `<tr><td >${de.name}</td><td style="text-align:center;">${totalValue}</td></tr>`;
+
+            } else if (de.id == "m50G1QGE4E8") {
+                let value = dataObj['m50G1QGE4E8'] ? changeDec(dataObj['m50G1QGE4E8'], 2) : '';
+                if (de.name == "PERCENTAGE") calculatedVal = value ? ((value / 1000) && value / 1000 != "Infinity" ? ((value / 1000) * 100).toFixed(2) : '') : '';
+                else calculatedVal = value;
+                codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center;font-weight:bold">${calculatedVal}</td></tr>`;
+            }
+            else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
+        })
+        document.getElementById('code-score').innerHTML = codeScore;
+
+        var codeComments = '';
+        deComments.forEach(de => {
+            codeComments += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
+        })
+        document.getElementById('code-comments').innerHTML = codeComments;
+
+        document.getElementById("date-count").style.display = "block";
+        document.getElementById("output").style.display = "block";
+        document.getElementById("downloads").style.display = "block";
+        document.getElementById("loader").style.display = "none";
+
+        function changeDec(val, index) {
+            var isDec = val.includes('.');
+            if (isDec) {
+                return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
+            }
+            return val;
         }
-    };
+
+    }
 
     function printContent(el) {
         window.parent.document.title = pdfName;
