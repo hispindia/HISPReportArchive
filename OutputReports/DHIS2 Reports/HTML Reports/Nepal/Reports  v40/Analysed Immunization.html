@@ -1,0 +1,1557 @@
+
+<script>
+	var anchor = `<a
+	role="button"
+	href="../api/apps/reports-app/index.html"
+	style="color:#fff;
+	background-color:#1976d2;
+	padding:6px 16px;
+	line-height: 1.75;
+	text-transform: uppercase;
+	font-weight: 500;
+	text-decoration:none;">
+	Back to Reports App</a>`
+	parent.document.querySelector('.button-row').innerHTML = anchor;
+	</script>
+<script type="text/javascript">
+	var directDownload = true;
+	// var periods = dhis2.report.periods;
+	// var period = periods[0];
+	//var period = "LAST_MONTH";
+	var orgUnit = dhis2.report.organisationUnit;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+	var rOrder = orgUnitChildrens.map(a=>a.id);
+
+	//----------------------------------------------------------------------------------------------------------------------------------
+	var ArrStringDEs = ["AFlVz6gyQBV;GaAyNyeNq6Z;a0dG7ih12DG;TkoLt9XedAM;xWpAuH8Wqql;lzSO3chNv6I;NJHQJPmUJKI;Kj8Yr5DmLuP;EIEPq5R3JNM;xnuRKnSsgoj;n92FFE1gzqh;EXPNptuuVE2;FJLuyu1umui",
+		"TPpxDKbvTqu;SWZjP8zWQ7B;B5p2T0KToGJ;j51Ga0aBS0U;twscAZKG6C0;FxAAi2gFts9;nQzvsXliRoV;JSZD2381HfZ;NiXDRayR5M6;bTNpI8t38yM",
+		"wWviZ4dZRak;v4bSwhjBYGk;luRH7fGC0fg;FvYDi4aEDne;Vf5UetPPQuv;yLwppfVbuN2;COARG2tB4Vm;H6sXOtXirFN;y6TjKU8PrmO;yjUYKJVaWC0;xheElu8vDuX;w9YWXr5mQmi;yY07O5OxHSb;y6ykKSK6ysO;apGFxbRVYOn;qleY8X1qJGS"];
+
+
+	var stringDEs = ""; 
+	var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;JM8keEP4z6r;mtNeiqIynwj;UcN4jZjv9Oo";
+	var url = window.parent.location.hash;
+	var params = url.split('&');
+ var gotPeriod=params[2].split('=')[1];
+				// var gotPeriod = gotOr.substring(0, 4); 
+				var gotOrg=orgUnit.id;
+	var arrOrgGroups = stringOrgGroups.split(";");
+	var uidGroupSet = "VuilQBYZNIR";
+	var stt = 0;
+	var load = 1;
+	var iteration = -1;
+	var arrayDEs;
+	var tableIDs = ["datavalue1", "datavalue2", "datavalue3"];
+	var currentTableID;
+	var rep = [false, false, false, false, false, false, false, false, false, false, false, false];
+
+	var jsonGroup, jsonNepal, jsonDistricts;
+	//*******************************************************************************************************************************
+	//*******************************************************************************************************************************
+
+
+	var rtype = params[4];
+	jQuery(document).ready(function () {
+		// console.log(periods);
+		// console.log(orgUnit);
+
+		$(".tab_content").hide();
+		$(".tab_content:first").show();
+
+		if (rtype > 1)
+			generateFourMonths();
+		getJson();
+		loadall(0);
+
+		$("ul.tabs li").click(function () {
+			$("ul.tabs li").removeClass("active");
+			$(this).addClass("active");
+			$(".tab_content").hide();
+			var activeTab = $(this).attr("rel");
+			$("#" + activeTab).fadeIn();
+		});
+	});
+
+	function hideLoad() {
+		document.getElementById("cover").style.display = "none";
+		document.getElementById("loads").style.display = "none";
+		//document.getElementById("loading").style.display="none";
+		document.getElementsByTagName("body")[0].style.overflow = "scroll";
+	}
+
+	//get period *************************************************************
+	var fourMonths = [];
+
+	function getPeriod() {
+		if (rtype > 1)
+			return getPeriodTitle(fourMonths[0]) + " To " + getPeriodTitle(fourMonths[params[4] - 1]);
+
+		else
+			return getPeriodTitle(gotPeriod);
+	}
+	function getPeriodTitle(pr) {
+		var year = pr.substring(0, 4);
+		var month = pr.substring(4, 6);
+		var strMonth = "";
+
+		if (month == "01" || month == "1")
+			strMonth = "Baishakh";
+		else if (month == "02" || month == "2")
+			strMonth = "Jestha";
+		else if (month == "03" || month == "3")
+			strMonth = "Ashadh";
+		else if (month == "04" || month == "4")
+			strMonth = "Shrawan";
+		else if (month == "05" || month == "5")
+			strMonth = "Bhadra";
+		else if (month == "06" || month == "6")
+			strMonth = "Ashwin";
+		else if (month == "07" || month == "7")
+			strMonth = "Kartik";
+		else if (month == "08" || month == "8")
+			strMonth = "Mangsir";
+		else if (month == "09" || month == "9")
+			strMonth = "Poush";
+		else if (month == "10")
+			strMonth = "Magh";
+		else if (month == "11")
+			strMonth = "Falgun";
+		else if (month == "12")
+			strMonth = "Chaitra";
+
+		return strMonth + " " + year;
+	}
+
+	function generateFourMonths() {
+		var n = params[4];
+		gotPeriod = gotPeriod.substring(0, 6);
+		var year = gotPeriod.substring(0, 4);
+		var month = gotPeriod.substring(4, 6);
+		fourMonths[0] = gotPeriod;
+		gotPeriod += ";";
+
+		for (var y = 1; y < n; y++) {
+			if (month < 12) {
+				month++;
+			}
+			else {
+				month = 1;
+				year++;
+			}
+			if (month < 10)
+				month = "0" + month;
+			fourMonths[y] = year + "" + month;
+			gotPeriod += fourMonths[y] + ";";
+		}
+
+	}
+	//************************************************************************
+
+
+	function loadall(t) {
+		load = 1;
+		stt = 0;
+
+		iteration = t;
+		if (!rep[t]) {
+			currentTableID = tableIDs[iteration];
+			rep[t] = true;
+		}
+	}
+
+	//*********************************************************************************
+	//********************************************************************************
+	function getJson()
+					{
+						for(var c=0; c<ArrStringDEs.length;c++)
+						stringDEs=stringDEs+ArrStringDEs[c]+";";
+										
+						arrayDEs=stringDEs.split(";");
+						
+						// //getting json for org groups
+						// $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+						// 	//alert(jsonGroup);
+						// 	jsonGroup=json;
+						// 	//sum(jsonGroup);
+						// 	getParentJson();
+						// });
+
+						$.when(
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=Eq1bKUKYRMO:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=VuilQBYZNIR:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+							$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=xFgSXyUMalf:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+						
+						).done(function(geographicalArea, publicNonpublic, urbanRural){
+							var meta_data = [], rows = [];
+							meta_data = {"metaData": geographicalArea[0].metaData};
+							rows = [].concat(geographicalArea[0].rows).concat(publicNonpublic[0].rows).concat(urbanRural[0].rows)
+							jsonGroup = {"metaData":meta_data.metaData, "rows" : rows };
+						});
+						getParentJson();
+					}
+
+	function getParentJson() {
+		var ouid = orgUnit.id;
+		$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=ou:" + ouid + "&filter=pe:" + gotPeriod, function (json) {
+			//printChildren(jsonNepal,"Region");
+			jsonNepal = json;
+			getAllDistricts(0);
+		});
+	}
+
+	var i = 0;
+	function getAllDistricts(d) {
+		//getting json for regions' districts, 5 means 5 regions, namely central, western etc
+		if (orgUnit.id == "cCTQiGkKcTk") {
+			if (d < orgUnitChildrens.length) {
+				if (0 < orgUnitChildrens.length) {
+					
+							var orguid=rOrder[d];
+					//alert(orguid);
+					$.get("../api/organisationUnits/" + orguid + ".json?fields=*", function (json) {
+
+						stringOrgChild(json);
+						if (i ==  orgUnitChildrens.length-1) {
+							$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=ou:" + dIDs + "&filter=pe:" + gotPeriod, function (json) {
+
+								jsonDistricts = json;
+								printAll();
+								hideLoad();
+							});
+						}
+						i++;
+
+						if (i <  orgUnitChildrens.length)
+							getAllDistricts(i);
+					});
+				}
+			}
+		}
+		else if (orgUnitChildrens.length != 0) {
+			$.get("../api/organisationUnits/" + orgUnit.id + ".json?fields=*", function (json) {
+
+				stringOrgChild(json);
+				$.get("../api/analytics.json?dimension=dx:" + stringDEs + "&dimension=ou:" + dIDs + "&filter=pe:" + gotPeriod, function (json) {
+
+					jsonDistricts = json;
+					printAll();
+					hideLoad();
+				});
+			});
+		}
+	}
+	//**************************************************************************************************************
+	//**************************************************************************************************************
+	function printAll() {
+		for (var c = 0; c < ArrStringDEs.length; c++) {
+			iteration = c;
+			currentTableID = tableIDs[iteration];
+			//alert(jsonGroup+"...."+jsonNepal+"......"+jsonDistricts);
+			sum(jsonGroup);
+			printChildren(jsonNepal, "Region");
+			printChildren(jsonDistricts, dCodes);
+		}
+		if (directDownload == true && iteration == 2)
+			tablesToExcel(['datavalue1', 'datavalue2', 'datavalue3'], ['Immunization 1', 'Immunization 2', 'Immunization 3'], 'Analysed Immunization.xls');
+	}
+	//**********************************************************************************
+	//*************************storeChildren*****************************************
+	var dIDs = "";
+	var dCodes = "";
+	var s = 0;
+	var isFirst = true;
+
+	function storeChildren(disId, disCode) {
+		if (isFirst) {
+			dIDs = disId + ";";
+			dCodes = disCode + ";";
+			isFirst = false;
+		}
+		else {
+			dIDs = dIDs + disId + ";";
+			dCodes = dCodes + disCode + ";";
+		}
+		s++;
+
+		//alert(dCodes);
+	}
+
+	///********************************************************************************
+
+	//***************************sorting***********************************
+	var ChildCount = 0;
+	var childrens = [];
+	var allCodes = [];
+	var regionsLoaded = 0;
+
+	function arraySorting(a, b) {
+		return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+	}
+
+	function stringOrgChild(json) {
+		var stringOrg = "";
+		var stringCode = "";
+
+		ChildCount = 0;
+		childrens = [];
+
+		json.children.forEach(function (child) {	
+			var childID = child.id;
+			var childCode = child.code;
+			childrens.push([childID, childCode]);
+			childrens.sort(arraySorting);
+			ChildCount++;
+		});
+
+		sortChildren();
+
+
+		for (var f = 0; f < ChildCount; f++) {
+			var childID = childrens[f][0];
+			var childCode = childrens[f][1];
+			stringOrg += childID + ";";
+			stringCode += childCode + ";";
+		}
+
+		if (orgUnit.id == "cCTQiGkKcTk") {
+			stringOrg += json.id;
+			stringCode += "Region";
+		}
+		storeChildren(stringOrg, stringCode);
+	}
+
+
+	function sortChildren() {
+		for (var u = 0; u < ChildCount; u++) {
+			for (var k = 0; k < ChildCount - 1; k++) {
+				if (parseInt(childrens[k][1]) > parseInt(childrens[k + 1][1])) {
+					var tempID = childrens[k][0];
+					var tempCode = childrens[k][1];
+
+					childrens[k][1] = childrens[k + 1][1];
+					childrens[k][0] = childrens[k + 1][0];
+					childrens[k + 1][1] = tempCode;
+					childrens[k + 1][0] = tempID;
+				}
+			}
+		}
+	}
+//******************************************************************
+
+</script>
+<style>
+	.ylw {
+		background: #ffff99;
+	}
+
+	.gray {
+		background: #ccc;
+	}
+</style>
+<script>
+		function sum(json) {
+			var htmlReport = "";
+			var t = 0;
+			if (iteration == 0) {
+				arrOrgGroups.forEach(function (OrgGroup) {
+					//bg color and title******************************************************************************************
+					var cl = "";
+					var fnt = "";
+					var clr = "";
+					if (t % 2 == 0)
+						clr = "ylw";
+					else
+						clr = "gray";
+
+					fnt = "font-weight:bolder;";
+					t++;
+					htmlReport += "<tr class=" + clr + " style='" + fnt + "'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+
+
+					htmlReport += "<td align='left' style='padding:3px 5px 3px 15px'>" + json.metaData.items[OrgGroup].name + "</td>";//1
+
+					if (OrgGroup == gotOrg) {
+						var title = document.getElementsByClassName(currentTableID)[0].innerHTML;
+						document.getElementsByClassName(currentTableID)[0].innerHTML = title + " of " +json.metaData.items[OrgGroup].name;
+
+						document.getElementsByClassName(currentTableID)[0].style.padding = "10px 0";
+					}
+					//**************************************************************************************************************
+
+
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'AFlVz6gyQBV', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'GaAyNyeNq6Z', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'a0dG7ih12DG', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'TkoLt9XedAM', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'xWpAuH8Wqql', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'lzSO3chNv6I', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'NJHQJPmUJKI', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'Kj8Yr5DmLuP', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'EIEPq5R3JNM', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'xnuRKnSsgoj', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'n92FFE1gzqh', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'EXPNptuuVE2', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'FJLuyu1umui', OrgGroup) + "</td>";
+
+
+
+					htmlReport += "</tr>";
+				});
+			}
+
+			else if (iteration == 1) {
+				arrOrgGroups.forEach(function (OrgGroup) {
+					//bg color and title******************************************************************************************
+					var cl = "";
+					var fnt = "";
+					var clr = "";
+					if (t % 2 == 0)
+						clr = "ylw";
+					else
+						clr = "gray";
+
+					fnt = "font-weight:bolder;";
+					t++;
+					htmlReport += "<tr class=" + clr + " style='" + fnt + "'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+
+					htmlReport += "<td align='left' style='padding:3px 5px 3px 15px'>" + json.metaData.items[OrgGroup].name + "</td>";//1
+
+					if (OrgGroup == gotOrg) {
+						var title = document.getElementsByClassName(currentTableID)[0].innerHTML;
+						document.getElementsByClassName(currentTableID)[0].innerHTML = title + " of " +json.metaData.items[OrgGroup].name;
+
+						document.getElementsByClassName(currentTableID)[0].style.padding = "10px 0";
+					}
+					//**************************************************************************************************************
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'TPpxDKbvTqu', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'SWZjP8zWQ7B', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'B5p2T0KToGJ', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'j51Ga0aBS0U', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'twscAZKG6C0', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'FxAAi2gFts9', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'nQzvsXliRoV', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'JSZD2381HfZ', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'NiXDRayR5M6', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'bTNpI8t38yM', OrgGroup) + "</td>";
+
+
+
+
+
+					htmlReport += "</tr>";
+				});
+			}
+
+
+			else if (iteration == 2) {
+				arrOrgGroups.forEach(function (OrgGroup) {
+					//bg color and title******************************************************************************************
+					var cl = "";
+					var fnt = "";
+					var clr = "";
+					if (t % 2 == 0)
+						clr = "ylw";
+					else
+						clr = "gray";
+
+					fnt = "font-weight:bolder;";
+					t++;
+					htmlReport += "<tr class=" + clr + " style='" + fnt + "'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+
+
+					htmlReport += "<td align='left' style='padding:3px 5px 3px 15px'>" + json.metaData.items[OrgGroup].name + "</td>";//1
+
+					if (OrgGroup == gotOrg) {
+						var title = document.getElementsByClassName(currentTableID)[0].innerHTML;
+						document.getElementsByClassName(currentTableID)[0].innerHTML = title + " of " + json.metaData.items[OrgGroup].name;
+
+						document.getElementsByClassName(currentTableID)[0].style.padding = "10px 0";
+					}
+					//**************************************************************************************************************
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'wWviZ4dZRak', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'v4bSwhjBYGk', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'luRH7fGC0fg', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'FvYDi4aEDne', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'Vf5UetPPQuv', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'yLwppfVbuN2', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'COARG2tB4Vm', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'H6sXOtXirFN', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'y6TjKU8PrmO', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'yjUYKJVaWC0', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'xheElu8vDuX', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'w9YWXr5mQmi', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'yY07O5OxHSb', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'y6ykKSK6ysO', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'apGFxbRVYOn', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'qleY8X1qJGS', OrgGroup) + "</td>";
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "</tr>";
+				});
+			}
+
+			var prd = "P" + currentTableID;
+			if (document.getElementsByClassName(prd)[0]) {
+				var periodTitle = document.getElementsByClassName(prd)[0].innerHTML;
+				document.getElementsByClassName(prd)[0].innerHTML = " " + periodTitle + " : " + getPeriod();
+			}
+
+
+			var dte = "D" + currentTableID;
+			if (document.getElementsByClassName(dte)[0])
+				var dateTitle = document.getElementsByClassName(dte)[0].innerHTML;
+			var now = new Date();
+			var AmPm = (now.getHours() >= 12) ? "PM" : "AM";
+			var mints = (now.getMinutes() > 9) ? now.getMinutes() : "0" + now.getMinutes();
+			var hrs = (now.getHours() > 12) ? now.getHours() % 12 : now.getHours();
+			var dteString = now.getDate() + "/" + (now.getMonth() + 1) + "/" + now.getFullYear() + " " + hrs + ":" + mints + " " + AmPm;
+			if (document.getElementsByClassName(dte)[0])
+				document.getElementsByClassName(dte)[0].innerHTML = dateTitle + " : " + dteString + " ";
+
+			$("#" + currentTableID).append(htmlReport);
+		}
+
+		var ct = 0;
+		function printChildren(json, disCodes) {
+			var htmlReport = "";
+			var arrayCodes = disCodes.split(";");
+			//alert(arrayCodes.length);
+			if (iteration == 0) {
+				var i = 0;
+			json.metaData.dimensions.ou.forEach(function(child){
+
+					if (arrayCodes[i] != 'undefined')
+						var dcode = arrayCodes[i];
+					else
+						var dcode = "*";
+
+					if (arrayCodes[i] == "Region" || orgUnit.id == "xxx") {
+						htmlReport += "<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+					}
+					else {
+						htmlReport += "<tr><td align='center'>" + dcode + "</td>";
+					}
+					htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+					i++;
+
+
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'AFlVz6gyQBV', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'GaAyNyeNq6Z', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'a0dG7ih12DG', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'TkoLt9XedAM', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'xWpAuH8Wqql', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'lzSO3chNv6I', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'NJHQJPmUJKI', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'Kj8Yr5DmLuP', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'EIEPq5R3JNM', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'xnuRKnSsgoj', child) + "</td>";
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'n92FFE1gzqh', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'EXPNptuuVE2', child) + "</td>";
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'FJLuyu1umui', child) + "</td>";
+
+
+
+
+					htmlReport += "</tr>";
+				});
+			}
+
+			else if (iteration == 1) {
+				var i = 0;
+				json.metaData.dimensions.ou.forEach(function(child){
+
+					if (arrayCodes[i] != 'undefined')
+						var dcode = arrayCodes[i];
+					else
+						var dcode = "*";
+
+					if (arrayCodes[i] == "Region" || orgUnit.id == "xxx") {
+						htmlReport += "<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+					}
+					else {
+						htmlReport += "<tr><td align='center'>" + dcode + "</td>";
+					}
+				htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+					i++;
+
+
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'TPpxDKbvTqu', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'SWZjP8zWQ7B', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'B5p2T0KToGJ', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'j51Ga0aBS0U', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'twscAZKG6C0', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'FxAAi2gFts9', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'nQzvsXliRoV', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'JSZD2381HfZ', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'NiXDRayR5M6', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'bTNpI8t38yM', child) + "</td>";
+
+
+					htmlReport += "</tr>";
+				});
+			}
+
+			else if (iteration == 2) {
+				var i = 0;
+			json.metaData.dimensions.ou.forEach(function(child){
+
+					if (arrayCodes[i] != 'undefined')
+						var dcode = arrayCodes[i];
+					else
+						var dcode = "*";
+
+					if (arrayCodes[i] == "Region" || orgUnit.id == "xxx") {
+						htmlReport += "<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+					}
+					else {
+						htmlReport += "<tr><td align='center'>" + dcode + "</td>";
+					}
+				htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+					i++;
+
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'wWviZ4dZRak', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'v4bSwhjBYGk', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'luRH7fGC0fg', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'FvYDi4aEDne', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'Vf5UetPPQuv', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'yLwppfVbuN2', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'COARG2tB4Vm', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'H6sXOtXirFN', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'y6TjKU8PrmO', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'yjUYKJVaWC0', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'xheElu8vDuX', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'w9YWXr5mQmi', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'yY07O5OxHSb', child) + "</td>";
+					htmlReport += "<td align='center'>&nbsp;</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'y6ykKSK6ysO', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'apGFxbRVYOn', child) + "</td>";
+					htmlReport += "<td align='center'>" + getValueForCategoryOptionCombo(json, 'qleY8X1qJGS', child) + "</td>";
+					htmlReport += "<td align='center'>&nbsp;</td>";
+
+
+					htmlReport += "</tr>";
+				});
+			}
+
+
+			$("#" + currentTableID).append(htmlReport);
+
+		}
+
+
+		//******************************************************************				
+
+		function getValueSum(json, de, orgGroup) {
+			var result = 0;
+			for (var i = 0; i < json.rows.length; i++) {
+				if (json.rows[i][0] == de && json.rows[i][1] == orgGroup && json.rows[i][2] != null) {
+					result += parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+
+		function getValueForCategoryOptionCombo(json, de, orgUnit) {
+			var result = 0;
+			for (var i = 0; i < json.rows.length; i++) {
+				if (json.rows[i][0] == de && json.rows[i][1] == orgUnit && json.rows[i][2] != null) {
+					result += parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+
+		function getValueTotal(json, de) {
+			var result = 0;
+			for (var i = 0; i < json.rows.length; i++) {
+				if (json.rows[i][0] == de && json.rows[i][2] != null) {
+					result += parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+
+</script>
+
+<!-- 		<!-- download script ------------------------------------------------------
+		--------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------- -->
+<script type="text/javascript">
+		function convert(dataURI) {
+			// convert base64 to raw binary data held in a string
+			// doesn't handle URLEncoded DataURIs
+			var byteString;
+			if (dataURI.split(',')[0].indexOf('base64') >= 0)
+				byteString = atob(dataURI.split(',')[1]);
+			else
+				byteString = unescape(dataURI.split(',')[1]);
+			// separate out the mime component
+			var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+			// write the bytes of the string to an ArrayBuffer
+			var ab = new ArrayBuffer(byteString.length);
+			var ia = new Uint8Array(ab);
+			for (var i = 0; i < byteString.length; i++) {
+				ia[i] = byteString.charCodeAt(i);
+			}
+
+			// write the ArrayBuffer to a blob, and you're done
+			return new Blob([ab], { type: mimeString });
+		}
+
+		var tablesToExcel = (function () {
+			var uri = 'data:application/vnd.ms-excel;base64,'
+				, tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+					+ '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>ThaiND</Author><Created>{created}</Created></DocumentProperties>'
+					+ '<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:Size="8"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s26"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s23"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="0"/></Borders><Font ss:Bold="1"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s24"><Alignment ss:Horizontal="Left" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s28"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s29"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#cccccc" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style></Styles>'
+					+ '{worksheets}</Workbook>'
+				, tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/>{rows}</Table></Worksheet>'
+				, tmplCellXML = '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>'
+				, base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+				, format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+
+			return function (tables, wsnames, wbname) {
+				var ctx = "";
+				var workbookXML = "";
+				var worksheetsXML = "";
+				var rowsXML = "";
+
+				for (var i = 0; i < tables.length; i++) {
+
+					if (!tables[i].nodeType)
+						tables[i] = document.getElementById(tables[i]);
+
+					for (var j = 0; j < tables[i].rows.length; j++) {
+						rowsXML += '<Row>'
+						for (var k = 0; k < tables[i].rows[j].cells.length; k++) {
+
+							var cols = tables[i].rows[j].cells[k].getAttribute("colspan");
+							var rws = tables[i].rows[j].cells[k].getAttribute("rowspan");
+							var styl = tables[i].rows[j].cells[k].getAttribute("bgcolor");
+							var styl2 = tables[i].rows[j].getAttribute("bgcolor");
+							var cls = tables[i].rows[j].cells[k].getAttribute("class");
+							var algn = tables[i].rows[j].cells[k].getAttribute("align");
+							var cls2 = tables[i].rows[j].getAttribute("class");
+
+							var dataType = 'String';
+							var dataValue = tables[i].rows[j].cells[k].innerHTML;
+							var typeD = "";
+							var parsed = parseInt(dataValue);
+
+							if (parsed == dataValue) {
+								typeD = "Number";
+							}
+							else {
+								typeD = "String";
+							}
+							var n;
+							if (cls) {
+								n = cls.indexOf("value");
+							}
+
+							if (cls == "all2" || n >= 0) {
+								if (cols) {
+									ctx = { data: dataValue, mrg: cols - 1, sid: "s23", dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+
+								else {
+
+									ctx = { data: dataValue, mrg: 0, sid: "s23", dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+							}
+
+							else if (cls2 == "ylw") {
+								if (k == 1 && j > 3)
+									var cl = "s22";
+								else
+									var cl = "s26";
+
+								if (cols) {
+									ctx = { data: dataValue, mrg: cols - 1, sid: cl, dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+
+								else {
+
+									ctx = { data: dataValue, mrg: 0, sid: cl, dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+							}
+
+							else if (cls2 == "gray") {
+								if (k == 1 && j > 3)
+									var cl = "s28";
+								else
+									var cl = "s29";
+
+								if (cols) {
+									ctx = { data: dataValue, mrg: cols - 1, sid: cl, dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+
+								else {
+
+									ctx = { data: dataValue, mrg: 0, sid: cl, dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+							}
+							else if (styl2) {
+								if (k == 1 && j > 3)
+									var cl = "s22";
+								else
+									var cl = "s26";
+
+								if (cols) {
+									ctx = { data: dataValue, mrg: cols - 1, sid: cl, dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+
+								else {
+
+									ctx = { data: dataValue, mrg: 0, sid: cl, dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+							}
+
+
+							else if (styl) {
+								if (cols) {
+									ctx = { data: dataValue, mrg: cols - 1, sid: "s21", dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+
+								else {
+									ctx = { data: dataValue, mrg: 0, sid: "s21", dtype: typeD };
+									rowsXML += format(tmplCellXML, ctx);
+								}
+							}
+
+							else {
+								if (cols) {
+									if (algn == "left") {
+										ctx = { data: dataValue, mrg: cols - 1, sid: "s24", dtype: typeD };
+										rowsXML += format(tmplCellXML, ctx);
+									}
+									else {
+										ctx = { data: dataValue, mrg: cols - 1, sid: "Default", dtype: typeD };
+										rowsXML += format(tmplCellXML, ctx);
+									}
+								}
+
+								else {
+									if (algn == "left") {
+										ctx = { data: dataValue, mrg: 0, sid: "s24", dtype: typeD };
+										rowsXML += format(tmplCellXML, ctx);
+									}
+									else {
+										ctx = { data: dataValue, mrg: 0, sid: "Default", dtype: typeD };
+										rowsXML += format(tmplCellXML, ctx);
+									}
+								}
+
+							}
+
+						}
+						rowsXML += '</Row>'
+					}
+					ctx = { rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i };
+					worksheetsXML += format(tmplWorksheetXML, ctx);
+					rowsXML = "";
+				}
+
+				ctx = { created: (new Date()).getTime(), worksheets: worksheetsXML };
+				workbookXML = format(tmplWorkbookXML, ctx);
+
+
+				var blobUrl = URL.createObjectURL(convert(uri + base64(workbookXML)));
+				var link = document.createElement("A");
+				link.href = blobUrl;
+				//link.href = uri + base64(workbookXML);
+				link.download = wbname || 'Workbook.xls';
+				link.target = '_blank';
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+			}
+		})();
+
+</script>
+<script type="text/javascript">
+	 $(document).ready(function () {
+		 $("input[value=Back]").closest('div').hide();
+	 });
+
+</script>
+
+
+<style type="text/css">
+	body {
+		overflow: none;
+	}
+
+	ul.tabs {
+		margin: 0;
+		padding: 0;
+		float: left;
+		list-style: none;
+		height: 32px;
+		border-bottom: 1px solid #999999;
+		border-left: 1px solid #999999;
+		width: 100%;
+	}
+
+	ul.tabs li {
+		float: left;
+		margin: 0;
+		cursor: pointer;
+		padding: 0px 21px;
+		height: 31px;
+		line-height: 31px;
+		border: 1px solid #999999;
+		border-left: none;
+		font-weight: bold;
+		background: #EEEEEE;
+		overflow: hidden;
+		position: relative;
+	}
+
+	ul.tabs li:hover {
+		background: #CCCCCC;
+	}
+
+	ul.tabs li.active {
+		background: #FFFFFF;
+		border-bottom: 1px solid #FFFFFF;
+	}
+
+	.tab_container {
+		clear: both;
+		float: left;
+		width: 100%;
+		background: #FFFFFF;
+	}
+
+	.tab_content {
+		padding: 0;
+		font-size: 1.2em;
+		display: none;
+	}
+
+	#container {
+		width: 100%;
+		margin: 0 auto;
+	}
+
+	.vtext {
+		min-width: 40px;
+	}
+
+	.borders {
+		border-bottom-color: #999999;
+	}
+
+	.rightborder {
+		border-right-color: #999999;
+	}
+
+	.all {
+		font-weight: bolder;
+		padding: 4px 5px;
+	}
+
+	.all td {
+		padding: 3px 5px;
+	}
+
+	.all2 {
+		font-weight: bolder;
+		padding: 4px 5px;
+
+		border: 0;
+	}
+
+	td {
+		min-width: 75px;
+	}
+
+	#cover {
+		position: fixed;
+		top: 0;
+		left: 0;
+		background: rgba(0, 0, 0, 0.7);
+		z-index: 5;
+		width: 100%;
+		height: 100%;
+	}
+
+	#loads {
+		height: 100px;
+		width: 500px;
+		position: fixed;
+		z-index: 10;
+		margin: 0 auto;
+		top: 50%;
+		left: 50%;
+		margin-top: -50px;
+		margin-left: -250px;
+		background: #999;
+		border: 5px solid #cccccc;
+		text-align=center;
+		border-radius: 5px;
+	}
+
+	.loading {
+		width: 400px;
+		font-size: 20px;
+		font-family: verdana;
+		font-weight: bolder;
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		margin: 0 auto;
+		margin-top: -8px;
+		margin-left: -200px;
+	}
+</style>
+<div id="loads">
+	<p class="loading" align="center">Reports Loading... Please Wait...</p>
+</div>
+<div id="cover"> </div>
+<!--<input type="button" value="Download all" style="width:140px;" onclick="tablesToExcel(['datavalue1','datavalue2','datavalue3',], ['Immunization1','Immunization2','Immunization3',], 'Analysed Immunization.xls')" id="dwnAll"/>-->
+<!-- <input type="button" value="Reports Home" style="width:140px; background-color: #1976D2; color: white;" onclick='window.open("http://dhislx.hispindia.org:8080/nepalhmis/api/apps/reports-app/index.html", "_self")'/>
+/> -->
+</br>
+</br>
+
+
+<div id="container">
+
+	<ul class="tabs">
+		<li class="active" rel="tab1"> Immunization 1</li>
+		<li rel="tab2"> Immunization 2</li>
+		<li rel="tab3"> Immunization 3</li>
+
+	</ul>
+
+	<div class="tab_container">
+
+		<div id="tab1" class="tab_content">
+
+			<p>
+
+				<!-- table1 ------------------------------------------------------------------------------------------------------------------- -->
+
+				<table id="datavalue1" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+					<tr height="20">
+						<td width="1804" height="20" colspan="18" bgcolor="#FFF0F8">
+							<div align="center"><strong>Analyzed Data:Immunization (Sheet 1 of 3)</strong></div>
+						</td>
+					</tr>
+					<tr>
+						<td bgcolor="#FFF0F8" class="Pdatavalue2 all2" align="left" colspan="9">Reporting Period </td>
+
+						<td bgcolor="#FFF0F8" class="Ddatavalue2 all2" align="right" colspan="9"> Date </td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1313" height="20" colspan="15" bgcolor="#FFF0F8"><strong>Summary of Programme Performance by    HF/VDC&amp;Municipality/District/Development &amp; Ecological Region</strong></td>
+						<td align="right" width="491" colspan="3" bgcolor="#FFF0F8"><strong>Department of Health    Services</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1313" height="20" colspan="15" bgcolor="#FFF0F8"><strong>(Note to the Programme Heads : this compilation is based on    Reports received at HMIS Section/District from the health facilities)</strong></td>
+						<td align="right" width="491" colspan="3" bgcolor="#FFF0F8"><strong>Management Division</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1313" height="20" colspan="15" bgcolor="#FFF0F8"><strong>Programme Heads/Focal Person are requested to verify the    reported figures with HFs and notify back to Stat. Section if anything to    correct. Thanks</strong></td>
+						<td align="right" width="491" colspan="3" bgcolor="#FFF0F8"><strong>Health Management    Information System</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1313" height="20" colspan="15" bgcolor="#FFF0F8"><strong>Expected report/Health facility: 1</strong></td>
+						<td align="right" width="491" colspan="3" bgcolor="#FFF0F8"><strong>[DEPARTMENT OF HEALTH    SERVICE]</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1313" height="20" colspan="15" bgcolor="#FFF0F8"></td>
+						<td align="right" width="491" colspan="3" bgcolor="#FFF0F8"><strong>(For Internal use only    : Restricted to quote)</strong></td>
+					</tr>
+					<tr height="20">
+						<td width="93" height="80" bgcolor="#D5EAFF">
+							<div align="center"><strong>District/ HF Code</strong></div>
+						</td>
+						<td width="95" bgcolor="#D5EAFF">
+							<div align="center"><strong>District Name</strong></div>
+						</td>
+						<td width="94" bgcolor="#D5EAFF">
+							<div align="center"><strong>Received Reports</strong></div>
+						</td>
+						<td width="1031" colspan="12" bgcolor="#D5EAFF">
+							<div align="center"><strong>Coverage (% of children under one year    immunized)</strong></div>
+						</td>
+						<td width="235" colspan="2" bgcolor="#D5EAFF">
+							<div align="center"><strong>% of children 12-23 months immunized</strong></div>
+						</td>
+						<td width="256" rowspan="4" bgcolor="#D5EAFF">
+							<div align="center"><strong>% of children under one year fully immunized as per NIP schedule</strong></div>
+						</td>
+					</tr>
+					<tr height="20">
+						<td width="93" height="80" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="95" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="94" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="89" height="60" rowspan="3" bgcolor="#D5EAFF">
+							<div align="center"><strong>BCG&nbsp;</strong></div>
+						</td>
+						<td width="277" colspan="3" rowspan="2" bgcolor="#D5EAFF">
+							<div align="center"><strong>DPT-HepB-Hib</strong></div>
+						</td>
+						<td width="274" colspan="3" rowspan="2" bgcolor="#D5EAFF">
+							<div align="center"><strong>Polio</strong></div>
+						</td>
+						<td width="267" colspan="3" rowspan="2" bgcolor="#D5EAFF">
+							<div align="center"><strong>PCV</strong></div>
+						</td>
+						<td width="39" bgcolor="#D5EAFF">
+							<div align="center"><strong>IPV</strong></div>
+						</td>
+						<td width="182" colspan="2" bgcolor="#D5EAFF">
+							<div align="center"><strong>Measles/Rubella</strong></div>
+						</td>
+						<td width="138" rowspan="3" bgcolor="#D5EAFF">
+							<div align="center"><strong>Japanese Encephalitis</strong></div>
+						</td>
+					</tr>
+					<tr height="20">
+						<td width="93" height="80" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="95" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="94" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="39" height="20" bgcolor="#D5EAFF">
+							<div align="center"><strong>(Polio)</strong></div>
+						</td>
+						<td width="182" colspan="2" bgcolor="#D5EAFF">
+							<div align="center"><strong>(9-11 months)</strong></div>
+						</td>
+					</tr>
+					<tr height="20">
+						<td width="93" height="80" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="95" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="94" bgcolor="#D5EAFF">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="92" height="20" bgcolor="#D5EAFF">
+							<div align="center"><strong>1st Dose</strong></div>
+						</td>
+						<td width="87" bgcolor="#D5EAFF">
+							<div align="center"><strong>2nd    dose</strong></div>
+						</td>
+						<td width="98" bgcolor="#D5EAFF">
+							<div align="center"><strong>3rd    dose</strong></div>
+						</td>
+						<td width="98" bgcolor="#D5EAFF">
+							<div align="center"><strong>1st    Dose</strong></div>
+						</td>
+						<td width="83" bgcolor="#D5EAFF">
+							<div align="center"><strong>2nd    dose</strong></div>
+						</td>
+						<td width="93" bgcolor="#D5EAFF">
+							<div align="center"><strong>3rd    dose</strong></div>
+						</td>
+						<td width="87" bgcolor="#D5EAFF">
+							<div align="center"><strong>1st    Dose</strong></div>
+						</td>
+						<td width="93" bgcolor="#D5EAFF">
+							<div align="center"><strong>2nd    dose</strong></div>
+						</td>
+						<td width="87" bgcolor="#D5EAFF">
+							<div align="center"><strong>3rd    dose</strong></div>
+						</td>
+						<td width="39" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="85" bgcolor="#D5EAFF">
+							<div align="center"><strong>1st    Dose</strong></div>
+						</td>
+						<td width="97" bgcolor="#D5EAFF">
+							<div align="center"><strong>2nd    Dose</strong></div>
+						</td>
+					</tr>
+				</table>
+				</br>
+				</br>
+			</p>
+
+		</div>
+		<!-- #tab1 -->
+
+		<div id="tab2" class="tab_content">
+
+			<p>
+
+				<!-- table2 ------------------------------------------------------------------------------------------------------------------- -->
+
+				<table id="datavalue2" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+					<tr height="20">
+						<td width="1294" height="20" colspan="13" bgcolor="#FFF0F8">
+							<div align="center"><strong>Analyzed Data:Immunization (Sheet 2 of 3)</strong></div>
+						</td>
+					</tr>
+					<tr>
+						<td bgcolor="#FFF0F8" class="Pdatavalue3 all2" align="left" colspan="7">Reporting Period </td>
+
+						<td bgcolor="#FFF0F8" class="Ddatavalue3 all2" align="right" colspan="6"> Date </td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1026" height="20" colspan="10" bgcolor="#FFF0F8"><strong>Summary of Programme Performance by    HF/VDC&amp;Municipality/District/Development &amp; Ecological Region</strong></td>
+						<td align="right" width="268" colspan="3" bgcolor="#FFF0F8"><strong>Department of Health    Services</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1026" height="20" colspan="10" bgcolor="#FFF0F8"><strong>(Note to the Programme Heads : this compilation is based on    Reports received at HMIS Section/District from the health facilities)</strong></td>
+						<td align="right" width="268" colspan="3" bgcolor="#FFF0F8"><strong>Management Division</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1026" height="20" colspan="10" bgcolor="#FFF0F8"><strong>Programme Heads/Focal Person are requested to verify the    reported figures with HFs and notify back to Stat. Section if anything to    correct. Thanks</strong></td>
+						<td align="right" width="268" colspan="3" bgcolor="#FFF0F8"><strong>Health Management    Information System</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1026" height="20" colspan="10" bgcolor="#FFF0F8"><strong>Expected report/Health facility: 1</strong></td>
+						<td align="right" width="268" colspan="3" bgcolor="#FFF0F8"><strong>[DEPARTMENT OF HEALTH    SERVICE]</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="1026" height="20" colspan="10" bgcolor="#FFF0F8"></td>
+						<td align="right" width="268" colspan="3" bgcolor="#FFF0F8"><strong>(For Internal use only    : Restricted to quote)</strong></td>
+					</tr>
+					<tr height="20">
+						<td width="96" height="60" bgcolor="#D8E6F2">
+							<div align="center"><strong>District / HF Code</strong></div>
+						</td>
+						<td width="95" bgcolor="#D8E6F2">
+							<div align="center"><strong>District Name</strong></div>
+						</td>
+						<td width="94" bgcolor="#D8E6F2">
+							<div align="center"><strong>Received Reports</strong></div>
+						</td>
+						<td width="313" colspan="2" bgcolor="#D8E6F2">
+							<div align="center"><strong>Dropout Rate</strong></div>
+						</td>
+						<td width="696" colspan="8" bgcolor="#D8E6F2">
+							<div align="center"><strong>WASTAGE RATE</strong></div>
+						</td>
+					</tr>
+					<tr height="20">
+						<td width="96" height="60" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="95" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="94" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="118" height="40" bgcolor="#D8E6F2">
+							<div align="center"><strong>DPT-HepB-Hib 1 vs 3&nbsp;&nbsp;</strong></div>
+						</td>
+						<td width="195" bgcolor="#D8E6F2">
+							<div align="center"><strong>DPT-HepB-Hib1 vs measles/rubella 1</strong></div>
+						</td>
+						<td width="83" bgcolor="#D8E6F2">
+							<div align="center"><strong>BCG</strong></div>
+						</td>
+						<td width="82" bgcolor="#D8E6F2">
+							<div align="center"><strong>DPT-Hep B-Hib</strong></div>
+						</td>
+						<td width="89" bgcolor="#D8E6F2">
+							<div align="center"><strong>Polio</strong></div>
+						</td>
+						<td width="90" bgcolor="#D8E6F2">
+							<div align="center"><strong>PCV</strong></div>
+						</td>
+						<td width="84" bgcolor="#D8E6F2">
+							<div align="center"><strong>Polio</strong></div>
+						</td>
+						<td width="94" bgcolor="#D8E6F2">
+							<div align="center"><strong>Measles</strong></div>
+						</td>
+						<td width="92" bgcolor="#D8E6F2">
+							<div align="center"><strong>JE</strong></div>
+						</td>
+						<td width="82" bgcolor="#D8E6F2">
+							<div align="center"><strong>TD</strong></div>
+						</td>
+					</tr>
+					<tr height="20">
+						<td width="96" height="60" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="95" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="94" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="96" height="60" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="95" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="94" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="94" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="89" height="20" bgcolor="#D8E6F2">
+							<div align="center"><strong>(OPV)</strong></div>
+						</td>
+						<td width="94" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="84" bgcolor="#D8E6F2">
+							<div align="center"><strong>(IPV)</strong></div>
+						</td>
+						<td width="96" height="60" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="95" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+						<td width="94" bgcolor="#D8E6F2">
+							<div align="center"><strong></strong></div>
+						</td>
+					</tr>
+			</p>
+			</table>
+			</br>
+			</br>
+
+
+		</div>
+		<!-- #tab2 -->
+		<div id="tab3" class="tab_content">
+			<p>
+				<!-- table3 ------------------------------------------------------------------------------------------------------------------- -->
+
+				<table id="datavalue3" width="80%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-color:#000000;">
+
+					<tr height="20">
+						<td width="2957" height="20" colspan="21" bgcolor="#FFF0F8">
+							<div align="center"><strong>Analyzed Data:Immunization (Sheet 3 of 3)</strong></div>
+						</td>
+					</tr>
+					<tr>
+						<td bgcolor="#FFF0F8" class="Pdatavalue1 all2" align="left" colspan="13">Reporting Period </td>
+
+						<td bgcolor="#FFF0F8" class="Ddatavalue1 all2" align="right" colspan="8"> Date </td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="2206" height="20" colspan="18" bgcolor="#FFF0F8"><strong>Summary of Programme Performance by    HF/VDC&amp;Municipality/District/Development &amp; Ecological Region</strong></td>
+						<td align="right" width="751" colspan="3" bgcolor="#FFF0F8"><strong>Department of Health    Services</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="2206" height="20" colspan="18" bgcolor="#FFF0F8"><strong>(Note to the Programme Heads : this compilation is based on    Reports received at HMIS Section/District from the health facilities)</strong></td>
+						<td align="right" width="751" colspan="3" bgcolor="#FFF0F8"><strong>Management Division</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="2206" height="20" colspan="18" bgcolor="#FFF0F8"><strong>Programme Heads/Focal Person are requested to verify the    reported figures with HFs and notify back to Stat. Section if anything to    correct. Thanks</strong></td>
+						<td align="right" width="751" colspan="3" bgcolor="#FFF0F8"><strong>Health Management    Information System</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="2206" height="20" colspan="18" bgcolor="#FFF0F8"><strong>Expected report/Health facility: 1</strong></td>
+						<td align="right" width="751" colspan="3" bgcolor="#FFF0F8"><strong>[DEPARTMENT OF HEALTH    SERVICE]</strong></td>
+					</tr>
+					<tr height="20">
+						<td align="left" width="2206" height="20" colspan="18" bgcolor="#FFF0F8"></td>
+						<td align="right" width="751" colspan="3" bgcolor="#FFF0F8"><strong>(For Internal use only    : Restricted to quote)</strong></td>
+					</tr>
+					<tr height="20">
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"><strong>District/HF Code</strong></div>
+						</td>
+						<td width="99" bgcolor="#D5EAFF">
+							<div align="center"><strong>District/ HF Name</strong></div>
+						</td>
+						<td width="94" bgcolor="#D5EAFF">
+							<div align="center"><strong>Received Reports</strong></div>
+						</td>
+						<td width="466" colspan="3" bgcolor="#D5EAFF">
+							<div align="center"><strong>TITANUS DIPTHERIA&nbsp;</strong></div>
+						</td>
+						<td width="290" colspan="2" bgcolor="#D5EAFF">
+							<div align="center"><strong>IMMUNIZATION CLINICS</strong></div>
+						</td>
+						<td width="735" colspan="8" bgcolor="#D5EAFF">
+							<div align="center"><strong>% of adverse events following    immunization&nbsp;</strong></div>
+						</td>
+						<td width="1225" colspan="5" bgcolor="#D5EAFF">
+							<div align="center"><strong>VACCINE PREVENTABLE DISEASES</strong></div>
+						</td>
+					</tr>
+					<tr height="39">
+						<td width="48" height="39" bgcolor="#D5EAFF">
+							<div align="center"><strong>&nbsp;</strong></div>
+						</td>
+						<td width="48" height="39" bgcolor="#D5EAFF">
+							<div align="center"><strong>&nbsp;</strong></div>
+						</td>
+						<td width="48" height="39" bgcolor="#D5EAFF">
+							<div align="center"><strong>&nbsp;</strong></div>
+						</td>
+						<td width="159" bgcolor="#D5EAFF">
+							<div align="center"><strong>% of pregnant women who received Td2</strong></div>
+						</td>
+						<td width="141" bgcolor="#D5EAFF">
+							<div align="center"><strong>% of pregnant women who received Td 2+</strong></div>
+						</td>
+						<td width="166" bgcolor="#D5EAFF">
+							<div align="center"><strong>% of pregnant women who received Td 2 &amp; 2+</strong></div>
+						</td>
+						<td width="144" bgcolor="#D5EAFF">
+							<div align="center"><strong>%&nbsp; of planned immunization clinics    conducted&nbsp;</strong></div>
+						</td>
+						<td width="146" bgcolor="#D5EAFF">
+							<div align="center"><strong>% of planned immunization sessions    conducted&nbsp;</strong></div>
+						</td>
+						<td width="93" bgcolor="#D5EAFF">
+							<div align="center"><strong>BCG</strong></div>
+						</td>
+						<td width="98" bgcolor="#D5EAFF">
+							<div align="center"><strong>DPT-Hep B-Hib</strong></div>
+						</td>
+						<td width="84" bgcolor="#D5EAFF">
+							<div align="center"><strong>Polio</strong></div>
+						</td>
+						<td width="90" bgcolor="#D5EAFF">
+							<div align="center"><strong>PCV</strong></div>
+						</td>
+						<td width="89" bgcolor="#D5EAFF">
+							<div align="center"><strong>Polio</strong></div>
+						</td>
+						<td width="86" bgcolor="#D5EAFF">
+							<div align="center"><strong>Measles/</strong></div>
+						</td>
+						<td width="102" bgcolor="#D5EAFF">
+							<div align="center"><strong>JE</strong></div>
+						</td>
+						<td width="93" bgcolor="#D5EAFF">
+							<div align="center"><strong>TD</strong></div>
+						</td>
+						<td width="256" bgcolor="#D5EAFF">
+							<div align="center"><strong>Acute flaccid paralysis (AFP) rate per 100,000    children under 15 years&nbsp;</strong></div>
+						</td>
+						<td width="218" bgcolor="#D5EAFF">
+							<div align="center"><strong>Neonatal tetanus rate per 1000 live births</strong></div>
+						</td>
+						<td width="256" bgcolor="#D5EAFF">
+							<div align="center"><strong>Acute encephalitis syndrome (AES) rate per    100,000 population in high risk districts&nbsp;</strong></div>
+						</td>
+						<td width="248" bgcolor="#D5EAFF">
+							<div align="center"><strong>Measles like illness rate per 100,000 population</strong></div>
+						</td>
+						<td width="247" bgcolor="#D5EAFF">
+							<div align="center"><strong>Rubella like illness rate per 100,000    population&nbsp;</strong></div>
+						</td>
+					</tr>
+					<tr height="20">
+						<td width="48" height="39" bgcolor="#D5EAFF">
+							<div align="center"><strong>&nbsp;</strong></div>
+						</td>
+						<td width="48" height="39" bgcolor="#D5EAFF">
+							<div align="center"><strong>&nbsp;</strong></div>
+						</td>
+						<td width="48" height="39" bgcolor="#D5EAFF">
+							<div align="center"><strong>&nbsp;</strong></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="89" bgcolor="#D5EAFF">
+							<div align="center"><strong>(IPV)</strong></div>
+						</td>
+						<td width="86" bgcolor="#D5EAFF">
+							<div align="center"><strong>Rubella</strong></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+						<td width="48" height="20" bgcolor="#D5EAFF">
+							<div align="center"></div>
+						</td>
+					</tr>
+				</table>
+				</br>
+				</br>
+			</p>
+		</div>
+		<!-- #tab3 -->
+
+
+
+	</div>
+	<!-- .tab_container -->
+
+</div>
+<!-- #container -->

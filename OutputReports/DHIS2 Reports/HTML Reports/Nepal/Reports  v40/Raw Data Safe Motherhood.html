@@ -1,0 +1,1798 @@
+<script>
+	var anchor = `<a
+	role="button"
+	href="../api/apps/reports-app/index.html"
+	style="color:#fff;
+	background-color:#1976d2;
+	padding:6px 16px;
+	line-height: 1.75;
+	text-transform: uppercase;
+	font-weight: 500;
+	text-decoration:none;">
+	Back to Reports App</a>`
+	parent.document.querySelector('.button-row').innerHTML = anchor;
+	</script>
+<script type="text/javascript">	
+	var directDownload=true;
+	// var periods = dhis2.report.periods;
+	// var period = periods[0];
+	var orgUnit = dhis2.report.organisationUnit;
+	var orgUnitChildrens = dhis2.report.organisationUnitChildren.sort((a,b)=> a.name.localeCompare(b.name));
+				var rOrder = orgUnitChildrens.map(a=>a.id);
+	var ArrStringDEs = ["C6ubEqEew8X;kSnqP4GPOsQ;vH9Mm6o3LKn;Bf3ebOgYXFL;RtidqFs7NRc;gNcAqChA90J;T9SHzXzpwnJ;GmSYhnEFEPr;WyIabPquKV4;CddyVd7FKmr;T9SHzXzpwnJ;WyIabPquKV4;GmSYhnEFEPr;VdZyJrLrSg5;rqny3AJuymt;c6dLz049UWw;CtX7O3pbtL3;fQU35FONgPq;NdY1V8YqJDd;BoPXsSKiPVx;xAulrqfseew;zgNUMf4qP2Z",
+	"C6ubEqEew8X",
+	"UQTYGjWr7wz;cMo5gmSt1yV;pP3HfFu4Bte;Yjwho2iruhu;w0fvdvU1yuF;ZtwhYCiEQ7w;uzX1NG6xDwr;DjglomjSiAu;vIuy5zKUj82;r1x2daA3pwt;stOtnhrYX9J;ssjLchkxrC3;uGteAfUfOBk;DFEHOcOqW5a;zaFinXSR0UY;k2StfxOzXpx;FlyYBxnmKup;XxGpVsZfVPL;UUZw688ThWK;r0HLdqmLwFB",
+	"b8jGBrMfBbP;Aw24Ejbp63F;KsMJg5sdGOS;wxIeWrnnZxe;KkSEy2pfgCD;ymw1agzYyF3;BIjA8u1VMF3;AP5k6dsqGPI;spH6ZRldV3F;WAxqda0KkYt;Jz96CS4ZOn7;oEUn9bucwse",
+	"f4ueiBTKF1T;S4CFTXyEFVc;JLKFv7K2i7Y;v3zKVR5wJt3;PELChUNfW2C;LIo3j809JrK;ueBJTsv0PXr;wsncKYDcmqr;Dior21jcQCe;nwQoDUhFR1z;PGNd6jcxJX4;kV3JhKJWMR8;dHet49ySm06;XAzAbTRbJve;YZfwWNZzfg0;BL5XaUOJ6aw;IMFPhLtATaw;dZo1PDWPAO1;ysTJteUVzO1;MO4VQOLebuG;ua0pnAingEU"];
+	//var stringDEs = "w84aFW1LESM";
+	var stringDEs="";
+	var arrayDEs = stringDEs.split(";");
+	var ArrStringCOCs = ["kdsirVNKdhm"," ","kdsirVNKdhm;ye1QuAMRG5Z;PflKpozpO7b;","kdsirVNKdhm;","kdsirVNKdhm"];
+	var stringCOCs="";
+	var arrayCOCs = stringCOCs.split(";");
+
+
+	var stringOrgGroups = "Y0KKpWj7lxz;scKWF4Udevr;JcXwohQqmha;zZ0uvqvqw2S;JM8keEP4z6r;mtNeiqIynwj;UcN4jZjv9Oo";
+	var url = window.parent.location.hash;
+	var params = url.split('&');
+var gotPeriod = params[2].split('=')[1];
+var gotOrg=orgUnit.id;
+	//stringOrgGroups+=";"+gotOrg;
+	var arrOrgGroups = stringOrgGroups.split(";");
+
+
+	var tableIDs=["datavalue1","datavalue3","datavalue4","datavalue5"];
+	var uidGroupSet = "VuilQBYZNIR";
+	var stt=0;
+	var load=1;
+	var iteration = -1;
+	var rep=[false,false,false,false,false];
+	
+	var jsonGroup, jsonNepal, jsonDistricts;
+	//*******************************************************************************************************************************
+	//*******************************************************************************************************************************
+	
+	
+	var rtype=params[4];
+	jQuery( document ).ready( function(){
+			
+		
+		$(".tab_content").hide();
+		$(".tab_content:first").show(); 
+		
+		if(rtype>1)
+		generateFourMonths();
+		getJson();
+		loadall(0);
+		
+			$("ul.tabs li").click(function() {
+			$("ul.tabs li").removeClass("active");
+			$(this).addClass("active");
+			$(".tab_content").hide();
+			var activeTab = $(this).attr("rel"); 
+			$("#"+activeTab).fadeIn(); 
+			}); 
+	});
+	
+				function hideLoad()
+				{
+					document.getElementById("cover").style.display="none";
+					document.getElementById("loads").style.display="none";
+					//document.getElementById("loading").style.display="none";
+					document.getElementsByTagName("body")[0].style.overflow="scroll";
+				}
+
+//get period *************************************************************
+		var fourMonths=[];
+
+		function getPeriod()
+		{
+			if(rtype>1)
+			return getPeriodTitle(fourMonths[0])+" To "+getPeriodTitle(fourMonths[params[4]-1]);
+			
+			else			
+			return getPeriodTitle(gotPeriod);
+		}
+
+		function getPeriodTitle(pr)
+		{
+			var year = pr.substring(0,4);
+			var month = pr.substring(4,6);
+			var strMonth="";
+			
+			if(month=="01" || month=="1")
+				strMonth="Baishakh";
+			else if(month=="02" || month=="2")
+				strMonth="Jestha";
+			else if(month=="03" || month=="3")
+				strMonth="Ashadh";
+			else if(month=="04" || month=="4")
+				strMonth="Shrawan";
+			else if(month=="05" || month=="5")
+				strMonth="Bhadra";
+			else if(month=="06" || month=="6")
+				strMonth="Ashwin";
+			else if(month=="07" || month=="7")
+				strMonth="Kartik";
+			else if(month=="08" || month=="8")
+				strMonth="Mangsir";
+			else if(month=="09" || month=="9")
+				strMonth="Poush";
+			else if(month=="10")
+				strMonth="Magh";
+			else if(month=="11")
+				strMonth="Falgun";
+			else if(month=="12")
+				strMonth="Chaitra";
+			
+			return strMonth + " " +year;
+		}
+
+		function generateFourMonths()
+		{   
+		    var n=params[4];
+			gotPeriod = gotPeriod.substring(0,6);
+			var year = gotPeriod.substring(0,4);
+			var month = gotPeriod.substring(4,6);	
+			fourMonths[0]=gotPeriod;
+			gotPeriod+=";";
+			
+			for(var y=1; y<n; y++)
+			{
+				if(month<12)
+				{
+					month++;
+				}
+				else
+				{
+					month=1;
+					year++;
+				}
+				if(month<10)
+				month="0"+month;
+				fourMonths[y]=year+""+month;
+				gotPeriod+=fourMonths[y]+";";
+			}
+			
+		}
+//************************************************************************
+
+
+		function loadall(t)
+		{
+			load=1;
+			stt=0;
+			
+			iteration=t;
+			if(!rep[t])
+			{				
+				currentTableID=tableIDs[iteration];	
+				rep[t]=true;
+			}								
+		}
+
+//*********************************************************************************
+//********************************************************************************
+		    
+			function getJson()
+            {
+                for(var c=0; c<ArrStringDEs.length;c++)
+                stringDEs=stringDEs+ArrStringDEs[c]+";";
+                                
+                arrayDEs=stringDEs.split(";");
+                
+                // //getting json for org groups
+                // $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension="+uidGroupSet+":"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+"",function(json){
+                // 	//alert(jsonGroup);
+                // 	jsonGroup=json;
+                // 	//sum(jsonGroup);
+                // 	getParentJson();
+                // });
+
+                $.when(
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=Eq1bKUKYRMO:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=VuilQBYZNIR:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                    $.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=xFgSXyUMalf:"+stringOrgGroups+"&filter=ou:"+orgUnit.id+"&filter=pe:"+gotPeriod+""),
+                
+                ).done(function(geographicalArea, publicNonpublic, urbanRural){
+                    var meta_data = [], rows = [];
+                    meta_data = {"metaData": geographicalArea[0].metaData};
+                    rows = [].concat(geographicalArea[0].rows).concat(publicNonpublic[0].rows).concat(urbanRural[0].rows)
+                    jsonGroup = {"metaData":meta_data.metaData, "rows" : rows };
+                });
+                getParentJson();
+            }
+		
+		function getParentJson()
+		{
+			var ouid=orgUnit.id;
+			$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+ouid+"&filter=pe:"+gotPeriod,function(json){
+				//printChildren(jsonNepal,"Region");
+				jsonNepal=json;
+				getAllDistricts(0);
+			});
+		}
+		
+		var i=0;
+		function getAllDistricts(d)
+		{
+			//getting json for regions' districts, 5 means 5 regions, namely central, western etc
+				if(orgUnit.id=="cCTQiGkKcTk")
+				{
+					if(d<orgUnitChildrens.length)
+					{
+						if(0<orgUnitChildrens.length)
+						{					
+						//	var rOrder=["fNWuOzDCRSZ","SgKEcvFdUDb","pbVS1HW9NrY","TyDBQRJzkBw","z5ZOAH5rBFu"];
+							var orguid=rOrder[d];
+							//alert(orguid);
+							$.get("../api/organisationUnits/"+orguid+".json?fields=*",function(json)
+							{
+								
+								stringOrgChild(json);
+								if(i == (orgUnitChildrens.length-1))
+								{
+									//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+period);
+									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+gotPeriod,function(json){
+										
+										jsonDistricts=json;
+										printAll();
+										hideLoad();
+									});
+								}
+								i++;
+								if(i <(orgUnitChildrens.length))
+									getAllDistricts(i);								
+							});
+						}								
+					}
+				}
+				else if(orgUnitChildrens.length!=0)
+				{
+							$.get("../api/organisationUnits/"+orgUnit.id+".json?fields=*",function(json)
+							{
+								
+									stringOrgChild(json);
+									//console.log("/api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+period);
+									$.get("../api/analytics.json?dimension=dx:"+stringDEs+"&dimension=co&dimension=ou:"+dIDs+"&filter=pe:"+gotPeriod,function(json){
+										
+										jsonDistricts=json;
+										printAll();
+										hideLoad();
+									});						
+							});
+				}
+		}
+//**************************************************************************************************************
+//**************************************************************************************************************
+	function printAll()
+	{
+		for(var c=0; c<ArrStringDEs.length;c++)
+		{
+			iteration=c;
+			currentTableID=tableIDs[iteration];	
+			//alert(jsonGroup+"...."+jsonNepal+"......"+jsonDistricts);
+			sum(jsonGroup);
+			printChildren(jsonNepal,"Region");
+			printChildren(jsonDistricts,dCodes);
+		}
+			if(directDownload == true)
+		tablesToExcel(['datavalue1','datavalue3','datavalue4','datavalue5'], ['SM1','SM2','SM3','SM4'], 'RAW Data Safe motherhood.xls');
+	}
+//**********************************************************************************
+//*************************storeChildren*****************************************
+		var dIDs="";
+		var	dCodes="";
+		var s=0;
+		var isFirst=true;
+		
+		function storeChildren(disId,disCode)
+		{			
+			if(isFirst)
+			{
+				dIDs=disId+";";
+				dCodes=disCode+";";
+				isFirst=false;
+			}
+			else
+			{
+				dIDs=dIDs+disId+";";
+				dCodes=dCodes+disCode+";";
+			}
+			s++;
+			
+			//alert(dCodes);
+		}
+
+///********************************************************************************
+
+//***************************sorting***********************************
+			var ChildCount=0;
+			var childrens=[];
+			var allCodes=[];
+			var regionsLoaded=0;
+
+ function arraySorting(a, b) {
+        return ((a[1] < b[1]) ? -1 : ((a[1] > b[1]) ? 1 : 0));
+    }
+		function stringOrgChild(json)
+		{
+				var stringOrg = "";
+				var stringCode = "";
+				
+				ChildCount=0;
+				childrens=[];
+				
+				json.children.forEach(function(child)
+				{
+					//console.log(child);	
+					var childID=child.id;
+					var childCode=child.code;
+					childrens.push([childID,childCode]);
+					childrens.sort(arraySorting);
+					ChildCount++;
+				});
+				
+				sortChildren();
+				//alert(ChildCount);
+				
+				for(var f=0; f<ChildCount; f++)
+				{
+					var childID=childrens[f][0];
+					var childCode=childrens[f][1];
+					stringOrg+=childID+";";
+					stringCode+=childCode+";";					
+				}
+				
+				if(orgUnit.id=="cCTQiGkKcTk")
+				{
+					stringOrg+=json.id;
+					stringCode+="Region";
+				}
+				storeChildren(stringOrg,stringCode);
+		}
+
+
+		function sortChildren()
+		{
+			for(var u=0;u<ChildCount;u++)
+			{
+				for(var k=0; k<ChildCount-1; k++)
+				{
+					if(parseInt(childrens[k][1])>parseInt(childrens[k+1][1]))
+					{
+						var tempID=childrens[k][0];
+						var tempCode=childrens[k][1];
+						
+						childrens[k][1]=childrens[k+1][1];
+						childrens[k][0]=childrens[k+1][0];
+						childrens[k+1][1]=tempCode;
+						childrens[k+1][0]=tempID;
+					}
+				}
+			}
+		}
+//******************************************************************		
+</script>
+	<style>
+		.ylw
+		{
+			background:#ffff99;
+		}
+		
+		.gray
+		{
+			background:#ccc;
+		}
+	</style>
+<script>
+
+function sum(json)
+{
+	var htmlReport="";
+	var t=0;
+			if(iteration==0)
+			{
+						arrOrgGroups.forEach(function(OrgGroup){
+						
+			//bg color and title******************************************************************************************
+			var cl="";
+									var fnt="";
+									var clr="";
+									if(t%2==0)
+										clr="ylw";
+									else
+										clr="gray";
+										
+										fnt="font-weight:bolder;";
+									t++;
+									htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+							
+			
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.items[OrgGroup].name+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.items[OrgGroup].name;
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+						
+					
+						var AC_FAV1 = getValueForCategoryOptionCombo(json, 'C6ubEqEew8X',OrgGroup, 'kdsirVNKdhm');
+						var AC_FAV2 = getValueForCategoryOptionCombo(json, 'kSnqP4GPOsQ',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+AC_FAV1+"</td>";
+						htmlReport+="<td align='center'>"+AC_FAV2+"</td>";
+						
+						htmlReport+="<td align='center'>"+(AC_FAV1 + AC_FAV2)+"</td>";
+						
+						var AC_FAV11 = getValueForCategoryOptionCombo(json, 'vH9Mm6o3LKn',OrgGroup, 'kdsirVNKdhm');
+						var AC_FAV12 = getValueForCategoryOptionCombo(json, 'Bf3ebOgYXFL',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+AC_FAV11+"</td>";
+						htmlReport+="<td align='center'>"+AC_FAV12+"</td>";
+
+						htmlReport+="<td align='center'>"+(AC_FAV11 + AC_FAV12)+"</td>";
+						
+						var AC_FAV13 = getValueForCategoryOptionCombo(json, 'RtidqFs7NRc',OrgGroup, 'kdsirVNKdhm');
+						var AC_FAV14 = getValueForCategoryOptionCombo(json, 'gNcAqChA90J',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+AC_FAV13+"</td>";
+						htmlReport+="<td align='center'>"+AC_FAV14+"</td>";
+
+						htmlReport+="<td align='center'>"+(AC_FAV13 + AC_FAV14)+"</td>";
+
+						var AC_FAV15 = getValueForCategoryOptionCombo(json, 'T9SHzXzpwnJ',OrgGroup, 'kdsirVNKdhm');
+						var AC_FAV16 = getValueForCategoryOptionCombo(json, 'GmSYhnEFEPr',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+AC_FAV15+"</td>";
+						htmlReport+="<td align='center'>"+AC_FAV16+"</td>";
+						
+						htmlReport+="<td align='center'>"+(AC_FAV15 + AC_FAV16)+"</td>";
+
+						var AC_FAV17 = getValueForCategoryOptionCombo(json, 'WyIabPquKV4',OrgGroup, 'kdsirVNKdhm');
+						var AC_FAV18 = getValueForCategoryOptionCombo(json, 'CddyVd7FKmr',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+AC_FAV17+"</td>";
+						htmlReport+="<td align='center'>"+AC_FAV18+"</td>";
+						
+						htmlReport+="<td align='center'>"+(AC_FAV17 + AC_FAV18)+"</td>";
+						
+						htmlReport+="<td align='center'>"+(AC_FAV15 + AC_FAV17)+"</td>";
+						htmlReport+="<td align='center'>"+(AC_FAV16 + AC_FAV18)+"</td>";
+						
+						htmlReport+="<td align='center'>"+(AC_FAV15 + AC_FAV16 + AC_FAV17 + AC_FAV18)+"</td>";
+
+
+						var tYDSC = getValueForCategoryOptionCombo(json, 'VdZyJrLrSg5',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYDSC+"</td>";
+						var tYDSS = getValueForCategoryOptionCombo(json, 'rqny3AJuymt',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYDSS+"</td>";
+						var tYDVC = getValueForCategoryOptionCombo(json, 'c6dLz049UWw',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYDVC+"</td>";
+						var tYDVS = getValueForCategoryOptionCombo(json, 'CtX7O3pbtL3',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYDVS+"</td>";
+						var tYDVB = getValueForCategoryOptionCombo(json, 'fQU35FONgPq',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYDVB+"</td>";
+						var tYCSC = getValueForCategoryOptionCombo(json, 'NdY1V8YqJDd',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYCSC+"</td>";
+						var tYCSS = getValueForCategoryOptionCombo(json, 'BoPXsSKiPVx',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYCSS+"</td>";
+						var tYCSB = getValueForCategoryOptionCombo(json, 'xAulrqfseew',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYCSB+"</td>";
+						var tYCSB1 = getValueForCategoryOptionCombo(json, 'zgNUMf4qP2Z',OrgGroup, 'kdsirVNKdhm');
+						htmlReport+="<td align='center'>"+tYCSB1+"</td>";
+
+						
+						htmlReport+="<td align='center'>"+(tYDSC+tYDVS+tYCSS)+"</td>";
+						htmlReport+="<td align='center'>"+(tYDSS+tYDVB+tYCSB)+"</td>";
+						htmlReport+="<td align='center'>"+(tYDVC+tYCSB1+tYCSC)+"</td>";
+						htmlReport+="<td align='center'>"+(tYDSC+tYDVS+tYCSS+tYDSS+tYDVB+tYCSB+tYDVC+tYCSB1+tYCSC)+"</td>";
+
+									
+						htmlReport+="</tr>";
+					});
+			}
+			
+			else if(iteration==1)
+			{
+					arrOrgGroups.forEach(function(OrgGroup){
+					//bg color and title******************************************************************************************
+			var cl="";
+									var fnt="";
+									var clr="";
+									if(t%2==0)
+										clr="ylw";
+									else
+										clr="gray";
+										
+										fnt="font-weight:bolder;";
+									t++;
+									htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+							
+			
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.items[OrgGroup].name+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.items[OrgGroup].name;
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+					
+					htmlReport+="<td align='center'>&nbsp;</td>";
+					 var NOM_S =getValueForCategoryOptionCombo(json, 'UQTYGjWr7wz',OrgGroup, 'kdsirVNKdhm') ;
+					 var NOM_TW =getValueForCategoryOptionCombo(json, 'cMo5gmSt1yV',OrgGroup, 'kdsirVNKdhm');
+					 var NOM_TR =getValueForCategoryOptionCombo(json, 'pP3HfFu4Bte',OrgGroup, 'kdsirVNKdhm');
+					
+					htmlReport+="<td align='center'>"+(NOM_S)+"</td>";
+					htmlReport+="<td align='center'>"+(NOM_TW)+"</td>";
+					htmlReport+="<td align='center'>"+(NOM_TR)+"</td>";
+					htmlReport+="<td align='center'>"+(NOM_S+NOM_TW+NOM_TR)+"</td>";
+					 
+					//second part
+					var NOLB_6F =getValueForCategoryOptionCombo(json, 'Yjwho2iruhu',OrgGroup, 'ye1QuAMRG5Z') ;
+					 var NOLB_6M =getValueForCategoryOptionCombo(json, 'Yjwho2iruhu',OrgGroup, 'PflKpozpO7b');
+					
+					htmlReport+="<td align='center'>"+(NOLB_6F)+"</td>";
+					htmlReport+="<td align='center'>"+(NOLB_6M)+"</td>";
+					 var NOLB_59F =getValueForCategoryOptionCombo(json, 'w0fvdvU1yuF',OrgGroup, 'ye1QuAMRG5Z') ;
+					 var NOLB_59M =getValueForCategoryOptionCombo(json, 'w0fvdvU1yuF',OrgGroup, 'PflKpozpO7b') ;
+					
+					htmlReport+="<td align='center'>"+(NOLB_59F)+"</td>";
+					htmlReport+="<td align='center'>"+(NOLB_59M)+"</td>";
+					
+					 var NOLB_60F =getValueForCategoryOptionCombo(json, 'ZtwhYCiEQ7w',OrgGroup, 'ye1QuAMRG5Z') ;
+					 var NOLB_60M =getValueForCategoryOptionCombo(json, 'ZtwhYCiEQ7w',OrgGroup, 'PflKpozpO7b') ;
+					
+					htmlReport+="<td align='center'>"+(NOLB_60F)+"</td>";
+					htmlReport+="<td align='center'>"+(NOLB_60M)+"</td>";
+					
+					htmlReport+="<td align='center'>"+(NOLB_6F+NOLB_59F+NOLB_60F)+"</td>";
+					htmlReport+="<td align='center'>"+(NOLB_6M+NOLB_59M+NOLB_60M)+"</td>";
+					htmlReport+="<td align='center'>"+(NOLB_6F+NOLB_59F+NOLB_60F+NOLB_6M+NOLB_59M+NOLB_60M)+"</td>";
+		//third part
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'uzX1NG6xDwr',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'DjglomjSiAu',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'vIuy5zKUj82',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'r1x2daA3pwt',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'stOtnhrYX9J',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'ssjLchkxrC3',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'uGteAfUfOBk',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'DFEHOcOqW5a',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'zaFinXSR0UY',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'k2StfxOzXpx',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'FlyYBxnmKup',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'XxGpVsZfVPL',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'UUZw688ThWK',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'r0HLdqmLwFB',OrgGroup, 'kdsirVNKdhm')+"</td>";
+								
+					htmlReport+="</tr>";
+				});
+			
+			}
+			
+			else if(iteration==2)
+			{
+								arrOrgGroups.forEach(function(OrgGroup){
+								
+								//bg color and title******************************************************************************************
+			var cl="";
+									var fnt="";
+									var clr="";
+									if(t%2==0)
+										clr="ylw";
+									else
+										clr="gray";
+										
+										fnt="font-weight:bolder;";
+									t++;
+									htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+							
+			
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.items[OrgGroup].name+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.items[OrgGroup].name;
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+							
+							htmlReport+="<td align='center'>&nbsp;</td>";
+						htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'b8jGBrMfBbP',OrgGroup, 'kdsirVNKdhm')+"</td>";
+							 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'Aw24Ejbp63F',OrgGroup, 'kdsirVNKdhm')+"</td>";
+							
+							
+							 var NOM_S =getValueForCategoryOptionCombo(json, 'KsMJg5sdGOS',OrgGroup, 'kdsirVNKdhm') ;
+							 var NOM_TW =getValueForCategoryOptionCombo(json, 'wxIeWrnnZxe',OrgGroup, 'kdsirVNKdhm');
+							 
+							
+							htmlReport+="<td align='center'>"+(NOM_S)+"</td>";
+							htmlReport+="<td align='center'>"+(NOM_TW)+"</td>";
+							
+							htmlReport+="<td align='center'>"+(NOM_S+NOM_TW)+"</td>";
+							 
+							//second part
+							var NOLB_6F =getValueForCategoryOptionCombo(json, 'KkSEy2pfgCD',OrgGroup, 'kdsirVNKdhm') ;
+							 var NOLB_6M =getValueForCategoryOptionCombo(json, 'ymw1agzYyF3',OrgGroup, 'kdsirVNKdhm');
+							
+							htmlReport+="<td align='center'>"+(NOLB_6F)+"</td>";
+							htmlReport+="<td align='center'>"+(NOLB_6M)+"</td>";
+							
+							htmlReport+="<td align='center'>"+(NOLB_6F+NOLB_6M)+"</td>";
+							htmlReport+="<td align='center'>"+(NOM_S+NOLB_6F)+"</td>";
+							htmlReport+="<td align='center'>"+(NOM_TW+NOLB_6M)+"</td>";
+							htmlReport+="<td align='center'>"+(NOM_TW+NOLB_6M+NOM_S+NOLB_6F)+"</td>";
+							
+							
+				//third part
+				var N_6F =getValueForCategoryOptionCombo(json, 'BIjA8u1VMF3',OrgGroup, 'kdsirVNKdhm') ;
+							 var N_6M =getValueForCategoryOptionCombo(json, 'AP5k6dsqGPI',OrgGroup, 'kdsirVNKdhm');
+							
+							htmlReport+="<td align='center'>"+(N_6F)+"</td>";
+							htmlReport+="<td align='center'>"+(N_6M)+"</td>";
+							
+							htmlReport+="<td align='center'>"+(N_6F+N_6M)+"</td>";
+							
+							var K_6F =getValueForCategoryOptionCombo(json, 'spH6ZRldV3F',OrgGroup, 'kdsirVNKdhm') ;
+							 var K_6M =getValueForCategoryOptionCombo(json, 'WAxqda0KkYt',OrgGroup, 'kdsirVNKdhm');
+							
+							htmlReport+="<td align='center'>"+(K_6F)+"</td>";
+							htmlReport+="<td align='center'>"+(K_6M)+"</td>";
+							
+							htmlReport+="<td align='center'>"+(K_6F+K_6M)+"</td>";
+							htmlReport+="<td align='center'>"+(N_6F+K_6F)+"</td>";
+							htmlReport+="<td align='center'>"+(N_6M+K_6M)+"</td>";
+							htmlReport+="<td align='center'>"+(N_6M+K_6M+N_6F+K_6F)+"</td>";
+							
+							var I_6F =getValueForCategoryOptionCombo(json, 'Jz96CS4ZOn7',OrgGroup, 'kdsirVNKdhm') ;
+							 var I_6M =getValueForCategoryOptionCombo(json, 'oEUn9bucwse',OrgGroup, 'kdsirVNKdhm');
+							
+							htmlReport+="<td align='center'>"+(I_6F)+"</td>";
+							htmlReport+="<td align='center'>"+(I_6M)+"</td>";
+							
+							htmlReport+="<td align='center'>"+(I_6F+I_6M)+"</td>";
+							htmlReport+="</tr>";
+						});
+			}
+			
+			else if(iteration==3)
+			{
+					arrOrgGroups.forEach(function(OrgGroup){
+					
+					//bg color and title******************************************************************************************
+			var cl="";
+									var fnt="";
+									var clr="";
+									if(t%2==0)
+										clr="ylw";
+									else
+										clr="gray";
+										
+										fnt="font-weight:bolder;";
+									t++;
+									htmlReport+="<tr class="+clr+" style='"+fnt+"'><td style='font-weight:bolder; font-size:15px;' align='center'></td>";
+							
+			htmlReport+="<td align='left' style='padding:3px 5px 3px 15px'>"+json.metaData.items[OrgGroup].name+"</td>";//1
+			
+			if(OrgGroup==gotOrg)
+			{
+				var title=document.getElementsByClassName(currentTableID)[0].innerHTML;
+				document.getElementsByClassName(currentTableID)[0].innerHTML=title + " of "+ json.metaData.items[OrgGroup].name;
+				
+				document.getElementsByClassName(currentTableID)[0].style.padding="10px 0";
+			}
+			//**************************************************************************************************************
+					
+
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'f4ueiBTKF1T',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'S4CFTXyEFVc',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'JLKFv7K2i7Y',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'v3zKVR5wJt3',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'PELChUNfW2C',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'LIo3j809JrK',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'ueBJTsv0PXr',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'wsncKYDcmqr',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'Dior21jcQCe',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'nwQoDUhFR1z',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'PGNd6jcxJX4',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'kV3JhKJWMR8',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'dHet49ySm06',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'XAzAbTRbJve',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'YZfwWNZzfg0',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'BL5XaUOJ6aw',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'IMFPhLtATaw',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'dZo1PDWPAO1',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'ysTJteUVzO1',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'MO4VQOLebuG',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'ua0pnAingEU',OrgGroup, 'kdsirVNKdhm')+"</td>";
+					
+
+
+
+								
+					htmlReport+="</tr>";
+				});
+			}
+			
+							var prd="P"+currentTableID;
+							if(document.getElementsByClassName(prd)[0])
+							{
+								var periodTitle=document.getElementsByClassName(prd)[0].innerHTML;
+								document.getElementsByClassName(prd)[0].innerHTML=" "+periodTitle+" : "+getPeriod();
+							}
+							
+							
+							var dte="D"+currentTableID;
+							if(document.getElementsByClassName(dte)[0])
+							var dateTitle=document.getElementsByClassName(dte)[0].innerHTML;
+							var now= new Date();
+							var AmPm = (now.getHours() >= 12) ? "PM" : "AM";
+							var mints=(now.getMinutes()>9) ? now.getMinutes() : "0"+now.getMinutes();
+							var hrs= (now.getHours() >12) ? now.getHours()%12 : now.getHours();
+							var dteString= now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear()+" "+hrs+":"+mints+" "+AmPm;
+							if(document.getElementsByClassName(dte)[0])
+							document.getElementsByClassName(dte)[0].innerHTML=dateTitle+" : "+dteString+" ";
+		
+		
+		$("#"+currentTableID).append(htmlReport);
+}
+
+var ct=0;
+function printChildren(json,disCodes)
+{
+		var htmlReport="";
+		var arrayCodes=disCodes.split(";");
+		//alert(arrayCodes.length);
+		if(iteration==0)
+		{
+								var i=0;
+								json.metaData.dimensions.ou.forEach(function(child){
+								
+								if(arrayCodes[i]!='undefined')
+									var dcode=arrayCodes[i];
+								else
+									var dcode="*";
+												
+								if(arrayCodes[i]=="Region"||orgUnit.id=="xxx"){
+									htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+								}
+								else
+								{
+									htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+								}
+								htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+								i++;
+					
+					
+					var AC_FAV1 = getValueForCategoryOptionCombo(json, 'C6ubEqEew8X',child, 'kdsirVNKdhm');
+					var AC_FAV2 = getValueForCategoryOptionCombo(json, 'kSnqP4GPOsQ',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+AC_FAV1+"</td>";
+					htmlReport+="<td align='center'>"+AC_FAV2+"</td>";
+					
+					htmlReport+="<td align='center'>"+(AC_FAV1 + AC_FAV2)+"</td>";
+					
+					var AC_FAV11 = getValueForCategoryOptionCombo(json, 'vH9Mm6o3LKn',child, 'kdsirVNKdhm');
+					var AC_FAV12 = getValueForCategoryOptionCombo(json, 'Bf3ebOgYXFL',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+AC_FAV11+"</td>";
+					htmlReport+="<td align='center'>"+AC_FAV12+"</td>";
+
+					htmlReport+="<td align='center'>"+(AC_FAV11 + AC_FAV12)+"</td>";
+					
+					var AC_FAV13 = getValueForCategoryOptionCombo(json, 'RtidqFs7NRc',child, 'kdsirVNKdhm');
+					var AC_FAV14 = getValueForCategoryOptionCombo(json, 'gNcAqChA90J',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+AC_FAV13+"</td>";
+					htmlReport+="<td align='center'>"+AC_FAV14+"</td>";
+
+					htmlReport+="<td align='center'>"+(AC_FAV13 + AC_FAV14)+"</td>";
+
+					var AC_FAV15 = getValueForCategoryOptionCombo(json, 'T9SHzXzpwnJ',child, 'kdsirVNKdhm');
+					var AC_FAV16 = getValueForCategoryOptionCombo(json, 'GmSYhnEFEPr',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+AC_FAV15+"</td>";
+					htmlReport+="<td align='center'>"+AC_FAV16+"</td>";
+					
+					htmlReport+="<td align='center'>"+(AC_FAV15 + AC_FAV16)+"</td>";
+
+					var AC_FAV17 = getValueForCategoryOptionCombo(json, 'WyIabPquKV4',child, 'kdsirVNKdhm');
+					var AC_FAV18 = getValueForCategoryOptionCombo(json, 'CddyVd7FKmr',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+AC_FAV17+"</td>";
+					htmlReport+="<td align='center'>"+AC_FAV18+"</td>";
+					
+					htmlReport+="<td align='center'>"+(AC_FAV17 + AC_FAV18)+"</td>";
+					
+					htmlReport+="<td align='center'>"+(AC_FAV15 + AC_FAV17)+"</td>";
+					htmlReport+="<td align='center'>"+(AC_FAV16 + AC_FAV18)+"</td>";
+					
+					htmlReport+="<td align='center'>"+(AC_FAV15 + AC_FAV16 + AC_FAV17 + AC_FAV18)+"</td>";
+
+
+					var tYDSC = getValueForCategoryOptionCombo(json, 'VdZyJrLrSg5',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYDSC+"</td>";
+					var tYDSS = getValueForCategoryOptionCombo(json, 'rqny3AJuymt',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYDSS+"</td>";
+					var tYDVC = getValueForCategoryOptionCombo(json, 'c6dLz049UWw',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYDVC+"</td>";
+					var tYDVS = getValueForCategoryOptionCombo(json, 'CtX7O3pbtL3',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYDVS+"</td>";
+					var tYDVB = getValueForCategoryOptionCombo(json, 'fQU35FONgPq',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYDVB+"</td>";
+					var tYCSC = getValueForCategoryOptionCombo(json, 'NdY1V8YqJDd',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYCSC+"</td>";
+					var tYCSS = getValueForCategoryOptionCombo(json, 'BoPXsSKiPVx',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYCSS+"</td>";
+					var tYCSB = getValueForCategoryOptionCombo(json, 'xAulrqfseew',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYCSB+"</td>";
+					var tYCSB1 = getValueForCategoryOptionCombo(json, 'zgNUMf4qP2Z',child, 'kdsirVNKdhm');
+					htmlReport+="<td align='center'>"+tYCSB1+"</td>";
+
+					
+					htmlReport+="<td align='center'>"+(tYDSC+tYDVS+tYCSS)+"</td>";
+					htmlReport+="<td align='center'>"+(tYDSS+tYDVB+tYCSB)+"</td>";
+					htmlReport+="<td align='center'>"+(tYDVC+tYCSB1+tYCSC)+"</td>";
+					htmlReport+="<td align='center'>"+(tYDSC+tYDVS+tYCSS+tYDSS+tYDVB+tYCSB+tYDVC+tYCSB1+tYCSC)+"</td>";
+
+								
+					htmlReport+="</tr>";	
+				});
+		}
+		
+		else if(iteration==1)
+		{
+			var i=0;
+								json.metaData.dimensions.ou.forEach(function(child){
+								
+								if(arrayCodes[i]!='undefined')
+									var dcode=arrayCodes[i];
+								else
+									var dcode="*";
+												
+								if(arrayCodes[i]=="Region"||orgUnit.id=="xxx"){
+									htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+								}
+								else
+								{
+									htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+								}
+								htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+								i++;
+				htmlReport+="<td align='center'>&nbsp;</td>";
+				
+					 var NOM_S =getValueForCategoryOptionCombo(json, 'UQTYGjWr7wz',child, 'kdsirVNKdhm') ;
+				 var NOM_TW =getValueForCategoryOptionCombo(json, 'cMo5gmSt1yV',child, 'kdsirVNKdhm');
+				 var NOM_TR =getValueForCategoryOptionCombo(json, 'pP3HfFu4Bte',child, 'kdsirVNKdhm');
+				
+				htmlReport+="<td align='center'>"+(NOM_S)+"</td>";
+				htmlReport+="<td align='center'>"+(NOM_TW)+"</td>";
+				htmlReport+="<td align='center'>"+(NOM_TR)+"</td>";
+				htmlReport+="<td align='center'>"+(NOM_S+NOM_TW+NOM_TR)+"</td>";
+				 
+				//second part
+				var NOLB_6F =getValueForCategoryOptionCombo(json, 'Yjwho2iruhu',child, 'ye1QuAMRG5Z') ;
+				 var NOLB_6M =getValueForCategoryOptionCombo(json, 'Yjwho2iruhu',child, 'PflKpozpO7b');
+				
+				htmlReport+="<td align='center'>"+(NOLB_6F)+"</td>";
+				htmlReport+="<td align='center'>"+(NOLB_6M)+"</td>";
+				 var NOLB_59F =getValueForCategoryOptionCombo(json, 'w0fvdvU1yuF',child, 'ye1QuAMRG5Z') ;
+				 var NOLB_59M =getValueForCategoryOptionCombo(json, 'w0fvdvU1yuF',child, 'PflKpozpO7b') ;
+				
+				htmlReport+="<td align='center'>"+(NOLB_59F)+"</td>";
+				htmlReport+="<td align='center'>"+(NOLB_59M)+"</td>";
+				
+				 var NOLB_60F =getValueForCategoryOptionCombo(json, 'ZtwhYCiEQ7w',child, 'ye1QuAMRG5Z') ;
+				 var NOLB_60M =getValueForCategoryOptionCombo(json, 'ZtwhYCiEQ7w',child, 'PflKpozpO7b') ;
+				
+				htmlReport+="<td align='center'>"+(NOLB_60F)+"</td>";
+				htmlReport+="<td align='center'>"+(NOLB_60M)+"</td>";
+				
+				htmlReport+="<td align='center'>"+(NOLB_6F+NOLB_59F+NOLB_60F)+"</td>";
+				htmlReport+="<td align='center'>"+(NOLB_6M+NOLB_59M+NOLB_60M)+"</td>";
+				htmlReport+="<td align='center'>"+(NOLB_6F+NOLB_59F+NOLB_60F+NOLB_6M+NOLB_59M+NOLB_60M)+"</td>";
+	//third part
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'uzX1NG6xDwr',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'DjglomjSiAu',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'vIuy5zKUj82',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'r1x2daA3pwt',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'stOtnhrYX9J',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'ssjLchkxrC3',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'uGteAfUfOBk',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'DFEHOcOqW5a',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'zaFinXSR0UY',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'k2StfxOzXpx',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'FlyYBxnmKup',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'XxGpVsZfVPL',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'UUZw688ThWK',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'r0HLdqmLwFB',child, 'kdsirVNKdhm')+"</td>";
+				
+			
+							
+				htmlReport+="</tr>";	
+			});
+		}
+		
+		else if(iteration==2)
+		{
+			var i=0;
+								json.metaData.dimensions.ou.forEach(function(child){
+								
+								if(arrayCodes[i]!='undefined')
+									var dcode=arrayCodes[i];
+								else
+									var dcode="*";
+												
+								if(arrayCodes[i]=="Region"||orgUnit.id=="xxx"){
+									htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+								}
+								else
+								{
+									htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+								}
+								htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+								i++;
+				htmlReport+="<td align='center'>&nbsp;</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'b8jGBrMfBbP',child, 'kdsirVNKdhm')+"</td>";
+				 htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'Aw24Ejbp63F',child, 'kdsirVNKdhm')+"</td>";
+				
+				
+				 var NOM_S =getValueForCategoryOptionCombo(json, 'KsMJg5sdGOS',child, 'kdsirVNKdhm') ;
+				 var NOM_TW =getValueForCategoryOptionCombo(json, 'wxIeWrnnZxe',child, 'kdsirVNKdhm');
+				 
+				
+				htmlReport+="<td align='center'>"+(NOM_S)+"</td>";
+				htmlReport+="<td align='center'>"+(NOM_TW)+"</td>";
+				
+				htmlReport+="<td align='center'>"+(NOM_S+NOM_TW)+"</td>";
+				 
+				//second part
+				var NOLB_6F =getValueForCategoryOptionCombo(json, 'KkSEy2pfgCD',child, 'kdsirVNKdhm') ;
+				 var NOLB_6M =getValueForCategoryOptionCombo(json, 'ymw1agzYyF3',child, 'kdsirVNKdhm');
+				
+				htmlReport+="<td align='center'>"+(NOLB_6F)+"</td>";
+				htmlReport+="<td align='center'>"+(NOLB_6M)+"</td>";
+				
+				htmlReport+="<td align='center'>"+(NOLB_6F+NOLB_6M)+"</td>";
+				htmlReport+="<td align='center'>"+(NOM_S+NOLB_6F)+"</td>";
+				htmlReport+="<td align='center'>"+(NOM_TW+NOLB_6M)+"</td>";
+				htmlReport+="<td align='center'>"+(NOM_TW+NOLB_6M+NOM_S+NOLB_6F)+"</td>";
+				
+				
+	//third part
+				var N_6F =getValueForCategoryOptionCombo(json, 'BIjA8u1VMF3',child, 'kdsirVNKdhm') ;
+				 var N_6M =getValueForCategoryOptionCombo(json, 'AP5k6dsqGPI',child, 'kdsirVNKdhm');
+				
+				htmlReport+="<td align='center'>"+(N_6F)+"</td>";
+				htmlReport+="<td align='center'>"+(N_6M)+"</td>";
+				
+				htmlReport+="<td align='center'>"+(N_6F+N_6M)+"</td>";
+				
+				var K_6F =getValueForCategoryOptionCombo(json, 'spH6ZRldV3F',child, 'kdsirVNKdhm') ;
+				 var K_6M =getValueForCategoryOptionCombo(json, 'WAxqda0KkYt',child, 'kdsirVNKdhm');
+				
+				htmlReport+="<td align='center'>"+(K_6F)+"</td>";
+				htmlReport+="<td align='center'>"+(K_6M)+"</td>";
+				
+				htmlReport+="<td align='center'>"+(K_6F+K_6M)+"</td>";
+				htmlReport+="<td align='center'>"+(N_6F+K_6F)+"</td>";
+				htmlReport+="<td align='center'>"+(N_6M+K_6M)+"</td>";
+				htmlReport+="<td align='center'>"+(N_6M+K_6M+N_6F+K_6F)+"</td>";
+				
+				var I_6F =getValueForCategoryOptionCombo(json, 'Jz96CS4ZOn7',child, 'kdsirVNKdhm') ;
+				 var I_6M =getValueForCategoryOptionCombo(json, 'oEUn9bucwse',child, 'kdsirVNKdhm');
+				
+				htmlReport+="<td align='center'>"+(I_6F)+"</td>";
+				htmlReport+="<td align='center'>"+(I_6M)+"</td>";
+				
+				htmlReport+="<td align='center'>"+(I_6F+I_6M)+"</td>";
+							
+				htmlReport+="</tr>";	
+			});
+		}
+		
+		else if(iteration==3)
+		{
+		
+				var i=0;
+								json.metaData.dimensions.ou.forEach(function(child){
+								
+								if(arrayCodes[i]!='undefined')
+									var dcode=arrayCodes[i];
+								else
+									var dcode="*";
+												
+								if(arrayCodes[i]=="Region"||orgUnit.id=="xxx"){
+									htmlReport+="<tr bgcolor='#ffff99' style='font-weight:bolder'><td>&nbsp;</td>";
+								}
+								else
+								{
+									htmlReport+="<tr><td align='center'>"+dcode+"</td>";
+								}
+								htmlReport+="<td align='left' style='padding:2px 5px 2px 15px;'>"+json.metaData.items[child].name+"</td>";
+								i++;
+					
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'f4ueiBTKF1T',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'S4CFTXyEFVc',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'JLKFv7K2i7Y',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'v3zKVR5wJt3',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'PELChUNfW2C',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'LIo3j809JrK',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'ueBJTsv0PXr',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'wsncKYDcmqr',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'Dior21jcQCe',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'nwQoDUhFR1z',child, 'kdsirVNKdhm')+"</td>";
+					
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'PGNd6jcxJX4',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'kV3JhKJWMR8',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'dHet49ySm06',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'XAzAbTRbJve',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'YZfwWNZzfg0',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'BL5XaUOJ6aw',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'IMFPhLtATaw',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'dZo1PDWPAO1',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'ysTJteUVzO1',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'MO4VQOLebuG',child, 'kdsirVNKdhm')+"</td>";
+					htmlReport+="<td align='center'>"+getValueForCategoryOptionCombo(json, 'ua0pnAingEU',child, 'kdsirVNKdhm')+"</td>";
+
+								
+					htmlReport+="</tr>";	
+				});
+		}
+		
+		$("#"+currentTableID).append(htmlReport);
+	
+}
+
+
+//******************************************************************				
+				
+		function getValueSum(json,de,orgGroup){
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][1] == orgGroup && json.rows[i][2]!= null)
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+
+		function getValueForCategoryOptionCombo( json, de, orgUnit, coc )
+		{
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][2] == orgUnit && json.rows[i][1] == coc && json.rows[i][3] != null )
+				{
+					result+=parseInt(json.rows[i][3]);
+				}
+			}
+			return result;
+		}
+
+		function getValueTotal(json,de){
+			var result=0;
+			for (var i=0; i < json.rows.length; i++){
+				if (json.rows[i][0] == de && json.rows[i][2]!= null)
+				{
+					result+=parseInt(json.rows[i][2]);
+				}
+			}
+			return result;
+		}
+</script>
+
+		<!-- 		<!-- download script ------------------------------------------------------
+		--------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------- -->
+<script type="text/javascript">
+	function convert(dataURI) 
+	{
+		  // convert base64 to raw binary data held in a string
+		  // doesn't handle URLEncoded DataURIs
+		  var byteString;
+		  if (dataURI.split(',')[0].indexOf('base64') >= 0)
+			  byteString = atob(dataURI.split(',')[1]);
+		  else
+			  byteString = unescape(dataURI.split(',')[1]);
+		  // separate out the mime component
+		  var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+		  // write the bytes of the string to an ArrayBuffer
+		  var ab = new ArrayBuffer(byteString.length);
+		  var ia = new Uint8Array(ab);
+		  for (var i = 0; i < byteString.length; i++) {
+			  ia[i] = byteString.charCodeAt(i);
+		  }
+
+		  // write the ArrayBuffer to a blob, and you're done
+		  return new Blob([ab],{type: mimeString});
+	}
+	
+	 var tablesToExcel = (function() {
+    var uri = 'data:application/vnd.ms-excel;base64,'
+    , tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+      + '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>ThaiND</Author><Created>{created}</Created></DocumentProperties>'
+	  +'<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders></Borders><Font ss:Size="8"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s21"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s22"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s26"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#ffff99" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style> <Style ss:ID="s23"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="0"/></Borders><Font ss:Bold="1"/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s24"><Alignment ss:Horizontal="Left" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font/><Interior /><NumberFormat /><Protection /></Style><Style ss:ID="s28"><Alignment ss:WrapText="1" ss:Horizontal="Left" ss:Indent="1" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style><Style ss:ID="s29"><Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Top"/><Font ss:Size="8" ss:Bold="1" /><Interior ss:Color="#999999" ss:Pattern="Solid" /><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style></Styles>'
+      + '{worksheets}</Workbook>'
+    , tmplWorksheetXML = '<Worksheet ss:Name="{nameWS}"><Table><Column ss:AutoFitWidth="0" ss:Width="35"/><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/><Column ss:AutoFitWidth="0" ss:Width="50"/>{rows}</Table></Worksheet>'
+	, tmplCellXML = '<Cell ss:StyleID="{sid}" ss:MergeAcross="{mrg}"><Data ss:Type="{dtype}">{data}</Data></Cell>'
+    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+	
+    return function(tables, wsnames, wbname) {
+		var ctx = "";
+		var workbookXML = "";
+		var worksheetsXML = "";
+		var rowsXML = "";
+		
+		for (var i = 0; i < tables.length; i++) 
+		{
+		
+			if (!tables[i].nodeType) 
+			tables[i] = document.getElementById(tables[i]);
+		
+			for (var j = 0; j < tables[i].rows.length; j++) 
+			{
+				rowsXML += '<Row>'
+				for (var k = 0; k < tables[i].rows[j].cells.length; k++) 
+				{
+					
+					var cols=tables[i].rows[j].cells[k].getAttribute("colspan");
+					var rws=tables[i].rows[j].cells[k].getAttribute("rowspan");
+					var styl=tables[i].rows[j].cells[k].getAttribute("bgcolor");
+					var styl2=tables[i].rows[j].getAttribute("bgcolor");
+					var cls=tables[i].rows[j].cells[k].getAttribute("class");
+					var algn=tables[i].rows[j].cells[k].getAttribute("align");
+					var cls2=tables[i].rows[j].getAttribute("class");
+					
+						var dataType = 'String';
+						var dataValue = tables[i].rows[j].cells[k].innerHTML;
+						var typeD="";
+						var parsed=parseInt(dataValue);
+						
+						if (parsed==dataValue)
+						{
+							typeD="Number";
+						}
+						else
+						{
+							typeD="String";
+						}
+					var n;
+						if(cls)
+						{
+							n=cls.indexOf("value"); 
+						}		
+						
+					if(cls=="all2" || n>=0)
+					{
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:"s23",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid: "s23",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else if(cls2=="ylw")
+					{
+						if(k==1&&j>3)
+						var cl="s22";
+						else
+						var cl="s26";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else if(cls2=="gray")
+					{
+						if(k==1&&j>3)
+						var cl="s28";
+						else
+						var cl="s29";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					else if(styl2)
+					{
+						if(k==1&&j>3)
+						var cl="s22";
+						else
+						var cl="s26";
+						
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+						
+							ctx = {data: dataValue, mrg: 0, sid:cl,dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					
+					else if(styl)
+					{
+						if(cols)
+						{
+							ctx = {data: dataValue, mrg: cols-1, sid:"s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+
+						else
+						{
+							ctx = {data: dataValue, mrg: 0, sid: "s21",dtype:typeD};
+							rowsXML += format(tmplCellXML, ctx);
+						}
+					}
+					
+					else
+					{
+						if(cols)
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: cols-1, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+
+						else
+						{
+							if(algn=="left")
+							{
+								ctx = {data: dataValue, mrg: 0, sid:"s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+							else
+							{
+								ctx = {data: dataValue, mrg: 0, sid: "s24",dtype:typeD};
+								rowsXML += format(tmplCellXML, ctx);
+							}
+						}
+					
+					}
+					
+				}
+				  rowsXML += '</Row>'
+			}
+			ctx = {rows: rowsXML, nameWS: wsnames[i] || 'Sheet' + i};
+			worksheetsXML += format(tmplWorksheetXML, ctx);
+			rowsXML = "";
+      }
+
+		ctx = {created: (new Date()).getTime(), worksheets: worksheetsXML};
+		workbookXML = format(tmplWorkbookXML, ctx);
+
+		console.log(workbookXML);
+
+		var blobUrl = URL.createObjectURL(convert(uri + base64(workbookXML)));
+		var link = document.createElement("A");
+		link.href = blobUrl;
+		//link.href = uri + base64(workbookXML);
+		link.download = wbname || 'Workbook.xls';
+		link.target = '_blank';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+    }
+  })();
+</script>
+<script type="text/javascript">
+$(document).ready(function () {
+   $("input[value=Back]").closest('div').hide();
+});
+</script>
+			
+	<style type="text/css">
+			body
+			{
+				overflow:none;
+			}
+			ul.tabs {
+				margin: 0;
+				padding: 0;
+				float: left;
+				list-style: none;
+				height: 32px;
+				border-bottom: 1px solid #999999;
+				border-left: 1px solid #999999;
+				width: 100%;
+			}
+			ul.tabs li {
+				float: left;
+				margin: 0;
+				cursor: pointer;
+				padding: 0px 21px ;
+				height: 31px;
+				line-height: 31px;
+				border: 1px solid #999999;
+				border-left: none;
+				font-weight: bold;
+				background: #EEEEEE;
+				overflow: hidden;
+				position: relative;
+			}
+			ul.tabs li:hover {
+				background: #999999;
+			}	
+			ul.tabs li.active{
+				background: #FFFFFF;
+				border-bottom: 1px solid #FFFFFF;
+			}
+			.tab_container {
+				clear: both;
+				float: left; 
+				width: 100%;
+				background: #FFFFFF;
+			}
+			.tab_content {
+				padding: 0;
+				font-size: 1.2em;
+				display: none;
+			}
+			#container {
+				width: 100%;
+				margin: 0 auto;	
+			}
+			
+			.vtext{
+				min-width:40px;
+			}
+			
+			.borders{
+				border-bottom-color:#999999;
+			}
+			
+			.rightborder{
+				border-right-color:#999999;	
+			}
+			
+			.all{
+				font-weight:bolder;
+				padding:4px 5px;
+			}
+			
+			.all td
+			{
+				padding:3px 5px;
+			}
+			.all2{
+				font-weight:bolder;
+				padding:4px 5px;
+				background:#fff;
+				border:0;
+			}
+			td{	min-width:75px;	} #cover{ position:fixed; top:0; left:0; background:rgba(0,0,0,0.7); z-index:5; width:100%; height:100%;}
+			#loads { height:100px; width:500px; position:fixed; z-index:10;  margin:0 auto;   top: 50%; left: 50%; margin-top:-50px; margin-left:-250px; background:#999; border:5px solid #999999; text-align=center; border-radius:5px; }
+			.loading { width:400px; font-size:20px; font-family:verdana; font-weight:bolder; position:fixed;  top: 50%; left: 50%; margin:0 auto; margin-top:-8px; margin-left:-200px;}
+		</style> 
+		<div id="loads" > <p class="loading" align="center">Reports Loading... Please Wait...</p></div>
+		<div id="cover" > </div>
+		<!--<input type="button" value="Download all" style="width:140px;" onclick="tablesToExcel(['datavalue1','f','datavalue3','datavalue3'], ['SM1','SM2','SM3','SM4'], 'RAW Data Safe motherhood.xls')" id="dwnAll"/>-->
+		<!-- <input type="button" value="Reports Home" style="width:140px; background-color: #1976D2; color: white;" onclick='window.open("http://dhislx.hispindia.org:8080/nepalhmis/api/apps/reports-app/index.html", "_self")'/> -->
+		</br></br>
+		
+		
+		<div id="container">
+
+  <ul class="tabs"> 
+        <li class="active" rel="tab1"> Safe MH 1</li>
+        <li rel="tab3"  onclick="loadall(2)"> Safe MH 2</li>
+		<li rel="tab4"  onclick="loadall(3)"> Safe MH 3</li>
+		<li rel="tab5"  onclick="loadall(4)"> Safe MH 4</li>
+    </ul>
+
+<div class="tab_container"> 
+
+     <div id="tab1" class="tab_content"> 
+ 
+         <p>
+		 
+		 <!-- report 1 ------------------------------------------------------------------------------------------>
+		<table id="datavalue1" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border:2px;border-color:#000000;">
+ 
+				<tr>
+					<td style="border-color:#999999" class="Pdatavalue1 all2" align="left" colspan="12" id="period12">Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue1 all2" align="center" colspan="9"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue1 all2" align="right" colspan="12"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="12"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="9"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="9"  bgcolor="#999999"> Safe Motherhood </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="9"  bgcolor="#999999">(Sheet 1 of 4)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="9"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="9"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="9"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="12"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+  <tr class="all">
+    <td  class="borders" align="center" bgcolor="#999999"> OrgUnit Code </td>
+    <td  style="min-width:200px" class="borders" align="center" bgcolor="#999999"> OrgUnit Name </td>
+    <td colspan="9" align="center" bgcolor="#999999"> Antenatal Checkup </td>
+    <td colspan="9" align="center" bgcolor="#999999"> Delivery Services </td>
+    <td colspan="13" align="center" bgcolor="#999999"> Type of Delivery </td>
+  </tr>
+  <tr class="all">
+    <td class="borders" bgcolor="#999999"></td><td class="borders" bgcolor="#999999"></td><td colspan="3" align="center" bgcolor="#999999"> First ANC Visit (any time) </td>
+    <td colspan="3" align="center" bgcolor="#999999"> First ANC visit as per protocol </td>
+    <td colspan="3" align="center" bgcolor="#999999"> Four ANC visits as per protocol </td>
+    <td colspan="3" align="center" bgcolor="#999999"> Skilled Birth Attendants (SBA) </td>
+    <td colspan="3" align="center" bgcolor="#999999"> Non-SBA health workers </td>
+    <td width="160" colspan="3" align="center" bgcolor="#999999"> Total </td>
+    <td colspan="3" align="center" bgcolor="#999999"> Spontaneous </td>
+    <td colspan="3" align="center" bgcolor="#999999"> Vacuum/Forcep </td>
+    <td colspan="3" align="center" bgcolor="#999999"> C/S </td>
+    <td colspan="4" align="center" bgcolor="#999999"> Total </td>
+  </tr>
+  <tr class="all" height="63">
+    <td bgcolor="#999999"><td bgcolor="#999999"><td height="63" align="center" bgcolor="#999999"> &lt; 20 Years </td>
+    <td align="center" bgcolor="#999999"> &ge; 20 Years </td>
+    <td align="center" bgcolor="#999999"> Total </td>
+    <td align="center" bgcolor="#999999"> &lt; 20 Years </td>
+    <td align="center" bgcolor="#999999"> &ge; 20 Years </td>
+    <td align="center" bgcolor="#999999"> Total </td>
+    <td align="center" bgcolor="#999999"> &lt; 20 Years </td>
+    <td align="center" bgcolor="#999999"> &ge; 20 Years </td>
+    <td align="center" bgcolor="#999999"> Total </td>
+    <td align="center" bgcolor="#999999"> Facility </td>
+    <td align="center" bgcolor="#999999"> Home </td>
+    <td align="center" bgcolor="#999999"> Total </td>
+    <td align="center" bgcolor="#999999"> Facility </td>
+    <td align="center" bgcolor="#999999"> Home </td>
+    <td align="center" bgcolor="#999999"> Total </td>
+    <td align="center" bgcolor="#999999"> Facility </td>
+    <td align="center" bgcolor="#999999"> Home </td>
+    <td align="center" bgcolor="#999999"> Total </td>
+    <td align="center" bgcolor="#999999"> Cephalic </td>
+    <td align="center" bgcolor="#999999"> Shoulder </td>
+    <td align="center" bgcolor="#999999"> Breech </td>
+    <td align="center" bgcolor="#999999"> Cephalic </td>
+    <td align="center" bgcolor="#999999"> Shoulder </td>
+    <td align="center" bgcolor="#999999"> Breech </td>
+    <td align="center" bgcolor="#999999"> Cephalic </td>
+    <td align="center" bgcolor="#999999"> Shoulder </td>
+    <td align="center" bgcolor="#999999"> Breech </td>
+    <td align="center" bgcolor="#999999"> Cephalic </td>
+    <td align="center" bgcolor="#999999"> Shoulder </td>
+    <td align="center" bgcolor="#999999"> Breech </td>
+    <td align="center" bgcolor="#999999"> Total </td>
+  </tr>
+</table>
+			
+         </p>
+
+     </div><!-- #tab1 -->
+	 
+     <div id="tab3" class="tab_content"> 
+
+       <p>
+	   
+	   	<!-- report 3 ------------------------------------------------------------------------------------------>
+			<table id="datavalue3" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-color:#000000;">
+				<tr>
+					<td style="border-color:#999999" class="Pdatavalue3 all2" align="left" colspan="12" id="period12">Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue3 all2" align="center" colspan="6"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue3 all2" align="right" colspan="12"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="12"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999"> Safe Motherhood </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">(Sheet 3 of 5)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="12"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="12"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="12"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+  <tr class="all"   align="center">
+    <td  class="borders" border="0" bgcolor="#999999" bgcolor="#999999"> OrgUnit Code </td>
+    <td    class="borders" style="font-weight:bolder; min-width:200px" bgcolor="#999999"> OrgUnit Name </td>
+    <td  class="borders"  style="font-weight:bolder" bgcolor="#999999"> Received Reports </td>
+    <td  colspan="4" bgcolor="#999999"> No.    of Mother </td>
+    <td  colspan="9" bgcolor="#999999"> No.    of Life Births </td>
+    <td  colspan="9" bgcolor="#999999"> Birth    weight </td>
+    <td  style=" font-weight:bolder" colspan="2"  bgcolor="#999999"> No of still    births </td>
+    <td  style=" font-weight:bolder" bgcolor="#999999"> CHX applied in cord </td>
+    <td  style=" font-weight:bolder" colspan="2"  bgcolor="#999999"> Blood    transfusion </td>
+  </tr>
+  <tr class="all"   align="center">
+    <td  class="borders" style="font-weight:bolder" bgcolor="#999999"><td class="borders" style="font-weight:bolder"  bgcolor="#999999"></td><td class="borders" style="font-weight:bolder"  bgcolor="#999999"></td><td class="borders" style="font-weight:bolder" bgcolor="#999999"> Single </td>
+    <td  colspan="2" bgcolor="#999999"> Multiple </td>
+    <td   style="font-weight:bolder" bgcolor="#999999"> Total </td>
+    <td  style="font-weight:bolder" colspan="2"  bgcolor="#999999"> Single </td>
+    <td  colspan="4" bgcolor="#999999"> Multiple </td>
+    <td  class="borders" style="font-weight:bolder" colspan="3"  bgcolor="#999999"> Total </td>
+    <td  class="borders" style="font-weight:bolder" colspan="3"  bgcolor="#999999"> Normal (&ge; 2.5    kg) </td>
+    <td class="borders"  style="font-weight:bolder" colspan="3"  bgcolor="#999999"> Low (2 to    &lt; 2.5 kg) </td>
+    <td  class="borders" style="font-weight:bolder" colspan="3"  bgcolor="#999999"> Very low    (&lt; 2 kg) </td><td style=" font-weight:bolder" colspan="2" bgcolor="#999999"><td style=" font-weight:bolder" bgcolor="#999999"><td style=" font-weight:bolder" colspan="2" bgcolor="#999999"></td>
+  </tr>
+  <tr class="all"   align="center">
+    <td  class="borders" style="font-weight:bolder" bgcolor="#999999"></td><td class="borders" style="font-weight:bolder"  bgcolor="#999999"></td><td class="borders" style="font-weight:bolder"  bgcolor="#999999"></td><td  class="borders" style="font-weight:bolder" bgcolor="#999999"></td><td style="font-weight:bolder" bgcolor="#999999"> Twin </td>
+    <td  style="font-weight:bolder" bgcolor="#999999"> &ge;    Triplet </td>
+    <td class="borders" style="font-weight:bolder" bgcolor="#999999"></td><td class="borders"colspan="2" bgcolor="#999999"></td><td  colspan="2" bgcolor="#999999"> Twin </td>
+    <td  colspan="2" bgcolor="#999999"> &ge;    Triplet </td><td colspan="3" bgcolor="#999999"></td><td colspan="3" bgcolor="#999999"></td><td colspan="3" bgcolor="#999999"></td><td colspan="3" bgcolor="#999999"></td><td colspan="2" bgcolor="#999999"></td><td style=" font-weight:bolder" bgcolor="#999999"></td><td  colspan="2" bgcolor="#999999"></td>
+  </tr>
+  <tr class="all"   align="center">
+    <td bgcolor="#999999"><td bgcolor="#999999"><td bgcolor="#999999"><td bgcolor="#999999"><td bgcolor="#999999"></td><td bgcolor="#999999"></td><td bgcolor="#999999"><td  height="77" bgcolor="#999999"> Female </td>
+    <td  bgcolor="#999999"> Male </td>
+    <td  bgcolor="#999999"> Female </td>
+    <td  bgcolor="#999999"> Male </td>
+    <td  bgcolor="#999999"> Female </td>
+    <td  bgcolor="#999999"> Male </td>
+    <td  bgcolor="#999999"> Female </td>
+    <td  bgcolor="#999999"> Male </td>
+    <td  bgcolor="#999999"> Total </td>
+    <td  bgcolor="#999999"> Total    No </td>
+    <td  bgcolor="#999999"> Asphyxia </td>
+    <td  bgcolor="#999999"> Defect </td>
+    <td  bgcolor="#999999"> Total    No </td>
+    <td  bgcolor="#999999"> Asphyxia </td>
+    <td  bgcolor="#999999"> Defect </td>
+    <td  bgcolor="#999999"> Total    No </td>
+    <td  bgcolor="#999999"> Asphyxia </td>
+    <td  bgcolor="#999999"> Defect </td>
+    <td  bgcolor="#999999"> Fresh </td>
+    <td  bgcolor="#999999"> Macerated </td><td bgcolor="#999999">
+    <td  bgcolor="#999999"> No. </td>
+    <td  bgcolor="#999999"> Units </td>
+  </tr>
+</table>
+			
+       </p>
+
+     </div><!-- #tab2 -->
+     <div id="tab4" class="tab_content"> 
+
+       <p>
+	   			<!-- report 4 ------------------------------------------------------------------------------------------>
+				<table id="datavalue4" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-color:#000000;">
+				<tr>
+					<td style="border-color:#999999" class="Pdatavalue4 all2" align="left" colspan="10" id="period10">Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue4 all2" align="center" colspan="6"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue4 all2" align="right" colspan="10"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="10"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999"> Safe Motherhood </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">(Sheet 4 of 5)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="6"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="10"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+  <tr class="all"  align="center">
+    <td class="borders"   bgcolor="#999999"> OrgUnit Code </td>
+    <td  class="borders"  style="min-width:200px"" bgcolor="#999999"> OrgUnit Name </td>
+    <td  class="borders"   bgcolor="#999999"> Received Reports </td>
+    <td  colspan="2" bgcolor="#999999"> PNC    Visit </td>
+    <td  colspan="9" bgcolor="#999999"> No of women </td>
+    <td  colspan="9" bgcolor="#999999"> Post Abortion FP    methods </td>
+    <td  colspan="3" bgcolor="#999999"> Post  Abortion Care (PAC) </td>
+  </tr>
+  <tr class="all"  align="center">
+    <td class="borders" bgcolor="#999999"></td><td class="borders" bgcolor="#999999"></td><td class="borders" bgcolor="#999999"></td><td class="borders" bgcolor="#999999"> Within 24 hour </td>
+    <td  bgcolor="#999999"> 3 PNC    visit as per protocol </td>
+    <td colspan="3" bgcolor="#999999"> Medical </td>
+    <td colspan="3" bgcolor="#999999"> Surgical </td>
+    <td colspan="3" bgcolor="#999999"> Total </td>
+    <td colspan="3" bgcolor="#999999"> Medical </td>
+    <td colspan="3" bgcolor="#999999"> Surgical </td>
+    <td colspan="3" bgcolor="#999999"> Total </td>
+    <td colspan="2" bgcolor="#999999"> This facility </td>
+    <td class="borders" bgcolor="#999999"> Others </td>
+  </tr>
+  <tr class="all" align="center" >
+    <td bgcolor="#999999"></td><td bgcolor="#999999"></td><td bgcolor="#999999"></td><td bgcolor="#999999"></td><td bgcolor="#999999"></td><td  bgcolor="#999999"> &lt; 20 years </td>
+    <td bgcolor="#999999"> &ge;20 Years </td>
+    <td bgcolor="#999999"> Total </td>
+    <td bgcolor="#999999"> &lt; 20 years </td>
+    <td bgcolor="#999999"> &ge; 20 Years </td>
+    <td bgcolor="#999999"> Total </td>
+    <td bgcolor="#999999"> &lt; 20 years </td>
+    <td bgcolor="#999999"> &ge; 20 Years </td>
+    <td bgcolor="#999999"> Total </td>
+    <td bgcolor="#999999"> Short term </td>
+    <td bgcolor="#999999"> Long term </td>
+    <td bgcolor="#999999"> Total </td>
+    <td bgcolor="#999999"> Short term </td>
+    <td bgcolor="#999999"> Long term </td>
+    <td bgcolor="#999999"> Total </td>
+    <td bgcolor="#999999"> Short term </td>
+    <td bgcolor="#999999"> Long term </td>
+    <td bgcolor="#999999"> Total </td>
+    <td bgcolor="#999999"> Medical </td>
+    <td bgcolor="#999999"> Surgical </td><td class="borders" bgcolor="#999999"></td>
+  </tr>
+</table>
+			
+       </p>
+     </div><!-- #tab3 -->
+		 
+	 <div id="tab5" class="tab_content"> 
+
+       <p>
+	   <!-- report 5 ------------------------------------------------------------------------------------------>
+		<table id="datavalue5" width="100%" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:2px;border-color:#000000;">
+ 
+  <tr>
+					<td style="border-color:#999999" class="Pdatavalue5 all2" align="left" colspan="10" id="period10">Reporting Period </td>
+					<td style="border-color:#999999" class="datavalue5 all2" align="center" colspan="3"> Raw Data </td>
+					<td style="border-color:#999999" class="Ddatavalue5 all2" align="right" colspan="10"> Date </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="left" colspan="10"  bgcolor="#999999"> Summary of programme performance by District/Development and Ecological Region</td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="3"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999"> Department of Health Services </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="3"  bgcolor="#999999"> Safe Motherhood </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999"> Management Division  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="3"  bgcolor="#999999">(Sheet 5 of 5)</td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999"> Health Management Information Systems  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="3"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999" class="all2" align="center" colspan="3"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999" class="all2" align="right" colspan="10"  bgcolor="#999999">  </td>
+				</tr>
+				<tr>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="10"  bgcolor="#999999"> </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="center" colspan="3"  bgcolor="#999999">  </td>
+					<td style="border-color:#999999; border-bottom-color:#000000" class="all2" align="right" colspan="10"  bgcolor="#999999">(For internal use only: Restricted to quote) </td>
+				</tr>
+  <tr class="all">
+    <td class="borders"  align="center" bgcolor="#999999"> OrgUnit Code </td>
+    <td  class="borders" style="min-width:200px" align="center" bgcolor="#999999"> OrgUnit Name </td>
+    <td colspan="14" align="center" bgcolor="#999999"> Obstetric Complications </td>
+    <td colspan="3" align="center" bgcolor="#999999"> Maternal Deaths </td>
+    <td colspan="2" align="center" bgcolor="#999999"> Transport Incentive </td>
+    <td colspan="2" align="center" bgcolor="#999999"> ANC Incentive </td>
+  </tr>
+  <tr class="all">
+    <td  bgcolor="#999999" ></td><td bgcolor="#999999" ></td><td class="vtext" align="center" bgcolor="#999999"> Ectopic pregnancy (O00) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Abortion complication (O08) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Preg.-induced hypertension (O13) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Severe/Pre-eclampsia (O14) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Eclampsia (O15) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Hyperemesis grivadarum (O21.0) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Antepartum haemorrhage (O46) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Prolonged labour (O63) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Obstructed Labor (O64-O66) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Ruptured uterus (S37.6) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Postpartum haemorrhage (O72) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Retained placenta (O73) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Pueperal sepsis (O85) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Other complications (O75) </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Ante-partum </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Intra-partum </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Post-partum </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Eligible </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Received </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Eligible </td>
+    <td class="vtext" align="center" bgcolor="#999999"> Received </td>
+  </tr>
+</table>
+	   
+	   </p>
+	</div><!-- #tab4 -->
+	
+	 <div id="tab5" class="tab_content"> 
+
+		<p>
+	   <!-- report 5 ------------------------------------------------------------------------------------------>
+		
+		</p>
+	</div><!-- #tab5 -->
+ </div> <!-- .tab_container --> 
+
+</div> <!-- #container -->
