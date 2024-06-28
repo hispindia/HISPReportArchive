@@ -1,0 +1,242 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Diagnosis/NCD Condition Report-TMC Report', 'Diagnosis/NCD Condition Report-TMC Report')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<div id="loader" style="display: none"></div>
+<div style="width: 50%; margin-left:25%;">
+    <table class="table table-borderless table-striped">
+        <tr style="border: 1px solid #DDDDDD;">
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Start Date : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input type="date" class="form-control" id="start-date">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>End Date : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input type="date" class="form-control" id="end-date">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+<div id="printing" class="animate-bottom">
+    <table border="1" id="dataTable" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+        style="border-collapse: collapse; text-align: center;">
+        <thead>
+            <tr style="font-weight:800; text-align:center;">
+                <td colspan="6" style="border:1px solid black;background:#ADD8E6;">Diagnosis/NCD Condition
+                    Report-TMC Report
+                </td>
+            </tr>
+            <tr style="font-weight:800; text-align:center;">
+                <td id="facility" colspan="6" style="border:1px solid black;background:#ADD8E6;"></td>
+            </tr>
+            <tr style="font-weight:800; text-align:center;">
+                <td style="border:1px solid black;background:#ADD8E6;">S.No.</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Beneficiary Reg ID</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Gender</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Age on Visit</td>
+                <td style="border:1px solid black;background:#ADD8E6;">NCD Condition</td>
+                <td style="border:1px solid black;background:#ADD8E6;">Diagnosis</td>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+</div>
+<script>
+
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    $('#dataTable').hide();
+    $('#loader').hide();
+    function submitData() {
+        $('#dataTable').hide();
+        let startDate = document.getElementById("start-date").value;
+        let endDate = document.getElementById("end-date").value;
+        let dates = {
+            startDate,
+            endDate
+        }
+        if (!startDate || !endDate || new Date(startDate) > new Date(endDate)) {
+            alert("Please Select dates Correctly!");
+            return;
+        } else {
+            document.getElementById("facility").innerHTML = selectedOrgUnit.name + " ( " + startDate + " to " + endDate + " )"
+            $('#loader').show();
+            setTimeout(() => {
+                displayData(dates);
+
+            }, 1000)
+        }
+    }
+    function displayData(dates) {
+        var sn = 0;
+        var tableData = '';
+
+        var url = '../api/analytics/events/query/hQUeRtU70wj.json?paging=false&startDate=' + dates.startDate + '&endDate=' + dates.endDate + '&dimension=ou:OU_GROUP-TPhSAXm3oio;' + selectedOrgUnit.id + '&dimension=gpZJwMDObuC.HKw3ToP2354&dimension=gpZJwMDObuC.KbHdenDCzwp&dimension=gpZJwMDObuC.P5a5E6m8llj&dimension=gpZJwMDObuC.NcOvQWsZFuU&&dimension=gpZJwMDObuC.XppQ0DsgMEF&stage=gpZJwMDObuC&displayProperty=NAME&outputType=EVENT&desc=eventdate'
+
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: url,
+            data: JSON,
+            success: function (res) {
+                var idIndex = {};
+                res.headers.forEach((header, index) => idIndex[header.name] = index);
+
+                for (let val of res.rows) {
+                    if (val[idIndex['gpZJwMDObuC.NcOvQWsZFuU']] || val[idIndex['gpZJwMDObuC.XppQ0DsgMEF']]) {
+                        var row = '<tr>';
+                        row += '<td>' + (++sn) + '</td>'
+                        row += '<td>' + val[idIndex['gpZJwMDObuC.HKw3ToP2354']] + '</td>';
+                        row += '<td>' + val[idIndex['gpZJwMDObuC.KbHdenDCzwp']] + '</td>';
+                        row += '<td>' + (val[idIndex['gpZJwMDObuC.P5a5E6m8llj']] && Number(val[idIndex['gpZJwMDObuC.P5a5E6m8llj']])) + '</td>';
+                        row += '<td>' + val[idIndex['gpZJwMDObuC.NcOvQWsZFuU']] + '</td>';
+                        row += '<td>' + val[idIndex['gpZJwMDObuC.XppQ0DsgMEF']] + '</td>';
+                    
+                        tableData += row;
+                    }
+                }
+            }
+        })
+
+
+        document.getElementById("tableBody").innerHTML = tableData;
+
+        $('#dataTable').show();
+        $('#loader').hide();
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename + "-" + selectedOrgUnit.name + ".xls";
+            document.getElementById("dlink").click();
+        }
+    })()
+
+    function printContent(el) {
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        window.location.reload();
+    }
+</script>

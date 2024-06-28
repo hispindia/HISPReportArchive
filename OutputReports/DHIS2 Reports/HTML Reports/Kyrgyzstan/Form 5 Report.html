@@ -1363,21 +1363,27 @@
             else indicatorValues[row["0"]] += Number(row['2']);
         });
         Promise.all(promises(months, orgUnits)).then((res) => {
-            res.map(ds => ds.dataValues.forEach(dv => {
-                if (!deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`]) deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] = Number(dv.value);
-                else deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] += Number(dv.value);
+            res.map(ds => {
+                if (ds && ds.dataValues) {
+                    ds.dataValues.forEach(dv => {
+                        if (!deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`]) deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] = Number(dv.value);
+                        else deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] += Number(dv.value);
 
-                if (!dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`]) dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] = {};
-                if (!dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`][dv.period]) dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`][dv.period] = {};
-                dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`][dv.period] = Number(dv.value);
-            }))
+                        if (!dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`]) dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] = {};
+                        if (!dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`][dv.period]) dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`][dv.period] = {};
+                        dePeValue[`${dv.dataElement}.${dv.categoryOptionCombo}`][dv.period] = Number(dv.value);
+                    })
+                }
+            })
         }).then(async () => {
             for (let ou of orgUnits) {
                 var perspectivePlanRes = await (await fetch(`../api/dataValueSets.json?dataSet=AlJOYCZCsNN&orgUnit=${ou.id}&period=${year}&paging=false`)).json();
-                perspectivePlanRes.dataValues.forEach(dv => {
-                    if (!deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`]) deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] = Number(dv.value);
-                    else deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] += Number(dv.value);
-                });
+                if (perspectivePlanRes && perspectivePlanRes.dataValues) {
+                    perspectivePlanRes.dataValues.forEach(dv => {
+                        if (!deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`]) deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] = Number(dv.value);
+                        else deTotalValue[`${dv.dataElement}.${dv.categoryOptionCombo}`] += Number(dv.value);
+                    });
+                }
             }
         }).then(() => {
 
