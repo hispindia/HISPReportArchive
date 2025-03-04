@@ -1,0 +1,648 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Isolation and Senstivity Pattern', 'Isolation and Senstivity Pattern.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<div style="width: 40%; margin-left:30%;">
+    <table class="table table-borderless table-striped">
+        <tr style="border: 1px solid #DDDDDD;">
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Start Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input type="month" class="form-control" id="startDate">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>End Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input type="month" class="form-control" id="endDate">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Department Name : </strong>
+            </td>
+            <td style="width: 60%;">
+                <select id="department-name" class="form-control"></select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Sample Type : </strong>
+            </td>
+            <td style="width: 60%;">
+                <select id="sampleType-name" class="form-control"></select>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>organism Type : </strong>
+            </td>
+            <td style="width: 60%;">
+                <select id="organismType-name" class="form-control"></select>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-left" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; visibility:hidden">
+            <tbody id="tableHead"></tbody>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+
+    document.getElementById("loader").style.display = "none";
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var department = [];
+    var departmentId = '';
+    var departmentIds = '';
+    var groupwiseAnti = {};
+    var organismAWGroupSet = [];
+    var organismGroupSet = [];
+    var antibioticsList = [];
+    var idNamePair = {};
+    var ogName = {};
+    var deptName = {};
+
+    $.get('../api/categories/o3f27RemB0u.json?fields=categoryOptions[id,name]&paging=false', function (res) {
+        var list = res.categoryOptions.sort((a, b) => a.name.localeCompare(b.name));
+
+        // $.get('../api/category/o3f27RemB0u.json?fields=categoryOptions[id,name]&paging=false', function (res) {
+        //     var hasValue = {}
+        //     var values = res.categoryOptions.sort((a, b) => a.name.localeCompare(b.name));
+        //     debugger
+        //     res.categoryOptions.forEach(op => hasValue[op.id] = true);
+            debugger;
+            list.forEach(op => {
+                
+                    antibioticsList.push(op)
+               
+            })
+            antibioticsList = [...antibioticsList];
+        })
+    // })
+    // $.get('../api/dataElementGroupSets/c0lHETNgcxg.json?fields=id,name,dataElementGroups[id,name]&paging=false', function (res) {
+    //     res.dataElementGroups.forEach(group => organismAWGroupSet.push(group.id));
+    // }) 
+    $.get('../api/dataElementGroupSets/c0lHETNgcxg.json?fields=id,name,dataElementGroups[id,name]&paging=false', function (res) {
+        res.dataElementGroups.forEach(group => organismGroupSet.push(group.id));
+    }) 
+    $.get('../api/categories/uoGPDb7NKXC.json?fields=categoryOptions[id,name]&paging=false', function (res) {
+        let departmentName = `<option value='ALL'>ALL</option>`;
+        deptName['ALL'] = "ALL"
+        department = res.categoryOptions;
+
+        for (let opt of res.categoryOptions) {
+            departmentId += opt.id + ';'
+            departmentName += `<option value='${opt.id}'>${opt.name}</option>`;
+            idNamePair[opt.id] = opt.name;
+            deptName[opt.id] = opt.name;
+        }
+
+        document.getElementById('department-name').innerHTML = departmentName;
+    })
+    $.get('../api/categories/lE9LfDeCSGa.json?paging=false&fields=name,categoryOptions[name,id]', function (res) {
+        // let coOptions = [];
+        let coOptions = [`<option value='ALL'>ALL</option>`]; 
+        let ids = ''
+
+        for (let opt of res.categoryOptions) {
+            ids += opt.id + ';'
+            coOptions.push(`<option value='${opt.id}'>${opt.name}</option>`);
+            idNamePair[opt.id] = opt.name
+        }
+        // coOptions.unshift(`<option value='${ids}' selecteed>ALL</option>`)
+        document.getElementById('sampleType-name').innerHTML = coOptions;
+    })
+    $.get('../api/dataElementGroupSets/nKkVHy7fQVv.json?fields=dataElementGroups[id,name]&paging=false', function (res) {
+        let organismType = [];
+        let ids = ''
+        for (let opt of res.dataElementGroups) {
+            ids += opt.id + ';'
+            organismType.push(`<option value='${opt.id}'>${opt.name}</option>`);
+            idNamePair[opt.id] = opt.name
+        }
+        // organismType.unshift( `<option value='${ids}' selected>ALL</option>`)
+        ogName["Gram positive"] = "GPC"
+        ogName["Gram negative"] = "GNB"
+        document.getElementById('organismType-name').innerHTML = organismType;
+    })
+
+    $.when(
+        $.get('../api/categories/o3f27RemB0u.json?fields=id,name,categoryOptions[id,name]&paging=false'),
+        // $.get('../api/categoryOptionGroups/XItSB1UWHef.json?fields=id,name,categoryOptions[id,name]&paging=false'),
+        // $.get('../api/categoryOptionGroups/amXL2nOcvSK.json?fields=id,name,categoryOptions[id,name]&paging=false'),
+        // $.get('../api/categoryOptionGroups/ThHsfQvoNKH.json?fields=id,name,categoryOptions[id,name]&paging=false'),
+
+    ).done((firstLine) => {
+        firstLine[0].categoryOptions.forEach(co => groupwiseAnti[co.name] = "A")
+        secondLine[0].categoryOptions.forEach(co => {
+            if (groupwiseAnti[co.name]) groupwiseAnti[co.name] = groupwiseAnti[co.name] + ", B";
+            else groupwiseAnti[co.name] = "B"
+        })
+        thirdLine[0].categoryOptions.forEach(co => {
+            if (groupwiseAnti[co.name]) groupwiseAnti[co.name] = groupwiseAnti[co.name] + ", C";
+            else groupwiseAnti[co.name] = "C"
+        })
+        fourthLine[0].categoryOptions.forEach(co => {
+            if (groupwiseAnti[co.name]) groupwiseAnti[co.name] = groupwiseAnti[co.name] + ", C";
+            else groupwiseAnti[co.name] = "U"
+        })
+    })
+
+
+    function submitData() {
+        document.getElementById("loader").style.display = "block";
+        document.getElementById("dataTable").style.visibility = "hidden";
+        document.getElementById("tableBody").innerHTML = "";
+
+        var startDate = document.getElementById("startDate").value;
+        var endDate = document.getElementById("endDate").value;
+        var departmentName = document.getElementById("department-name").value;
+        var sampleTypeId = document.getElementById("sampleType-name").value;
+        var organismTypeId = document.getElementById("organismType-name").value;
+        departmentIds = departmentName == "ALL" ? departmentId : departmentName;
+        var data = {
+            startDate: startDate,
+            endDate: endDate,
+            departmentName: departmentName,
+            sampleTypeId: sampleTypeId,
+            organismTypeId: organismTypeId
+        }
+        if (new Date(startDate) > new Date(endDate) || !startDate || !endDate) {
+            alert("Please Select dates Correctly!");
+            document.getElementById("loader").style.display = "none";
+            return;
+        } else {
+            $('#loader').show();
+            setTimeout(function () {
+                getData(data);
+            }, 1000);
+        }
+
+    }
+
+    function getData(data) {
+
+        var includedOrgUnitGroups = [];
+        var organismWise = {};
+        var printTotalValue = [];
+
+        var orgUnitArr = [];
+
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let month = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(month);
+                }
+            }
+
+            return arr;
+        }
+
+        //getting between dates
+        var smToEm = getBetweenDates(data.startDate, data.endDate);
+
+        var attrName = {}
+        var dataElementLists = [];
+        var dataElementName = [];
+        var totalValuesIsolates = {};
+
+        var count = 0;
+
+
+console.trace("dddddddddddddd")
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/analytics.json?dimension=c0lHETNgcxg:${organismGroupSet.join(';')}&dimension=uoGPDb7NKXC:${departmentIds}&dimension=nKkVHy7fQVv:${data.organismTypeId}&dimension=BB34TO1MsbB:o2KJuGuyUQ8;Ci3YWzweFIZ;DlD3fIWinjJ;PDkTBvpXxDL;hUsQwwsNkYs;fkwG2huZCzS;Evx7exBNN1A&dimension=lE9LfDeCSGa:${data.sampleTypeId};&filter=ou:${selectedOrgUnit.id}&filter=pe:${smToEm.join(';')}&displayProperty=SHORTNAME`,
+
+            // url: `../api/analytics.json?dimension=KmzygisWigP:${organismGroupSet.join(';')}&dimension=uoGPDb7NKXC:${departmentIds}&dimension=nKkVHy7fQVv:${data.organismTypeId}&dimension=BB34TO1MsbB:o2KJuGuyUQ8;Ci3YWzweFIZ;DlD3fIWinjJ;PDkTBvpXxDL;hUsQwwsNkYs;EixFFe8U26O;fkwG2huZCzS;Evx7exBNN1A&dimension=lE9LfDeCSGa:${data.sampleTypeId}&filter=ou:bLfOUtl4eZd&filter=pe:${smToEm.join(';')}&displayProperty=SHORTNAME`,
+            data: JSON,
+            success: function (res, status) {
+                var dataElementList = []
+                for (item in res.metaData.items) {
+                    attrName[item] = res.metaData.items[item].name;
+                }
+                res.rows.forEach(data => {
+                    if (!organismWise[data[0]]) organismWise[data[0]] = {};
+                    if (!organismWise[data[0]][data[3]]) organismWise[data[0]][data[3]] = Number(data[5]);
+                    else organismWise[data[0]][data[3]] += Number(data[5]);
+                })
+
+                for (let isolates in organismWise) {
+                    dataElementList[isolates] = [];
+                    dataElementList[isolates]["totalDE"] = 0;
+                    for (let ward in organismWise[isolates]) {
+                        dataElementList[isolates]["totalDE"] += Number(organismWise[isolates][ward]);
+                        dataElementList[isolates][attrName[ward]] = Number(organismWise[isolates][ward]);
+                    }
+                }
+                let count = 0;
+                for (let isolates in dataElementList) {
+                    dataElementList[count++] = {
+                        name: attrName[isolates],
+                        value: dataElementList[isolates]['totalDE'],
+                        location: dataElementList[isolates]
+                    };
+                }
+
+                count = 0;
+                dataElementList.sort(arraySorting)
+                for (let list of dataElementList) {
+                    if (count < 3) {
+                        count++;
+                        dataElementLists.push(list);
+                    }
+                }
+
+                for (let sample of dataElementLists) {
+                    dataElementName.push(`${sample.name}`);
+                }
+            }
+        });
+
+        var antibioticsValue = {}
+        var attrNames = {}
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/analytics.json?dimension=c0lHETNgcxg:${organismAWGroupSet.join(';')}&dimension=nKkVHy7fQVv:${data.organismTypeId}&dimension=BB34TO1MsbB:o2KJuGuyUQ8;Ci3YWzweFIZ;DlD3fIWinjJ;PDkTBvpXxDL;hUsQwwsNkYs;fkwG2huZCzS;Evx7exBNN1A&dimension=lE9LfDeCSGa:${data.sampleTypeId};&dimension=o3f27RemB0u:uafU3z8FI5k;A9lhvAzBHWB;cRTGleVcSot;AG1SqURA7ZY;S4s7CQ6jvEp;tvrmLWyKEfa;CHxxE1FWcJt;ut6SBS9f8d7;AKir7rABOFw;YTqzjOxGLsK;jwoozvFjwxH;pL3dCGW5GtT;PTX6rtu1UgD;mRPpjB3Edii;AlxZqKXI17J;UZrg4Q4udS9;BEVbXVVhDCZ;r44xE28T8Xs;VMIRSc5Wqfw;L5TicdN8XbU;KU322WNZVAx;xJmiytz4Je3;uDPQOTBt5tr;FLU2xujN3EE;MBnkOJsirWk;RqKmKtJJUzN;IVipan1rQME;D5ccm9bfeGR;LHfThMHy709;dczhpmYFqzi;Jf4NWtBtmld;be2xD7h9jQ7;VnQecHUo9iq;zP9f8mjR4bH;GEjROCGRdBK;uvLGlNO6qNF;ijkNLCXyyHv;JvAzvm9YD2v;mzFPJIqz4OP;AAHcICnhiSV;w3G8Zh8VrOf;D6tqkQl3eSo;d7KOQSOEVRs;XcHYZ0B5ngC;TVHmMkJ1r7u;lVWvJc57RQe;WlPLm82Jzs7;zn2Juh5xDFy;CReS4iT7FVy;yKAKER11ABp;RvxbV2SYPbr;WdjbrHqLEtI;iV0RRHElQlL;SjrgaDJCg9H;twtctjeWQx4;D3VjC2F63Hh;oaP95BtU2mN;MsVMhZ89xUu;SfCZriRGdUQ;ARgcVFsmG6U;anYRHxr9bTC;vmS4xy4l4Or;pgR3EnL82be;dgfNQgAV8To;ZAqVX035fFB;c5P5vdayuB2;gWs2HKwumAL;WF3qcs1UJrc;bYtSCWtlwAU;qk11Fc8X1C0;cT1L17B86AC;ZpQsajaflnv;D5qKlljklBk;ZXVC82NqKgi;SpRBbSCmsGp;WZePItBM9Mb;kU8yb0OOcNs;XYwAJU1Uv79;ER5mUO5NaEZ;FXdYH8aZtVo;WMiY06XquPC;iQ79W3m4guP;OAMRa8ilRoK;aOVW6i2R1Hx;KQTPbeAuFBL;WucG2xpnuST;UnEkcXjNdVx;fZqGEUb18ra;enNnkS1O2Gb;rRg6JUNpg5j;oZAdCPK0Ywa;FnNq5XTWW1q;fOYysS1VqzQ;fQwFi3COlEa;QwQZlI5kwxD;BeJEQIXsWqx;iB4l1PiXVER;pgsmsVEKGqK;RhvcqFKWxDu&dimension=OeTywbgqYtV:IBJVjPuQjM4;oMG1kpCFtzS;OedC9yr4wYk&dimension=uoGPDb7NKXC:${departmentIds}&filter=ou:${selectedOrgUnit.id}&filter=pe:${smToEm.join(";")}&displayProperty=SHORTNAME&paging=false`,
+
+            // url: `../api/analytics.json?dimension=sGLfOuxQyLd:${organismAWGroupSet.join(';')}&dimension=nKkVHy7fQVv:${data.organismTypeId}&dimension=BB34TO1MsbB:o2KJuGuyUQ8;Ci3YWzweFIZ;DlD3fIWinjJ;PDkTBvpXxDL;hUsQwwsNkYs;EixFFe8U26O;fkwG2huZCzS;Evx7exBNN1A&dimension=lE9LfDeCSGa:${data.sampleTypeId}&dimension=o3f27RemB0u:uafU3z8FI5k;A9lhvAzBHWB;cRTGleVcSot;AG1SqURA7ZY;S4s7CQ6jvEp;tvrmLWyKEfa;CHxxE1FWcJt;ut6SBS9f8d7;AKir7rABOFw;YTqzjOxGLsK;jwoozvFjwxH;pL3dCGW5GtT;PTX6rtu1UgD;mRPpjB3Edii;AlxZqKXI17J;UZrg4Q4udS9;BEVbXVVhDCZ;r44xE28T8Xs;VMIRSc5Wqfw;L5TicdN8XbU;KU322WNZVAx;xJmiytz4Je3;uDPQOTBt5tr;FLU2xujN3EE;MBnkOJsirWk;RqKmKtJJUzN;IVipan1rQME;D5ccm9bfeGR;LHfThMHy709;dczhpmYFqzi;Jf4NWtBtmld;be2xD7h9jQ7;VnQecHUo9iq;zP9f8mjR4bH;GEjROCGRdBK;uvLGlNO6qNF;ijkNLCXyyHv;JvAzvm9YD2v;mzFPJIqz4OP;AAHcICnhiSV;w3G8Zh8VrOf;D6tqkQl3eSo;d7KOQSOEVRs;XcHYZ0B5ngC;TVHmMkJ1r7u;lVWvJc57RQe;WlPLm82Jzs7;zn2Juh5xDFy;CReS4iT7FVy;yKAKER11ABp;RvxbV2SYPbr;WdjbrHqLEtI;iV0RRHElQlL;SjrgaDJCg9H;twtctjeWQx4;D3VjC2F63Hh;oaP95BtU2mN;MsVMhZ89xUu;SfCZriRGdUQ;ARgcVFsmG6U;anYRHxr9bTC;vmS4xy4l4Or;pgR3EnL82be;dgfNQgAV8To;ZAqVX035fFB;c5P5vdayuB2;gWs2HKwumAL;WF3qcs1UJrc;bYtSCWtlwAU;qk11Fc8X1C0;cT1L17B86AC;ZpQsajaflnv;D5qKlljklBk;ZXVC82NqKgi;SpRBbSCmsGp;WZePItBM9Mb;kU8yb0OOcNs;XYwAJU1Uv79;ER5mUO5NaEZ;FXdYH8aZtVo;WMiY06XquPC;iQ79W3m4guP;OAMRa8ilRoK;aOVW6i2R1Hx;KQTPbeAuFBL;WucG2xpnuST;UnEkcXjNdVx;fZqGEUb18ra;enNnkS1O2Gb;rRg6JUNpg5j;oZAdCPK0Ywa;FnNq5XTWW1q;fOYysS1VqzQ;fQwFi3COlEa;QwQZlI5kwxD;BeJEQIXsWqx;iB4l1PiXVER;pgsmsVEKGqK;RhvcqFKWxDu&dimension=OeTywbgqYtV:IBJVjPuQjM4;oMG1kpCFtzS;OedC9yr4wYk&dimension=uoGPDb7NKXC:${departmentIds}&filter=ou:bLfOUtl4eZd&filter=pe:${smToEm.join(";")}&displayProperty=SHORTNAME&paging=false`,
+            data: JSON,
+            success: function (res, status) {
+
+                var hasSample = {};
+                var hasAntibioticIds = {};
+                var antibioticAttrName = {};
+                for (item in res.metaData.items) {
+                    attrNames[item] = res.metaData.items[item].name;
+                    if (res.metaData.items[item].name.includes(' - AW')) antibioticAttrName[res.metaData.items[item].name] = item;
+                }
+
+                dataElementName.forEach(de => {
+                    if (antibioticAttrName[de]) {
+                        hasAntibioticIds[`${antibioticAttrName[de]}`] = de;
+                    }
+                })
+                debugger;
+
+                res.rows.forEach(row => {
+                    if (hasAntibioticIds[`${row[0]}`] && (data.departmentName == row[6] || data.departmentName == "ALL")) {
+                        if (!antibioticsValue[hasAntibioticIds[`${row[0]}`]]) antibioticsValue[hasAntibioticIds[`${row[0]}`]] = {}
+                        if (!antibioticsValue[hasAntibioticIds[`${row[0]}`]][attrNames[row[2]]]) antibioticsValue[hasAntibioticIds[`${row[0]}`]][attrNames[row[2]]] = {}
+                        if (!antibioticsValue[hasAntibioticIds[`${row[0]}`]][attrNames[row[2]]][row[4]]) antibioticsValue[hasAntibioticIds[`${row[0]}`]][attrNames[row[2]]][row[4]] = {}
+
+                        if (!antibioticsValue[hasAntibioticIds[`${row[0]}`]][attrNames[row[2]]][row[4]][row[5]]) antibioticsValue[hasAntibioticIds[`${row[0]}`]][attrNames[row[2]]][row[4]][row[5]] = Number(row[7])
+                        else antibioticsValue[hasAntibioticIds[`${row[0]}`]][attrNames[row[2]]][row[4]][row[5]] += Number(row[7]);
+                        if (row[5] == "OedC9yr4wYk") hasSample[row[4]] = true;
+                    }
+                })
+                debugger;
+                var colList = 0;
+                let row = ''
+                antibioticsList.forEach(antibiotic => {
+                    if (hasSample[antibiotic.id]) {
+                        colList += 1;
+                        row += `<td style="font-weight: bold;border:1px solid black;background:#eceeef;writing-mode: vertical-lr;transform: rotate(180deg);"><p>${groupwiseAnti[antibiotic.name] ? "(" + groupwiseAnti[antibiotic.name] + ")" : ''} ${antibiotic.name}</p></td>`
+                    }
+                })
+                var tableHead = `<tr><td colspan="${colList + 3}" style="font-weight: 900px;font-size:25px;border:1px solid black;background:rgb(44, 102, 147);color:white;text-align:center">Percentage susceptibility & Location-wise distribution of ${data.sampleTypeId === 'ALL' ? 'ALL Sample Types' : idNamePair[data.sampleTypeId]} isolate groups</td></tr><tr><td colspan="${colList + 3}" style="font-weight: 900px;font-size:25px;border:1px solid black;background:rgb(44, 102, 147);color:white;text-align:center">Department: ${deptName[data.departmentName]}</td></tr><tr><td colspan="${colList + 3}" style="font-weight: 900px;font-size:25px;border:1px solid black;background:rgb(44, 102, 147);color:white;text-align:center">Period: ${months[(Number(data.startDate.split("-")["1"] - 1))]} ${data.startDate.split("-")["0"]} to  ${months[(Number(data.endDate.split("-")["1"] - 1))]} ${data.endDate.split("-")["0"]}</td></tr>
+                <tr>
+                    <td colspan="3" rowspan="2" style="font-weight: bold;border:1px solid black;background:#eceeef;text-align:center">${ogName[idNamePair[data.organismTypeId]]} ${data.sampleTypeId === 'ALL' ? 'ALL Sample Types' : idNamePair[data.sampleTypeId]}</td>
+                    <td colspan="${colList}" style="font-weight: bold;border:1px solid black;background:#eceeef;text-align:center">% Susceptibility of Isolates to tested antibiotics</td>
+                </tr>
+                <tr>
+                    <td colspan="${colList}" style="font-weight: bold;border:1px solid black;background:#eceeef;text-align:center">Susceptible/Tested Isolates</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;border:1px solid black;background:#eceeef;text-align:center">Total no. of isolates (1/patient)</td>
+                    <td style="font-weight: bold;border:1px solid black;background:#eceeef;text-align:center">Location</td>
+                    <td style="font-weight: bold;border:1px solid black;background:#eceeef;text-align:center">%/N <br/>Per Location</td>`
+                tableHead += row
+                tableHead += `</tr>`;
+                document.getElementById('tableHead').innerHTML = tableHead;
+                var tableRow = '';
+
+                dataElementLists.forEach(de => {
+                    count = 0;
+                    let row = ''
+                    let rowDeno = ''
+                    for (let loc in de.location) {
+                        if (loc != "totalDE") {
+                            count++;
+                            if (count != 1) row += '<tr>'
+                            row += `<td rowspan="2">${loc}</td><td style="font-weight:bold">${(de.location[loc] / de.value) || (de.location[loc] / de.value) != 'Infinity' ? ((de.location[loc] / de.value) * 100).toFixed(2) : ''}</td>`
+                            rowDeno += `<tr><td>${de.location[loc]}</td>`
+                            if (antibioticsValue[de.name] && antibioticsValue[de.name][loc]) {
+                                antibioticsList.forEach(antibiotic => {
+                                    if (hasSample[antibiotic.id]) {
+                                        let value = '';
+                                        totalValue = 0;
+                                        let calculatedValue = '';
+                                        for (let ris in antibioticsValue[de.name][loc][antibiotic.id]) {
+                                            if (!value && antibioticsValue[de.name][loc][antibiotic.id]["OedC9yr4wYk"]) value = antibioticsValue[de.name][loc][antibiotic.id]["OedC9yr4wYk"];
+                                            totalValue += antibioticsValue[de.name][loc][antibiotic.id][ris];
+                                        }
+
+                                        calculatedValue = (value && totalValue && (value / totalValue) && (value / totalValue != "Infinity")) ? (value / totalValue * 100).toFixed(2) : '';
+                                        row += totalValue > 30 ? `<td style="font-weight:bold">${calculatedValue}</td>` : '<td></td>';
+                                        rowDeno += value && totalValue ? `<td>(${value}/${totalValue})  </td>` : '<td></td>';
+                                    }
+                                })
+                            }
+                            else {
+
+                                antibioticsList.forEach(antibiotic => {
+                                    if (hasSample[antibiotic.id]) {
+                                        row += "<td></td>"
+                                        rowDeno += "<td></td>"
+                                    }
+                                });
+                            }
+
+                            row += "</tr>"
+                            rowDeno += '</tr>'
+                            row += rowDeno;
+                            rowDeno = ''
+                        }
+                    }
+
+                    tableRow += `<tr> <td rowspan="${count * 2}">${de.name ? `${de.name.replace(" - AW", "")} (N=${de.value})` : ''}</td>`
+                    tableRow += row
+                    debugger;
+                })
+                //         var arrayData = [];
+
+                //         var risCount = 0;
+                //         let sortedAntibioticsValue = [];
+                //         for (let isolates in antibioticsValue) {
+                //             sortedAntibioticsValue.push({ id: isolates, value: totalValuesIsolates[hasAntibioticIds[isolates]] })
+                //         }
+                //         debugger;
+                //         sortedAntibioticsValue.sort(arraySorting);
+                //         debugger;
+                //         for (let sampleData of sortedAntibioticsValue) {
+                //             let sample = sampleData.id;
+                //             if (!arrayData[count]) arrayData[count] = [];
+                //             arrayData[count][0] = attrNames[sample].replace("(Attribute)", "") + '__' + dataElementList[sample]['totalDE'];
+                //             arrayData[count][1] = [];
+                //             arrayData[count][2] = [];
+                //             let sortedDEValues = [];
+
+                //             for (let de in antibioticsValue[sample]) {
+                //                 sortedDEValues.push({
+                //                     id: de,
+                //                     value: valuesData = dataElementList[sample][attrNames[de].replace("- AW", "")] ? dataElementList[sample][attrNames[de].replace("- AW", "")] : ''
+                //                 })
+                //             }
+
+                //             sortedDEValues.sort(arraySorting);
+
+                //             for (let deData of sortedDEValues) {
+                //                 let de = deData.id;
+                //                 let unsortedValues = [];
+                //                 // let totalDEValues = 0;
+                //                 for (let antibiotics in antibioticsValue[sample][de]) {
+                //                     let value = '';
+                //                     totalValue = 0;
+                //                     let calculatedValue = '';
+                //                     for (let ris in antibioticsValue[sample][de][antibiotics]) {
+                //                         if (!value && antibioticsValue[sample][de][antibiotics]["OedC9yr4wYk"]) value = antibioticsValue[sample][de][antibiotics]["OedC9yr4wYk"];
+                //                         totalValue += antibioticsValue[sample][de][antibiotics][ris];
+                //                     }
+                //                     calculatedValue = (value && totalValue && (value / totalValue) && (value / totalValue != "Infinity")) ? (value / totalValue * 100).toFixed(2) : '';
+                //                     unsortedValues.push({ id: `${attrNames[antibiotics]} == (${value} / ${totalValue})`, value: calculatedValue });
+                //                     // totalDEValues += totalValue;
+
+                //                 }
+
+                //                 let valuesData = dataElementList[sample][attrNames[de].replace("- AW", "")] ? dataElementList[sample][attrNames[de].replace("- AW", "")] : ''
+                //                 arrayData[count][1].push(attrNames[de] + "__" + valuesData);
+
+                //                 unsortedValues.sort(arraySorting);
+                //                 risCount = 0;
+                //                 unsortedValues.forEach(data => {
+
+                //                     if (!arrayData[count][2][risCount]) arrayData[count][2][risCount] = [];
+                //                     arrayData[count][2][risCount].push(data.id + "__" + data.value);
+                //                     risCount++;
+                //                 })
+                //             }
+                //             count++;
+                //         }
+
+                //         var tableRow = `<tr>
+                //             <td colspan="6" style="font-weight: bold;border:1px solid black;background:rgb(44, 102, 147);color:white;text-align:center">Isolation and Senstivity Pattern </td> 
+                //             </tr>
+                //             <tr>
+                //                 <td colspan="6" style="font-weight: bold;border:1px solid black;background:rgb(44, 102, 147);color:white;text-align:center">Period: ${months[(Number(data.startDate.split("-")["1"] - 1))]} ${data.startDate.split("-")["0"]} to  ${months[(Number(data.endDate.split("-")["1"] - 1))]} ${data.endDate.split("-")["0"]}</td>
+                //             </tr>`
+                //         for (let values in arrayData) {
+                //             tableRow += `
+                //             <tr>
+                //                 <td colspan="6"></td>
+                //             </tr>
+                //             <tr>
+                //                 <td colspan="${arrayData[values][1].length * 2}" style="font-weight: bold;border:1px solid black;background:#ADD8E6;text-align:center">${arrayData[values][0].split('__')[0]}</td>
+                //             </tr>
+                //             <tr>
+                //                 <td colspan="${arrayData[values][1].length * 2}" style="font-weight: bold;border:1px solid black;background:#ADD8E6;text-align:left">Total number of ${arrayData[values][0].split('__')[0]} Isolates : ${arrayData[values][0].split('__')[1]} </td>
+                //             </tr>
+                //             <tr>`;
+                //             let percentAnti = '<tr>'
+                //             arrayData[values][1].forEach(de => {
+                //                 percentAnti += `<td style="text-align:left">Antibiotics</td><td style="text-align:center">Percentage</td>`
+                //                 tableRow += `<td colspan="2" style="font-weight: bold;border:1px solid black;background:#eceeef;text-align:left">Total number of ${de.split("__")[0].replace(" - AW", "")} : ${de.split("__")[1]}</td>`
+                //             })
+                //             percentAnti += '</tr>'
+                //             tableRow += '</tr>';
+                //             tableRow += percentAnti;
+                //             arrayData[values][2].forEach(value => {
+                //                 let hasValues = false;
+                //                 let row = ''
+                //                 row += '<tr>'
+                //                 value.forEach(val => {
+                //                     if (val.split('__')[1]) {
+                //                         hasValues = true;
+                //                         console.log(val)
+                //                         tableRow += `<td style="font-weight:400px !important;">${groupwiseAnti[val.split(' ==')[0]] ? "(" + groupwiseAnti[val.split(' ==')[0]] + ")" : ''} ${val.split('__')[0].split('==')[0]}</td><td style="font-weight:400px; !important;">${val.split('__')[1]} % ${val.split('__')[0].split('==')[1]}</td>`
+                //                     }
+                //                 })
+                //                 row += '</tr>'
+                //                 if (hasValues) tableRow += row;
+                //             })
+                //         }
+                tableRow += `<tr><td style="font-weight: bold;font-size:20px;" colspan='${colList + 3}'> <h6>
+    Antibiotics grouping- A, B, C, U, AB, AC <br>
+    A,B- Group A antibiotics for Staphylococcus sp., Group B antibiotics for Enterobacterales<br>
+    B,C - Group B antibiotics for Pseudomonas, Group C for Staphylococcus sp.<br>
+    A,C - Group A antibiotics for Pseudomonas, Group C for others<br>
+    U - Antibiotics used for treating UTIs<br>
+    </h6></td>`
+                tableRow += `<tr><td style="font-weight: bold;font-size:20px;" colspan='${colList + 3}'><h6 style="padding-bottom: 100px">Notes:</h6></td></tr>`
+
+  
+                document.getElementById("tableBody").innerHTML = tableRow;
+                document.getElementById("dataTable").style.visibility = "visible";
+                document.getElementById("loader").style.display = "none";
+            }
+        });
+    }
+
+    function arraySorting(a, b) {
+        return ((Number(a.value) > Number(b.value)) ? -1 : ((Number(a.value) < Number(b.value)) ? 1 : 0));
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
