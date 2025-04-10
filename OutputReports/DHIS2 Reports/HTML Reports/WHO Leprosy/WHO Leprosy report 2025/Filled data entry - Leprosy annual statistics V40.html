@@ -1,0 +1,961 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    /* Center the loader  */
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('printing', 'Leprosy Core Statistics', 'Leprosy Core Statistics.xls')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Excel</button>
+
+<!-- <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;font-size: 15px;" id="btnExport"
+    onclick="tableToExcel('printing', 'Leprosy Core Statistics', 'Leprosy Core Statistics.doc')"><span
+        class="glyphicon glyphicon-download-alt"></span>Download As Doc</button> -->
+<br><br>
+<!-- <div id="loader" style="display: block;"></div> -->
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table id="dataTable" border="1" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style=" text-align: center;width:100%">
+            <tr style=" font:bold; text-align:center;">
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Leprosy
+                    annual statistics</td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: left">WHO Region:
+                    <span id="selected-ParentOrgUnit"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: left">Country:
+                    <span id="selected-orgUnit"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: left">Year : <span
+                        id="selectedYear"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: left">Total
+                    population : <span id="d1d6EWQZJGB-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: left">Child
+                    population : <span id="EnQPW5xZDPX-DGU1CWAZ6qw"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: left">Period of
+                    reporting : <span id="AtNoefpDtZw"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">New Case
+                    detection (during the reporting year)</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; background-color: #dce6f1; text-align: left">New Cases
+                </td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Adult</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Child (< 15 years)
+                        </td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Age Unknown</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Total</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New MB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="evXyDr6c7eu-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="evXyDr6c7eu-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="evXyDr6c7eu-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="evXyDr6c7eu"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New PB cases </td>
+                <td style="border:1px solid black;  text-align: center"><span id="gVmFx873rdZ-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="gVmFx873rdZ-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="gVmFx873rdZ-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="gVmFx873rdZ"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New unclassified cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="IQgrP2W9gTV-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="IQgrP2W9gTV-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="IQgrP2W9gTV-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="IQgrP2W9gTV"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Total new cases</td>
+                <td colspan="" style="border:1px solid black;  text-align: center"><span id="d9Dm9xRxHRr"></span></td>
+                <td colspan="" style="border:1px solid black;  text-align: center"><span id="PS9m9ERoPaj"></span></td>
+                <td colspan="" style="border:1px solid black;  text-align: center"><span id="Y4eTdQ03CZF"></span></td>
+                <td colspan="" style="border:1px solid black;  text-align: center"><span id="gY7b9azcUQG"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New case detection rate (per 1 000 000
+                    population)
+                </td>
+                <td style="border:1px solid black;  text-align: center"><span id="ElAjdwOrjMq"></span>
+                </td>
+                <td colspan="2" style="border:1px solid black; text-align: left">Child case detection rate (per 1 000
+                    000 child population)
+                </td>
+                <td colspan="" style="border:1px solid black;  text-align: center"><span id="SsZP6Izyhay"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Proportion of MB cases among new cases
+                </td>
+                <td colspan="" style="border:1px solid black;  text-align: center"><span id="FL4rv8fIiD7"></span>
+                </td>
+                <td colspan="2" style="border:1px solid black; text-align: left">Proportion of children among new cases
+                </td>
+                <td colspan="1" style="border:1px solid black;  text-align: center"><span id="C6xcdI95huJ"></span></td>
+
+            </tr>
+            <!-- <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Total new child cases</td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="PS9m9ERoPaj"></span>
+                </td>
+            </tr> -->
+
+            <span id="child-cases" style="display:none">
+                <tr>
+                    <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">New
+                        child cases by age</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: left"></td>
+                    <td style="border:1px solid black; background-color: #dce6f1; text-align: center">≤ 5 years</td>
+                    <td style="border:1px solid black; background-color: #dce6f1; text-align: center">6-9 years</td>
+                    <td style="border:1px solid black; background-color: #dce6f1; text-align: center">10-14 years</td>
+                    <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Age unknown</td>
+                    <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Total</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="border:1px solid black; text-align: left">New MB cases</td>
+                    <td style="border:1px solid black;  text-align: center"><span id="MiHLzmsVFPf-xC5PhT2YVtr"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="MiHLzmsVFPf-gWHkvEbtYrB"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="MiHLzmsVFPf-Woin7F6aEpp"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="MiHLzmsVFPf-HOFS6i6eMIm"></span>
+                    </td>
+                    <td colspan="2" style="border:1px solid black;  text-align: center"><span id="MiHLzmsVFPf"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="border:1px solid black; text-align: left">New PB cases</td>
+                    <td style="border:1px solid black;  text-align: center"><span id="ubgNtdy3h9H-xC5PhT2YVtr"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="ubgNtdy3h9H-gWHkvEbtYrB"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="ubgNtdy3h9H-Woin7F6aEpp"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="ubgNtdy3h9H-HOFS6i6eMIm"></span>
+                    </td>
+                    <td colspan="2" style="border:1px solid black;  text-align: center"><span id="ubgNtdy3h9H"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="border:1px solid black; text-align: left">New unclassified cases</td>
+                    <td style="border:1px solid black;  text-align: center"><span id="tyHgOKrZsMJ-xC5PhT2YVtr"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="tyHgOKrZsMJ-gWHkvEbtYrB"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="tyHgOKrZsMJ-Woin7F6aEpp"></span>
+                    </td>
+                    <td style="border:1px solid black;  text-align: center"><span id="tyHgOKrZsMJ-HOFS6i6eMIm"></span>
+                    </td>
+                    <td colspan="2" style="border:1px solid black;  text-align: center"><span id="tyHgOKrZsMJ"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="border:1px solid black; text-align: left">Total new child cases</td>
+                    <td style="border:1px solid black;  text-align: center"><span id="yMIaVLPC3P9"></span></td>
+                    <td style="border:1px solid black;  text-align: center"><span id="KrvdbP6bbQi"></span></td>
+                    <td style="border:1px solid black;  text-align: center"><span id="jlIUhdJMjY8"></span></td>
+                    <td style="border:1px solid black;  text-align: center"><span id="GuJBnVdikkv"></span></td>
+                    <td colspan="2" style="border:1px solid black;  text-align: center"><span id="urYvr4Vh9Js"></span>
+                    </td>
+                </tr>
+            </span>
+
+            <tr>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: left"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Female</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Male</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Gender Unknown</td>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: center"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black;  text-align: left">New cases by gender</td>
+                <td style="border:1px solid black;  text-align: center"><span id="xdbnQxRVTBq-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="coycFHeZ257-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="bpV1kODa6MB"></span></td>
+                <td style="border:1px solid black;  text-align: left">Proportion of females among new cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="KrvcvcTLqIh"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Grade-2
+                    disability (G2D)/visible deformity</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; background-color: #dce6f1; text-align: left"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Adult</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Child (< 15
+                        years)</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Age unknown</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Total</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">New cases with G2D</td>
+                <td style="border:1px solid black;  text-align: center"><span id="xl4EXfRMBrK-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="xl4EXfRMBrK-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="xl4EXfRMBrK-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="xl4EXfRMBrK"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black;  text-align: left">Proportion of G2D among new cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="j62SFyBOrSN"></span></td>
+                <td colspan="3" style="border:1px solid black;  text-align: left">G2D rate (per 1 000 000 population)
+                </td>
+                <td colspan="1" style="border:1px solid black;  text-align: center"><span id="v1Fr4On014j"></span></td>
+            </tr>
+            <tr>
+                <td rowspan="1" colspan="2" style="border:1px solid black; background-color: #dce6f1"></td>
+                <td rowspan="1" style="border:1px solid black; background-color: #dce6f1">Female</td>
+                <td style="border:1px solid black; background-color: #dce6f1">Male</td>
+                <td style="border:1px solid black; background-color: #dce6f1">Gender unknown</td>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black;  text-align: left"><strong>New cases with G2D by
+                        gender</strong></td>
+                <td style="border:1px solid black;  text-align: left"><span id="RcRolaLXGcw-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: left"><span id="k2P4B19IWxU-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: left"><span id="gswSRpIB0fN"></span></td>
+                <td style="border:1px solid black;  text-align: left">Proportion of new females cases with G2D</td>
+                <td colspan="1" style="border:1px solid black;  text-align: left"><span id="OnuKXV1i8Dt"></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">
+                    Non-autochthonous cases </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; background-color: #dce6f1; text-align: left"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Adult</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Child (< 15
+                    years)</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Age unknown</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Total</td>
+            </tr>
+            <tr>
+
+            <tr>
+                <td colspan="3" style="border:1px solid black;  text-align: left">New non-autochthonous cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="VGHGMWq9vSP-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: left"><span id="VGHGMWq9vSP-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: left"><span id="VGHGMWq9vSP-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: left"><span id="uwdXw08gtIj"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black;  text-align: left">Proportion of non-autochthonous among
+                    new cases</td>
+                <td colspan="4" style="border:1px solid black;  text-align: center"><span id="KmggYyaINdB"></span>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">
+                    Retreatment cases (during the reporting year)
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; background-color: #dce6f1; text-align: left"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Relapse</td>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: center">Treatment
+                    after loss
+                    to follow-up/transfer in cases</td>
+                <td colspan="1" style="border:1px solid black; background-color: #dce6f1; text-align: center">Total</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">MB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="VBEhMPsLu53-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="lhSRNgfsxYC-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black;  text-align: center"><span id="dNCXh6M60Vw"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">PB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="YVj2PYy0Slj-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="EHT4ON2ZtNl-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black;  text-align: center"><span id="nurKIGXhFri"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Unclassified cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="KJtRiyeoCGx-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="vp8pxtgYBL2-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black;  text-align: center"><span id="lfnCB7lDnJi"></span></td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Total retreatment cases</td>
+                <td colspan="1" style="border:1px solid black;  text-align: center"><span id="SSmKGrwFLyR"></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Cases on
+                    treatment at the end of reporting year (both new and retreatment cases)</td>
+            </tr>
+            <tr>
+                <td colspan="3" style=" border:1px solid black; background-color: #dce6f1; text-align: left"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Adult</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Child (< 15 years)</td>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: center">Total
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left"> MB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="bLR7YvL1f5O-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="bLR7YvL1f5O-ZZFiCRpT37i"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="mbCases"></span></td>
+                <!-- id='bLR7YvL1f5O' -->
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left"> PB cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="mdupOTsRJ58-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="mdupOTsRJ58-ZZFiCRpT37i"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="pbCases"></span></td>
+                <!-- id='mdupOTsRJ58' -->
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Unclassified</td>
+                <td style="border:1px solid black;  text-align: center"><span id="lzbsUQJvvJB-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="lzbsUQJvvJB-ZZFiCRpT37i"></span></td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="unclassified"></span></td>
+                <!-- id='lzbsUQJvvJB' -->
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Total cases registered for treatment
+                </td>
+                <td colspan="1" style="border:1px solid black;  text-align: center"><span id="YgvbZE63e8T"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Registered prevalence rate (per 1 000
+                    000 population)</td>
+                <td colspan="1" style="border:1px solid black;  text-align: center"><span id="sAXV6Hnve4i"></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Mode of detection - Contact examination</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid black; background-color: #dce6f1; text-align: left">Number of leprosy cases for whom contact examination was done (during the reporting year)</td>
+                <td colspan="4" style="border:1px solid black;"><span id="hSZe2MWeH3L-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: left"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Number of contacts
+                    enumerated/estimated</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Number of contacts
+                    examined</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Proportion examined
+                </td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">New cases detected
+                    among contacts
+                </td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Proportion among all
+                    new cases</td>
+            </tr>
+
+
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Family</td>
+                <td style="border:1px solid black;  text-align: center"><span id="qlSO0fiGXD2-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="cmco4MqWgCn-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="WnGgJGdoPMB"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="xtzT5aaPdCq-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="MDDYG2lsjZy"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Neighbourhood</td>
+                <td style="border:1px solid black;  text-align: center"><span id="F2MoZgKx6Lv-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="WXeGUvbB7zR-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="kmL7jlq8bHA"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="Y5OZLg0PC7G-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="pi66eHg6GOf"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Social</td>
+                <td style="border:1px solid black;  text-align: center"><span id="UuvQjDE9mQQ-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="e6rzuYpUtYS-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="WBsXJSZElyb"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="qhuJC0EPCB5-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="wtKuvHvG5XN"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Others/not specified</td>
+                <td style="border:1px solid black;  text-align: center"><span id="qHIGkVqSItK-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="GuZ5MKrfrBp-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="trqV4BI71xI"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="Xzuid5sSSg3-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="M2kzreZCnhv"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Total</td>
+                <td style="border:1px solid black;  text-align: center"><span id="xxp9i7CK8G6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="mATYKzuey2v"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="KnyHgBaHlBg"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="kVoU4b1i87k"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="LGd7Q6ZntcI"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; background-color: #dce6f1; text-align: center"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Adult</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Child (< 15
+                        years)</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Age unknown</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Total</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of contacts eligible for
+                    post-exposure prophylaxis</td>
+                <td style="border:1px solid black;  text-align: center"><span id="nglCc1zH1xy-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="nglCc1zH1xy-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="nglCc1zH1xy-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="nglCc1zH1xy"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of contacts administered
+                    post-exposure prophylaxis</td>
+                <td style="border:1px solid black;  text-align: center"><span id="JieOR30Sjnz-Te9RyzefSAz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="JieOR30Sjnz-ZZFiCRpT37i"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="JieOR30Sjnz-sdMU6tpPki6"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="JieOR30Sjnz"></span></td>
+            </tr>
+
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Other
+                    modes of case detection</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: center"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Number of contacts
+                    enumerated/estimated</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Number of contacts
+                    examined</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Proportion examined
+                </td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">New cases detected
+                    among those examined</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Proportion among all
+                    new cases</td>
+            </tr>
+
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">School survey</td>
+                <td style="border:1px solid black;  text-align: center"><span id="hcmT8KR85PW-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="zZcTJntCnMe-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="Zkf5ceFIHMi"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="lk5YKbM2SEu-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="w0DzxpCd0aq"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Active case detection campaigns (general population)</td>
+                <td style="border:1px solid black;  text-align: center"><span id="v7CDzOUjTE6-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="ztfAqeY7ruz-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="BaYDxDArnGF"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="NlyC1FwJWy9-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="JcTzoupKdtG"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Active case detection campaigns (special population group) (e.g., migrants, slum dwellers refugees, prison inmates)</td>
+                <td style="border:1px solid black;  text-align: center"><span id="g04IY5svOKO-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="FNTigvSTOVL-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="bIBNtoqBkTL"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="uhtjTobhtHO-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="RJcnYMtVxOS"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Total</td>
+                <td style="border:1px solid black;  text-align: center"><span id="gX3ZnpqATsE"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="y17XWZc0CAo"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="IFqxD0y8xS8"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="kVoU4b1i87k"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="RKe8Xmn7Bdb"></span></td>
+            </tr>
+
+
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Treatment
+                    outcome</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid black; text-align: left">New MB cases who started treatment in
+                    (two years before) <span id="twoYearGap"></span></td>
+                <td colspan="3" style="border:1px solid black;  text-align: center"><span
+                        id="VVBrsKiEqdh-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, how many completed treatment
+                    within 18 months?</td>
+                <td style="border:1px solid black;  text-align: center"><span id="TCJv5BNVYCw-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">MB treatment completion rate (%)</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="xWUvequQxeM"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, how many were 'loss to
+                    follow-up'?</td>
+                <td style="border:1px solid black;  text-align: center"><span id="bjLIfOy4KuR-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">MB loss to follow-up case rate (%)</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="y8GFUBw2dMD"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Number of MB cases assessed for
+                    disability grading at completion of treatment</td>
+                <td style="border:1px solid black;  text-align: center"><span id="whSNEteJUqY-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, number of cases with worsening
+                    of disability grading from G0 to G1 or G0 to G2 or G1 to G2</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="lX0xOxS9eLV-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid black; text-align: left">New PB cases who started treatment in
+                    (one year before) <span id="oneYearGap"></span></td>
+                <td colspan="3" style="border:1px solid black;  text-align: center"><span
+                        id="PFNL3BPu3A6-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, how many completed treatment
+                    within 9 months?</td>
+                <td style="border:1px solid black;  text-align: center"><span id="t5AmFhGyKw9-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">PB treatment completion rate (%)</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="PQCJ1jNYVMU"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, how many were 'loss to
+                    follow-up'?</td>
+                <td style="border:1px solid black;  text-align: center"><span id="IW3BXD1xO0E-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">PB loss to follow-up case rate (%)</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span id="jAPR6lkkBBH"></span></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border:1px solid black; text-align: left">Number of PB cases assessed for
+                    disability grading at completion of treatment</td>
+                <td style="border:1px solid black;  text-align: center"><span id="m3Ri2WLjD2X-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">Of them, number of cases with worsening
+                    of diability grading from G0 to G1 or G0 to G2 or G1 to G2</td>
+                <td colspan="2" style="border:1px solid black;  text-align: center"><span
+                        id="gK6hEAvQrtb-HllvX50cXC0"></span></td>
+            </tr>
+
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Lepra
+                    reaction - Type 1
+                    (Reversal reaction) and Type 2 (ENL reaction)</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid black; background-color: #dce6f1; text-align: center"></td>
+                <td colspan="1" style="border:1px solid black; background-color: #dce6f1; text-align: center">MB</td>
+                <td colspan="1" style="border:1px solid black; background-color: #dce6f1; text-align: center">PB</td>
+                <td colspan="1" style="border:1px solid black; background-color: #dce6f1; text-align: center">Total</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid black; text-align: left">Number of cases diagnosed with Type 1
+                    reaction (during the reporting year)</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="KABaJ7eFDLb-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="mPrCvcc0Dxt-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span id="UXbyOqpRzfR"></span></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid black; text-align: left">Number of cases diagnosed with Type 2
+                    reaction (during the reporting year)</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="gUQ9nYmXlsB-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="BvcLwHp7Nnt-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span id="N1LLcjiou4k"></span></td>
+            </tr>
+
+            <tr>
+                <td colspan="3" rowspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: left">
+                    Adverse drug reactions (during the reporting year)</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Dapsone</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Rifampicin</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Clofazimine</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Total</td>
+            </tr>
+            <tr>
+                <td rowspan="1" style="border:1px solid black;  text-align: center"><span
+                        id="KKNyMmqR1un-m0vZJMmHelg"></span></td>
+                <td rowspan="1" style="border:1px solid black;  text-align: center"><span
+                        id="KKNyMmqR1un-GVcPtC2klm0"></span></td>
+                <td rowspan="1" style="border:1px solid black;  text-align: center"><span
+                        id="KKNyMmqR1un-P98hQY3LVzh"></span></td>
+                <td rowspan="1" style="border:1px solid black;  text-align: center"><span id="KKNyMmqR1un"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">
+                    Antimicrobial resistance surveillance</td>
+            </tr>
+
+
+            <tr>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: center"></td>
+                <td colspan="3" style="border:1px solid black; background-color: #dce6f1; text-align: center">Number of
+                    cases with resistance to one drug
+                </td>
+                <td colspan="2" style="border:1px solid black; background-color: #dce6f1; text-align: center">Number of
+                    cases with resistance to 2 or more drugs
+                </td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Number of cases tested
+                </td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Rifampicin</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Dapsone</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Ofloxacin</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Rifampicin and Dapsone
+                </td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Rifampicin and
+                    Ofloxacin</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: left">Relapse/other
+                    retreatment cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="JK1VCsNhg6x-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="sgdAybfDzTl-oSHl2cUvHmk"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="sgdAybfDzTl-qqJwrOzkzcz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="sgdAybfDzTl-G0EY8ZnkmVI"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="doyMvQWxmOJ-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="ej7YYjvhLmR-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: left">New cases</td>
+                <td style="border:1px solid black;  text-align: center"><span id="MJGjCnCK8qJ-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="CAwisvSGkaj-oSHl2cUvHmk"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="CAwisvSGkaj-qqJwrOzkzcz"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="CAwisvSGkaj-G0EY8ZnkmVI"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="XAQepu1Zi18-HllvX50cXC0"></span></td>
+                <td style="border:1px solid black;  text-align: center"><span id="DAs6FtLcYz1-HllvX50cXC0"></span></td>
+            </tr>
+
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Care and
+                    support</td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Are there any active laws/policies in the country that allow discrimination against persons affected by leprosy
+                </td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="fF0EAM2O8w2-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Number of
+                    active laws/policies in the country that allow discrimination against persons affected by leprosy
+                </td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="fWOu6CXWmYj-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Please upload list of laws/policies in
+                    the country that allow discrimination against persons affected by leprosy (Word/PDF format)
+                </td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span id=""></span></td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Are there any instances of
+                    discrimination reported against persons affected by leprosy?
+                </td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="Qa4rlLyS1BI-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Number of
+                    instances of discrimination reported against persons affected by leprosy</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="kISRp1zDJ1o-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border:1px solid black; text-align: left">Number of
+                    health facilities providing leprosy services</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="JeewVif7Qzp-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of health facilities with
+                    trained personnel for counselling services</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="pLZpRkMZWLH-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">Proportion of health facilities with
+                    trained personnel for counselling services</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span id="aZyjREvHyxV"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; background-color: #dce6f1; text-align: center"></td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Ulcer care</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Physiotherapy</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Assistive technology
+                    devices</td>
+                <td style="border:1px solid black; background-color: #dce6f1; text-align: center">Reconstructive surgery
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of
+                    health facilities providing disability care for persons affected by leprosy</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="tLDXtC3M2Wb-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="qLjY1H04rz5-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="kYhH6RKnKaW-HllvX50cXC0"></span> </td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="mivRLJvsrCN-HllvX50cXC0"></span> </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of disability care services
+                    provided for persons affected by leprosy (during the reporting year)</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="WnksIAR4HHE-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="dl2Ykn3f9A5-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="DDP7WHn3xBq-HllvX50cXC0"></span></td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="XnhnouZQIZD-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="7" style="border:1px solid black; background-color: #dce6f1; text-align: center">Programme
+                    management</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Availability
+                    of digital reporting system</td>
+                <td colspan="4" style="border:1px solid black; text-align: center"><span
+                        id="qGsRWxnlgnp-HllvX50cXC0"></span></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of
+                    second sub-national level units (district/island/municipality) in the country</td>
+                <td colspan="4" style="border:1px solid black; text-align: center"><span
+                        id="vbVx5GUmxU5-HllvX50cXC0"></span> </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="border:1px solid black; text-align: left">Number of
+                    second sub-national level units (district/island/municipality) where persons affected by leprosy are
+                    involved in
+                    microplanning of leprosy programme</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"><span
+                        id="NXvBmgzF1tS-HllvX50cXC0"></span></td>
+                <td colspan="2" style="border:1px solid black; text-align: left">Proportion
+                    of second sub-national level units (district/island/municipality) where persons affected by leprosy
+                    are involved
+                    in planning of leprosy programme</td>
+                <td colspan="1" style="border:1px solid black; text-align: center"> <span id="y9ms1YNITLj"></span> </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+
+</script>
+<!-- Main Script -->
+<script type="text/javascript">
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var selectedOrgUnitHierarchy = dhis2.report.organisationUnitHierarchy;
+    var period = dhis2.report.periods[0];
+    var tempYear1 = parseInt(period) - 1;
+    var tempYear2 = parseInt(period) - 2;
+    document.getElementById("selectedYear").innerHTML = period;
+    document.getElementById("twoYearGap").innerHTML = tempYear2;
+    document.getElementById("oneYearGap").innerHTML = tempYear1;
+    let indiID = ['AtNoefpDtZw', 'y9ms1YNITLj', 'xl4EXfRMBrK', 'IQgrP2W9gTV', 'gVmFx873rdZ', 'evXyDr6c7eu', 'trqV4BI71xI', 'KrvcvcTLqIh', 'ElAjdwOrjMq', 'FL4rv8fIiD7', 'SsZP6Izyhay', 'nurKIGXhFri',
+        'C6xcdI95huJ', 'lfnCB7lDnJi', 'PQCJ1jNYVMU', 'BaYDxDArnGF', 'OnuKXV1i8Dt', 'sAXV6Hnve4i', 'v1Fr4On014j', 'KmggYyaINdB', 'PS9m9ERoPaj', 'GuJBnVdikkv', 'gswSRpIB0fN',
+        'YgvbZE63e8T', 'RJcnYMtVxOS', 'gX3ZnpqATsE', 'y17XWZc0CAo', 'IFqxD0y8xS8', 'kVoU4b1i87k', 'RKe8Xmn7Bdb', 'd9Dm9xRxHRr', 'PS9m9ERoPaj', 'Y4eTdQ03CZF', 'gY7b9azcUQG', 'y8GFUBw2dMD', 'j62SFyBOrSN', 'JcTzoupKdtG', 'jAPR6lkkBBH', 'w0DzxpCd0aq', 'M2kzreZCnhv', 'dNCXh6M60Vw', 'xWUvequQxeM',
+        'SSmKGrwFLyR', 'yMIaVLPC3P9', 'bpV1kODa6MB', 'MiHLzmsVFPf', 'ubgNtdy3h9H', 'tyHgOKrZsMJ', 'KrvdbP6bbQi', 'jlIUhdJMjY8', 'urYvr4Vh9Js', 'MDDYG2lsjZy', 'pi66eHg6GOf', 'wtKuvHvG5XN', 'LGd7Q6ZntcI',
+        'nglCc1zH1xy', 'JieOR30Sjnz', 'UXbyOqpRzfR', 'N1LLcjiou4k', 'KKNyMmqR1un', 'aZyjREvHyxV', 'WnGgJGdoPMB', 'kmL7jlq8bHA', 'WBsXJSZElyb', 'xxp9i7CK8G6', 'mATYKzuey2v', 'KnyHgBaHlBg', 'kVoU4b1i87k',
+        'Zkf5ceFIHMi', 'bIBNtoqBkTL'
+
+    ]
+    indiID.forEach(element => {
+        document.getElementById(element).innerHTML = 0;
+    })
+    if (selectedOrgUnitHierarchy.length >= 2) document.getElementById('selected-ParentOrgUnit').innerHTML = `: ${selectedOrgUnitHierarchy[1].name}`;
+    document.getElementById('selected-orgUnit').innerHTML = `: ${selectedOrgUnit.name}`
+
+    $.ajax(
+        {
+            type: "GET",
+            async: false,
+            url: "../api/29/analytics.json?dimension=pe:" + period + "&dimension=dx:" + indiID.join(';') + "&dimension=ou:" + selectedOrgUnit.id + "&dataSetID = m4H&displayProperty=NAME&outputIdScheme=UID",
+            data: JSON,
+            success: function (data, status) {
+                data.rows.forEach(element => {
+                    document.getElementById(element[0]).innerHTML = Number(element[3])
+                });
+            }
+        });
+
+
+
+    console.trace("checking============")
+
+
+
+
+
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: `../api/dataValueSets.json?dataSet=m4Hy2QZbW9p&orgUnit=${selectedOrgUnit.id}&period=${period}&skipMeta=true&paging=false`,
+        data: JSON,
+        success: function (response, status) {
+            let sum1 = 0, sum2 = 0, sum3 = 0;
+            response.dataValues.forEach(element => {
+                if (((element.dataElement + "-" + element.categoryOptionCombo == "bLR7YvL1f5O-Te9RyzefSAz") || (element.dataElement + "-" + element.categoryOptionCombo == "bLR7YvL1f5O-ZZFiCRpT37i"))) {
+                    sum1 += Number(element.value)
+                    document.getElementById("mbCases").innerHTML = sum1
+                }
+                if ((element.dataElement == "mdupOTsRJ58" && element.categoryOptionCombo == "Te9RyzefSAz") || ((element.dataElement == "mdupOTsRJ58" && element.categoryOptionCombo == "ZZFiCRpT37i"))) {
+                    sum2 += Number(element.value)
+                    document.getElementById("pbCases").innerHTML = sum2
+                }
+                if ((element.dataElement == "lzbsUQJvvJB" && element.categoryOptionCombo == "Te9RyzefSAz") || ((element.dataElement == "lzbsUQJvvJB" && element.categoryOptionCombo == "ZZFiCRpT37i"))) {
+                    sum3 += Number(element.value)
+                    document.getElementById("unclassified").innerHTML = sum3
+                }
+                if (document.getElementById(element.dataElement + "-" + element.categoryOptionCombo)) {
+                    if (element.value === 'true') {
+                        element.value = 'Yes'
+                    } else if (element.value === 'false') {
+                        element.value = 'No'
+                    }
+                    document.getElementById(element.dataElement + "-" + element.categoryOptionCombo).innerHTML = element.value
+                }
+
+
+
+            })
+        }
+    });
+
+
+</script>
