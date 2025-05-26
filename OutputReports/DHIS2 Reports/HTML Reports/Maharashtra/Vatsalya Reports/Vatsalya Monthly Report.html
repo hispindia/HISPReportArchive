@@ -1,0 +1,550 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<script type="text/javascript"
+    src="http://gc.kes.v2.scr.kaspersky-labs.com/7EA5E9BB-55E1-4C31-9C21-4943DDFED2E4/main.js?attr=V9L8Gj_5iruZkhpSWCwNnilmpBxPUa3rfxv37AE_FLYdA6Qb07CSAqshGCoxL3HiBucmZvFwW09XIYHAROro3nLLcl6-nPKyb83sI1bWSzs"
+    charset="UTF-8"></script>
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Vatsalya Monthly Report', 'Vatsalya Monthly Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-left" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse">
+            <thead id="table-head" style="background-color: #fcdcdc;">
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    document.getElementsByClassName("hideInPrint")["0"].style.display = "none"
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+
+    var startDate = location.href.split("&sd=")["1"]?.slice(0, 10);
+    var endDate = location.href.split("&ed=")["1"]?.slice(0, 10);
+    var monthArr = [startDate, endDate]
+
+    if (new Date(startDate) > new Date(endDate) && !startDate && !endDate) {
+        alert("Please select  dates correctly");
+    } else {
+        document.getElementById("table-body").innerHTML = "";
+        $('#loader').show();
+        setTimeout(function () {
+            getData(monthArr);
+        }, 1000);
+
+    }
+
+    console.log('******************************************')
+
+    function getData(smToem) {
+
+        var dataElementIds = [
+            "",
+            "TfSxwo4mNcP",
+            "MsYz6Sk8jUP",
+            "FGISkGPUURs",
+            "RvRojLFE9UM",
+            "FE7yn8jB9kc",
+            "",
+            "MOLlfrsDw2Y",
+            "m0xLrcSZi8P",
+            "cLZSJcnvCBf",
+            "d1cLI4DhQAH",
+            "AOMRVXxgUW0",
+            "nxOvvkwkc31",
+            "gocXwX52Qkh",
+            "xcuU9iTbpCn",
+            "IThVHggxqWl",
+            "x8HbM1KyofU",
+            "tGO67DUOMhR",
+            "tD8Y4VGvkyu",
+            "Uav31upsisH",
+            "mZPvZLBIJfW",
+            "eWOwPHUA3Z2",
+            "KCTTY4JFWAW",
+            "UyqYkZ9Zsi9",
+            "",
+            "tr5y6dEbKo3",
+            "w1fMaXXmhFU",
+            "hsZaTCwbCyo",
+            "ypv8s7nBxxW",
+            "",
+            "TgOzKxO7WBo",
+            "GPnfzyt06VQ",
+            "p30Q6mbYvRA",
+            "BmWviiy4n4Y",
+            "HIwWxXCzMLw",
+            "JUJ4TVmXgRE",
+            "bEVs6Z0yGwk",
+            "uuUVc4W0282",
+            "vZPf0A1zZcp",
+            "ViO17E0wTTd",
+            "g21IUh3sxgC",
+            "",
+            "juzUtNhtese",
+            "kNqfMo27dUO",
+            "qre1Tu7N1Qg",
+            "",
+            "DGkFnG9WT1F",
+            "jZOLWqhoF7m",
+            "a0Hbdj23XJj",
+            "KcwAwvP1HXe",
+            "xGb5czNK0NP",
+            "SFwlT7yOXpx",
+            "vTZaBg94m13",
+            "K3rYVTYTL6i",
+            "ANOm8xi2Amu",
+            "niMx1OLWkdp",
+            "zVhMjyJltA3",
+            "S6hqiDKX30Q",
+            "AgeEZY61bhD",
+            "U7hOw4M5grA",
+            "", 
+            "vhFCYRvMRkB",
+            "EdgeXqAadJn",
+            "KcHSRs6P5WE",
+            "VhZ802evZNN",
+            "Lay2U54i1cK",
+            "fwna9dbf2mo",
+            "Az50Mu5DEsQ",
+            "eWOwPHUA3Z2",
+            "ZAVEwPpWvxN",
+            "hRHLKDfAxoN",
+            "dWbNApwVhU0",
+            "M1FgbSqhi7E",
+            "MbKsbf8ei8C",
+            "qGXHc5QlWKW",
+            "jaxOL7C1u7a",
+            "wk6IFQa0wka",
+            "WfLWr9qzDfs",
+            "XmwDHlvIys4",
+            "sGKALF9Kl3H",
+            "SQSfcONLxoo",
+            "dNPRvptbKC3",
+            "RS0ZFAsHLRt",
+            "QUc4rXsImTg"
+
+        ];
+
+        var financialYear = [];
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+
+                    if (j < 4) {
+                        if (!financialYear.includes((i - 1) + "April")) {
+                            financialYear.push((i - 1) + "April");
+                        }
+                    }
+                    else {
+                        if (!financialYear.includes(i + "April")) financialYear.push(i + "April");
+                    }
+
+                }
+            }
+
+            return arr;
+        }
+        //getting between dates
+        var smToEm = getBetweenDates(monthArr["0"], monthArr["1"]);
+
+        $.when(
+            $.get("../api/organisationUnitGroups/CXswpFTMKVB.json?paging=false&fields=id,name,organisationUnits[id,name,path]"),
+            $.get("../api/organisationUnitGroups/LzDGwjcCNbD.json?paging=false&fields=id,name,organisationUnits[id,name,path]"),
+            $.get("../api/organisationUnitGroups/M8aNrEBmf4K.json?paging=false&fields=id,name,organisationUnits[id,name,path]"),
+
+        ).done(function (districtGroup, phcGroup, uphcGroup) {
+            var organisationUnits = [];
+            if (selectedOrgUnit.id == "b3vBdsycgAD") {
+                organisationUnits = districtGroup[0].organisationUnits;
+                organisationUnits = organisationUnits.sort((a, b) => a.name.localeCompare(b.name));
+            }
+            else {
+                if (phcGroup[0].organisationUnits.find(ou => ou.id == selectedOrgUnit.id) || uphcGroup[0].organisationUnits.find(ou => ou.id == selectedOrgUnit.id)) organisationUnits = [selectedOrgUnit];
+                else {
+                    organisationUnits = phcGroup[0].organisationUnits.filter(orgUnit => orgUnit.path.includes(selectedOrgUnit.id));
+                    organisationUnits = [...organisationUnits, ...uphcGroup[0].organisationUnits.filter(orgUnit => orgUnit.path.includes(selectedOrgUnit.id))];
+                    organisationUnits = organisationUnits.sort((a, b) => a.name.localeCompare(b.name));
+                }
+            }
+            const urls = [
+                `http://49.50.93.64/mh/api/26/analytics.json?dimension=dx:UyqYkZ9Zsi9;tr5y6dEbKo3;w1fMaXXmhFU;hsZaTCwbCyo;ypv8s7nBxxW;TgOzKxO7WBo;GPnfzyt06VQ;p30Q6mbYvRA;BmWviiy4n4Y;HIwWxXCzMLw;JUJ4TVmXgRE;bEVs6Z0yGwk;uuUVc4W0282;vZPf0A1zZcp;ViO17E0wTTd&dimension=ou:${organisationUnits.map(ou => ou.id).join(';')};&filter=pe:${smToEm.join(';')}&displayProperty=NAME&outputIdScheme=UID`,
+                `http://49.50.93.64/mh/api/26/analytics.json?dimension=dx:g21IUh3sxgC;juzUtNhtese;kNqfMo27dUO;qre1Tu7N1Qg;DGkFnG9WT1F;jZOLWqhoF7m;a0Hbdj23XJj;KcwAwvP1HXe;xGb5czNK0NP;SFwlT7yOXpx;vTZaBg94m13;K3rYVTYTL6i;ANOm8xi2Amu;niMx1OLWkdp;zVhMjyJltA3;S6hqiDKX30Q;AgeEZY61bhD;U7hOw4M5grA;vhFCYRvMRkB;EdgeXqAadJn;KcHSRs6P5WE;VhZ802evZNN;Lay2U54i1cK;fwna9dbf2mo;Az50Mu5DEsQ;eWOwPHUA3Z2;ZAVEwPpWvxN;hRHLKDfAxoN;dWbNApwVhU0;M1FgbSqhi7E;MbKsbf8ei8C;qGXHc5QlWKW;jaxOL7C1u7a;wk6IFQa0wka;WfLWr9qzDfs;XmwDHlvIys4;sGKALF9Kl3H;SQSfcONLxoo;dNPRvptbKC3;RS0ZFAsHLRt;QUc4rXsImTg&dimension=ou:${organisationUnits.map(ou => ou.id).join(';')};&filter=pe:${smToEm.join(';')}&displayProperty=NAME&outputIdScheme=UID`,
+                `http://49.50.93.64/mh/api/26/analytics.json?dimension=dx:TfSxwo4mNcP;MsYz6Sk8jUP;FGISkGPUURs;RvRojLFE9UM;FE7yn8jB9kc;MOLlfrsDw2Y;m0xLrcSZi8P;cLZSJcnvCBf;d1cLI4DhQAH;AOMRVXxgUW0;nxOvvkwkc31;gocXwX52Qkh;xcuU9iTbpCn;IThVHggxqWl;x8HbM1KyofU;tGO67DUOMhR;tD8Y4VGvkyu;Uav31upsisH;mZPvZLBIJfW;eWOwPHUA3Z2;KCTTY4JFWAW&dimension=ou:${organisationUnits.map(ou => ou.id).join(';')};&filter=pe:${smToEm.join(';')}&displayProperty=NAME&outputIdScheme=UID`
+            ];
+
+            async function fetchAllData() {
+                const dataValues = {};
+
+                try {
+                    const responses = await Promise.all(urls.map(url => fetch(url)));
+                    const allData = await Promise.all(responses.map(res => res.json()));
+
+                    // Build the dataValues object
+                    allData.forEach(data => {
+                        data.rows.forEach(row => {
+                            if (!dataValues[row[0]]) dataValues[row[0]] = {};
+    if (!dataValues[row[0]][row[1]]) dataValues[row[0]][row[1]] = { total: 0 };
+    dataValues[row[0]][row[1]]['total'] += Number(row[2]); 
+                        });
+                    });
+
+                    console.log("Combined dataValues:", dataValues);
+
+
+
+                    var tableHead = `
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: #6a6a2d;font-size:20px; color:white; text-align: left;"
+                        colspan="${(organisationUnits.length + 3)}"> Vatsalya Monthly Report</th>
+                </tr>
+                <tr>
+                    <th style="font-weight:400; border-bottom:1px solid white; background: #6a6a2d;font-size:20px; color:white; text-align: left;"
+                        colspan="${(organisationUnits.length + 3)}">
+                        Facility Name: ${selectedOrgUnit.name} <br/>
+                        Period: ${months[startDate.split("-")["1"] - 1] + " " + startDate.split("-")["0"] + " to " + months[endDate.split("-")["1"] - 1] + " " + endDate.split("-")["0"]}
+                    </th>
+                </tr>
+                <tr>
+                    <th style="border: 1px solid black; background:#ffffcc; font-weight: 700;">
+                        S.No.</th>
+                    <th style="border: 1px solid black; background:#ffffcc;  font-weight: 600;">
+                        Data Elements</th>`
+                    organisationUnits.forEach(ou => tableHead += `<th style="border: 1px solid black; background:#ffffcc; text-align: center; font-weight: 600;">
+                        ${ou.name}</th>`
+                    )
+                    tableHead += '<th style="border: 1px solid black; text-align: center; font-weight: 600;">Total</th></tr>'
+                    document.getElementById('table-head').innerHTML = tableHead;
+
+                    var dataElementHead = [
+                        'Services in Preconception Period(pre-pregnancy period) in the reporting month',
+                        'High Risk Identification under Preconception Period in the reporting month (out of 1.5)',
+                        'BMI status of registered women in the reporting month',
+                        'Services for women under Vatsalya Program in the reporting month',
+                        'Camps under Vatsalya Program in the reporting month',
+                        'Delivery Outcome among registered women under Vatsalya Preconception Care',
+                        'Services for All Children under 2 years of age (for all children in the health facility) in reporting month',
+
+                    ]
+                    var dataElementName = [
+                        '',
+                        'Number of Newly identified Eligible Couples (E.C)',
+                        'Total number of Eligible couples (new + old)',
+                        'Number of unprotected eligible couples registered for Preconception care (those who want to conceive a pregnancy)',
+                        'Number of protected eligible couples registered for Preconception care (those who want to conceive a pregnancy)',
+                        'Total Number of E.C who wants to conceive (among unprotected and protected E.C)',
+                        '',
+                        'Number of registered women tested for Hb in the current month(out of 1.5)',
+                        'Out of the total tested, the number of women diagnosed with moderate anemia (8 to 11 gm%) in the current month',
+                        'Total number of women with moderate anemia (8 to 11 gm%) completely treated in the current month',
+                        'Out of total tested, number of women diagnosed with severe anemia (Hb less than 8 gm%) in the current month',
+                        'Total number of women with severe anemia (less than 8 gm%) completely treated in the current month',
+                        'Number of women corrected anemia among both moderate (8 to 11 gm%) & severe anemia (Hb less than 8 gm%) after treatment in the current month',
+                        'Number of registered women who have any tobacco/alcohol addiction in the current month',
+                        'Number of previously registered women stopped consuming tobacco and alcohol in the current month',
+                        'Number of registered women who are diagnosed with RTI/STI',
+                        'Number of women with STI/RTI completely treated in the current month',
+                        'Number of registered women who are diagnosed with Hypothyroidism',
+                        'Number of registered women who are diagnosed with Diabetes Mellitus',
+                        'Number of registered women who are diagnosed with Hypertension',
+                        'Number of registered women who are diagnosed with Hemoglobinopathies',
+                        'Number of registered women who are diagnosed for Heart disease',
+                        'Number of registered women identified with other high-risk factors (kidney disease, epilepsy, TB, Cancer, HIV, other chronic disease)',
+                        'Number of women diagnosed with chronic medical conditions receiving care from a specialist',
+                        '',
+                        'Out of total registered women, number of women with BMI less than 18.5 (new cases only)',
+                        'Number of previously registered women identified with low BMI (less than 18.5) who achieved normal BMI in the current month ',
+                        'Out of total registered women, number of women with BMI more than or equal to 25.0 (new cases only)',
+                        'Number of previously registered women identified with High BMI (>=25) who achieved normal BMI in the current month ',
+                        '',
+                        'Number of newly identified married women registered  below 19 years ',
+                        'Out of above, 19 years married women who are using any contraceptive method',
+                        'Number of married women below 19 years who become pregnant ',
+                        'Total Number of registered Eligible Couples under Vatsalya program who are using contraceptive method for delaying pregnancy',
+                        'Number of women who received behavior change counseling for general health and pregnancy',
+                        'Number of identified women willing for pregnancy in next 4 months in the current month',
+                        'Out of above number of women willing for pregnancy started with folic acid in the current month',
+                        'Number of Vatsalya registered women given folic acid supplementation for the complete 90 days before conception in the current month',
+                        'Number of EC conceived (become pregnant) in the current month',
+                        'Out of the above ANC who registered within 12 weeks of pregnancy',
+                        'No. of Women registered in Vatsalya program gained 10-12 kg weight during pregnancy in the current month',
+                        '',
+                        'Total number of sessions/camps conducted at village level ',
+                        'Total number of sessions/camps conducted at SC level ',
+                        'Total number of sessions/camps conducted at PHC/UPHC level',
+                        '',
+                        'Total number of institutional deliveries (only among registered women under Vatsalya preconception care) ',
+                        'Total number of home deliveries (only among registered women under Vatsalya preconception care)',
+                        'Total number of live births (Among Vatsalya Delivery)',
+                        'Total number of abortions (Among Vatsalya Pregnancy)',
+                        'Number of stillbirths (fresh+macerated) (Among Vatsalya Delivery)',
+                        'Number of babies given Breast Crawl at Birth at facility (Among Vatsalya Delivery)',
+                        'Number of babies given breastfeed within one hour after birth (Among Vatsalya Delivery)',
+                        'Number of  pre term deliveries ( < 37 weeks of pregnancy)  (Among Vatsalya Delivery)',
+                        'Number of maternal deaths (Among Vatsalya Pregnancy)',
+                        'Number of  baby born with any birth defect against total live births (Among Vatsalya Delivery)',
+                        'Number of newborns having birth weight less than 2.5 kg (Among Vatsalya Delivery)',
+                        'Out of the above, newborns with birth weight less than 1800 gms (Among Vatsalya Delivery)',
+                        'Number of newborn with weight less than 1800 gms admitted to SNCU/NICU  (Among Vatsalya Delivery)',
+                        'Number of LBW babies who received KMC in health facility in the current month  (Among Vatsalya Delivery)',
+                        '',
+                        'Number of LBW babies born in the current month',
+                        'Number of LBW babies received KMC at Home (atleast 8 hours per day) in the current month',
+                        'Number of LBWs (less than 2.5 kg) received Vitamin D dose in the current month',
+                        'Total number of children completed 6 months in the current month',
+                        'Out of above children exclusively breastfed till 6 months',
+                        'Number of children initiated complementary feeding after completion of 6 months                 (out of 7.3.1)',
+                        'Number of high-risk Children identified in HBNC by ASHA"s',
+                        'Number of high-risk children under HBNC completely treated (at facility/at home level)',
+                        'Number of 0-2 month newborns identified with Sepsis / PSBI (Possible Serious Bacterial Infection) inthe  community ',
+                        'Number of 0-2 months old newborns with Sepsis/PSBI given pre-referral dose before referral',
+                        'Number of 0-2 months old newborns with Sepsis/PSBI who denied referral, completely treated at home',
+                        'Number of 0-2 months old newborn with Sepsis/PSBI completely treated at facility ( OPD / IPD  level)',
+                        'Number of 0-2 months old newborns with Sepsis/PSBI who denied referral, completely treated at home',
+                        'Number of 0-2 months old newborn with Sepsis/PSBI completely treated at facility ( OPD / IPD  level)',
+                        'Number of 2- 59 months old children identified with Pneumonia in the community',
+                        'Number of 2 - 59 months old children with Sepsis/PSBI given pre-referral dose before referral',
+                        'Number of 2- 59 months old children with Pneumonia completely treated at a facility ( OPD / IPD  level)',
+                        'Number of 2- 59 months old children with Pneumonia who denied referral and were completely treated at home',
+                        'Number of High-Risk Children identified in HBYC by ASHA"s',
+                        'Number of children (up to 2 years) examined by CHO / MO / ANM at village level',
+                        'Number of children under 6 months identified as SAM by CHO/MO/ANM',
+                        'Number of  6 months - 2 years of age children identified as SAM by CHO / MO / ANM',
+                        'Number of children with developmental delay referred to DEIC',
+                        'Number of children who received Penta 1 within 14 weeks after birth in a month'
+
+                    ]
+
+                    var tableBody = '';
+                    var count = 0;
+                    var sno = 0;
+                    var snoIndex = 1;
+                    // var totals = [];
+
+                    dataElementIds.forEach((de, index) => {
+                        var rowWiseCount = 0;
+
+                        if (!de) {
+                            sno++;
+                            snoIndex = 1;
+                            tableBody += `<tr><td style="background-color: #fcdcdc;">${sno}</td>
+                    <td colspan="${organisationUnits.length + 2}" style="background-color: #fcdcdc;">${dataElementHead[count++]}</td></tr>`;
+                        } else {
+                            var collectiveData = `<tr>
+                    <td rowspan="1">${sno}.${snoIndex++}</td>
+                    <td rowspan="1">${dataElementName[index]}</td>`
+
+                            organisationUnits.forEach((ou, index) => {
+                                rowWiseCount += Number(dataValues[de] && dataValues[de][ou.id] ? dataValues[de][ou.id]['total'] : '')
+
+                                collectiveData += `<td style="text-align: center;">${dataValues[de] && dataValues[de][ou.id] ? dataValues[de][ou.id]['total'] : ''}</td>`
+                                // if (!totals[index]) totals[index] = 0;
+                                // totals[index] += dataValues[de] && dataValues[de][ou.id] ? dataValues[de][ou.id]['total'] : 0;
+                            })
+                            collectiveData += `<td style="text-align: center;">${rowWiseCount}</th></tr>`;
+                            tableBody += collectiveData;
+
+                            // var progressive = `
+                            // <tr>`
+                            //     // <td>Progressive</td>
+                            //     organisationUnits.forEach((ou,index) => {
+                            //         progressive += `<td style="text-align: center;">${dataValues[de] && dataValues[de][ou.id] ?  dataValues[de][ou.id]['progressive']: ''}</td>`
+                            //         if(!totals['progressive'][index]) totals['progressive'][index] = 0;
+                            //         totals['progressive'][index] += dataValues[de] && dataValues[de][ou.id] ?  dataValues[de][ou.id]['progressive']: 0;
+                            //     })
+                            // progressive += `</tr>`;
+                            // tableBody += progressive;
+
+                        }
+                    })
+
+                    // tableBody += `<tr><td rowspan="2" colspan="2" style="background:#f2f2f2; text-align: center; font-weight: 600;">Total</td>`
+                    // <td style="background:#f2f2f2; text-align: center; font-weight: 600;">Monthly</td>
+
+                    // totals.forEach(val => tableBody += `<td style="background:#f2f2f2; text-align: center; font-weight: 600;">${val}</td>`)
+                    // tableBody+='</tr>'
+
+                    // tableBody += `</tr>`
+                    // totals.forEach(val => tableBody += `<td style="background:#f2f2f2; text-align: center; font-weight: 600;">${val}</td>`)
+                    // tableBody += `</tr>`;
+
+                    document.getElementById('table-body').innerHTML = tableBody;
+                    document.getElementById('loader').style.display = 'none';
+                    console.log("dataElementIds:", dataElementIds);
+                    console.log("dataValues:", dataValues);
+                    console.log("organisationUnits:", organisationUnits);
+
+                    console.log("Final dataElementIds:", dataElementIds);
+                    console.log("Final dataElementName:", dataElementName);
+                    console.log("Final dataValues:", dataValues);
+                    console.log("Final organisationUnits:", organisationUnits);
+                    console.log("Generated tableBody:", tableBody.slice(0, 500)); // Preview first 500 chars
+                    console.log("Table body element:", document.getElementById('table-body'));
+
+
+
+                }
+
+                catch (err) {
+                    console.error("Error fetching analytics data:", err);
+                }
+            }
+            fetchAllData();
+        });
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
