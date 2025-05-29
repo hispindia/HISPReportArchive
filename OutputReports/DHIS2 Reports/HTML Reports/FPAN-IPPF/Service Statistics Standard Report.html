@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <style>
+        #btnExport {
+            transition: background 0.3s, color 0.3s;
+        }
+
+        #btnExport:hover {
+            background: #218838;
+            color: #fff;
+        }
+    </style>
+
+</head>
+
+<body>
+    <a id="dlink" style="display:none"></a>
+    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px;">
+        <button type="button" class="btn btn-success btn-sm" id="btnExport"
+            onclick="tableToExcel('table-data', 'Service Statistics Standard Report', 'Service Statistics Standard Report.xls')">
+            <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>
+            Download As Excel
+        </button>
+    </div>
+    <div id="loader" style="display:none; text-align:center; margin: 30px;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div>Loading data, please wait...</div>
+    </div>
+
+    <table id="table-data">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+
+        const selectedOrgUnit = dhis2.report.organisationUnit.id;
+        const selectedPeriod = dhis2.report.periods;
+
+        //Download btn 
+        var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,'
+                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+            return function (table, name, filename) {
+                if (!table.nodeType) table = document.getElementById(table)
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+                document.getElementById("dlink").href = uri + base64(format(template, ctx));
+                document.getElementById("dlink").download = filename;
+                document.getElementById("dlink").click();
+            }
+        })()
+
+        function createSubtotalRow(label, tableRows, columnCount) {
+            // Initializing totals
+            const totals = Array(columnCount).fill(0);
+
+            // Sum each column
+            tableRows.forEach(row => {
+                for (let i = 0; i < columnCount; i++) {
+                    const val = Number(row[i]) || 0;
+                    totals[i] += val;
+                }
+            });
+
+            // Build HTML row
+            let subtotalRow = `<tr style="background-color:#83CCEB"><th>${label}</th>`;
+            totals.forEach(total => {
+                subtotalRow += `<th>${total}</th>`;
+            });
+            subtotalRow += `</tr>`;
+            return subtotalRow;
+        }
+
+        async function
+            buildSectionRows({
+                servicesGroupId,
+                referralGroupId,
+                sectionLabel,
+                ageGroups,
+                genders,
+                orgUnit,
+                period
+            }) {
+
+            const baseUrl = 'https://fpanmis.org/fpanpro/api/29/indicatorGroups/';
+            const servicesGroupUrl = `${baseUrl}${servicesGroupId}.json?fields=id,name,indicators[id,name]`;
+            const referralGroupUrl = `${baseUrl}${referralGroupId}.json?fields=id,name,indicators[id,name]`;
+
+            //fetch indicators 
+            const [servicesData, referralsData] = await Promise.all([
+                fetch(servicesGroupUrl).then(res => res.json()),
+                fetch(referralGroupUrl).then(res => res.json())
+            ]);
+
+            const servicesIndicators = servicesData.indicators || [];
+            const referralsIndicators = referralsData.indicators || [];
+
+            //removing -Ref from Referrals indicator
+            const referralMap = {};
+            referralsIndicators.forEach(ind => {
+                referralMap[ind.name] = ind.id;
+            });
+
+            // combining both indicators id and referrals id so that both id's will be added to analytics call 
+            const indicatorIds = [
+                ...servicesIndicators.map(i => i.id),
+                ...referralsIndicators.map(i => i.id)
+            ].join(';');
+            const ageGroupIds = ageGroups.map(a => a.id).join(';');
+            const gendersIds = genders.map(g => g.id).join(';');
+
+            const analyticsRes = await fetch(`https://fpanmis.org/fpanpro/api/32/analytics.json?dimension=ID3CGIXZNp9:${ageGroupIds}&dimension=JXjPOMyEo8u:${gendersIds}&dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
+            const analyticsData = await analyticsRes.json();
+
+            // debugging;
+            if (!analyticsData.rows) {
+                console.log('No Analytics data returned: ', analyticsData);
+                document.querySelector('tbody').innerHTML = `<tr><td colspan="13" style="color:#005B96;">No data available for the selected period/org unit/indicators.</td></tr>`;
+                return;
+
+            }
+
+            // Build a value map for fast lookup
+            const valueMap = {};
+            analyticsData.rows.forEach(row => {
+                const [dx, ageGroup, gender, value] = row;
+                if (!valueMap[dx]) valueMap[dx] = {};
+                if (!valueMap[dx][ageGroup]) valueMap[dx][ageGroup] = {};
+                valueMap[dx][ageGroup][gender] = value;
+            });
+
+            // Building table rows and subtotal
+            let rows = `<tr> <th colspan = "13">${sectionLabel}</th></tr>`
+            let sectionTotal = Array(12).fill(0); //12 columns
+
+            // var dataRows = {};
+            servicesIndicators.forEach(serviceInd => {
+                const normName = (serviceInd.name).trim();
+                const referralIndId = referralMap[`${normName}-Ref`];
+                rows += `<tr><td>${serviceInd.name}</td>`;
+
+                // var totalServices = [], totalReferral = [], 
+                var totalSerRef = [];
+                ageGroups.forEach(age => {
+                    genders.forEach(gender => {
+                        const rawValueSer = valueMap[serviceInd.id]?.[age.id]?.[gender.id] || '';
+                        const rawValueRef = referralIndId ? (valueMap[referralIndId]?.[age.id]?.[gender.id] || '') : '';
+                        const valSer = rawValueSer ? Number(rawValueSer) : 0;
+                        const valRef = rawValueRef ? Number(rawValueRef) : 0;
+                        rows += `<td>${valSer || ''}</td>`;
+                        rows += `<td>${valRef || ''}</td>`
+                        // totalServices.push(rawValueSer ? Number(rawValueSer) : 0);
+                        // totalReferral.push(rawValueRef ? Number(rawValueRef) : 0);
+                        totalSerRef.push(valSer, valRef);
+
+                    });
+                });
+                // totalSerRef = [...totalServices, ...totalReferral];
+
+                // if(!dataRows[sectionLabel])  dataRows[sectionLabel] = totalSerRef;
+                // else dataRows[sectionLabel] = dataRows[sectionLabel].map((val,index) => (totalSerRef[index]+val))
+
+                //summing the indicator's values into the section total 
+                sectionTotal = sectionTotal.map((val, index) => val + (totalSerRef[index] || 0));
+                rows += `</tr>`;
+
+            });
+
+            //abortion 
+            const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, [sectionTotal], 12);
+            return { html: rows + subtotal, dataRows: sectionTotal };
+        }
+
+        let sections = [
+
+            {
+                sectionLabel: 'Abortion Care',
+                servicesGroupId: 'spKJhO2BdJ4',
+                referralGroupId: 'LGYW9TZWGxA'
+
+            },
+
+            {
+                sectionLabel: 'Contraception',
+                servicesGroupId: 'KjrflkiHprP',
+                referralGroupId: 'VrBmrcDuct8'
+            },
+
+            {
+                sectionLabel: 'HIV',
+                servicesGroupId: 'ew2v3klBXk3',
+                referralGroupId: 'ULP4QGLITZG'
+
+            },
+
+            {
+                sectionLabel: 'Obstetrics',
+                servicesGroupId: 'CeQ16ak9sf9',
+                referralGroupId: 'liNyIIqvS8R'
+
+            },
+
+            {
+                sectionLabel: 'Gynecology',
+                servicesGroupId: 'AMKGqk1VW3G',
+                referralGroupId: 'E2QQOs1ugfS',
+                totals: ['Obstetrics']
+            },
+
+            {
+                sectionLabel: 'Pediatrics Services',
+                servicesGroupId: 'MwviwYL7d1p',
+                referralGroupId: 'X0ryZfnewxu'
+
+            },
+
+            {
+                sectionLabel: 'STIs/RTIs ',
+                servicesGroupId: 'FaVY5m0FfW9',
+                referralGroupId: 'pADO4FoFj1k'
+
+            },
+
+            {
+                sectionLabel: 'Subfertility Services/ Fertility Support',
+                servicesGroupId: 'qGCyR14BR7N',
+                referralGroupId: 'viU7fgkn50L',
+
+            },
+            {
+                sectionLabel: 'Urology Services',
+                servicesGroupId: 'aSLsltvfg14',
+                referralGroupId: 'L4VekghOvJp',
+            },
+            {
+                sectionLabel: 'Specialised SRH services / Sexual and gender based violence',
+                servicesGroupId: 'kt2rS9nNwSC',
+                referralGroupId: 'HVPac5RfKZY',
+            },
+            {
+                sectionLabel: 'SRH - Other Services',
+                servicesGroupId: 'aSLsltvfg14',
+                referralGroupId: 'L4VekghOvJp'
+
+            },
+            {
+                sectionLabel: 'Non-SRH Medical Services',
+                servicesGroupId: 'QIPLUVq6zr8',
+                referralGroupId: 'xPCwSI1ommI'
+
+            }
+
+        ];
+
+        async function populateDataInTheCell(ageGroups, genders, orgUnit, period) {
+
+            let allRows = [];
+            // var totals = {}; 
+            let sectionTotals = {}; //storing each section's subtotal array by label
+
+            for (const section of sections) {
+
+                const { html, dataRows } = await buildSectionRows({
+                    servicesGroupId: section.servicesGroupId,
+                    referralGroupId: section.referralGroupId,
+                    sectionLabel: section.sectionLabel,
+                    ageGroups,
+                    genders,
+                    period,
+                    orgUnit
+
+                });
+
+                // totals = {
+                //     ...dataRows, ...totals
+                // }
+                // console.log(totals);
+
+                //storing sub-total array for this section 
+                sectionTotals[section.sectionLabel] = dataRows; //an array
+
+
+                //for each label to combine
+                if (section.totals) {
+                    // let tableHead = `${section.sectionLabel}`
+                    // var totalVal = dataRows[section.sectionLabel] //this line causing error
+                    let combined = [...(dataRows || [])];
+                    section.totals.forEach(label => {
+                        const arr = sectionTotals[label];
+                        // if (totals[label]) {
+                        //     tableHead += ` & ${label}`
+                        //     totalVal[index] += Number(totals[label][index]); //this is causing error here we are total[lable][index]
+
+                        // } 
+
+                        if (arr) {
+                            for (let i = 0; i < combined.length; i++) {
+                                combined[i] += Number(arr[i] || 0);
+                            }
+                        }
+                    });
+
+                    // allRows.push(`<tr><td style="font-weight:bold;background-color:#83CCEB">Sub-total ${tableHead}</td>${totalVal.map(val => `<td style="font-weight:bold;background-color:#83CCEB">${val}</td>`).join('')}</tr>`)
+                    //adding combined subtotal row 
+                    allRows.push(
+                        `<tr><td style="font-weight:bold;background-color:#83CCEB">Sub-total ${section.totals.join(' & ')} & ${section.sectionLabel}</td>` +
+                        combined.map(val => `<td style="font-weight:bold;background-color:#83CCEB">${val}</td>`).join('') +
+                        `</tr>`
+                    );
+
+                }
+                allRows.push(html);
+
+            }
+
+            document.querySelector('tbody').innerHTML = allRows.join('');
+
+            //building table header here after all the data 
+
+            //Header 
+            let topRow = `<tr>
+                    <th rowspan="3" style="background:#DAE9F8">Service Statistics</th>
+                    <th colspan="6" style="background:#DAE9F8">Services</th>
+                   <th colspan="6" style="background:#DAE9F8">Referrals</th>
+                </tr>`
+
+
+            let ageRow = `<tr style="background:#DAE9F8">`;
+            ageRow += `<th colspan="3">${ageGroups[0].name}</th>`;
+            ageRow += `<th colspan="3">${ageGroups[1].name}</th>`;
+            ageRow += `<th colspan="3">${ageGroups[0].name}</th>`;
+            ageRow += `<th colspan="3">${ageGroups[1].name}</th>`;
+            ageRow += `</tr>`;
+
+            let genderRow = `<tr style="background:#DAE9F8">`;
+            for (let i = 0; i < 4; i++) {
+                genderRow += `<th>${genders[0].name}</th>`;
+                genderRow += `<th>${genders[1].name}</th>`;
+                genderRow += `<th>${genders[2].name}</th>`;
+            }
+            genderRow += `</tr>`;
+
+            document.querySelector('table thead').innerHTML = topRow + ageRow + genderRow;
+
+
+            //loader end
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('table-data').style.display = '';
+
+
+        }
+
+        let indicators = [];
+        let ageGroups = [];
+        let genders = [];
+
+        //loader starts
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('table-data').style.display = 'none';
+
+        //fetching and receving the data
+        Promise.all([
+
+            fetch('https://fpanmis.org/fpanpro/api/29/categoryOptionGroupSets/ID3CGIXZNp9.json?fields=id,name,categoryOptionGroups[id,name]').then(res => res.json()),
+            fetch('https://fpanmis.org/fpanpro/api/categories/JXjPOMyEo8u.json?fields=id,name,categoryOptions[id,name]').then(res => res.json()),
+
+        ]).then((
+            [
+                ageGroupData, genderDetails,
+
+            ]) => {
+
+            ageGroups = ageGroupData.categoryOptionGroups;
+            genders = genderDetails.categoryOptions;
+            populateDataInTheCell(ageGroups, genders, selectedOrgUnit, selectedPeriod[0]);
+
+        });
+
+    </script>
+
+</body>
+
+</html>
