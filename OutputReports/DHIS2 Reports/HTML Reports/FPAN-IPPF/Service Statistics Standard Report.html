@@ -147,29 +147,24 @@
             // var dataRows = {};
             servicesIndicators.forEach(serviceInd => {
                 const normName = (serviceInd.name).trim();
-                const referralIndId = referralMap[`${normName}-Ref`];
+                const referralIndId = referralMap[`${normName}-Ref`]; //give id
                 rows += `<tr><td>${serviceInd.name}</td>`;
 
                 // var totalServices = [], totalReferral = [], 
                 var totalSerRef = [];
                 ageGroups.forEach(age => {
                     genders.forEach(gender => {
-                        const rawValueSer = valueMap[serviceInd.id]?.[age.id]?.[gender.id] || '';
+                        const rawValueServ = valueMap[serviceInd.id]?.[age.id]?.[gender.id] || '';
                         const rawValueRef = referralIndId ? (valueMap[referralIndId]?.[age.id]?.[gender.id] || '') : '';
-                        const valSer = rawValueSer ? Number(rawValueSer) : 0;
+                        const valServ = rawValueServ ? Number(rawValueServ) : 0;
                         const valRef = rawValueRef ? Number(rawValueRef) : 0;
-                        rows += `<td>${valSer || ''}</td>`;
-                        rows += `<td>${valRef || ''}</td>`
-                        // totalServices.push(rawValueSer ? Number(rawValueSer) : 0);
-                        // totalReferral.push(rawValueRef ? Number(rawValueRef) : 0);
-                        totalSerRef.push(valSer, valRef);
+                        rows += `<td>${valServ || ''}</td>`;
+                        rows += `<td>${valRef || ''}</td>`;
+                        totalSerRef.push(valServ, valRef);
+
 
                     });
                 });
-                // totalSerRef = [...totalServices, ...totalReferral];
-
-                // if(!dataRows[sectionLabel])  dataRows[sectionLabel] = totalSerRef;
-                // else dataRows[sectionLabel] = dataRows[sectionLabel].map((val,index) => (totalSerRef[index]+val))
 
                 //summing the indicator's values into the section total 
                 sectionTotal = sectionTotal.map((val, index) => val + (totalSerRef[index] || 0));
@@ -177,7 +172,6 @@
 
             });
 
-            //abortion 
             const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, [sectionTotal], 12);
             return { html: rows + subtotal, dataRows: sectionTotal };
         }
@@ -266,7 +260,6 @@
         async function populateDataInTheCell(ageGroups, genders, orgUnit, period) {
 
             let allRows = [];
-            // var totals = {}; 
             let sectionTotals = {}; //storing each section's subtotal array by label
 
             for (const section of sections) {
@@ -282,27 +275,15 @@
 
                 });
 
-                // totals = {
-                //     ...dataRows, ...totals
-                // }
-                // console.log(totals);
-
                 //storing sub-total array for this section 
                 sectionTotals[section.sectionLabel] = dataRows; //an array
 
-
                 //for each label to combine
                 if (section.totals) {
-                    // let tableHead = `${section.sectionLabel}`
-                    // var totalVal = dataRows[section.sectionLabel] //this line causing error
+
                     let combined = [...(dataRows || [])];
                     section.totals.forEach(label => {
                         const arr = sectionTotals[label];
-                        // if (totals[label]) {
-                        //     tableHead += ` & ${label}`
-                        //     totalVal[index] += Number(totals[label][index]); //this is causing error here we are total[lable][index]
-
-                        // } 
 
                         if (arr) {
                             for (let i = 0; i < combined.length; i++) {
@@ -311,7 +292,6 @@
                         }
                     });
 
-                    // allRows.push(`<tr><td style="font-weight:bold;background-color:#83CCEB">Sub-total ${tableHead}</td>${totalVal.map(val => `<td style="font-weight:bold;background-color:#83CCEB">${val}</td>`).join('')}</tr>`)
                     //adding combined subtotal row 
                     allRows.push(
                         `<tr><td style="font-weight:bold;background-color:#83CCEB">Sub-total ${section.totals.join(' & ')} & ${section.sectionLabel}</td>` +
@@ -326,7 +306,6 @@
 
             document.querySelector('tbody').innerHTML = allRows.join('');
 
-            //building table header here after all the data 
 
             //Header 
             let topRow = `<tr>
@@ -335,25 +314,28 @@
                    <th colspan="6" style="background:#DAE9F8">Referrals</th>
                 </tr>`
 
-
             let ageRow = `<tr style="background:#DAE9F8">`;
-            ageRow += `<th colspan="3">${ageGroups[0].name}</th>`;
-            ageRow += `<th colspan="3">${ageGroups[1].name}</th>`;
-            ageRow += `<th colspan="3">${ageGroups[0].name}</th>`;
-            ageRow += `<th colspan="3">${ageGroups[1].name}</th>`;
+            ageGroups.forEach(ag => {
+                ageRow += `<th colspan="3">${ag.name}</th>`
+            });
+
+            ageGroups.forEach(ag => {
+                ageRow += `<th colspan="3">${ag.name}</th>`
+            })
+
             ageRow += `</tr>`;
+
 
             let genderRow = `<tr style="background:#DAE9F8">`;
             for (let i = 0; i < 4; i++) {
-                genderRow += `<th>${genders[0].name}</th>`;
-                genderRow += `<th>${genders[1].name}</th>`;
-                genderRow += `<th>${genders[2].name}</th>`;
+                genders.forEach(g => {
+                    genderRow += `<th>${g.name}</th>`
+                })
             }
             genderRow += `</tr>`;
 
+
             document.querySelector('table thead').innerHTML = topRow + ageRow + genderRow;
-
-
             //loader end
             document.getElementById('loader').style.display = 'none';
             document.getElementById('table-data').style.display = '';
