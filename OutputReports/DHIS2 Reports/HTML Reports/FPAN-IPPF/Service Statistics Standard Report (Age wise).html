@@ -26,7 +26,7 @@
         <button type="button" class="btn btn-success btn-sm" id="btnExport" onclick="exportBothTables()">
             <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>
             Download As Excel
-    </button>
+        </button>
     </div>
     <div id="loader" style="display:none; text-align:center; margin: 30px;">
         <div class="spinner-border text-primary" role="status">
@@ -49,7 +49,9 @@
     <script>
 
         const selectedOrgUnit = dhis2.report.organisationUnit.id;
-        const selectedPeriod = dhis2.report.periods;
+
+        const urlParams = new URLSearchParams(window.parent.location.href);
+        const selectedPeriod = urlParams.get('pe')
 
         function exportBothTables() {
             // Combine both tables' HTML
@@ -63,7 +65,7 @@
                 table2.tHead.outerHTML + table2.tBodies[0].outerHTML;
 
             // Export the combined table
-            tableToExcel(exportTable, 'Service Statistics Standard Report', 'Service Statistics Standard Report.xls');
+            tableToExcel(exportTable, 'Service Statistics Standard Report(Age wise)', 'Service Statistics Standard Report(Age wise).xls');
         }
 
         // //Download btn 
@@ -81,22 +83,12 @@
             }
         })()
 
-        function createSubtotalRow(label, tableRows, columnCount) {
-            // Initializing totals
-            const totals = Array(columnCount).fill(0);
-
-            // Sum each column
-            tableRows.forEach(row => {
-                for (let i = 0; i < columnCount; i++) {
-                    const val = Number(row[i]) || 0;
-                    totals[i] += val;
-                }
-            });
+        function createSubtotalRow(label, tableRows) {
 
             // Build HTML row
-            let subtotalRow = `<tr><th style="background:#DAE9F8;">${label}</th>`;
-            totals.forEach(total => {
-                subtotalRow += `<th style="background:#DAE9F8;">${total}</th>`;
+            let subtotalRow = `<tr><th style="background:#DAE9F8;font-weight:bold;">${label}</th>`;
+            tableRows.forEach(total => {
+                subtotalRow += `<td style="background:#DAE9F8; font-weight:bold;text-align:center;">${total}</td>`;
             });
             subtotalRow += `</tr>`;
             return subtotalRow;
@@ -122,8 +114,17 @@
                 fetch(referralGroupUrl).then(res => res.json())
             ]);
 
-            const servicesIndicators = servicesData.indicators || [];
-            const referralsIndicators = referralsData.indicators || [];
+            const servicesIndicators = (servicesData.indicators || []).slice().sort((a, b) => {
+                const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
+                const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
+                return aPart.localeCompare(bPart);
+            });
+            const referralsIndicators = referralsData.indicators || [].slice().sort((a, b) => {
+                const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
+                const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
+                return aPart.localeCompare(bPart);
+            });
+
 
             //removing -Ref from Referrals indicator
             const referralMap = {};
@@ -163,23 +164,35 @@
             let rows = `<tr> <th colspan = "5" style="font-weight:bold;text-align:center">${sectionLabel}</th></tr>`
             let sectionTotal = Array(4).fill(0);
 
-            // var dataRows = {};
+            var dataRows = {};
             servicesIndicators.forEach(serviceInd => {
                 const normName = (serviceInd.name).trim();
                 const referralIndId = referralMap[`${normName}-Ref`];
                 rows += `<tr><td>${serviceInd.name}</td>`;
 
+
+                let totalServices = [], totalReferral = [];
                 var totalSerRef = [];
+
                 ageGroups.forEach(age => {
                     const rawValueSer = valueMap[serviceInd.id]?.[age.id] || '';
                     const rawValueRef = referralIndId ? (valueMap[referralIndId]?.[age.id] || '') : '';
-                    const valSer = rawValueSer ? Number(rawValueSer) : 0;
-                    const valRef = rawValueRef ? Number(rawValueRef) : 0;
-                    rows += `<td style="text-align:center">${valSer || ''}</td>`;
-                    rows += `<td style="text-align:center">${valRef || ''}</td>`
-                    totalSerRef.push(valSer, valRef);
+                    //changes 
+                    totalServices.push(rawValueSer ? Number(rawValueSer) : 0);
+                    totalReferral.push(rawValueRef ? Number(rawValueRef) : 0);
 
                 });
+                //changes
+                totalSerRef = [...totalServices, ...totalReferral];
+
+                totalSerRef.forEach(val => {
+                    rows += `<td style="text-align:center">${val || ''}</td>`;
+                })
+
+                //assigning values
+                if (!dataRows[sectionLabel]) dataRows[sectionLabel] = totalSerRef;
+                else dataRows[sectionLabel] = dataRows[sectionLabel].map((val, index) => (totalSerRef[index] + val))
+
 
                 //summing the indicator's values into the section total 
                 sectionTotal = sectionTotal.map((val, index) => val + (totalSerRef[index] || 0));
@@ -187,8 +200,7 @@
 
             });
 
-            //abortion 
-            const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, [sectionTotal], 4);
+            const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, dataRows[sectionLabel]);
             return { html: rows + subtotal, dataRows: sectionTotal };
         }
 
@@ -281,6 +293,7 @@
             for (const section of sections) {
 
                 const { html, dataRows } = await buildSectionRows({
+
                     servicesGroupId: section.servicesGroupId,
                     referralGroupId: section.referralGroupId,
                     sectionLabel: section.sectionLabel,
@@ -289,6 +302,7 @@
                     orgUnit
 
                 });
+
 
                 allRows.push(html);
 
@@ -308,10 +322,11 @@
                         }
                     });
 
+
                     //adding combined subtotal row 
                     allRows.push(
                         `<tr><td style="font-weight:bold;background-color:#DAE9F8;">Sub-total ${section.totals.join(' & ')} & ${section.sectionLabel}</td>` +
-                        combined.map(val => `<td style="font-weight:bold;background-color:#DAE9F8">${val}</td>`).join('') +
+                        combined.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
                         `</tr>`
                     );
 
@@ -339,7 +354,7 @@
             if (srhSubtotal) {
                 allRows.push(
                     `<tr><td style="font-weight:bold;background-color:#DAE9F8">Subtotal SRH - Services</td>` +
-                    srhSubtotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;">${val}</td>`).join('') +
+                    srhSubtotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
                     `</tr>`
                 );
             }
@@ -350,7 +365,7 @@
                 let grandTotal = srhSubtotal.map((val, i) => val + Number(nonSrhArr[i] || 0));
                 allRows.push(
                     `<tr><td style="font-weight:bold;background-color:#DAE9F8;">Grand Total (SRH+Non-SRH Medical)</td>` +
-                    grandTotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;">${val}</td>`).join('') +
+                    grandTotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
                     `</tr>`
                 );
             }
@@ -396,9 +411,12 @@
 
             const groupUrl = `../api/29/indicatorGroups/${indicatorGroupId}.json?fields=id,name,indicators[id,name]`;
             const groupData = await fetch(groupUrl).then(res => res.json());
-            const indicators = groupData.indicators || [];
+            const indicators = (groupData.indicators || []).slice().sort((a, b) => {
+                const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
+                const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
+                return aPart.localeCompare(bPart);
+            });
             const indicatorIds = indicators.map(i => i.id).join(';');
-
 
             //analytics call 
             const analyticsRes = await fetch(`../api/analytics.json?dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
@@ -413,7 +431,6 @@
                 });
 
             }
-
 
             // Build section HTML
             let sectionHtml = `<tr><th colspan="2" style="text-align:center;font-weight:bold;">${sectionLabel}</th></tr>`;
@@ -430,15 +447,12 @@
                 const total = sectionValues.reduce((sum, v) => sum + (Number(v) || 0), 0);
                 sectionHtml += `<tr>
                 <td style="background:#DAE9F8">Total</td>
-                <td style="background:#DAE9F8">${total}</td>
+                <td style="background:#DAE9F8; text-align:center;">${total}</td>
                 </tr>`;
             }
 
-
             return sectionHtml;
-
         }
-
 
         let indicators = [];
         let ageGroups = [];
@@ -460,13 +474,13 @@
             ageGroups = ageGroupData.categoryOptionGroups;
 
 
-            const mainTablePromise = populateDataInTheCell(ageGroups, selectedOrgUnit, selectedPeriod[0]);
+            const mainTablePromise = populateDataInTheCell(ageGroups, selectedOrgUnit, selectedPeriod);
             const simpleTablePromises = simpleSections.map(section =>
 
                 populateSimpleSection(
                     section.indicatorGroupId,
                     selectedOrgUnit,
-                    selectedPeriod[0],
+                    selectedPeriod,
                     section.sectionLabel
                 )
 
