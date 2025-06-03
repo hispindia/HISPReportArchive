@@ -24,7 +24,7 @@
     <a id="dlink" style="display:none"></a>
     <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px;">
         <button type="button" class="btn btn-success btn-sm" id="btnExport"
-            onclick="tableToExcel('table-data', 'Service Statistics Standard Report', 'Service Statistics Standard Report.xls')">
+            onclick="tableToExcel('table-data', 'Service Statistics Standard Report(Age & Gender wise)', 'Service Statistics Standard Report(Age & Gender wise).xls')">
             <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>
             Download As Excel
         </button>
@@ -44,7 +44,9 @@
     <script>
 
         const selectedOrgUnit = dhis2.report.organisationUnit.id;
-        const selectedPeriod = dhis2.report.periods;
+
+        const urlParams = new URLSearchParams(window.parent.location.href);
+        const selectedPeriod = urlParams.get('pe')
 
         //Download btn 
         var tableToExcel = (function () {
@@ -61,22 +63,12 @@
             }
         })()
 
-        function createSubtotalRow(label, tableRows, columnCount) {
-            // Initializing totals
-            const totals = Array(columnCount).fill(0);
-
-            // Sum each column
-            tableRows.forEach(row => {
-                for (let i = 0; i < columnCount; i++) {
-                    const val = Number(row[i]) || 0;
-                    totals[i] += val;
-                }
-            });
+        function createSubtotalRow(label, tableRows) {
 
             // Build HTML row
-            let subtotalRow = `<tr style="background-color:#83CCEB"><th>${label}</th>`;
-            totals.forEach(total => {
-                subtotalRow += `<th>${total}</th>`;
+            let subtotalRow = `<tr><th style="background-color:#83CCEB; font-weight:bold">${label}</th>`;
+            tableRows.forEach(total => {
+                subtotalRow += `<td style="background-color:#83CCEB; font-weight:bold; text-align:center;">${total}</td>`;
             });
             subtotalRow += `</tr>`;
             return subtotalRow;
@@ -103,8 +95,16 @@
                 fetch(referralGroupUrl).then(res => res.json())
             ]);
 
-            const servicesIndicators = servicesData.indicators || [];
-            const referralsIndicators = referralsData.indicators || [];
+            const servicesIndicators = (servicesData.indicators || []).slice().sort((a, b) => {
+                const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
+                const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
+                return aPart.localeCompare(bPart);
+            });
+            const referralsIndicators = referralsData.indicators || [].slice().sort((a, b) => {
+                const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
+                const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
+                return aPart.localeCompare(bPart);
+            });
 
             //removing -Ref from Referrals indicator
             const referralMap = {};
@@ -144,35 +144,45 @@
             let rows = `<tr> <th colspan = "13">${sectionLabel}</th></tr>`
             let sectionTotal = Array(12).fill(0); //12 columns
 
-            // var dataRows = {};
+            var dataRows = {};
             servicesIndicators.forEach(serviceInd => {
                 const normName = (serviceInd.name).trim();
                 const referralIndId = referralMap[`${normName}-Ref`]; //give id
                 rows += `<tr><td>${serviceInd.name}</td>`;
 
-                // var totalServices = [], totalReferral = [], 
+                var totalServices = [], totalReferral = [];
                 var totalSerRef = [];
                 ageGroups.forEach(age => {
                     genders.forEach(gender => {
                         const rawValueServ = valueMap[serviceInd.id]?.[age.id]?.[gender.id] || '';
                         const rawValueRef = referralIndId ? (valueMap[referralIndId]?.[age.id]?.[gender.id] || '') : '';
-                        const valServ = rawValueServ ? Number(rawValueServ) : 0;
-                        const valRef = rawValueRef ? Number(rawValueRef) : 0;
-                        rows += `<td>${valServ || ''}</td>`;
-                        rows += `<td>${valRef || ''}</td>`;
-                        totalSerRef.push(valServ, valRef);
 
+                        totalServices.push(rawValueServ ? Number(rawValueServ) : 0);
+                        totalReferral.push(rawValueRef ? Number(rawValueRef) : 0);
 
                     });
                 });
 
+                totalSerRef = [...totalServices, ...totalReferral];
+
+                totalSerRef.forEach(val => {
+                    rows += `<td style="text-align:center;">${val || ''}</td>`
+                })
+
+                //assigned values 
+                if (!dataRows[sectionLabel]) dataRows[sectionLabel] = totalSerRef;
+                else dataRows[sectionLabel] = dataRows[sectionLabel].map((val, index) => (totalSerRef[index] + val))
+
+
                 //summing the indicator's values into the section total 
                 sectionTotal = sectionTotal.map((val, index) => val + (totalSerRef[index] || 0));
+               
                 rows += `</tr>`;
 
             });
 
-            const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, [sectionTotal], 12);
+            // const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, [sectionTotal], 12); 
+            const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, dataRows[sectionLabel]);
             return { html: rows + subtotal, dataRows: sectionTotal };
         }
 
@@ -295,7 +305,7 @@
                     //adding combined subtotal row 
                     allRows.push(
                         `<tr><td style="font-weight:bold;background-color:#83CCEB">Sub-total ${section.totals.join(' & ')} & ${section.sectionLabel}</td>` +
-                        combined.map(val => `<td style="font-weight:bold;background-color:#83CCEB">${val}</td>`).join('') +
+                        combined.map(val => `<td style="font-weight:bold;background-color:#83CCEB; text-align:center;">${val}</td>`).join('') +
                         `</tr>`
                     );
 
@@ -365,7 +375,7 @@
 
             ageGroups = ageGroupData.categoryOptionGroups;
             genders = genderDetails.categoryOptions;
-            populateDataInTheCell(ageGroups, genders, selectedOrgUnit, selectedPeriod[0]);
+            populateDataInTheCell(ageGroups, genders, selectedOrgUnit, selectedPeriod);
 
         });
 
