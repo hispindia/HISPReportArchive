@@ -23,11 +23,33 @@
 <body>
     <a id="dlink" style="display:none"></a>
     <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px;">
-        <button type="button" class="btn btn-success btn-sm" id="btnExport" onclick="exportBothTables()">
+        <button type="button" class="btn btn-success btn-sm" id="btnExport"
+            onclick="tableToExcel('table-list', 'Service Statistics Standard Report (Age wise)', 'Service Statistics Standard Report (Age wise).xls')">
             <span class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>
             Download As Excel
         </button>
     </div>
+    <div id="selection" class="d-flex justify-content-center">
+        <table class="w-50">
+            <tbody>
+                <tr>
+                    <td class="font-weight-bold">Select Period Type:</td>
+                    <td>
+                        <select id="period-selection" class="form-select" onchange="displayPeriodType(this)">
+                            <option value="year">Year</option>
+                            <option value="quarter">Quarter</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr id="period-type">
+                </tr>
+                <tr>
+                    <td colspan="2"><button class="btn btn-primary" onclick="displayData()">Submit</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
     <div id="loader" style="display:none; text-align:center; margin: 30px;">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -35,38 +57,490 @@
         <div>Loading data, please wait...</div>
     </div>
 
-    <table id="table-data">
-        <thead></thead>
-        <tbody></tbody>
-    </table>
+    <div id="table-list">
+        <table id="table-subcategory" class='table table-bordered'>
+            <thead></thead>
+            <tbody></tbody>
+        </table>
 
-    <table id="table2">
-        <thead></thead>
-        <tbody></tbody>
-    </table>
-    <table id="export-table" style="display:none"></table>
+        <table id="table-indicators" class='table table-bordered'>
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    
+    <script>
+        displayPeriodType({value: 'year'})
+        const quarters = {
+            'Q1':'January - March',
+            'Q2':'April - May',
+            'Q3':'June - August',
+            'Q4':'October - December',
+        }
 
+        function displayPeriodType(event) {
+            const { value } = event;
+            var yearList = [];
+
+            for (let year = 2022; year <= new Date().getFullYear(); year++) yearList.push(year);
+
+            if (value == 'year') {
+                document.getElementById('period-type').innerHTML = `
+                <td class="font-weight-bold">Select Year:</td> 
+                <td> 
+                    <select class="form-select" id='period-value'>
+                        ${yearList.map(year => `<option>${year}</option>`)}
+                    </select>
+                    </td>`
+                return;
+            }
+            if (value == "quarter") {
+                document.getElementById('period-type').innerHTML = `
+                <td class="font-weight-bold">Select Quarter:</td> 
+                <td> 
+                    <select class="form-select" id='period-quarter'>
+                        ${Object.keys(quarters).map(quarter => `<option value='${quarter}'>${quarters[quarter]}</option>`)}
+                    </select>
+                    <select class="form-select" id='period-value'>
+                        ${yearList.map(year => `<option>${year}</option>`)}
+                    </select>
+                    </td>`
+
+                return;
+            }
+        }
+    </script>
     <script>
 
-        const selectedOrgUnit = dhis2.report.organisationUnit.id;
-        // console.log("trying to print the name of orgUnit: ", dhis2.report.organisationUnit.name);
+        const selectedOrgUnit = dhis2.report.organisationUnit;
+        function displayData() {
 
-        const urlParams = new URLSearchParams(window.parent.location.href);
-        const selectedPeriod = urlParams.get('pe')
+            var selectedPeriod = document.getElementById('period-value').value;
+            var quarterSelection = ''
+            if(document.getElementById('period-selection').value=="quarter") quarterSelection = document.getElementById('period-quarter').value;
+            selectedPeriod += quarterSelection;
 
-        function exportBothTables() {
-            // Combine both tables' HTML
-            const table1 = document.getElementById('table-data');
-            const table2 = document.getElementById('table2');
-            const exportTable = document.getElementById('export-table');
+            function createSubtotalRow(label, tableRows) {
 
-            // Combine thead and tbody of both tables
-            exportTable.innerHTML =
-                table1.tHead.outerHTML + table1.tBodies[0].outerHTML +
-                table2.tHead.outerHTML + table2.tBodies[0].outerHTML;
+                // Build HTML row
+                let subtotalRow = `<tr><th style="background:#DAE9F8;font-weight:bold;">${label}</th>`;
+                tableRows.forEach(total => {
+                    subtotalRow += `<td style="background:#DAE9F8; font-weight:bold;text-align:center;">${total}</td>`;
+                });
+                subtotalRow += `</tr>`;
+                return subtotalRow;
+            }
 
-            // Export the combined table
-            tableToExcel(exportTable, 'Service Statistics Standard Report(Age wise)', 'Service Statistics Standard Report(Age wise).xls');
+            async function
+                buildSectionRows({
+                    servicesGroupId,
+                    referralGroupId,
+                    sectionLabel,
+                    ageGroups,
+                    orgUnit,
+                    period
+                }) {
+
+                const baseUrl = '../../indicatorGroups/';
+                const servicesGroupUrl = `${baseUrl}${servicesGroupId}.json?fields=id,name,indicators[id,name]`;
+                const referralGroupUrl = `${baseUrl}${referralGroupId}.json?fields=id,name,indicators[id,name]`;
+
+                //fetch indicators 
+                const [servicesData, referralsData] = await Promise.all([
+                    fetch(servicesGroupUrl).then(res => res.json()),
+                    fetch(referralGroupUrl).then(res => res.json())
+                ]);
+
+                const servicesIndicators = (servicesData.indicators || []).slice().sort((a, b) => {
+                    const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
+                    const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
+                    return aPart.localeCompare(bPart);
+                });
+                const referralsIndicators = referralsData.indicators || [].slice().sort((a, b) => {
+                    const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
+                    const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
+                    return aPart.localeCompare(bPart);
+                });
+
+
+                //removing -Ref from Referrals indicator
+                const referralMap = {};
+                referralsIndicators.forEach(ind => {
+                    referralMap[ind.name] = ind.id;
+                });
+
+                // combining both indicators id and referrals id so that both id's will be added to analytics call 
+                const indicatorIds = [
+                    ...servicesIndicators.map(i => i.id),
+                    ...referralsIndicators.map(i => i.id)
+                ].join(';');
+                const ageGroupIds = ageGroups.map(a => a.id).join(';');
+
+                const analyticsRes = await fetch(`../../analytics.json?dimension=ID3CGIXZNp9:${ageGroupIds}&dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
+                const analyticsData = await analyticsRes.json();
+
+                // debugging;
+                if (!analyticsData.rows) {
+                    console.log('No Analytics data returned: ', analyticsData);
+                    document.querySelector('tbody').innerHTML = `<tr><td colspan="13" style="color:#005B96;">No data available for the selected period/org unit/indicators.</td></tr>`;
+                    return;
+
+                }
+
+                // Build a value map for fast lookup
+                const valueMap = {};
+                analyticsData.rows.forEach(row => {
+                    const [dx, ageGroup, value] = row;
+                    if (!valueMap[dx]) valueMap[dx] = {};
+                    if (!valueMap[dx][ageGroup]) valueMap[dx][ageGroup] = {};
+                    valueMap[dx][ageGroup] = value;
+                });
+
+
+                // Building table rows and subtotal
+                let rows = `<tr> <th colspan = "5" style="font-weight:bold;text-align:center; background-color:#83CCEB;">${sectionLabel}</th></tr>`
+                let sectionTotal = Array(4).fill(0);
+
+                var dataRows = {};
+                servicesIndicators.forEach(serviceInd => {
+                    const normName = (serviceInd.name).trim();
+                    const referralIndId = referralMap[`${normName}-Ref`];
+                    rows += `<tr><td>${serviceInd.name}</td>`;
+
+
+                    let totalServices = [], totalReferral = [];
+                    var totalSerRef = [];
+
+                    ageGroups.forEach(age => {
+                        const rawValueSer = valueMap[serviceInd.id]?.[age.id] || '';
+                        const rawValueRef = referralIndId ? (valueMap[referralIndId]?.[age.id] || '') : '';
+                        //changes 
+                        totalServices.push(rawValueSer ? Number(rawValueSer) : 0);
+                        totalReferral.push(rawValueRef ? Number(rawValueRef) : 0);
+
+                    });
+                    //changes
+                    totalSerRef = [...totalServices, ...totalReferral];
+
+                    totalSerRef.forEach(val => {
+                        rows += `<td style="text-align:center">${val || ''}</td>`;
+                    })
+
+                    //assigning values
+                    if (!dataRows[sectionLabel]) dataRows[sectionLabel] = totalSerRef;
+                    else dataRows[sectionLabel] = dataRows[sectionLabel].map((val, index) => (totalSerRef[index] + val))
+
+
+                    //summing the indicator's values into the section total 
+                    sectionTotal = sectionTotal.map((val, index) => val + (totalSerRef[index] || 0));
+                    rows += `</tr>`;
+
+                });
+
+                const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, dataRows[sectionLabel]);
+                return { html: rows + subtotal, dataRows: sectionTotal };
+            }
+
+            let sections = [
+
+                {
+                    sectionLabel: 'Abortion Care',
+                    servicesGroupId: 'spKJhO2BdJ4',
+                    referralGroupId: 'LGYW9TZWGxA'
+
+                },
+
+                {
+                    sectionLabel: 'Contraception',
+                    servicesGroupId: 'KjrflkiHprP',
+                    referralGroupId: 'VrBmrcDuct8'
+                },
+
+                {
+                    sectionLabel: 'HIV',
+                    servicesGroupId: 'ew2v3klBXk3',
+                    referralGroupId: 'ULP4QGLITZG'
+
+                },
+
+                {
+                    sectionLabel: 'Obstetrics',
+                    servicesGroupId: 'CeQ16ak9sf9',
+                    referralGroupId: 'liNyIIqvS8R'
+
+                },
+
+                {
+                    sectionLabel: 'Gynecology',
+                    servicesGroupId: 'AMKGqk1VW3G',
+                    referralGroupId: 'E2QQOs1ugfS',
+                    totals: ['Obstetrics']
+                },
+
+                {
+                    sectionLabel: 'Pediatrics Services',
+                    servicesGroupId: 'MwviwYL7d1p',
+                    referralGroupId: 'X0ryZfnewxu'
+
+                },
+
+                {
+                    sectionLabel: 'STIs/RTIs ',
+                    servicesGroupId: 'FaVY5m0FfW9',
+                    referralGroupId: 'pADO4FoFj1k'
+
+                },
+
+                {
+                    sectionLabel: 'Subfertility Services/ Fertility Support',
+                    servicesGroupId: 'qGCyR14BR7N',
+                    referralGroupId: 'viU7fgkn50L',
+
+                },
+                {
+                    sectionLabel: 'Urology Services',
+                    servicesGroupId: 'aSLsltvfg14',
+                    referralGroupId: 'L4VekghOvJp',
+                },
+                {
+                    sectionLabel: 'Specialised SRH services / Sexual and gender based violence',
+                    servicesGroupId: 'kt2rS9nNwSC',
+                    referralGroupId: 'HVPac5RfKZY',
+                },
+                {
+                    sectionLabel: 'SRH - Other Services',
+                    servicesGroupId: 'aSLsltvfg14',
+                    referralGroupId: 'L4VekghOvJp'
+
+                },
+                {
+                    sectionLabel: 'Non-SRH Medical Services',
+                    servicesGroupId: 'QIPLUVq6zr8',
+                    referralGroupId: 'xPCwSI1ommI'
+
+                }
+
+            ];
+
+            async function populateDataInTheCell(ageGroups, orgUnit, period) {
+
+                let allRows = [];
+                let sectionTotals = {}; //storing each section's subtotal array by label
+
+                for (const section of sections) {
+
+                    const { html, dataRows } = await buildSectionRows({
+
+                        servicesGroupId: section.servicesGroupId,
+                        referralGroupId: section.referralGroupId,
+                        sectionLabel: section.sectionLabel,
+                        ageGroups,
+                        period,
+                        orgUnit
+
+                    });
+
+
+                    allRows.push(html);
+
+                    //storing sub-total array for this section 
+                    sectionTotals[section.sectionLabel] = dataRows; //an array
+
+                    //for each label to combine
+                    if (section.totals) {
+                        let combined = [...(dataRows || [])];
+                        section.totals.forEach(label => {
+                            const arr = sectionTotals[label];
+
+                            if (arr) {
+                                for (let i = 0; i < combined.length; i++) {
+                                    combined[i] += Number(arr[i] || 0);
+                                }
+                            }
+                        });
+
+
+                        //adding combined subtotal row 
+                        allRows.push(
+                            `<tr><td style="font-weight:bold;background-color:#DAE9F8;">Sub-total ${section.totals.join(' & ')} & ${section.sectionLabel}</td>` +
+                            combined.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
+                            `</tr>`
+                        );
+
+                    }
+                }
+
+                // sub total SRH Services
+                const srhSectionLabels = sections
+                    .filter(s => s.sectionLabel !== 'SRH - Other Services' && s.sectionLabel !== 'Non-SRH Medical Services')
+                    .map(s => s.sectionLabel);
+
+                let srhSubtotal = null;
+                srhSectionLabels.forEach(label => {
+                    const arr = sectionTotals[label];
+                    if (arr) {
+                        if (!srhSubtotal) {
+                            srhSubtotal = [...arr];
+                        } else {
+                            for (let i = 0; i < srhSubtotal.length; i++) {
+                                srhSubtotal[i] += Number(arr[i] || 0);
+                            }
+                        }
+                    }
+                });
+                if (srhSubtotal) {
+                    allRows.push(
+                        `<tr><td style="font-weight:bold;background-color:#DAE9F8">Subtotal SRH - Services</td>` +
+                        srhSubtotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
+                        `</tr>`
+                    );
+                }
+
+                //  Grand Total (SRH + Non-SRH Medical)
+                const nonSrhArr = sectionTotals['Non-SRH Medical Services'];
+                if (srhSubtotal && nonSrhArr) {
+                    let grandTotal = srhSubtotal.map((val, i) => val + Number(nonSrhArr[i] || 0));
+                    allRows.push(
+                        `<tr><td style="font-weight:bold;background-color:#DAE9F8;">Grand Total (SRH+Non-SRH Medical)</td>` +
+                        grandTotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
+                        `</tr>`
+                    );
+                }
+
+                document.querySelector('#table-subcategory tbody').innerHTML = allRows.join('');
+
+                let HeaderRow = `<tr>
+            <th colspan="5" style="border:1px solid black;background:#DAE9F8;text-align:center; background-color:#83CCEB;">
+        ${selectedOrgUnit.name} (Period: ${ (quarterSelection ? `${quarters[quarterSelection]} ,`: '')} ${selectedPeriod.split('Q')[0]})
+        </th>
+        </tr>`;
+                let topRow = `<tr>
+                    <th rowspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Service Statistics</th>
+                    <th colspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Services</th>
+                   <th colspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Referrals</th>
+                </tr>`
+
+                let ageRow = `<tr>`
+                ageGroups.forEach(ag => {
+                    ageRow += `<th style="border:1px solid black;background:#DAE9F8;text-align:center" >${ag.name}</th>`
+                });
+
+                ageGroups.forEach(ag => {
+                    ageRow += `<th style="border:1px solid black;background:#DAE9F8;text-align:center">${ag.name}</th>`
+                })
+
+                ageRow += `</tr>`;
+                document.querySelector('#table-subcategory thead').innerHTML = HeaderRow + topRow + ageRow;
+
+
+            }
+
+            const simpleSections = [
+                { indicatorGroupId: 'pcnZequJIjP', sectionLabel: 'Contraceptive Items (Provided/Distributed)' },
+                { indicatorGroupId: 'ApPsIU2yn6y', sectionLabel: 'First time users of modern contraception' },
+                { indicatorGroupId: 'XJjjsfbX5zA', sectionLabel: 'CYP' },
+                { indicatorGroupId: 'cTg8yVub6Ua', sectionLabel: 'Clients' },
+                { indicatorGroupId: 'BhDEp8xjGSr', sectionLabel: 'Comprehensive Sexuality Education' },
+                { indicatorGroupId: 'g40R5KzDKFL', sectionLabel: 'Net Promoter Score' }
+            ];
+
+
+            let combinedTotalSections = ["Contraceptive Items (Provided/Distributed)", "First time users of modern contraception", "CYP"];
+
+            // for table 2 
+            async function populateSimpleSection(indicatorGroupId, orgUnit, period, sectionLabel) {
+
+                const groupUrl = `../../indicatorGroups/${indicatorGroupId}.json?fields=id,name,indicators[id,name]`;
+                const groupData = await fetch(groupUrl).then(res => res.json());
+                const indicators = (groupData.indicators || []).slice().sort((a, b) => {
+                    const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
+                    const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
+                    return aPart.localeCompare(bPart);
+                });
+                const indicatorIds = indicators.map(i => i.id).join(';');
+
+                //analytics call 
+                const analyticsRes = await fetch(`../../analytics.json?dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
+                const analyticsData = await analyticsRes.json();
+
+                const valueMap = {};
+                if (analyticsData.rows) {
+                    analyticsData.rows.forEach(row => {
+                        const [dx, rawValue] = row;
+                        const value = rawValue ? Number(rawValue) : '';
+                        valueMap[dx] = value;
+                    });
+
+                }
+
+                // Build section HTML
+                let sectionHtml = `<tr><th colspan="2" style="text-align:center;background-color:#83CCEB;">${sectionLabel}</th></tr>`;
+                let sectionValues = [];
+                indicators.forEach(ind => {
+                    const val = valueMap[ind.id] || '';
+                    sectionHtml += `<tr><td>${ind.name}</td><td style="text-align:center;">${val}</td></tr>`;
+                    sectionValues.push(val);
+                });
+
+
+                //adding only few sublabels
+                if (combinedTotalSections.includes(sectionLabel)) {
+                    const total = sectionValues.reduce((sum, v) => sum + (Number(v) || 0), 0);
+                    sectionHtml += `<tr>
+                <td style="background:#DAE9F8; font-weight:bold !important;">Total</td>
+                <td style="background:#DAE9F8; font-weight:bold !important; text-align:center;">${total}</td>
+                </tr>`;
+                }
+
+                return sectionHtml;
+            }
+
+            let indicators = [];
+            let ageGroups = [];
+
+            //loader starts
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('table-list').style.display = 'none';
+
+            //fetching and receving the data
+            Promise.all([
+
+                fetch('../../categoryOptionGroupSets/ID3CGIXZNp9.json?fields=id,name,categoryOptionGroups[id,name]').then(res => res.json()),
+
+            ]).then(async (
+                [
+                    ageGroupData,
+                ]) => {
+
+                ageGroups = ageGroupData.categoryOptionGroups;
+
+
+                const mainTablePromise = populateDataInTheCell(ageGroups, selectedOrgUnit.id, selectedPeriod);
+                const simpleTablePromises = simpleSections.map(section =>
+
+                    populateSimpleSection(
+                        section.indicatorGroupId,
+                        selectedOrgUnit.id,
+                        selectedPeriod,
+                        section.sectionLabel
+                    )
+
+                );
+
+                //wait for all to finisth 
+                const [_, ...allSimpleSections] = await Promise.all([
+                    mainTablePromise,
+                    ...simpleTablePromises
+                ])
+
+                document.querySelector('#table-indicators thead').innerHTML = '';
+                document.querySelector('#table-indicators tbody').innerHTML = allSimpleSections.join('');
+
+                //loader end
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('table-list').style.display = 'block';
+
+            });
         }
 
         // //Download btn 
@@ -83,430 +557,6 @@
                 document.getElementById("dlink").click();
             }
         })()
-
-        function createSubtotalRow(label, tableRows) {
-
-            // Build HTML row
-            let subtotalRow = `<tr><th style="background:#DAE9F8;font-weight:bold;">${label}</th>`;
-            tableRows.forEach(total => {
-                subtotalRow += `<td style="background:#DAE9F8; font-weight:bold;text-align:center;">${total}</td>`;
-            });
-            subtotalRow += `</tr>`;
-            return subtotalRow;
-        }
-
-        async function
-            buildSectionRows({
-                servicesGroupId,
-                referralGroupId,
-                sectionLabel,
-                ageGroups,
-                orgUnit,
-                period
-            }) {
-
-            const baseUrl = '../api/29/indicatorGroups/';
-            const servicesGroupUrl = `${baseUrl}${servicesGroupId}.json?fields=id,name,indicators[id,name]`;
-            const referralGroupUrl = `${baseUrl}${referralGroupId}.json?fields=id,name,indicators[id,name]`;
-
-            //fetch indicators 
-            const [servicesData, referralsData] = await Promise.all([
-                fetch(servicesGroupUrl).then(res => res.json()),
-                fetch(referralGroupUrl).then(res => res.json())
-            ]);
-
-            const servicesIndicators = (servicesData.indicators || []).slice().sort((a, b) => {
-                const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
-                const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
-                return aPart.localeCompare(bPart);
-            });
-            const referralsIndicators = referralsData.indicators || [].slice().sort((a, b) => {
-                const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
-                const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
-                return aPart.localeCompare(bPart);
-            });
-
-
-            //removing -Ref from Referrals indicator
-            const referralMap = {};
-            referralsIndicators.forEach(ind => {
-                referralMap[ind.name] = ind.id;
-            });
-
-            // combining both indicators id and referrals id so that both id's will be added to analytics call 
-            const indicatorIds = [
-                ...servicesIndicators.map(i => i.id),
-                ...referralsIndicators.map(i => i.id)
-            ].join(';');
-            const ageGroupIds = ageGroups.map(a => a.id).join(';');
-
-            const analyticsRes = await fetch(`../api/analytics.json?dimension=ID3CGIXZNp9:${ageGroupIds}&dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
-            const analyticsData = await analyticsRes.json();
-
-            // debugging;
-            if (!analyticsData.rows) {
-                console.log('No Analytics data returned: ', analyticsData);
-                document.querySelector('tbody').innerHTML = `<tr><td colspan="13" style="color:#005B96;">No data available for the selected period/org unit/indicators.</td></tr>`;
-                return;
-
-            }
-
-            // Build a value map for fast lookup
-            const valueMap = {};
-            analyticsData.rows.forEach(row => {
-                const [dx, ageGroup, value] = row;
-                if (!valueMap[dx]) valueMap[dx] = {};
-                if (!valueMap[dx][ageGroup]) valueMap[dx][ageGroup] = {};
-                valueMap[dx][ageGroup] = value;
-            });
-
-
-            // Building table rows and subtotal
-            let rows = `<tr> <th colspan = "5" style="font-weight:bold;text-align:center; background-color:#83CCEB;">${sectionLabel}</th></tr>`
-            let sectionTotal = Array(4).fill(0);
-
-            var dataRows = {};
-            servicesIndicators.forEach(serviceInd => {
-                const normName = (serviceInd.name).trim();
-                const referralIndId = referralMap[`${normName}-Ref`];
-                rows += `<tr><td>${serviceInd.name}</td>`;
-
-
-                let totalServices = [], totalReferral = [];
-                var totalSerRef = [];
-
-                ageGroups.forEach(age => {
-                    const rawValueSer = valueMap[serviceInd.id]?.[age.id] || '';
-                    const rawValueRef = referralIndId ? (valueMap[referralIndId]?.[age.id] || '') : '';
-                    //changes 
-                    totalServices.push(rawValueSer ? Number(rawValueSer) : 0);
-                    totalReferral.push(rawValueRef ? Number(rawValueRef) : 0);
-
-                });
-                //changes
-                totalSerRef = [...totalServices, ...totalReferral];
-
-                totalSerRef.forEach(val => {
-                    rows += `<td style="text-align:center">${val || ''}</td>`;
-                })
-
-                //assigning values
-                if (!dataRows[sectionLabel]) dataRows[sectionLabel] = totalSerRef;
-                else dataRows[sectionLabel] = dataRows[sectionLabel].map((val, index) => (totalSerRef[index] + val))
-
-
-                //summing the indicator's values into the section total 
-                sectionTotal = sectionTotal.map((val, index) => val + (totalSerRef[index] || 0));
-                rows += `</tr>`;
-
-            });
-
-            const subtotal = createSubtotalRow(`Sub-total ${sectionLabel}`, dataRows[sectionLabel]);
-            return { html: rows + subtotal, dataRows: sectionTotal };
-        }
-
-        let sections = [
-
-            {
-                sectionLabel: 'Abortion Care',
-                servicesGroupId: 'spKJhO2BdJ4',
-                referralGroupId: 'LGYW9TZWGxA'
-
-            },
-
-            {
-                sectionLabel: 'Contraception',
-                servicesGroupId: 'KjrflkiHprP',
-                referralGroupId: 'VrBmrcDuct8'
-            },
-
-            {
-                sectionLabel: 'HIV',
-                servicesGroupId: 'ew2v3klBXk3',
-                referralGroupId: 'ULP4QGLITZG'
-
-            },
-
-            {
-                sectionLabel: 'Obstetrics',
-                servicesGroupId: 'CeQ16ak9sf9',
-                referralGroupId: 'liNyIIqvS8R'
-
-            },
-
-            {
-                sectionLabel: 'Gynecology',
-                servicesGroupId: 'AMKGqk1VW3G',
-                referralGroupId: 'E2QQOs1ugfS',
-                totals: ['Obstetrics']
-            },
-
-            {
-                sectionLabel: 'Pediatrics Services',
-                servicesGroupId: 'MwviwYL7d1p',
-                referralGroupId: 'X0ryZfnewxu'
-
-            },
-
-            {
-                sectionLabel: 'STIs/RTIs ',
-                servicesGroupId: 'FaVY5m0FfW9',
-                referralGroupId: 'pADO4FoFj1k'
-
-            },
-
-            {
-                sectionLabel: 'Subfertility Services/ Fertility Support',
-                servicesGroupId: 'qGCyR14BR7N',
-                referralGroupId: 'viU7fgkn50L',
-
-            },
-            {
-                sectionLabel: 'Urology Services',
-                servicesGroupId: 'aSLsltvfg14',
-                referralGroupId: 'L4VekghOvJp',
-            },
-            {
-                sectionLabel: 'Specialised SRH services / Sexual and gender based violence',
-                servicesGroupId: 'kt2rS9nNwSC',
-                referralGroupId: 'HVPac5RfKZY',
-            },
-            {
-                sectionLabel: 'SRH - Other Services',
-                servicesGroupId: 'aSLsltvfg14',
-                referralGroupId: 'L4VekghOvJp'
-
-            },
-            {
-                sectionLabel: 'Non-SRH Medical Services',
-                servicesGroupId: 'QIPLUVq6zr8',
-                referralGroupId: 'xPCwSI1ommI'
-
-            }
-
-        ];
-
-        async function populateDataInTheCell(ageGroups, orgUnit, period) {
-
-            let allRows = [];
-            let sectionTotals = {}; //storing each section's subtotal array by label
-
-            for (const section of sections) {
-
-                const { html, dataRows } = await buildSectionRows({
-
-                    servicesGroupId: section.servicesGroupId,
-                    referralGroupId: section.referralGroupId,
-                    sectionLabel: section.sectionLabel,
-                    ageGroups,
-                    period,
-                    orgUnit
-
-                });
-
-
-                allRows.push(html);
-
-                //storing sub-total array for this section 
-                sectionTotals[section.sectionLabel] = dataRows; //an array
-
-                //for each label to combine
-                if (section.totals) {
-                    let combined = [...(dataRows || [])];
-                    section.totals.forEach(label => {
-                        const arr = sectionTotals[label];
-
-                        if (arr) {
-                            for (let i = 0; i < combined.length; i++) {
-                                combined[i] += Number(arr[i] || 0);
-                            }
-                        }
-                    });
-
-
-                    //adding combined subtotal row 
-                    allRows.push(
-                        `<tr><td style="font-weight:bold;background-color:#DAE9F8;">Sub-total ${section.totals.join(' & ')} & ${section.sectionLabel}</td>` +
-                        combined.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
-                        `</tr>`
-                    );
-
-                }
-            }
-
-            // sub total SRH Services
-            const srhSectionLabels = sections
-                .filter(s => s.sectionLabel !== 'SRH - Other Services' && s.sectionLabel !== 'Non-SRH Medical Services')
-                .map(s => s.sectionLabel);
-
-            let srhSubtotal = null;
-            srhSectionLabels.forEach(label => {
-                const arr = sectionTotals[label];
-                if (arr) {
-                    if (!srhSubtotal) {
-                        srhSubtotal = [...arr];
-                    } else {
-                        for (let i = 0; i < srhSubtotal.length; i++) {
-                            srhSubtotal[i] += Number(arr[i] || 0);
-                        }
-                    }
-                }
-            });
-            if (srhSubtotal) {
-                allRows.push(
-                    `<tr><td style="font-weight:bold;background-color:#DAE9F8">Subtotal SRH - Services</td>` +
-                    srhSubtotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
-                    `</tr>`
-                );
-            }
-
-            //  Grand Total (SRH + Non-SRH Medical)
-            const nonSrhArr = sectionTotals['Non-SRH Medical Services'];
-            if (srhSubtotal && nonSrhArr) {
-                let grandTotal = srhSubtotal.map((val, i) => val + Number(nonSrhArr[i] || 0));
-                allRows.push(
-                    `<tr><td style="font-weight:bold;background-color:#DAE9F8;">Grand Total (SRH+Non-SRH Medical)</td>` +
-                    grandTotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
-                    `</tr>`
-                );
-            }
-
-            document.querySelector('tbody').innerHTML = allRows.join('');
-
-            let HeaderRow = `<tr>
-            <th colspan="9" style="border:1px solid black;background:#DAE9F8;text-align:center; background-color:#83CCEB;">
-        ${dhis2.report.organisationUnit.name} (${selectedPeriod})
-        </th>
-        </tr>`;
-            let topRow = `<tr>
-                    <th rowspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Service Statistics</th>
-                    <th colspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Services</th>
-                   <th colspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Referrals</th>
-                </tr>`
-
-            let ageRow = `<tr>`
-            ageGroups.forEach(ag => {
-                ageRow += `<th style="border:1px solid black;background:#DAE9F8;text-align:center" >${ag.name}</th>`
-            });
-
-            ageGroups.forEach(ag => {
-                ageRow += `<th style="border:1px solid black;background:#DAE9F8;text-align:center">${ag.name}</th>`
-            })
-
-            ageRow += `</tr>`;
-            document.querySelector('table thead').innerHTML = HeaderRow + topRow + ageRow;
-
-
-        }
-
-        const simpleSections = [
-            { indicatorGroupId: 'pcnZequJIjP', sectionLabel: 'Contraceptive Items (Provided/Distributed)' },
-            { indicatorGroupId: 'ApPsIU2yn6y', sectionLabel: 'First time users of modern contraception' },
-            { indicatorGroupId: 'XJjjsfbX5zA', sectionLabel: 'CYP' },
-            { indicatorGroupId: 'cTg8yVub6Ua', sectionLabel: 'Clients' },
-            { indicatorGroupId: 'BhDEp8xjGSr', sectionLabel: 'Comprehensive Sexuality Education' },
-            { indicatorGroupId: 'g40R5KzDKFL', sectionLabel: 'Net Promoter Score' }
-        ];
-
-
-        let combinedTotalSections = ["Contraceptive Items (Provided/Distributed)", "First time users of modern contraception", "CYP"];
-
-        // for table 2 
-        async function populateSimpleSection(indicatorGroupId, orgUnit, period, sectionLabel) {
-
-            const groupUrl = `../api/29/indicatorGroups/${indicatorGroupId}.json?fields=id,name,indicators[id,name]`;
-            const groupData = await fetch(groupUrl).then(res => res.json());
-            const indicators = (groupData.indicators || []).slice().sort((a, b) => {
-                const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
-                const bPart = b.name.includes('-') ? b.name.split('-')[1].trim() : b.name;
-                return aPart.localeCompare(bPart);
-            });
-            const indicatorIds = indicators.map(i => i.id).join(';');
-
-            //analytics call 
-            const analyticsRes = await fetch(`../api/analytics.json?dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
-            const analyticsData = await analyticsRes.json();
-
-            const valueMap = {};
-            if (analyticsData.rows) {
-                analyticsData.rows.forEach(row => {
-                    const [dx, rawValue] = row;
-                    const value = rawValue ? Number(rawValue) : '';
-                    valueMap[dx] = value;
-                });
-
-            }
-
-            // Build section HTML
-            let sectionHtml = `<tr><th colspan="2" style="text-align:center;background-color:#83CCEB;">${sectionLabel}</th></tr>`;
-            let sectionValues = [];
-            indicators.forEach(ind => {
-                const val = valueMap[ind.id] || '';
-                sectionHtml += `<tr><td>${ind.name}</td><td style="text-align:center;">${val}</td></tr>`;
-                sectionValues.push(val);
-            });
-
-
-            //adding only few sublabels
-            if (combinedTotalSections.includes(sectionLabel)) {
-                const total = sectionValues.reduce((sum, v) => sum + (Number(v) || 0), 0);
-                sectionHtml += `<tr>
-                <td style="background:#DAE9F8; font-weight:bold !important;">Total</td>
-                <td style="background:#DAE9F8; font-weight:bold !important; text-align:center;">${total}</td>
-                </tr>`;
-            }
-
-            return sectionHtml;
-        }
-
-        let indicators = [];
-        let ageGroups = [];
-
-        //loader starts
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('table-data').style.display = 'none';
-
-        //fetching and receving the data
-        Promise.all([
-
-            fetch('../api/categoryOptionGroupSets/ID3CGIXZNp9.json?fields=id,name,categoryOptionGroups[id,name]').then(res => res.json()),
-
-        ]).then(async (
-            [
-                ageGroupData,
-            ]) => {
-
-            ageGroups = ageGroupData.categoryOptionGroups;
-
-
-            const mainTablePromise = populateDataInTheCell(ageGroups, selectedOrgUnit, selectedPeriod);
-            const simpleTablePromises = simpleSections.map(section =>
-
-                populateSimpleSection(
-                    section.indicatorGroupId,
-                    selectedOrgUnit,
-                    selectedPeriod,
-                    section.sectionLabel
-                )
-
-            );
-
-            //wait for all to finisth 
-            const [_, ...allSimpleSections] = await Promise.all([
-                mainTablePromise,
-                ...simpleTablePromises
-            ])
-
-            document.querySelector('#table2 thead').innerHTML = '';
-            document.querySelector('#table2 tbody').innerHTML = allSimpleSections.join('');
-
-            //loader end
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('table-data').style.display = '';
-
-        });
-
-
     </script>
 
 </body>
