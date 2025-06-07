@@ -16,6 +16,17 @@
             background: #218838;
             color: #fff;
         }
+
+        #table-list {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+#table-list table {
+    margin-bottom: 0 !important;
+}
+
+        
+
     </style>
 
 </head>
@@ -36,8 +47,8 @@
                     <td class="font-weight-bold">Select Period Type:</td>
                     <td>
                         <select id="period-selection" class="form-select" onchange="displayPeriodType(this)">
-                            <option value="year">Year</option>
-                            <option value="quarter">Quarter</option>
+                            <option value="year">Yearly</option>
+                            <option value="quarter">Quarterly</option>
                         </select>
                     </td>
                 </tr>
@@ -49,7 +60,7 @@
             </tbody>
         </table>
     </div>
-    
+
     <div id="loader" style="display:none; text-align:center; margin: 30px;">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -68,14 +79,14 @@
             <tbody></tbody>
         </table>
     </div>
-    
+
     <script>
-        displayPeriodType({value: 'year'})
+        displayPeriodType({ value: 'year' })
         const quarters = {
-            'Q1':'January - March',
-            'Q2':'April - May',
-            'Q3':'June - August',
-            'Q4':'October - December',
+            'Q1': 'January - March',
+            'Q2': 'April - May',
+            'Q3': 'June - August',
+            'Q4': 'October - December',
         }
 
         function displayPeriodType(event) {
@@ -98,12 +109,13 @@
                 document.getElementById('period-type').innerHTML = `
                 <td class="font-weight-bold">Select Quarter:</td> 
                 <td> 
-                    <select class="form-select" id='period-quarter'>
-                        ${Object.keys(quarters).map(quarter => `<option value='${quarter}'>${quarters[quarter]}</option>`)}
-                    </select>
                     <select class="form-select" id='period-value'>
                         ${yearList.map(year => `<option>${year}</option>`)}
                     </select>
+                    <select class="form-select" id='period-quarter'>
+                        ${Object.keys(quarters).map(quarter => `<option value='${quarter}'>${quarters[quarter]}</option>`)}
+                    </select>
+                   
                     </td>`
 
                 return;
@@ -117,7 +129,7 @@
 
             var selectedPeriod = document.getElementById('period-value').value;
             var quarterSelection = ''
-            if(document.getElementById('period-selection').value=="quarter") quarterSelection = document.getElementById('period-quarter').value;
+            if (document.getElementById('period-selection').value == "quarter") quarterSelection = document.getElementById('period-quarter').value;
             selectedPeriod += quarterSelection;
 
             function createSubtotalRow(label, tableRows) {
@@ -142,7 +154,7 @@
                     period
                 }) {
 
-                const baseUrl = '../../indicatorGroups/';
+                const baseUrl = '../api/indicatorGroups/';
                 const servicesGroupUrl = `${baseUrl}${servicesGroupId}.json?fields=id,name,indicators[id,name]`;
                 const referralGroupUrl = `${baseUrl}${referralGroupId}.json?fields=id,name,indicators[id,name]`;
 
@@ -178,7 +190,7 @@
                 const ageGroupIds = ageGroups.map(a => a.id).join(';');
                 const gendersIds = genders.map(g => g.id).join(';');
 
-                const analyticsRes = await fetch(`../../analytics.json?dimension=ID3CGIXZNp9:${ageGroupIds}&dimension=JXjPOMyEo8u:${gendersIds}&dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
+                const analyticsRes = await fetch(`../api/analytics.json?dimension=ID3CGIXZNp9:${ageGroupIds}&dimension=JXjPOMyEo8u:${gendersIds}&dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
                 const analyticsData = await analyticsRes.json();
 
                 // debugging;
@@ -201,7 +213,7 @@
 
                 // Building table rows and subtotal
                 let rows = `<tr> <th colspan = "13" style="font-weight:bold;text-align:center; background-color:#83CCEB;">${sectionLabel}</th></tr>`
-    
+
 
                 var dataRows = {};
                 servicesIndicators.forEach(serviceInd => {
@@ -223,7 +235,7 @@
 
                         });
                     });
-                        //changes
+                    //changes
                     totalSerRef = [...totalServices, ...totalReferral];
 
                     totalSerRef.forEach(val => {
@@ -415,12 +427,12 @@
 
                 let HeaderRow = `<tr>
                 <th colspan="13" style="border:1px solid black;background:#DAE9F8;text-align:center; background-color:#83CCEB;">
-                ${selectedOrgUnit.name} (Period: ${ (quarterSelection ? `${quarters[quarterSelection]} ,`: '')} ${selectedPeriod.split('Q')[0]})
+                ${selectedOrgUnit.name} (Period: ${(quarterSelection ? `${quarters[quarterSelection]} ,` : '')} ${selectedPeriod.split('Q')[0]})
                 </th></tr>`;
-               
+
                 //Header 
                 let topRow = `<tr>
-                        <th rowspan="3" style="border:1px solid black;background:#DAE9F8;text-align:center">Service Statistics</th>
+                        <th rowspan="3" style="border:1px solid black;background:#DAE9F8;text-align:center !important">Service Statistics</th>
                         <th colspan="6" style="border:1px solid black;background:#DAE9F8;text-align:center">Services</th>
                         <th colspan="6" style="border:1px solid black;background:#DAE9F8;text-align:center">Referrals</th>
                     </tr>`
@@ -435,7 +447,7 @@
                 })
 
                 ageRow += `</tr>`;
-                
+
                 let genderRow = `<tr>`;
                 for (let i = 0; i < 4; i++) {
                     genders.forEach(g => {
@@ -445,7 +457,6 @@
                 genderRow += `</tr>`;
 
                 document.querySelector('#table-subcategory thead').innerHTML = HeaderRow + topRow + ageRow + genderRow;
-
 
             }
 
@@ -464,7 +475,7 @@
             // for table 2 
             async function populateSimpleSection(indicatorGroupId, orgUnit, period, sectionLabel) {
 
-                const groupUrl = `../../indicatorGroups/${indicatorGroupId}.json?fields=id,name,indicators[id,name]`;
+                const groupUrl = `../api/indicatorGroups/${indicatorGroupId}.json?fields=id,name,indicators[id,name]`;
                 const groupData = await fetch(groupUrl).then(res => res.json());
                 const indicators = (groupData.indicators || []).slice().sort((a, b) => {
                     const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
@@ -474,7 +485,7 @@
                 const indicatorIds = indicators.map(i => i.id).join(';');
 
                 //analytics call 
-                const analyticsRes = await fetch(`../../analytics.json?dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
+                const analyticsRes = await fetch(`../api/analytics.json?dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
                 const analyticsData = await analyticsRes.json();
 
                 const valueMap = {};
@@ -501,8 +512,8 @@
                 if (combinedTotalSections.includes(sectionLabel)) {
                     const total = sectionValues.reduce((sum, v) => sum + (Number(v) || 0), 0);
                     sectionHtml += `<tr>
-                <td style="background:#DAE9F8; font-weight:bold !important;">Total</td>
-                <td style="background:#DAE9F8; font-weight:bold !important; text-align:center;">${total}</td>
+                    <td style="background:#DAE9F8; font-weight:bold !important;">Total</td>
+                    <td style="background:#DAE9F8; font-weight:bold !important; text-align:center;">${total}</td>
                 </tr>`;
                 }
 
@@ -520,8 +531,8 @@
             //fetching and receving the data
             Promise.all([
 
-                fetch('../../categoryOptionGroupSets/ID3CGIXZNp9.json?fields=id,name,categoryOptionGroups[id,name]').then(res => res.json()),
-                fetch('../../categories/JXjPOMyEo8u.json?fields=id,name,categoryOptions[id,name]').then(res => res.json()),
+                fetch('../api/categoryOptionGroupSets/ID3CGIXZNp9.json?fields=id,name,categoryOptionGroups[id,name]').then(res => res.json()),
+                fetch('../api/categories/JXjPOMyEo8u.json?fields=id,name,categoryOptions[id,name]').then(res => res.json()),
 
 
             ]).then(async (
@@ -553,12 +564,15 @@
                 document.querySelector('#table-indicators thead').innerHTML = '';
                 document.querySelector('#table-indicators tbody').innerHTML = allSimpleSections.join('');
 
+              
+
                 //loader end
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('table-list').style.display = 'block';
 
             });
         }
+
 
 
         // //Download btn 
