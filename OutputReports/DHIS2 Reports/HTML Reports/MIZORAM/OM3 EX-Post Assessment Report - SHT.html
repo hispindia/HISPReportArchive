@@ -164,6 +164,24 @@
 
         </div>
         <br>
+        <div class="container w-50">
+            <div class="m-2 row">
+                <label for="start-date" class="col-3 col-form-label">Start Date</label>
+                <div class="col-7">
+                    <input type="date" class="form-control" id="start-date">
+                </div>
+            </div>
+            <div class="m-2 row">
+                <label for="end-date" class="col-3 col-form-label">End Date</label>
+                <div class="col-7">
+                    <input type="date" class="form-control" id="end-date">
+                </div>
+            </div>
+
+            <div class="m-2 row">
+                <button class="btn btn-primary" onclick="displayReport()">Submit</button>
+            </div>
+        </div>
         <div id="output" style="display: none;">
             <style>
                 * {
@@ -280,7 +298,8 @@
             <div style="clear:both"></div>
             <div>
                 <p style="font-style: italic;">
-                    This document is computer generated and does not require the assessor’s physical signature in order to be
+                    This document is computer generated and does not require the assessor’s physical signature in order
+                    to be
                     considered valid.</p>
             </div>
         </div>
@@ -288,16 +307,11 @@
 </body>
 
 <script>
-    document.getElementById("loader").style.display = "block";
     document.getElementById("date-count").style.display = "none";
     document.getElementById("output").style.display = "none";
 
     var selectedOrgUnit = dhis2.report.organisationUnit;
-    var selectedDate = dhis2.report.date;
-    var dates = {
-        startDate: selectedDate,
-        endDate: `${selectedDate.split('-')[0]}-${('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2)}-${new Date(selectedDate.split('-')[0], ('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2), 0).getDate()}`
-    }
+    var pdfName = selectedOrgUnit.name + ' Report'
     var quaters = [
         "January-March",
         "April-June",
@@ -305,7 +319,6 @@
         "October-December"
     ]
 
-    var pdfName = selectedOrgUnit.name + ' Report'
     var dataElement = [
         {
             id: 'tm5mca1RtIi',
@@ -376,15 +389,15 @@
             name: 'SHT_17_Quality Outcome Reporting'
         },
         {
-            id: 'm50G1QGE4E8',
+            id: 'MX5rRE8vauY',
             name: 'TOTAL (Max 1000 points = 100%)'
         },
         {
-            id: 'm50G1QGE4E8',
+            id: 'MX5rRE8vauY',
             name: 'PERCENTAGE'
         }
     ];
-    
+
     var dataStoreCount = 0;
     $.ajax({
         async: false,
@@ -396,92 +409,120 @@
         }
     });
 
-        $.ajax({
-            async: false,
-            type: "post",
-            url: '../api/dataStore/reportCounts/shtExAnteOM3',
-            data: JSON.stringify(++dataStoreCount),
-            contentType: "application/json"
-        });
-        debugger;
-        var date = new Date();
-        date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
-        pdfName += `(${date})-${dataStoreCount}`;
+    $.ajax({
+        async: false,
+        type: "post",
+        url: '../api/dataStore/reportCounts/shtExAnteOM3',
+        data: JSON.stringify(++dataStoreCount),
+        contentType: "application/json"
+    });
+    debugger;
+    var date = new Date();
+    date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
+    pdfName += `(${date})-${dataStoreCount}`;
 
-        document.getElementById("curr-date").innerHTML = date;
-        document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
-    
-
-        getData()
-        async function getData() {
-            var dataObj = {};
-
-            var responseFirst = await (await fetch(`../api/events.json?fields=*&program=J2WLAhMNTa9&orgUnit=${selectedOrgUnit.id}&startDate=${dates.startDate}&endDate=${dates.endDate}&paging=false`)).json();
-            responseFirst.events.forEach(event => {
-                if (event.programStage == 'RgeKAiRQ3yo') {
-                    event.dataValues.forEach(dv => {
-                        dataObj[dv.dataElement] = dv.value;
-                    })
-                    if (event.programStage == 'RgeKAiRQ3yo') {
-                        let value = event.eventDate.split("T")[0];
-                        let year = Number(value.split("-")[0]);
-                        value = Number(value.split("-")[1]);
-                        value = value >= 1 && value <= 3 ? 0 : value;
-                        value = value >= 4 && value <= 6 ? 1 : value;
-                        value = value >= 7 && value <= 9 ? 2 : value;
-                        value = value >= 10 && value <= 12 ? 3 : value;
-                        let quater = quaters[(value + '')].split('-');
-
-                        dataObj["exPost-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
-                    }
-                }
-
-            });
-            document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
-            document.getElementById('ou').innerHTML = selectedOrgUnit.name;
-            document.getElementById('quater-dates').innerHTML = (dataObj["exPost-ev"] ? dataObj["exPost-ev"] : '');
-            document.getElementById('exAnte-startDate').innerHTML = (dataObj['WWekZ4prgf4'] ? dataObj['WWekZ4prgf4'] : '');
-            document.getElementById('exAnte-endDate').innerHTML = (dataObj['MkkWs8MkL8C'] ? ` to ${dataObj['MkkWs8MkL8C']}` : '');
+    document.getElementById("curr-date").innerHTML = date;
+    document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
 
 
-            document.getElementById('ex-postNotes').innerHTML = dataObj['kEmB5rxi38s'] ? dataObj['kEmB5rxi38s'] : '';
-            document.getElementById('ex-postRec').innerHTML = dataObj['ITR1IqQtkmx'] ? dataObj['ITR1IqQtkmx'] : '';
-
-            document.getElementById('assessorI-nd').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '') + (dataObj['Bt7OvMO4KoD'] ? `, ${dataObj['Bt7OvMO4KoD']}` : '');
-            document.getElementById('assessorII-nd').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '') + (dataObj['PEUbEOT8VNV'] ? `, ${dataObj['PEUbEOT8VNV']}` : '');
-            document.getElementById('assessorIII-nd').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '') + (dataObj['Zrt7faR6v76'] ? `, ${dataObj['Zrt7faR6v76']}` : '');
-            document.getElementById('assessorI-sign').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '');
-            document.getElementById('assessorII-sign').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '');
-            document.getElementById('assessorIII-sign').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '');
-            document.getElementById('assessorI-designation').innerHTML = (dataObj['Bt7OvMO4KoD'] ? dataObj['Bt7OvMO4KoD'] : '');
-            document.getElementById('assessorII-designation').innerHTML = (dataObj['PEUbEOT8VNV'] ? dataObj['PEUbEOT8VNV'] : '');
-            document.getElementById('assessorIII-designation').innerHTML = (dataObj['Zrt7faR6v76'] ? dataObj['Zrt7faR6v76'] : '');
-
-            var codeScore = '';
-            dataElement.forEach(de => {
-                if (de.id == "MX5rRE8vauY") {
-                    let value = dataObj['MX5rRE8vauY'] ? changeDec(dataObj['MX5rRE8vauY'], 2) : '';
-                    if (de.name == "PERCENTAGE") calculatedVal = value ? ((value / 1000) && value / 1000 != "Infinity" ? ((value / 1000) * 100).toFixed(2) : '') : '';
-                    else calculatedVal = value;
-                    codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center;font-weight:bold">${calculatedVal}</td></tr>`;
-                }
-                else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
-            })
-            document.getElementById('code-score').innerHTML = codeScore;
-
-            document.getElementById("date-count").style.display = "block";
-            document.getElementById("output").style.display = "block";
-            document.getElementById("downloads").style.display = "block";
-            document.getElementById("loader").style.display = "none";
-
-            function changeDec(val, index) {
-                var isDec = val.includes('.');
-                if (isDec) {
-                    return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
-                }
-                return val;
-            }
+    function displayReport() {
+        document.getElementById("date-count").style.display = "none";
+        document.getElementById("output").style.display = "none";
+        document.getElementById("loader").style.display = "block";
+        var dates = {
+            startDate: document.getElementById('start-date').value,
+            endDate: document.getElementById('end-date').value,
         }
+        if (!dates.startDate || !dates.endDate) {
+            document.getElementById("loader").style.display = "none";
+            alert("Please Select Dates Correctly!");
+        } else {
+            setTimeout(() => {
+                getData(dates);
+            }, 1000)
+        }
+    }
+
+    async function getData(dates) {
+        var dataObj = {};
+
+        var responseFirst = await (await fetch(`../api/events.json?fields=*&program=J2WLAhMNTa9&orgUnit=${selectedOrgUnit.id}&startDate=${dates.startDate}&endDate=${dates.endDate}&paging=false`)).json();
+        responseFirst.events.forEach(event => {
+            var obj = {};
+            if (event.programStage == 'RgeKAiRQ3yo') {
+                event.dataValues.forEach(dv => {
+                    obj[dv.dataElement] = dv.value;
+                })
+                if (event.programStage == 'RgeKAiRQ3yo') {
+                    let value = event.eventDate.split("T")[0];
+                    let year = Number(value.split("-")[0]);
+                    value = Number(value.split("-")[1]);
+                    value = value >= 1 && value <= 3 ? 0 : value;
+                    value = value >= 4 && value <= 6 ? 1 : value;
+                    value = value >= 7 && value <= 9 ? 2 : value;
+                    value = value >= 10 && value <= 12 ? 3 : value;
+                    let quater = quaters[(value + '')].split('-');
+
+                    obj["exPost-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
+                }
+            }
+            if (obj['hqDoSMfLh8F'] == 'Ex-Post Assessment') {
+                dataObj = { ...obj }
+            }
+        });
+
+
+        document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
+        document.getElementById('ou').innerHTML = selectedOrgUnit.name;
+        document.getElementById('quater-dates').innerHTML = (dataObj["exPost-ev"] ? dataObj["exPost-ev"] : '');
+        document.getElementById('exAnte-startDate').innerHTML = (dataObj['WWekZ4prgf4'] ? dataObj['WWekZ4prgf4'] : '');
+        document.getElementById('exAnte-endDate').innerHTML = (dataObj['MkkWs8MkL8C'] ? ` to ${dataObj['MkkWs8MkL8C']}` : '');
+
+
+        document.getElementById('ex-postNotes').innerHTML = dataObj['kEmB5rxi38s'] ? dataObj['kEmB5rxi38s'] : '';
+        document.getElementById('ex-postRec').innerHTML = dataObj['ITR1IqQtkmx'] ? dataObj['ITR1IqQtkmx'] : '';
+
+        document.getElementById('assessorI-nd').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '') + (dataObj['Bt7OvMO4KoD'] ? `, ${dataObj['Bt7OvMO4KoD']}` : '');
+        document.getElementById('assessorII-nd').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '') + (dataObj['PEUbEOT8VNV'] ? `, ${dataObj['PEUbEOT8VNV']}` : '');
+        document.getElementById('assessorIII-nd').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '') + (dataObj['Zrt7faR6v76'] ? `, ${dataObj['Zrt7faR6v76']}` : '');
+        document.getElementById('assessorI-sign').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '');
+        document.getElementById('assessorII-sign').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '');
+        document.getElementById('assessorIII-sign').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '');
+        document.getElementById('assessorI-designation').innerHTML = (dataObj['Bt7OvMO4KoD'] ? dataObj['Bt7OvMO4KoD'] : '');
+        document.getElementById('assessorII-designation').innerHTML = (dataObj['PEUbEOT8VNV'] ? dataObj['PEUbEOT8VNV'] : '');
+        document.getElementById('assessorIII-designation').innerHTML = (dataObj['Zrt7faR6v76'] ? dataObj['Zrt7faR6v76'] : '');
+
+        var codeScore = '';
+        dataElement.forEach(de => {
+            if (de.id == "MX5rRE8vauY") {
+                let value = dataObj['MX5rRE8vauY'] ? changeDec(dataObj['MX5rRE8vauY'], 2) : '';
+                if (de.name == "PERCENTAGE") calculatedVal = value ? ((value / 1000) && value / 1000 != "Infinity" ? ((value / 1000) * 100).toFixed(2) : '') : '';
+                else calculatedVal = value;
+                codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center;font-weight:bold">${calculatedVal}</td></tr>`;
+            }
+            else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? formatNumber(dataObj[de.id]) : '')}</td></tr>`;
+        })
+        document.getElementById('code-score').innerHTML = codeScore;
+
+        document.getElementById("date-count").style.display = "block";
+        document.getElementById("output").style.display = "block";
+        document.getElementById("downloads").style.display = "block";
+        document.getElementById("loader").style.display = "none";
+
+        function changeDec(val, index) {
+            var isDec = val.includes('.');
+            if (isDec) {
+                return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
+            }
+            return val;
+        }
+
+        function formatNumber(value) {
+            const num = Number(value);
+            if (isNaN(num)) return 'Invalid number';
+            return Number.isInteger(num) ? num : Number(num.toFixed(2));
+        }
+    }
 
     function printContent(el) {
         window.parent.document.title = pdfName;

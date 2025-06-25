@@ -159,16 +159,33 @@
 </head>
 
 <body>
-    <div class="loading" id="loader"></div>
-
+    <div class="loading" id="loader" style="display: none;"></div>
     <a id="dlink" style="display:none;"></a>
 
     <div id="downloads" style="display: none;">
-        <button class="btn btn-success" onclick="printContent('output')">Print
-        </button>
-
+        <button class="btn btn-success" onclick="printContent('output')">Print</button>
     </div>
     <br>
+
+    <div class="container w-50">
+        <div class="m-2 row">
+            <label for="start-date" class="col-3 col-form-label">Start Date</label>
+            <div class="col-7">
+              <input type="date" class="form-control" id="start-date">
+            </div>
+          </div>
+          <div class="m-2 row">
+            <label for="end-date" class="col-3 col-form-label">End Date</label>
+            <div class="col-7">
+              <input type="date" class="form-control" id="end-date">
+            </div>
+          </div>
+
+          <div class="m-2 row">
+            <button class="btn btn-primary" onclick="displayReport()">Submit</button>
+          </div>
+          
+    </div>
     <div id="output" style="display: none;">
         <style>
             * {
@@ -335,23 +352,41 @@
 
 <script>
 
-    document.getElementById("loader").style.display = "block";
     document.getElementById("date-count").style.display = "none";
     document.getElementById("output").style.display = "none";
 
     var selectedOrgUnit = dhis2.report.organisationUnit;
-    var selectedDate = dhis2.report.date;
-    var dates = {
-        startDate: selectedDate,
-        endDate: `${selectedDate.split('-')[0]}-${('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2)}-${new Date(selectedDate.split('-')[0], ('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2), 0).getDate()}`
-    }
+    var pdfName = selectedOrgUnit.name + ' Report';
     var quaters = [
         "January-March",
         "April-June",
         "July-September",
         "October-December"
-    ]
-    var pdfName = selectedOrgUnit.name + ' Report'
+    ];
+
+    var dataStoreCount = 0;
+    $.ajax({
+        async: false,
+        type: "GET",
+        url: '../api/dataStore/reportCounts/chcOM3',
+        success: function (data) {
+            debugger;
+            dataStoreCount = data;
+        }
+    });
+
+
+    $.ajax({
+        async: false,
+        type: "put",
+        url: '../api/dataStore/reportCounts/chcOM3',
+        data: JSON.stringify(++dataStoreCount),
+        contentType: "application/json"
+    });
+    debugger;
+    var date = new Date();
+    date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
+    pdfName += `(${date})-${dataStoreCount}`;
 
     var dataElement = [
         {
@@ -386,41 +421,41 @@
             id: 'mwBMY6pBnNt',
             name: 'CHC_SDH_8_Drug Store'
         },
-        {
-            id: 'pHdhGRXtgYK',
-            name: 'CHC_SDH_9_Waste Disp'
-        },
+        // {
+        //     id: 'pHdhGRXtgYK',
+        //     name: 'CHC_SDH_9_Waste Disp'
+        // },
         {
             id: 'NronO8j2Fft',
-            name: 'CHC_SDH_10_Drug Dispensation'
+            name: 'CHC_SDH_9_Drug Dispensation'
         },
         {
             id: 'LA8oFJGjiX3',
-            name: 'CHC_SDH_11_Knowledge'
+            name: 'CHC_SDH_10_Knowledge'
         },
         {
             id: 'uIbs7yJJGEe',
-            name: 'CHC_SDH_12_BMW'
+            name: 'CHC_SDH_11_BMW'
         },
         {
             id: 'OjLkSpUqD2P',
-            name: 'CHC_SDH_13_Outcome Quality'
+            name: 'CHC_SDH_12_Outcome Quality'
         },
         {
             id: 'FuBMShCvsTa',
-            name: 'CHC_SDH_14_Accountability'
+            name: 'CHC_SDH_13_Accountability'
         },
         {
             id: 'mdbSU6XYoK3',
-            name: 'CHC_SDH_15_Patient Experience Score'
+            name: 'CHC_SDH_14_Patient Experience Score'
         },
         {
             id: 'uj9OgZ2awL0',
-            name: 'CHC_SDH_16_Greviance'
+            name: 'CHC_SDH_15_Greviance'
         },
         {
             id: 'aYF1TLh8Wgo',
-            name: 'CHC_SDH_17_HMIS Reporting'
+            name: 'CHC_SDH_16_HMIS Reporting'
         },
         {
             id: 'm50G1QGE4E8',
@@ -432,36 +467,32 @@
         }
     ]
 
-    var dataStoreCount = 0;
-    $.ajax({
-        async: false,
-        type: "GET",
-        url: '../api/dataStore/reportCounts/chcOM3',
-        success: function (data) {
-            debugger;
-            dataStoreCount = data;
-        }
-    });
+    function displayReport() {
+    document.getElementById("date-count").style.display = "none";
+    document.getElementById("output").style.display = "none";
+    document.getElementById("loader").style.display = "block";
+    var dates = {
+        startDate: document.getElementById('start-date').value,
+        endDate: document.getElementById('end-date').value,
+    }
+    if(!dates.startDate || !dates.endDate) {
+        document.getElementById("loader").style.display = "none";
+        alert("Please Select Dates Correctly!");
+    } else {
+        setTimeout(()=> {
+            getData(dates);
+        },1000)
+    }
 
-    $.ajax({
-        async: false,
-        type: "put",
-        url: '../api/dataStore/reportCounts/chcOM3',
-        data: JSON.stringify(++dataStoreCount),
-        contentType: "application/json"
-    });
-    debugger;
-    var date = new Date();
-    date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
-    pdfName += `(${date})-${dataStoreCount}`;
+    }
+
+    async function getData(dates) {
+
 
     document.getElementById("curr-date").innerHTML = date;
     document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
 
 
-    getData();
-
-    async function getData() {
         var dataObj = {};
         var selfAssessmentDate = ''
 
@@ -529,7 +560,7 @@
                 else calculatedVal = value;
                 codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center;font-weight:bold">${calculatedVal}</td></tr>`;
             }
-            else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
+            else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? formatNumber(dataObj[de.id]) : '')}</td></tr>`;
         })
         document.getElementById('code-score').innerHTML = codeScore;
 
@@ -546,6 +577,12 @@
             return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
         }
         return val;
+    }
+
+    function formatNumber(value) {
+        const num = Number(value);
+        if (isNaN(num)) return 'Invalid number';
+        return Number.isInteger(num) ? num : Number(num.toFixed(2));
     }
 
     function printContent(el) {

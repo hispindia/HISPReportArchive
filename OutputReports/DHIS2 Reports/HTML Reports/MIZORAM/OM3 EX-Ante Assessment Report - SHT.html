@@ -164,6 +164,25 @@
 
         </div>
         <br>
+
+        <div class="container w-50">
+            <div class="m-2 row">
+                <label for="start-date" class="col-3 col-form-label">Start Date</label>
+                <div class="col-7">
+                  <input type="date" class="form-control" id="start-date">
+                </div>
+              </div>
+              <div class="m-2 row">
+                <label for="end-date" class="col-3 col-form-label">End Date</label>
+                <div class="col-7">
+                  <input type="date" class="form-control" id="end-date">
+                </div>
+              </div>
+    
+              <div class="m-2 row">
+                <button class="btn btn-primary" onclick="displayReport()">Submit</button>
+              </div>
+        </div>
         <div id="output" style="display: none;">
             <style>
                 * {
@@ -289,17 +308,11 @@
 </body>
 
 <script>
-    document.getElementById("loader").style.display = "block";
     document.getElementById("date-count").style.display = "none";
     document.getElementById("output").style.display = "none";
 
     var selectedOrgUnit = dhis2.report.organisationUnit;
-    var selectedDate = dhis2.report.date;
-    var dates = {
-        startDate: selectedDate,
-        endDate: `${selectedDate.split('-')[0]}-${('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2)}-${new Date(selectedDate.split('-')[0], ('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2), 0).getDate()}`
-    }
-
+    var pdfName = selectedOrgUnit.name + ' Report'
     var quaters = [
         "January-March",
         "April-June",
@@ -307,7 +320,6 @@
         "October-December"
     ]
 
-    var pdfName = selectedOrgUnit.name + ' Report'
     var dataElement = [
         {
             id: 'tm5mca1RtIi',
@@ -412,15 +424,34 @@
     document.getElementById("curr-date").innerHTML = date;
     document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
 
-    getData()
-    async function getData() {
+    function displayReport() {
+        document.getElementById("date-count").style.display = "none";
+        document.getElementById("output").style.display = "none";
+        document.getElementById("loader").style.display = "block";
+        var dates = {
+            startDate: document.getElementById('start-date').value,
+            endDate: document.getElementById('end-date').value,
+        }
+        if (!dates.startDate || !dates.endDate) {
+            document.getElementById("loader").style.display = "none";
+            alert("Please Select Dates Correctly!");
+        } else {
+            setTimeout(() => {
+                getData(dates);
+            }, 1000)
+        }
+
+    }
+    
+    async function getData(dates) {
         var dataObj = {};
 
         var responseFirst = await (await fetch(`../api/events.json?fields=*&program=J2WLAhMNTa9&orgUnit=${selectedOrgUnit.id}&startDate=${dates.startDate}&endDate=${dates.endDate}&paging=false`)).json();
         responseFirst.events.forEach(event => {
+            var obj = {};
             if (event.programStage == 'RgeKAiRQ3yo') {
                 event.dataValues.forEach(dv => {
-                    dataObj[dv.dataElement] = dv.value;
+                    obj[dv.dataElement] = dv.value;
                 })
                 if (event.programStage == 'RgeKAiRQ3yo') {
                     let value = event.eventDate.split("T")[0];
@@ -432,10 +463,12 @@
                     value = value >= 10 && value <= 12 ? 3 : value;
                     let quater = quaters[(value + '')].split('-');
 
-                    dataObj["exAnte-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
+                    obj["exAnte-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
                 }
             }
-
+       if(obj['hqDoSMfLh8F']== 'Ex-Ante Assessment'){
+           dataObj= {...obj}
+}
         });
         document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
         document.getElementById('ou').innerHTML = selectedOrgUnit.name;
@@ -465,7 +498,7 @@
                 else calculatedVal = value;
                 codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center;font-weight:bold">${calculatedVal}</td></tr>`;
             }
-            else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
+            else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? formatNumber(dataObj[de.id]) : '')}</td></tr>`;
         })
         document.getElementById('code-score').innerHTML = codeScore;
 
@@ -481,6 +514,14 @@
             }
             return val;
         }
+
+
+        function formatNumber(value) {
+            const num = Number(value);
+            if (isNaN(num)) return 'Invalid number';
+            return Number.isInteger(num) ? num : Number(num.toFixed(2));
+        }
+
     }
 
     function printContent(el) {

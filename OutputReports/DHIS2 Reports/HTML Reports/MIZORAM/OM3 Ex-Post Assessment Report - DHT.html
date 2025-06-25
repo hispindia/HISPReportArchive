@@ -165,6 +165,24 @@
 
         </div>
         <br>
+        <div class="container w-50">
+            <div class="m-2 row">
+                <label for="start-date" class="col-3 col-form-label">Start Date</label>
+                <div class="col-7">
+                    <input type="date" class="form-control" id="start-date">
+                </div>
+            </div>
+            <div class="m-2 row">
+                <label for="end-date" class="col-3 col-form-label">End Date</label>
+                <div class="col-7">
+                    <input type="date" class="form-control" id="end-date">
+                </div>
+            </div>
+
+            <div class="m-2 row">
+                <button class="btn btn-primary" onclick="displayReport()">Submit</button>
+            </div>
+        </div>
         <div id="output" style="display: none;">
             <style>
                 * {
@@ -312,7 +330,8 @@
             <div style="clear:both"></div>
             <div>
                 <p style="font-style: italic;">
-                    This document is computer generated and does not require the assessor’s physical signature in order to be
+                    This document is computer generated and does not require the assessor’s physical signature in order
+                    to be
                     considered valid.</p>
             </div>
 
@@ -321,62 +340,92 @@
 </body>
 
 <script>
-    document.getElementById("loader").style.display = "block";
     document.getElementById("date-count").style.display = "none";
     document.getElementById("output").style.display = "none";
 
     var selectedOrgUnit = dhis2.report.organisationUnit;
-    var selectedDate = dhis2.report.date;
-    var dates = {
-        startDate: selectedDate,
-        endDate: `${selectedDate.split('-')[0]}-${('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2)}-${new Date(selectedDate.split('-')[0], ('00' + (+(selectedDate.split('-')[1]) + 2)).slice(-2), 0).getDate()}`
-    }
+    var pdfName = selectedOrgUnit.name + ' Report';
     var quaters = [
         "January - March",
         "April - June",
         "July - September",
         "October - December"
     ]
-    var pdfName = selectedOrgUnit.name + ' Report'
     var dataElement = [
         {
-            id: 'SCDuKdemOIT + BYhEGzfODLG + gij4TpmypCy',
-            name: 'DHT_1_Meetings'
+            id: 'tm5mca1RtIi',
+            name: 'DHT_1_NQAS'
         },
         {
-            id: 'zbWVoUNSgiS',
-            name: 'DHT_2_Coaching'
+            id: 'yiLQuZMuSmj',
+            name: 'DHT_2_Planning'
         },
         {
-            id: 'JO3QuMUsHGb',
-            name: 'DHT_3_Quality Assessment '
+            id: 'WSAbtRZhxM5',
+            name: 'DHT_3_Plan Execution'
         },
         {
-            id: 'ceJ00NUfJ2w',
-            name: 'DHT_4_Data Analysis'
+            id: 'XctfwttQv93',
+            name: 'DHT_4_Ex-Ante Assesment'
         },
         {
-            id: 'K7yyIgVOVTK',
-            name: 'DHT_5_Implementation of condemnation policy'
+            id: 'zYPbdrUOHCu',
+            name: 'DHT_5_Coaching Visit (Quality HR)'
         },
         {
-            id: 'ZrZLLtBmLcT',
-            name: 'DHT_6_Equipment maintenance'
+            id: 'sNSCyMN95ys',
+            name: 'DHT_6_Drug Quality'
         },
         {
-            id: 'kGuJb5Dm7PY',
-            name: 'DHT_7_Drug Supply Chain'
+            id: 'mwBMY6pBnNt',
+            name: 'DHT_7_Drug Store Quality'
         },
         {
-            id: 'Fy58KHYQBJj',
-            name: 'DHT_8_ Grievance redressal '
+            id: 'RyKtdJOt0mN',
+            name: 'DHT_8_Store Quality PHC/CHC'
         },
         {
-            id: 'm50G1QGE4E8',
+            id: 'RXbBpPnx2yl',
+            name: 'DHT_9_Pharmacy Review'
+        },
+        {
+            id: 'lgK2dP5Zp8S',
+            name: 'DHT_10_Nursing Review'
+        },
+        {
+            id: 'ZABLh7HEOko',
+            name: 'DHT_11_Emergency Training'
+        },
+        {
+            id: 'FuBMShCvsTa',
+            name: 'DHT_13_Accountability'
+        },
+        {
+            id: 'uj9OgZ2awL0',
+            name: 'DHT_14_Grievance'
+        },
+        {
+            id: 'aYF1TLh8Wgo',
+            name: 'DHT_15_HMIS Reporting'
+        },
+        {
+            id: 'CMGA0AX5PTf',
+            name: 'DHT_16_Condemnation Medical Equipment'
+        },
+        {
+            id: 'mnFzdiwV2cB',
+            name: 'DHT_17_Condemnation - Vehicles'
+        },
+        {
+            id: 'Nnfhzkv2Hzi',
+            name: 'DHT_18_NCD Screening Data -Submission'
+        },
+        {
+            id: 'MX5rRE8vauY',
             name: 'TOTAL (Max 1000 points = 100%)'
         },
         {
-            id: 'm50G1QGE4E8',
+            id: 'MX5rRE8vauY',
             name: 'PERCENTAGE'
         }
     ]
@@ -393,109 +442,138 @@
     });
 
     $.ajax({
-            async: false,
-            type: "put",
-            url: '../api/dataStore/reportCounts/dhtExPostOM3',
-            data: JSON.stringify(++dataStoreCount),
-            contentType: "application/json"
+        async: false,
+        type: "put",
+        url: '../api/dataStore/reportCounts/dhtExPostOM3',
+        data: JSON.stringify(++dataStoreCount),
+        contentType: "application/json"
+    });
+    debugger;
+    var date = new Date();
+    date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
+    pdfName += `(${date})-${dataStoreCount}`;
+
+    document.getElementById("curr-date").innerHTML = date;
+    document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
+
+    function displayReport() {
+        document.getElementById("date-count").style.display = "none";
+        document.getElementById("output").style.display = "none";
+        document.getElementById("loader").style.display = "block";
+        var dates = {
+            startDate: document.getElementById('start-date').value,
+            endDate: document.getElementById('end-date').value,
+        }
+        if (!dates.startDate || !dates.endDate) {
+            document.getElementById("loader").style.display = "none";
+            alert("Please Select Dates Correctly!");
+        } else {
+            setTimeout(() => {
+                getData(dates);
+            }, 1000)
+        }
+    }
+
+    async function getData(dates) {
+        var dataObj = {};
+        var dataObjCI = {};
+
+        var responseFirst = await (await fetch(`../api/events.json?fields=*&program=T9rLO6TLFrx&orgUnit=${selectedOrgUnit.id}&startDate=${dates.startDate}&endDate=${dates.endDate}&field=*&paging=false`)).json();
+        responseFirst.events.forEach(event => {
+            var objCI = {};
+            var objIPA = {}
+
+            event.dataValues.forEach(dv => {
+                if (event.programStage == 'bgyWZTN72Is') {
+                    objIPA[dv.dataElement] = dv.value;
+                    if (dv.dataElement == 'MX5rRE8vauY') {
+                        let value = event.eventDate.split("T")[0];
+                        let year = Number(value.split("-")[0]);
+                        value = Number(value.split("-")[1]);
+                        value = value >= 1 && value <= 3 ? 0 : value;
+                        value = value >= 4 && value <= 6 ? 1 : value;
+                        value = value >= 7 && value <= 9 ? 2 : value;
+                        value = value >= 10 && value <= 12 ? 3 : value;
+                        let quater = quaters[(value + '')].split('-');
+
+                        objIPA["exPost-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
+                    }
+                }
+                if (event.programStage == 'PT9rqtMc6vU') {
+                    objCI[dv.dataElement] = dv.value;
+                }
+            })
+
+            if (objIPA['hqDoSMfLh8F'] == 'Ex-Post Assessment' && event.programStage == 'bgyWZTN72Is') {
+                dataObj = { ...objIPA }
+            }
+
+            if (objCI['hqDoSMfLh8F'] == 'Ex-Post Assessment' && event.programStage == 'PT9rqtMc6vU') {
+                dataObjCI = { ...objCI }
+            }
         });
         debugger;
-        var date = new Date();
-        date = `${('00' + date.getDate()).slice(-2)}/${('00' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}-${('00' + date.getHours()).slice(-2)}:${('00' + date.getMinutes()).slice(-2)}:${('00' + date.getSeconds()).slice(-2)}`
-        pdfName += `(${date})-${dataStoreCount}`;
+        document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
+        document.getElementById('ou').innerHTML = selectedOrgUnit.name;
+        document.getElementById('quater-dates').innerHTML = (dataObj["exPost-ev"] ? dataObj["exPost-ev"] : '');
+        document.getElementById('exAnte-startDate').innerHTML = (dataObj['i2afLnjFrdh'] ? dataObj['i2afLnjFrdh'] : '');
+        document.getElementById('exAnte-endDate').innerHTML = (dataObj['MkkWs8MkL8C'] ? ` to ${dataObj['MkkWs8MkL8C']}` : '');
 
-        document.getElementById("curr-date").innerHTML = date;
-        document.getElementById("curr-count").innerHTML = date + '-' + dataStoreCount;
+        document.getElementById('resource-enum').innerHTML = (dataObjCI['UqZHchiZ2sJ'] == '1' ? 'Yes' : '');
+        document.getElementById('training').innerHTML = (dataObjCI['rOb9Xs9yC93'] ? dataObjCI['rOb9Xs9yC93'] : '');
+        document.getElementById('ipa-mid').innerHTML = (dataObjCI['PGP05ncWrql'] ? dataObjCI['PGP05ncWrql'] : '');
 
-        getData()
+        document.getElementById('ex-postNotes').innerHTML = dataObj['kEmB5rxi38s'] ? dataObj['kEmB5rxi38s'] : '';
+        document.getElementById('ex-postRec').innerHTML = dataObj['ITR1IqQtkmx'] ? dataObj['ITR1IqQtkmx'] : '';
 
-        async function getData() {
-            var dataObj = {};
+        document.getElementById('assessorI-nd').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '') + (dataObj['Bt7OvMO4KoD'] ? `, ${dataObj['Bt7OvMO4KoD']}` : '');
+        document.getElementById('assessorII-nd').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '') + (dataObj['PEUbEOT8VNV'] ? `, ${dataObj['PEUbEOT8VNV']}` : '');
+        document.getElementById('assessorIII-nd').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '') + (dataObj['Zrt7faR6v76'] ? `, ${dataObj['Zrt7faR6v76']}` : '');
+        document.getElementById('assessorI-sign').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '');
+        document.getElementById('assessorII-sign').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '');
+        document.getElementById('assessorIII-sign').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '');
+        document.getElementById('assessorI-designation').innerHTML = (dataObj['Bt7OvMO4KoD'] ? dataObj['Bt7OvMO4KoD'] : '');
+        document.getElementById('assessorII-designation').innerHTML = (dataObj['PEUbEOT8VNV'] ? dataObj['PEUbEOT8VNV'] : '');
+        document.getElementById('assessorIII-designation').innerHTML = (dataObj['Zrt7faR6v76'] ? dataObj['Zrt7faR6v76'] : '');
 
-            var responseFirst = await (await fetch(`../api/events.json?fields=*&program=T9rLO6TLFrx&orgUnit=${selectedOrgUnit.id}&startDate=${dates.startDate}&endDate=${dates.endDate}&field=*&paging=false`)).json();
-            responseFirst.events.forEach(event => {
+        var codeScore = '';
+        dataElement.forEach(de => {
+            if (de.name == "DHT_1_Meetings") {
+                let totalValue = 0;
+                let des = de.id.split(" + ");
+                des.forEach(de => totalValue += dataObj[de] ? Number(dataObj[de]) : 0);
+                codeScore += `<tr><td >${de.name}</td><td style="text-align:center;">${totalValue}</td></tr>`;
 
-
-                event.dataValues.forEach(dv => {
-                    if (event.programStage == 'bgyWZTN72Is') {
-                        dataObj[dv.dataElement] = dv.value;
-                        if (dv.dataElement == 'm50G1QGE4E8') {
-
-                            let value = event.eventDate.split("T")[0];
-                            let year = Number(value.split("-")[0]);
-                            value = Number(value.split("-")[1]);
-                            value = value >= 1 && value <= 3 ? 0 : value;
-                            value = value >= 4 && value <= 6 ? 1 : value;
-                            value = value >= 7 && value <= 9 ? 2 : value;
-                            value = value >= 10 && value <= 12 ? 3 : value;
-                            let quater = quaters[(value + '')].split('-');
-
-                            dataObj["exPost-ev"] = quater.length ? quater[0] + ' ' + year + ' - ' + quater[1] + ' ' + year : ''
-                        }
-                    }
-
-                    if (dv.dataElement == "UqZHchiZ2sJ" || dv.dataElement == "rOb9Xs9yC93" || dv.dataElement == "PGP05ncWrql") {
-                        dataObj[dv.dataElement] = dv.value;
-                    }
-                })
-
-
-            });
-            debugger;
-            document.getElementById('qa-team-name').innerHTML = (dataObj['D8fsB13w245'] ? dataObj['D8fsB13w245'] : '');
-            document.getElementById('ou').innerHTML = selectedOrgUnit.name;
-            document.getElementById('quater-dates').innerHTML = (dataObj["exPost-ev"] ? dataObj["exPost-ev"] : '');
-            document.getElementById('exAnte-startDate').innerHTML = (dataObj['i2afLnjFrdh'] ? dataObj['i2afLnjFrdh'] : '');
-            document.getElementById('exAnte-endDate').innerHTML = (dataObj['MkkWs8MkL8C'] ? ` to ${dataObj['MkkWs8MkL8C']}` : '');
-
-            document.getElementById('resource-enum').innerHTML = (dataObj['UqZHchiZ2sJ'] == '1' ? 'Yes' : '');
-            document.getElementById('training').innerHTML = (dataObj['rOb9Xs9yC93'] ? dataObj['rOb9Xs9yC93'] : '');
-            document.getElementById('ipa-mid').innerHTML = (dataObj['PGP05ncWrql'] ? dataObj['PGP05ncWrql'] : '');
-
-            document.getElementById('ex-postNotes').innerHTML = dataObj['kEmB5rxi38s'] ? dataObj['kEmB5rxi38s'] : '';
-            document.getElementById('ex-postRec').innerHTML = dataObj['ITR1IqQtkmx'] ? dataObj['ITR1IqQtkmx'] : '';
-
-            document.getElementById('assessorI-nd').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '') + (dataObj['Bt7OvMO4KoD'] ? `, ${dataObj['Bt7OvMO4KoD']}` : '');
-            document.getElementById('assessorII-nd').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '') + (dataObj['PEUbEOT8VNV'] ? `, ${dataObj['PEUbEOT8VNV']}` : '');
-            document.getElementById('assessorIII-nd').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '') + (dataObj['Zrt7faR6v76'] ? `, ${dataObj['Zrt7faR6v76']}` : '');
-            document.getElementById('assessorI-sign').innerHTML = (dataObj['YHGt2ebEsPP'] ? dataObj['YHGt2ebEsPP'] : '');
-            document.getElementById('assessorII-sign').innerHTML = (dataObj['tHlFqnqwV2o'] ? dataObj['tHlFqnqwV2o'] : '');
-            document.getElementById('assessorIII-sign').innerHTML = (dataObj['g3xzqucnUyW'] ? dataObj['g3xzqucnUyW'] : '');
-            document.getElementById('assessorI-designation').innerHTML = (dataObj['Bt7OvMO4KoD'] ? dataObj['Bt7OvMO4KoD'] : '');
-            document.getElementById('assessorII-designation').innerHTML = (dataObj['PEUbEOT8VNV'] ? dataObj['PEUbEOT8VNV'] : '');
-            document.getElementById('assessorIII-designation').innerHTML = (dataObj['Zrt7faR6v76'] ? dataObj['Zrt7faR6v76'] : '');
-
-            var codeScore = '';
-            dataElement.forEach(de => {
-                if (de.name == "DHT_1_Meetings") {
-                    let totalValue = 0;
-                    let des = de.id.split(" + ");
-                    des.forEach(de => totalValue += dataObj[de] ? Number(dataObj[de]) : 0);
-                    codeScore += `<tr><td >${de.name}</td><td style="text-align:center;">${totalValue}</td></tr>`;
-
-                } else if (de.id == "m50G1QGE4E8") {
-                    let value = dataObj['m50G1QGE4E8'] ? changeDec(dataObj['m50G1QGE4E8'], 2) : '';
-                    if (de.name == "PERCENTAGE") calculatedVal = value ? ((value / 1000) && value / 1000 != "Infinity" ? ((value / 1000) * 100).toFixed(2) : '') : '';
-                    else calculatedVal = value;
-                    codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center">${calculatedVal}</td></tr>`;
-                }
-                else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? dataObj[de.id] : '')}</td></tr>`;
-            })
-            document.getElementById('code-score').innerHTML = codeScore;
-
-            document.getElementById("date-count").style.display = "block";
-            document.getElementById("output").style.display = "block";
-            document.getElementById("downloads").style.display = "block";
-            document.getElementById("loader").style.display = "none";
-
-            function changeDec(val, index) {
-                var isDec = val.includes('.');
-                if (isDec) {
-                    return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
-                }
-                return val;
+            } else if (de.id == "MX5rRE8vauY") {
+                let value = dataObj['MX5rRE8vauY'] ? changeDec(dataObj['MX5rRE8vauY'], 2) : '';
+                if (de.name == "PERCENTAGE") calculatedVal = value ? ((value / 1000) && value / 1000 != "Infinity" ? ((value / 1000) * 100).toFixed(2) : '') : '';
+                else calculatedVal = value;
+                codeScore += `<tr><td style="font-weight:bold">${de.name}</td><td style="text-align:center">${calculatedVal}</td></tr>`;
             }
+            else codeScore += `<tr><td>${de.name}</td><td style="text-align:center">${(dataObj[de.id] ? formatNumber(dataObj[de.id]) : '')}</td></tr>`;
+        })
+        document.getElementById('code-score').innerHTML = codeScore;
+
+        document.getElementById("date-count").style.display = "block";
+        document.getElementById("output").style.display = "block";
+        document.getElementById("downloads").style.display = "block";
+        document.getElementById("loader").style.display = "none";
+
+        function changeDec(val, index) {
+            var isDec = val.includes('.');
+            if (isDec) {
+                return val.split('.')[0] + '.' + val.split('.')[1].slice(0, index)
+            }
+            return val;
         }
+
+
+        function formatNumber(value) {
+            const num = Number(value);
+            if (isNaN(num)) return 'Invalid number';
+            return Number.isInteger(num) ? num : Number(num.toFixed(2));
+        }
+    }
 
     function printContent(el) {
         window.parent.document.title = pdfName;
