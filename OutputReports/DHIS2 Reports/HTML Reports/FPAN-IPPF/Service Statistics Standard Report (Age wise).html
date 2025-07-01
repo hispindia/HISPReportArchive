@@ -123,9 +123,13 @@
 
             function createSubtotalRow(label, tableRows) {
 
+                let expandedRows = [...tableRows];
+                const grandTotal = expandedRows.reduce((sum, v) => sum + (Number(v) || 0), 0);
+                expandedRows.push(grandTotal);
+
                 // Build HTML row
                 let subtotalRow = `<tr><th style="background:#DAE9F8;font-weight:bold;">${label}</th>`;
-                tableRows.forEach(total => {
+                expandedRows.forEach(total => {
                     subtotalRow += `<td style="background:#DAE9F8; font-weight:bold;text-align:center;">${total}</td>`;
                 });
                 subtotalRow += `</tr>`;
@@ -142,7 +146,7 @@
                     period
                 }) {
 
-                const baseUrl = '../../indicatorGroups/';
+                const baseUrl = '../api/indicatorGroups/';
                 const servicesGroupUrl = `${baseUrl}${servicesGroupId}.json?fields=id,name,indicators[id,name]`;
                 const referralGroupUrl = `${baseUrl}${referralGroupId}.json?fields=id,name,indicators[id,name]`;
 
@@ -177,7 +181,7 @@
                 ].join(';');
                 const ageGroupIds = ageGroups.map(a => a.id).join(';');
 
-                const analyticsRes = await fetch(`../../analytics.json?dimension=ID3CGIXZNp9:${ageGroupIds}&dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
+                const analyticsRes = await fetch(`../api/analytics.json?dimension=ID3CGIXZNp9:${ageGroupIds}&dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
                 const analyticsData = await analyticsRes.json();
 
                 // debugging;
@@ -199,7 +203,7 @@
 
 
                 // Building table rows and subtotal
-                let rows = `<tr> <th colspan = "5" style="font-weight:bold;text-align:center; background-color:#83CCEB;">${sectionLabel}</th></tr>`
+                let rows = `<tr> <th colspan = "6" style="font-weight:bold;text-align:center; background-color:#83CCEB;">${sectionLabel}</th></tr>`
                 let sectionTotal = Array(4).fill(0);
 
                 var dataRows = {};
@@ -222,10 +226,15 @@
                     });
                     //changes
                     totalSerRef = [...totalServices, ...totalReferral];
+                   
 
                     totalSerRef.forEach(val => {
                         rows += `<td style="text-align:center">${val || ''}</td>`;
                     })
+
+                    const rowTotal = totalSerRef.reduce((sum, v) => sum + (Number(v) || 0), 0);
+                    rows += `<td style="font-weight:bold; background:#F8EAD8; text-align:center;">${rowTotal}</td>`;
+
 
                     //assigning values
                     if (!dataRows[sectionLabel]) dataRows[sectionLabel] = totalSerRef;
@@ -310,8 +319,8 @@
                 },
                 {
                     sectionLabel: 'SRH - Other Services',
-                    servicesGroupId: 'aSLsltvfg14',
-                    referralGroupId: 'L4VekghOvJp'
+                    servicesGroupId: 'a7WFgK7fbWR',
+                    referralGroupId: 'LrxxuyK9tJH'
 
                 },
                 {
@@ -360,11 +369,14 @@
                             }
                         });
 
+                        let expandedRows = [...combined];
+                        let rowGrandTotal = expandedRows.reduce((sum, v) => sum + (Number(v) || 0), 0);
 
                         //adding combined subtotal row 
                         allRows.push(
                             `<tr><td style="font-weight:bold;background-color:#DAE9F8;">Sub-total ${section.totals.join(' & ')} & ${section.sectionLabel}</td>` +
                             combined.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
+                            `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${rowGrandTotal}</td>` +
                             `</tr>`
                         );
 
@@ -373,7 +385,7 @@
 
                 // sub total SRH Services
                 const srhSectionLabels = sections
-                    .filter(s => s.sectionLabel !== 'SRH - Other Services' && s.sectionLabel !== 'Non-SRH Medical Services')
+                    .filter(s =>  s.sectionLabel !== 'Non-SRH Medical Services')
                     .map(s => s.sectionLabel);
 
                 let srhSubtotal = null;
@@ -389,10 +401,15 @@
                         }
                     }
                 });
+
+                let expandedRows = [...srhSubtotal];
+                const grandTotal = expandedRows.reduce((sum, v) => sum + (Number(v) || 0), 0);
+
                 if (srhSubtotal) {
                     allRows.push(
                         `<tr><td style="font-weight:bold;background-color:#DAE9F8">Subtotal SRH - Services</td>` +
-                        srhSubtotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
+                        expandedRows.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
+                        `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${grandTotal}</td>` +
                         `</tr>`
                     );
                 }
@@ -401,9 +418,14 @@
                 const nonSrhArr = sectionTotals['Non-SRH Medical Services'];
                 if (srhSubtotal && nonSrhArr) {
                     let grandTotal = srhSubtotal.map((val, i) => val + Number(nonSrhArr[i] || 0));
+
+                    let expandedRows = [...grandTotal]
+                    const rowGrandTotal = expandedRows.reduce((sum, v) => sum + (Number(v) || 0), 0);
+
                     allRows.push(
                         `<tr><td style="font-weight:bold;background-color:#DAE9F8;">Grand Total (SRH+Non-SRH Medical)</td>` +
                         grandTotal.map(val => `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${val}</td>`).join('') +
+                        `<td style="font-weight:bold;background-color:#DAE9F8;text-align:center;">${rowGrandTotal}</td>` +  
                         `</tr>`
                     );
                 }
@@ -411,7 +433,7 @@
                 document.querySelector('#table-subcategory tbody').innerHTML = allRows.join('');
 
                 let HeaderRow = `<tr>
-            <th colspan="5" style="border:1px solid black;background:#DAE9F8;text-align:center; background-color:#83CCEB;">
+            <th colspan="6" style="border:1px solid black;background:#DAE9F8;text-align:center; background-color:#83CCEB;">
         ${selectedOrgUnit.name} (Period: ${ (quarterSelection ? `${quarters[quarterSelection]} ,`: '')} ${selectedPeriod.split('Q')[0]})
         </th>
         </tr>`;
@@ -419,6 +441,7 @@
                     <th rowspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Service Statistics</th>
                     <th colspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Services</th>
                    <th colspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Referrals</th>
+                   <th rowspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Total</th>
                 </tr>`
 
                 let ageRow = `<tr>`
@@ -440,7 +463,7 @@
                 { indicatorGroupId: 'pcnZequJIjP', sectionLabel: 'Contraceptive Items (Provided/Distributed)' },
                 { indicatorGroupId: 'ApPsIU2yn6y', sectionLabel: 'First time users of modern contraception' },
                 { indicatorGroupId: 'XJjjsfbX5zA', sectionLabel: 'CYP' },
-                { indicatorGroupId: 'cTg8yVub6Ua', sectionLabel: 'Clients' },
+                { indicatorGroupId: 'cTg8yVub6Ua', sectionLabel: 'Service wise category' },
                 { indicatorGroupId: 'BhDEp8xjGSr', sectionLabel: 'Comprehensive Sexuality Education' },
                 { indicatorGroupId: 'g40R5KzDKFL', sectionLabel: 'Net Promoter Score' }
             ];
@@ -451,7 +474,7 @@
             // for table 2 
             async function populateSimpleSection(indicatorGroupId, orgUnit, period, sectionLabel) {
 
-                const groupUrl = `../../indicatorGroups/${indicatorGroupId}.json?fields=id,name,indicators[id,name]`;
+                const groupUrl = `../api/indicatorGroups/${indicatorGroupId}.json?fields=id,name,indicators[id,name]`;
                 const groupData = await fetch(groupUrl).then(res => res.json());
                 const indicators = (groupData.indicators || []).slice().sort((a, b) => {
                     const aPart = a.name.includes('-') ? a.name.split('-')[1].trim() : a.name;
@@ -461,7 +484,7 @@
                 const indicatorIds = indicators.map(i => i.id).join(';');
 
                 //analytics call 
-                const analyticsRes = await fetch(`../../analytics.json?dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
+                const analyticsRes = await fetch(`../api/analytics.json?dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
                 const analyticsData = await analyticsRes.json();
 
                 const valueMap = {};
@@ -475,7 +498,8 @@
                 }
 
                 // Build section HTML
-                let sectionHtml = `<tr><th colspan="2" style="text-align:center;background-color:#83CCEB;">${sectionLabel}</th></tr>`;
+                let sectionHtml = `<tr><th colspan="3" style="text-align:center;background-color:#83CCEB;">${sectionLabel}</th>` + 
+                     `</tr>`;
                 let sectionValues = [];
                 indicators.forEach(ind => {
                     const val = valueMap[ind.id] || '';
@@ -490,6 +514,7 @@
                     sectionHtml += `<tr>
                 <td style="background:#DAE9F8; font-weight:bold !important;">Total</td>
                 <td style="background:#DAE9F8; font-weight:bold !important; text-align:center;">${total}</td>
+                
                 </tr>`;
                 }
 
@@ -506,7 +531,7 @@
             //fetching and receving the data
             Promise.all([
 
-                fetch('../../categoryOptionGroupSets/ID3CGIXZNp9.json?fields=id,name,categoryOptionGroups[id,name]').then(res => res.json()),
+                fetch('../api/categoryOptionGroupSets/ID3CGIXZNp9.json?fields=id,name,categoryOptionGroups[id,name]').then(res => res.json()),
 
             ]).then(async (
                 [
