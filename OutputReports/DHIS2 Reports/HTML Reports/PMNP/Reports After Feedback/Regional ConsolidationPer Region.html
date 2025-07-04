@@ -1,0 +1,605 @@
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+  integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous" /> -->
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  th,
+  td {
+    border: 1px solid #000;
+    padding: 6px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .header {
+    font-weight: bold;
+
+    font-size: large;
+  }
+
+  .header1 {
+    background-color: #d9d9d9;
+  }
+
+  .MunicipalityHeader {
+    background-color: #d0e0e3;
+    font-weight: bold;
+  }
+
+  .centerHeader {
+    text-align: center;
+    background-color: #fce5cd;
+    font-weight: bold;
+  }
+
+  .subHeader {
+    text-align: center;
+    background-color: #fce5cd;
+    font-weight: 100;
+  }
+
+  .category {
+    background-color: #fce5cd;
+  }
+
+  #loader {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #34b4db;
+    width: 120px;
+    height: 120px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+  }
+
+  @-webkit-keyframes spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+      -webkit-transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Add animation to "page content" */
+
+  .animate-bottom {
+    position: relative;
+    -webkit-animation-name: animatebottom;
+    -webkit-animation-duration: 1s;
+    animation-name: animatebottom;
+    animation-duration: 1s;
+  }
+
+  @-webkit-keyframes animatebottom {
+    from {
+      bottom: -100px;
+      opacity: 0;
+    }
+
+    to {
+      bottom: 0px;
+      opacity: 1;
+    }
+  }
+
+  @keyframes animatebottom {
+    from {
+      bottom: -100px;
+      opacity: 0;
+    }
+
+    to {
+      bottom: 0;
+      opacity: 1;
+    }
+  }
+
+  #printing {
+    text-align: center;
+  }
+
+  .report-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    font-family: Arial, sans-serif;
+  }
+
+  .styled-select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    transition: border-color 0.3s;
+  }
+
+  .styled-select:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+
+  .styled-button {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .styled-button:hover {
+    background-color: #0056b3;
+  }
+</style>
+
+<a id="dlink" style="display: none"></a>
+
+<button
+  type="button"
+  class="btn btn-success btn-sm"
+  style="vertical-align: middle; cursor: pointer"
+  id="btnExport"
+  onclick="tableToExcel('dataTable', 'Regional Consolidation/Per Region', 'Regional Consolidation/Per Region')"
+>
+  <span class="glyphicon glyphicon-download-alt" style="font-size: 15px"></span
+  >Download As Excel
+</button>
+<div class="report-controls">
+  <select
+    id="reportTypeSelect"
+    class="styled-select"
+    onchange="showSelectedYear();"
+  >
+    <option value="quarterly">Quarterly</option>
+    <option value="yearly">Yearly</option>
+  </select>
+
+  <select id="quarterSelect" class="styled-select"></select>
+
+  <button id="submitBtn" class="styled-button">Generate</button>
+</div>
+
+<div id="loader" style="display: none"></div>
+<div id="dataTable">
+  <table border="1">
+    <tr>
+      <td colspan="12" class="header1">Regional Consolidation/Per Region</td>
+    </tr>
+    <tr>
+      <td colspan="12">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 10px;
+          "
+        >
+          <span>HOUSEHOLD CONVERGENCE SCORECARD</span>
+          <span>Quarterly Report</span>
+        </div>
+      </td>
+    </tr>
+
+    <tr class="header1">
+      <td colspan="8">REGIONAL INFORMATION</td>
+      <td colspan="4">Date:<span id="report-date"></span></td>
+    </tr>
+    <tr>
+      <td colspan="8">Region:<span id="region"></span></td>
+      <td colspan="2">Quarter:<span id="selected-quarter-text"></span></td>
+      <td colspan="2">Year:<span id="selectedYearDisplay"></span></td>
+    </tr>
+    <tr>
+      <td colspan="4">Number of IPs:<span id="Number_IPs"></span></td>
+      <td colspan="4">Number of Provinces:<span id="oUCount"></span></td>
+      <td colspan="4">
+        Number of Eligible Children 0-59 mos old :<span id="M14FqSaQu5Q"></span>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">Number of 4Ps Members:<span id="Number_4IPs"></span></td>
+      <td colspan="4">
+        Total number of Eligible Household:<span id="fxmvSiKfEpnTotal"></span>
+      </td>
+      <td colspan="4">
+        Number of Eligible Children less than 6 mos old :<span
+          id="r5cHtnYeyXd"
+        ></span>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        Number of Philhealth Members:<span
+          id="Number_Philhealth_Members"
+        ></span>
+      </td>
+      <td colspan="4">
+        Total Number of Convergent Household:<span id="LOMZy9q1euITotal"></span>
+      </td>
+      <td colspan="4">
+        Number of Eligible Children 6-23 mos old:<span id="ePaxQu8511O"></span>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">Number of PWD:<span id="sz4PVwrCDQY"></span></td>
+      <td colspan="4">Percent Convergence:<span id="Gs1ujVrangk"></span></td>
+      <td colspan="4">
+        Number of Eligible Children 24-59 mos old :<span
+          id="wiZlLaZYus3"
+        ></span>
+      </td>
+    </tr>
+  </table>
+
+  <table border="1">
+    <thead>
+      <tr>
+        <th rowspan="2" class="centerHeader">Name of Province</th>
+        <th rowspan="2" class="centerHeader">Percent Completion</th>
+        <th rowspan="2" class="centerHeader">Number of Eligible HH</th>
+        <th rowspan="2" class="centerHeader">Number of Convergent HH</th>
+        <th colspan="5" class="centerHeader">Household Services</th>
+        <th colspan="5" class="centerHeader">Maternal Services</th>
+        <th colspan="5" class="centerHeader">Child Services</th>
+      </tr>
+      <tr>
+        <th class="subHeader">
+          Household has access to a safely managed drinking water source
+        </th>
+        <th class="subHeader">
+          Household has access to a handwashing water source
+        </th>
+        <th class="subHeader">Household with access to improved toilet</th>
+        <th class="subHeader">
+          Attendance to FDS/SBCC Session on Health and Nutrition
+        </th>
+        <th class="subHeader">Pre-natal</th>
+
+        <th class="subHeader">Intake of Iron + Folic or MMS</th>
+        <th class="subHeader">Facility Based Delivery</th>
+        <th class="subHeader">Post Natal Care</th>
+        <th class="subHeader">Tetanus Vaccine</th>
+        <!-- <th>Vit. A after Delivery</th> -->
+
+        <th class="subHeader">Age-appropriate Immunization</th>
+        <th class="subHeader">Exclusive Breastfeeding/ Diet Diversity Score</th>
+        <th class="subHeader">Vitamin A Supplementation</th>
+        <th class="subHeader">Growth Monitoring</th>
+        <th class="subHeader">Monitoring and Treatment for SAM/MAM/OB/OW</th>
+      </tr>
+    </thead>
+    <tbody id="scorecardBody">
+      <!-- Dynamic content goes here -->
+    </tbody>
+  </table>
+</div>
+<script>
+  var selectedOrgUnit = dhis2.report.organisationUnit;
+  document.addEventListener("DOMContentLoaded", function () {
+    const staticDataElements = {
+      ZkDVhSbzeRq: "Number_IPs",
+      UrdlhCguP6T: "Number_4IPs",
+      Cl9XC0HVp1B: "Number_Philhealth_Members",
+      Gs1ujVrangk: "Gs1ujVrangk",
+      M14FqSaQu5Q: "M14FqSaQu5Q",
+      r5cHtnYeyXd: "r5cHtnYeyXd",
+      ePaxQu8511O: "ePaxQu8511O",
+      wiZlLaZYus3: "wiZlLaZYus3",
+      sz4PVwrCDQY: "sz4PVwrCDQY"
+      // Ehf1xzXtGkm: "Ehf1xzXtGkm",
+      
+    }; // all the Static dataElement are mapped
+
+    const indicators = [
+      "StDJxe7tIiS",
+      "fxmvSiKfEpn",
+      "LOMZy9q1euI",
+      "V0sL4t6QbWt",
+      "OesvIru88Ro",
+      "sZSMvX1cvUZ",
+      "Uh7vWH7yf7y",
+      "ibpGfmm1q7u",
+      "TttZ3onzGkq",
+      "WuKUD8eHQp7",
+      "miuxU0urVWn",
+      "KVwxvMjsDcE",
+      "qyGMqtUeUBz",
+      "TDwyvUkokTH",
+      "jEtIiTObcIs",
+      "sAdu5ouwPuA",
+      "puHvieDvsqq",
+    ]; // all the Indicators that are Mapped in DataVisualizer
+
+    const currentYear = new Date().getFullYear();
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString("en-GB").replace(/\//g, "-");
+
+    document.getElementById("report-date").innerText = formattedDate;
+    // document.getElementById("year-id").innerText = currentYear;
+
+    const quarterSelect = document.getElementById("quarterSelect");
+    const orgUnitSelect = document.getElementById("OrgUnitSelect");
+    const submitBtn = document.getElementById("submitBtn");
+    const loader = document.getElementById("loader");
+    const tbody = document.getElementById("scorecardBody");
+    const yearsToShow = [2025, 2026]; // Adjust years as needed
+    // function to show the selected year from the period
+    function showSelectedYear() {
+      const selectedValue = quarterSelect.value;
+      let selectedYear = "";
+
+      if (reportTypeSelect.value === "quarterly") {
+        selectedYear = selectedValue.substring(0, 4);
+      } else if (reportTypeSelect.value === "yearly") {
+        selectedYear = selectedValue;
+      }
+
+      document.getElementById(
+        "selectedYearDisplay"
+      ).innerText = `${selectedYear}`;
+    }
+    quarterSelect.addEventListener("change", showSelectedYear); // call the EventListener
+    const quarterMap = {
+      Q1: ["01", "02", "03"],
+      Q2: ["04", "05", "06"],
+      Q3: ["07", "08", "09"],
+      Q4: ["10", "11", "12"],
+    };
+
+    // This function populates the dropdown based on selected report type
+    function populatePeriodOptions() {
+      quarterSelect.innerHTML = ""; // Clear old options
+      const reportType = reportTypeSelect.value;
+
+      if (reportType === "quarterly") {
+        // For each year, add all four quarters
+        yearsToShow.forEach((year) => {
+          for (const [quarter, months] of Object.entries(quarterMap)) {
+            const periodValue = months
+              .map((month) => `${year}${month}`)
+              .join(";");
+            const option = document.createElement("option");
+            option.value = periodValue;
+            option.text = `${quarter} ${year}`;
+            quarterSelect.appendChild(option);
+          }
+        });
+      } else if (reportType === "yearly") {
+        // Just show each year as a single option
+        yearsToShow.forEach((year) => {
+          const option = document.createElement("option");
+          option.value = year; // We’ll build the full year range later
+          option.text = `${year}`;
+          quarterSelect.appendChild(option);
+        });
+      }
+      showSelectedYear(); // Update year after repopulating
+    }
+
+    reportTypeSelect.addEventListener("change", populatePeriodOptions);
+    populatePeriodOptions(); // Initial call
+    // showYears();
+
+    // Handle submit
+    submitBtn.addEventListener("click", async function () {
+      const selectedReportType = reportTypeSelect.value;
+      const selectedQuarterValue = quarterSelect.value;
+
+      if (!selectedQuarterValue) {
+        alert("Please select Quarter");
+        return;
+      }
+      const orgUnitsLevelUrl = `../api/organisationUnits/${selectedOrgUnit.id}.json?fields=id,name,level`;
+      const orgUnitsLevelData = await fetchData(orgUnitsLevelUrl);
+
+      if (!orgUnitsLevelData || orgUnitsLevelData.level !== 2) {
+        loader.style.display = "none";
+        submitBtn.disabled = false;
+        alert(
+          "This is a regional level report. Kindly select a region to generate the report."
+        );
+        return;
+      } else {
+        document.getElementById("region").innerText = orgUnitsLevelData.name;
+      }
+      let periodValues = [];
+
+      if (selectedReportType === "quarterly") {
+        // The value already contains months like 202401;202402;202403
+        periodValues = selectedQuarterValue.split(";");
+      } else if (selectedReportType === "yearly") {
+        // Build 12 months of the selected year: 202401 to 202412
+        const selectedYear = selectedQuarterValue;
+        periodValues = Array.from({ length: 12 }, (_, i) => {
+          const month = String(i + 1).padStart(2, "0");
+          return `${selectedYear}${month}`;
+        });
+      }
+
+      // Convert periods into DHIS2 filter format
+      const encodedPeriod = encodeURIComponent(periodValues.join(";"));
+      const periodFilter = `pe:${encodedPeriod}`;
+
+      // Update UI label
+      const selectedText =
+        selectedReportType === "yearly"
+          ? "All"
+          : quarterSelect.options[quarterSelect.selectedIndex].text;
+
+      document.getElementById("selected-quarter-text").innerText = selectedText;// this is for selected report type if year then show the year otherwise Quarter with year
+      //   let selectedText = "";
+
+      // if (selectedReportType === "yearly") {
+      //   selectedText = "All";
+      // } else if (selectedReportType === "quarterly") {
+      //   const fullText = quarterSelect.options[quarterSelect.selectedIndex].text;
+
+      //   // Extract "Q1", "Q2", "Q3", or "Q4"
+      //   const match = fullText.match(/\bQ[1-4]\b/i);
+      //   selectedText = match ? match[0].toUpperCase() : fullText;
+      // }
+
+      // document.getElementById("selected-quarter-text").innerText = selectedText;
+      // Clear old values when change the option values
+      Object.values(staticDataElements).forEach((id) => {
+        document.getElementById(id).innerText = " ";
+      });
+      tbody.innerHTML = "";
+
+      loader.style.display = "block";
+
+      // Get immediate children  of selected OrgUnit Units and pass in the Api
+      const childrenOrgUnits = `../api/organisationUnits/${selectedOrgUnit.id}.json?fields=id,name,children[id,name]`;
+      const childrenorgUnitData = await fetchData(childrenOrgUnits);
+
+      if (
+        !childrenorgUnitData ||
+        !childrenorgUnitData.children ||
+        childrenorgUnitData.children.length === 0
+      ) {
+        loader.style.display = "none";
+        alert("No child organisation units found.");
+        return;
+      }
+
+      // Only children OrgUnit IDs
+      const childOrgUnitIds = childrenorgUnitData.children.map(
+        (child) => child.id
+      );
+      const joinedChildrenOrgUnits = childOrgUnitIds.join(";");
+
+      // dataVisualizer api call and pass all the dynamic parameters in the api
+      const apiUrl = `../api/analytics.json?dimension=dx:${[
+        ...Object.keys(staticDataElements),
+        ...indicators,
+      ].join(
+        ";"
+      )}&dimension=ou:${joinedChildrenOrgUnits}&filter=pe:${periodFilter}&showHierarchy=false&hierarchyMeta=false&includeMetadataDetails=true&includeNumDen=true&skipRounding=false&completedOnly=false&outputIdScheme=UID`;
+
+      const data = await fetchData(apiUrl);
+      loader.style.display = "none";
+
+      if (!data) {
+        alert("Failed to load analytics data.");
+        return;
+      }
+
+      renderTable(data); // pass the Api data in renderTable function to populate table
+    });
+
+    // Fetch Reusable Function for all the api's
+    async function fetchData(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return await response.json();
+      } catch (err) {
+        console.error("Fetch error:", err);
+        return null;
+      }
+    }
+
+    // Render Dynamic table with ou and respective data of that table
+    function renderTable(data) {
+      const valueMap = {};
+
+      data.rows.forEach(([dx, ou, value]) => {
+       
+
+        const num = parseFloat(value);
+        const formattedValue = Number.isInteger(num) ? num.toString() : value;
+        if (!valueMap[ou]) valueMap[ou] = {};
+        valueMap[ou][dx] = formattedValue;
+
+        if (staticDataElements[dx]) {
+          document.getElementById(staticDataElements[dx]).innerText =
+            formattedValue;
+        }
+      });
+
+      (data.metaData.dimensions.ou || []).forEach((ouId) => {
+         const ouCount = (data.metaData.dimensions.ou || []).length;
+        document.getElementById("oUCount").innerText = ouCount;
+        const tr = document.createElement("tr");
+
+        const nameTd = document.createElement("td");
+        nameTd.textContent = data.metaData.items[ouId]?.name || ouId;
+        tr.appendChild(nameTd);
+
+        indicators.forEach((indicator) => {
+          const td = document.createElement("td");
+          td.textContent = valueMap[ouId]?.[indicator] || " ";
+          
+          tr.appendChild(td);
+            //apply the logic to calcualte the total HouseHold and Total Convergent and then disply that value with multiple DataElements
+           const getTotal = (id) =>
+            Object.values(valueMap).reduce((sum, obj) => sum + parseInt(obj[id] || 0, 10), 0);
+
+          document.getElementById("fxmvSiKfEpnTotal").textContent = getTotal("fxmvSiKfEpn");
+          document.getElementById("LOMZy9q1euITotal").textContent = getTotal("LOMZy9q1euI");
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+  });
+
+  var tableToExcel = (function () {
+    var uri = "data:application/vnd.ms-excel;base64,",
+      template =
+        '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>',
+      base64 = function (s) {
+        return window.btoa(unescape(encodeURIComponent(s)));
+      },
+      format = function (s, c) {
+        return s.replace(/{(\w+)}/g, function (m, p) {
+          return c[p];
+        });
+      };
+    return function (table, name, filename) {
+      if (!table.nodeType) table = document.getElementById(table);
+      var ctx = { worksheet: name || "Worksheet", table: table.innerHTML };
+      document.getElementById("dlink").href =
+        uri + base64(format(template, ctx));
+      document.getElementById("dlink").download = filename + ".xls";
+      document.getElementById("dlink").click();
+    };
+  })();
+</script>
