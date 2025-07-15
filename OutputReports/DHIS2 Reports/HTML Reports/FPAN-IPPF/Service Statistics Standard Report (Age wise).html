@@ -38,6 +38,7 @@
                         <select id="period-selection" class="form-select" onchange="displayPeriodType(this)">
                             <option value="year">Yearly</option>
                             <option value="quarter">Quarterly</option>
+                            <option value="month">Monthly</option>
                         </select>
                     </td>
                 </tr>
@@ -70,6 +71,8 @@
     </div>
     
     <script>
+       
+        
         displayPeriodType({value: 'year'})
         const quarters = {
             'Q1':'January - March',
@@ -78,8 +81,23 @@
             'Q4':'October - December',
         }
 
+        const monthSelector = {
+            '01':'January',
+            '02':'February',
+            '03':'March',
+            '04':'April',
+            '05':'May',
+            '06':'June',
+            '07':'July',
+            '08':'August',
+            '09':'September',
+            '10':'October',
+            '11':'November',
+            '12':'December',
+        }
+
         function displayPeriodType(event) {
-            const { value } = event;
+            const { value }  = event;
             var yearList = [];
 
             for (let year = 2022; year <= new Date().getFullYear(); year++) yearList.push(year);
@@ -109,6 +127,22 @@
 
                 return;
             }
+
+             if (value == "month") {
+                document.getElementById('period-type').innerHTML = `
+                <td class="font-weight-bold">Select Month:</td> 
+                <td> 
+                    <select class="form-select" id='period-value'>
+                        ${yearList.map(year => `<option>${year}</option>`)}
+                    </select>
+                    <select class="form-select" id='month-value'>
+                        ${Object.keys(monthSelector).map(month => `<option value='${month}'>${monthSelector[month]}</option>`)}
+                    </select>
+                    
+                    </td>`
+
+                return;
+            }
         }
     </script>
     <script>
@@ -118,14 +152,19 @@
 
             var selectedPeriod = document.getElementById('period-value').value;
             var quarterSelection = ''
+            var monthSelection = ''
             if(document.getElementById('period-selection').value=="quarter") quarterSelection = document.getElementById('period-quarter').value;
             selectedPeriod += quarterSelection;
+            if(document.getElementById('period-selection').value == "month") monthSelection = document.getElementById('month-value').value;
+            selectedPeriod += monthSelection;
 
             function createSubtotalRow(label, tableRows) {
 
                 let expandedRows = [...tableRows];
                 const grandTotal = expandedRows.reduce((sum, v) => sum + (Number(v) || 0), 0);
                 expandedRows.push(grandTotal);
+
+
 
                 // Build HTML row
                 let subtotalRow = `<tr><th style="background:#DAE9F8;font-weight:bold;">${label}</th>`;
@@ -208,6 +247,7 @@
 
                 var dataRows = {};
                 servicesIndicators.forEach(serviceInd => {
+                   
                     const normName = (serviceInd.name).trim();
                     const referralIndId = referralMap[`${normName}-Ref`];
                     rows += `<tr><td>${serviceInd.name}</td>`;
@@ -434,8 +474,14 @@
 
                 let HeaderRow = `<tr>
             <th colspan="6" style="border:1px solid black;background:#DAE9F8;text-align:center; background-color:#83CCEB;">
-        ${selectedOrgUnit.name} (Period: ${ (quarterSelection ? `${quarters[quarterSelection]} ,`: '')} ${selectedPeriod.split('Q')[0]})
-        </th>
+                ${selectedOrgUnit.name} (Period: ${ 
+                    quarterSelection 
+                    ? `${quarters[quarterSelection]} , ${selectedPeriod.split('Q')[0]}`
+                    : monthSelection
+                    ? `${monthSelector[selectedPeriod.substring(4, 6)]}, ${selectedPeriod.substring(0, 4)}`
+                    : selectedPeriod
+            })
+                </th>
         </tr>`;
                 let topRow = `<tr>
                     <th rowspan="2" style="border:1px solid black;background:#DAE9F8;text-align:center">Service Statistics</th>
@@ -485,6 +531,8 @@
 
                 //analytics call 
                 const analyticsRes = await fetch(`../api/analytics.json?dimension=dx:${indicatorIds}&filter=ou:${orgUnit}&filter=pe:${period}`);
+                console.log('Analytics', analyticsRes);
+                
                 const analyticsData = await analyticsRes.json();
 
                 const valueMap = {};
@@ -542,6 +590,7 @@
 
 
                 const mainTablePromise = populateDataInTheCell(ageGroups, selectedOrgUnit.id, selectedPeriod);
+                // console.log('selectedPeriod', selectedPeriod);
                 const simpleTablePromises = simpleSections.map(section =>
 
                     populateSimpleSection(
