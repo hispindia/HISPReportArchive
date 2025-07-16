@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TB Case Detection Report</title>
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous"> -->
+
+    <!-- for table content -->
+    <style>
+        * {
+            font-size: 15px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .header img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            min-width: 37px;
+        }
+
+        td {
+            height: 20px !important;
+            text-align: center !important;
+        }
+
+        th {
+            background-color: #bdd7ee;
+            text-align: center;
+        }
+
+        .blocks {
+            font-weight: 600;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+
+            td {
+                text-align: center;
+            }
+        }
+
+        .left-align {
+            display: flex;
+            justify-content: flex-start;
+            font-weight: 700;
+            text-align: left;
+
+            th,
+            td {
+                border: none;
+            }
+        }
+    </style>
+
+    <!-- for loader -->
+    <style>
+        #loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 47px;
+            animation: spin 1s linear infinite;
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+
+
+
+</head>
+
+<body>
+    <a id="dlink" style="display: none"></a>
+    <div id="loader"></div>
+    <div id="printing">
+        <tr>
+
+            <td colspan="4" style="text-align: right;">
+                <div id="downloads">
+                    <button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+                        onclick="printContent('tb-report')"><span class="glyphicon glyphicon-print"
+                            style="font-size: 15px;"></span> &nbsp;
+                        Print
+                    </button>
+
+                    <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+                        onclick="tableToExcel('tb-report', 'DEPARTMENT OF INFECTIOUS DISEASES CONTROL', 'DEPARTMENT OF INFECTIOUS DISEASES CONTROL.xls')"><span
+                            class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As
+                        Excel</button>
+                </div>
+            </td>
+        </tr>
+    </div>
+
+    <div id="tb-report">
+        <table id="table">
+
+            <tr>
+                <td style="border: none;" colspan="4"><img src="../api/documents/OnA95Rqh12I/data"
+                        alt="Ministério da Saúde"></td>
+                <td style="border: none;" colspan="10">
+                    <div class="title">
+                        <p>MINISTER OF HEALTH</p>
+                        <p><b>DEPARTMENT OF INFECTIOUS DISEASES CONTROL</b></p>
+                        <h2 style="text-align: center; font-size: 10px;">QUARTERLY REPORT ON TUBERCULOSIS CASE DETECTION
+                        </h2>
+
+                    </div>
+
+                </td>
+                <td style="border: none;" colspan="4">
+                    <img width="84px" src="../api/documents/x5nJFLDnCDt/data" alt="END TB">
+                </td>
+
+            </tr>
+
+            <tr>
+                <td colspan="18" style="border: none;">
+                    <hr />
+
+                </td>
+            </tr>
+            <tr>
+                <th colspan="5" style="background-color:#ccc;">Organization unit</th>
+                <th colspan="5" style="background-color:#ccc;">NAME of the DOT CENTER</th>
+                <th colspan="5" style="background-color:#ccc;">YEARS</th>
+                <th colspan="8" rowspan="2" style="background-color:#ccc;">SIGNATURE and COMPLETION DATE THIS FORMAT
+                </th>
+            <tr>
+                <td colspan="5" id="municipality"></td>
+                <td colspan="5" id="dot_center"></td>
+                <td colspan="5" id="year"></td>
+            </tr>
+
+            </tr>
+            <tr>
+                <th colspan="5" style="background-color:#ccc;">Name of Health Facility</th>
+                <th colspan="5" style="background-color:#ccc;">KTM or TB Responsible</th>
+                <th colspan="5" style="background-color:#ccc;">QUARTERLY</th>
+                <td colspan="5" rowspan='2'></td>
+            </tr>
+            <tr>
+                <td colspan="5" style="text-align: center;"></td>
+                <td colspan="5"></td>
+                <td colspan="5" id="quarter"></td>
+            </tr>
+
+            <table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; font-size: 12px;">
+                <thead>
+                    <tr><strong>Block 1: All TB cases registered during this trimester/Quarter</strong></tr>
+                    <tr>
+                        <th rowspan="3" colspan="2">Types of TB Patients</th>
+                        <th colspan="3" rowspan="2">Total Number of Registered TB cases</th>
+                        <th colspan="12">TREATMENT RESULTS</th>
+                        <th colspan="3" rowspan="2">Total Evaluated</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">Cured</th>
+                        <th colspan="2">Treatment Completed</th>
+                        <th colspan="2">Treatment Failure</th>
+                        <th colspan="2">Died</th>
+                        <th colspan="2">Lost to Follow Up</th>
+                        <th colspan="2">Not Evaluated</th>
+                    </tr>
+                    <tr>
+                        <th>M</th>
+                        <th>F</th>
+                        <th>Total</th>
+                        <th>M</th>
+                        <th>F</th>
+                        <th>M</th>
+                        <th>F</th>
+                        <th>M</th>
+                        <th>F</th>
+                        <th>M</th>
+                        <th>F</th>
+                        <th>M</th>
+                        <th>F</th>
+                        <th>M</th>
+                        <th>F</th>
+                        <th>M</th>
+                        <th>F</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1.1</td>
+                        <td>Bacteriologically Confirmed, New and relapse (Pulmonary and Extra Pulmonary) &lt; 14
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>1.2</td>
+                        <td>Bacteriologically Confirmed, New and Relapse (Pulmonary and Extra Pulmonary) &gt; 15
+                            Years Old</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>2.1</td>
+                        <td>Clinically Diagnosed, New and Relapse (Pulmonary and Extra Pulmonary) &lt;14</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>2.2</td>
+                        <td>Clinical Diagnosis, New and Relapse (Pulmonary and Extra Pulmonary) &gt;16 Years Old
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>3.1</td>
+                        <td>Re-treatment (not including relapse)* &lt;14</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>3.2</td>
+                        <td>Re-treatment (not including relapse)* &gt;15 Years Old</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>4.1</td>
+                        <td>All types of HIV-positive</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <table border="1" cellspacing="0" cellpadding="5"
+                style="border-collapse: collapse; font-size: 12px; text-align: center;">
+                <thead>
+                    <tr><strong>Block 2: TB/HIV activity (All Forams TB Cases registered during this trimester/Quarter
+                            with HIV Status Negative)</strong></tr>
+                    <tr>
+                        <th rowspan="2">Total Number of All Forams TB Cases Registered</th>
+                        <th colspan="6">TREATMENT RESULTS</th>
+                        <th rowspan="2">Total Evaluated</th>
+                    </tr>
+                    <tr>
+                        <th>Cured</th>
+                        <th>Treatment Completed</th>
+                        <th>Treatment Failure</th>
+                        <th>Died</th>
+                        <th>Loss to Follow up</th>
+                        <th>Not Evaluated</th>
+                    </tr>
+                    <tr>
+                        <td id="nkGYhtyodXe"></td>
+                        <td id="RwwG4S8LHIG"></td>
+                        <td id="g0CEllsES12"></td>
+                        <td id="aM8XtWPyh7P"></td>
+                        <td id="cO42uNucMhG"></td>
+                        <td id="EsJPC7sFspA"></td>
+                        <td id="DFigKL5Q0GW"></td>
+                        <td></td>
+                    </tr>
+
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+            <table border="1" cellspacing="0" cellpadding="5"
+                style="border-collapse: collapse; font-size: 12px; text-align: center;">
+                <thead>
+                    <tr><strong>Block 3: TB/HIV activity (All Forams TB cases registered during the trimester/Quarter
+                            were not tested for HIV)</strong></tr>
+                    <tr>
+                        <th rowspan="2">Total Number of All Forams TB Cases Registered</th>
+                        <th colspan="6">TREATMENT RESULTS</th>
+                        <th rowspan="2">Total Evaluated</th>
+                    </tr>
+                    <tr>
+                        <th>Cured</th>
+                        <th>Treatment Completed</th>
+                        <th>Treatment Failure</th>
+                        <th>Died</th>
+                        <th>Loss to Follow up</th>
+                        <th>Not Evaluated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="NDIVb8EIEg0"></td>
+                        <td id="nNQJH0URBML"></td>
+                        <td id="otdWAaNbfB6"></td>
+                        <td id="dETmRlIXm1m"></td>
+                        <td id="JrH442MoVQZ"></td>
+                        <td id="mhKFp76LA34"></td>
+                        <td id="AbXqYqhSyfT"></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <table border="1" cellspacing="0" cellpadding="5"
+                style="border-collapse: collapse; font-size: 12px; text-align: center;">
+                <thead>
+                    <tr><strong>Block 4: TB/HIV activity (all TB cases registered during the trimester/Quarter)</strong>
+                    </tr>
+                    <tr>
+                        <th>HIV-positive for TB patients</th>
+                        <th>HIV positive of TB patients are receiving ART</th>
+                        <th>HIV-positive of TB patients receiving CPT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="AmMw8Uwnjib"></td>
+                        <td id="BrbNekdiVyU"></td>
+                        <td id="yHq3704BQwx"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>a) The registration period was based on the date of case registration in the TB registry, followed by the
+                date of
+            </p>
+
+            <table border="1" cellspacing="0" cellpadding="5"
+                style="border-collapse: collapse; font-size: 12px; text-align: center;">
+                <thead>
+                    <tr><strong>Block 5: Treatment Observations by DOT Providers</strong></tr>
+
+                    <tr>
+                        <th colspan="8" style="background-color: #ffffff;">Directly Observed Treatment (DOT)</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="2">Type of TB Cases</th>
+                        <th colspan="6"> DOT Provided from:</th>
+                        <th rowspan="2">Total</th>
+                    </tr>
+                    <tr>
+                        <th>Health Care Workers</th>
+                        <th>NGO Staff</th>
+                        <th>Private Clinic</th>
+                        <th>Traditional Healer</th>
+                        <th>Volunteer/PSF</th>
+                        <th>Not by DOT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Bacteriologically Confirmed, New and relapse (Pulmonary and Extra Pulmonary)</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Clinically Diagnosed, New and Relapse (Pulmonary and Extra Pulmonary)</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td> </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <table border="1" cellspacing="0" cellpadding="8">
+                <thead>
+                    <tr><strong>Block 6: Treatment Outcome of Volunteer or PSF (PSF=Family Health Promoter)ᵇ</strong></tr>
+
+                    <tr>
+                        <th rowspan="2">Type of TB Cases</th>
+                        <th rowspan="2">Total TB cases on DOT from PSF in this Quarter</th>
+                        <th colspan="6">Treatment Outcome</th>
+                        <th rowspan="2">Total patients evaluated</th>
+                    </tr>
+                    <tr>
+                        <th>Cured</th>
+                        <th>Treatment Completed</th>
+                        <th>Positive (Failure)</th>
+                        <th>Died</th>
+                        <th>Lost to follow up</th>
+                        <th>Evaluation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Bacteriologically Confirmed, New and Relapse (Pulmonary and Extra Pulmonary)</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Clinically Diagnosed, New and Relapse (Pulmonary and Extra Pulmonary)</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+            <table class="left-align">
+                <tr>
+                    <td>Approved by,</td>
+                </tr>
+
+                <tr>
+                    <td>.......</td>
+                </tr>
+            </table>
+    </div>
+</body>
