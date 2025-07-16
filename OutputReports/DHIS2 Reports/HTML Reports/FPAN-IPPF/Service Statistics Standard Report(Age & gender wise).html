@@ -49,6 +49,7 @@
                         <select id="period-selection" class="form-select" onchange="displayPeriodType(this)">
                             <option value="year">Yearly</option>
                             <option value="quarter">Quarterly</option>
+                            <option value="month">Monthly</option>
                         </select>
                     </td>
                 </tr>
@@ -88,6 +89,21 @@
             'Q3': 'July - September',
             'Q4': 'October - December',
         }
+        const monthSelector = {
+            '01':'January',
+            '02':'February',
+            '03':'March',
+            '04':'April',
+            '05':'May',
+            '06':'June',
+            '07':'july',
+            '08':'August',
+            '09':'September',
+            '10':'October',
+            '11':'November',
+            '12':'December',
+        }
+
 
         function displayPeriodType(event) {
             const { value } = event;
@@ -120,6 +136,22 @@
 
                 return;
             }
+
+            if (value == "month") {
+                document.getElementById('period-type').innerHTML = `
+                <td class="font-weight-bold">Select Month:</td> 
+                <td> 
+                    <select class="form-select" id='period-value'>
+                        ${yearList.map(year => `<option>${year}</option>`)}
+                    </select>
+                    <select class="form-select" id='month-value'>
+                        ${Object.keys(monthSelector).sort().map(month => `<option value='${month}'>${monthSelector[month]}</option>`)}
+                    </select>
+                    
+                    </td>`
+
+                return;
+            }
         }
     </script>
     <script>
@@ -131,6 +163,8 @@
             var quarterSelection = ''
             if (document.getElementById('period-selection').value == "quarter") quarterSelection = document.getElementById('period-quarter').value;
             selectedPeriod += quarterSelection;
+            if(document.getElementById('period-selection').value == "month") monthSelection = document.getElementById('month-value').value;
+            selectedPeriod += monthSelection;
 
             function createSubtotalRow(label, tableRows) {
 
@@ -446,8 +480,15 @@
 
                 let HeaderRow = `<tr>
                 <th colspan="14" style="border:1px solid black;background:#DAE9F8;text-align:center; background-color:#83CCEB;">
-                ${selectedOrgUnit.name} (Period: ${(quarterSelection ? `${quarters[quarterSelection]} ,` : '')} ${selectedPeriod.split('Q')[0]})
-                </th></tr>`;
+                ${selectedOrgUnit.name} (Period: ${ 
+                    quarterSelection 
+                    ? `${quarters[quarterSelection]} , ${selectedPeriod.split('Q')[0]}`
+                    : monthSelection
+                    ? `${monthSelector[selectedPeriod.substring(4, 6)]}, ${selectedPeriod.substring(0, 4)}`
+                    : selectedPeriod
+            })
+                </th>
+        </tr>`;
 
                 //Header 
                 let topRow = `<tr>
