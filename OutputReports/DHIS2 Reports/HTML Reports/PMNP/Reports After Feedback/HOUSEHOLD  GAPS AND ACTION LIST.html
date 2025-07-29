@@ -128,6 +128,42 @@
   .tableSidebar {
     align-content: center;
   }
+  .report-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    font-family: Arial, sans-serif;
+  }
+    .styled-select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    transition: border-color 0.3s;
+  }
+
+  .styled-select:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+
+  .styled-button {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .styled-button:hover {
+    background-color: #0056b3;
+  }
+
 </style>
 
 
@@ -137,6 +173,21 @@
 <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
   onclick="tableToExcel('dataTable', 'HOUSEHOLD GAPS AND ACTION LIST', 'HOUSEHOLD GAPS AND ACTION LIST')"><span
     class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+    <div class="report-controls">
+  <select
+    id="reportTypeSelect"
+    class="styled-select"
+    onchange="showSelectedYear();"
+  >
+    <option value="quarterly">Quarterly</option>
+    <option value="yearly">Yearly</option>
+  </select>
+
+  <select id="quarterSelect" class="styled-select"></select>
+
+  <button id="submitBtn" class="styled-button">Generate</button>
+</div>
 <div id="loader" style="display:none;">Loading...</div>
 <div id="dataTable">
 
@@ -154,8 +205,10 @@
       <td colspan="2">Municipality:<span id="municipality"></span></td>
       <td colspan="2">Province:<span id="province"></span></td>
       <td colspan="2">Region:<span id="region"></span></td>
-      <td colspan="2">Quarter:<span id="quarter"></span></td>
-      <td colspan="2">Year:<span id="year-id"></span></td>
+      <!-- <td colspan="2">Quarter:<span id="quarter"></span></td>
+      <td colspan="2">Year:<span id="year-id"></span></td> -->
+          <td colspan="2">Quarter:<span id="selected-quarter-text"></span></td>
+      <td colspan="2">Year:<span id="selectedYearDisplay"></span></td>
     </tr>
     <tr>
       <td colspan="4">Number of IPs:<span id="ZkDVhSbzeRq"></span></td>
@@ -225,7 +278,8 @@
           <th>Hunger (0907)</th>
         </tr>
       </thead>
-      <tbody>
+      <!-- <tbody id="myTableBody" style="display: none;"> -->
+        <tbody>
         <tr>
           <td>
             Number of Eligible Household that did not acquire the service
@@ -1043,9 +1097,9 @@
           <th>Exclusive Breastfeeding (Q501)</th>
           <th>Min. dietary diversity</th>
           <th>Micronutrient Powder (Q503)</th>
-          <th>Growth Monitoring (Q505??)</th>
+          <th>Growth Monitoring (Q505)</th>
           <th>Vitamin A supplementation (Q504)</th>
-          <th>Vaccination on schedule (Q403??)</th>
+          <th>Vaccination on schedule (Q403)</th>
           <th>Underweight/ Severly Underweight (Q508)</th>
           <th>Stunting/ Severly Stunting (Q510)</th>
           <th>Wasting/ Severely Wasting (Q511)</th>
@@ -1308,7 +1362,7 @@
           <th>Did not take any Iron + Folic tablets (Q601)</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody >
         <tr>
           <td>Number of women that did not access the services</td>
 
@@ -1348,7 +1402,7 @@
 
 </div>
 
-<script>
+<!-- <script>
   const today = new Date();
   const year = today.getFullYear();
   const formattedDate = today.toLocaleDateString("en-GB"); // 'dd/mm/yyyy'
@@ -1368,11 +1422,12 @@
 
   // Display the quarter in an element with id "quarter"
   document.getElementById("quarter").innerText = `Quarter: ${quarter}`;
-</script>
+</script> -->
 
 <script>
-  document.getElementById("loader").style.display = "block";
+ 
   var selectedOrgUnit = dhis2.report.organisationUnit;
+   const tbody = document.getElementById("scorecardBody");
   async function fetchAnalyticsData(apiUrl) {
     try {
       const response = await fetch(apiUrl);
@@ -1385,11 +1440,138 @@
       return null;
     }
   }
+  const yearsToShow = [2025, 2026]; // Adjust years as needed
+    // function to show the selected year from the period
+    function showSelectedYear() {
+      const selectedValue = quarterSelect.value;
+      let selectedYear = "";
 
-  async function renderTable() {
-    const api1 = `../api/analytics.json?dimension=pe%3ATHIS_MONTH&dimension=dx%3AZkDVhSbzeRq%3BUrdlhCguP6T%3BCl9XC0HVp1B%3BfxmvSiKfEpn%3BegST5Av3tJh%3BLmh1EJ2UXBL%3BLOMZy9q1euI%3BM14FqSaQu5Q%3BwiZlLaZYus3%3BePaxQu8511O%3Br5cHtnYeyXd%3BtrWWnuGDrlu%3Bb2ryjcOLjIt%3BnSSlc4m3NAZ%3BCYZuxghXedK%3Bqu5kmBNPMyO%3BZeX95mwRBgF%3BApY125Gzhp4%3BcQwGcqUFlrZ%3BDqd1n3Zlfkw%3BvVjDJMVR5zB%3BoQ8dt2o6mWV%3Bsz4PVwrCDQY&showHierarchy=false&hierarchyMeta=false&includeMetadataDetails=true&includeNumDen=true&skipRounding=false&completedOnly=false&outputIdScheme=UID&filter=ou:${selectedOrgUnit.id}`
-    const api2 = `../api/analytics.json?dimension=pe%3ATHIS_MONTH&dimension=dx%3AMwDoLDGps0V%3BllRKgaEZ3zD%3BWOLQ4DVzawM%3Bw4e3AokVXpH%3BSmHDspW9LR9%3Bb2yl0YuLE6l%3BzGnPpVYhU5x%3Bm2lhek9Um0I%3BBoQYrcKLJtJ%3BBI7LIJvcwVa%3Bnt0dp1oizi4%3BI0Ni5negIu5%3BegST5Av3tJh%3BNLIeH5JjPOa&showHierarchy=false&hierarchyMeta=false&includeMetadataDetails=true&includeNumDen=true&skipRounding=false&completedOnly=false&outputIdScheme=UID&filter=ou:${selectedOrgUnit.id}`
-    const api3 = `../api/analytics.json?dimension=pe%3ATHIS_MONTH&dimension=dx%3AhbKfd9S5Jf6%3BbwkuXJjZsEk%3Bi1hp3tAJis2%3BbTzvbsvrJBH%3By6Kzag46eE7%3BA75hq1NTFu3%3BlXWUKmEQdwJ%3BCKgS4VT9RAR%3BaNIUlsz5vWM%3Bzli244sbQUn%3BAoAjfFFpmyD%3BM14FqSaQu5Q%3BLmh1EJ2UXBL&showHierarchy=false&hierarchyMeta=false&includeMetadataDetails=true&includeNumDen=true&skipRounding=false&completedOnly=false&outputIdScheme=UID&filter=ou:${selectedOrgUnit.id}`; // Replace with your third API
+      if (reportTypeSelect.value === "quarterly") {
+        selectedYear = selectedValue.substring(0, 4);
+      } else if (reportTypeSelect.value === "yearly") {
+        selectedYear = selectedValue;
+      }
+
+      document.getElementById(
+        "selectedYearDisplay"
+      ).innerText = `${selectedYear}`;
+    }
+    quarterSelect.addEventListener("change", showSelectedYear); // call the EventListener
+    const quarterMap = {
+      Q1: ["01", "02", "03"],
+      Q2: ["04", "05", "06"],
+      Q3: ["07", "08", "09"],
+      Q4: ["10", "11", "12"],
+    };
+
+    // This function populates the dropdown based on selected report type
+    function populatePeriodOptions() {
+      quarterSelect.innerHTML = ""; // Clear old options
+      const reportType = reportTypeSelect.value;
+
+      if (reportType === "quarterly") {
+        // For each year, add all four quarters
+        yearsToShow.forEach((year) => {
+          for (const [quarter, months] of Object.entries(quarterMap)) {
+            const periodValue = months
+              .map((month) => `${year}${month}`)
+              .join(";");
+            const option = document.createElement("option");
+            option.value = periodValue;
+            option.text = `${quarter} ${year}`;
+            quarterSelect.appendChild(option);
+          }
+        });
+      } else if (reportType === "yearly") {
+        // Just show each year as a single option
+        yearsToShow.forEach((year) => {
+          const option = document.createElement("option");
+          option.value = year; // We’ll build the full year range later
+          option.text = `${year}`;
+          quarterSelect.appendChild(option);
+        });
+      }
+      showSelectedYear(); // Update year after repopulating
+    }
+
+    reportTypeSelect.addEventListener("change", populatePeriodOptions);
+    populatePeriodOptions(); // Initial call
+      // Fetch Reusable Function for all the api's
+    async function fetchData(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return await response.json();
+      } catch (err) {
+        console.error("Fetch error:", err);
+        return null;
+      }
+    }
+    
+  submitBtn.addEventListener("click", async function () {
+     document.getElementById("loader").style.display = "block";
+      const selectedReportType = reportTypeSelect.value;
+      const selectedQuarterValue = quarterSelect.value;
+      // tbody.innerHTML = "";
+      if (!selectedQuarterValue) {
+        alert("Please select Quarter");
+        return;
+      }
+      const orgUnitsLevelUrl = `../api/organisationUnits/${selectedOrgUnit.id}.json?fields=id,name,level`;
+      const orgUnitsLevelData = await fetchData(orgUnitsLevelUrl);
+
+      if (!orgUnitsLevelData || orgUnitsLevelData.level !== 5) {
+        loader.style.display = "none";
+        submitBtn.disabled = false;
+        alert(
+          "Please Select a Barangay"
+        );
+        return;
+      } else {
+        document.getElementById("region").innerText = orgUnitsLevelData.name;
+      }
+      let periodValues = [];
+
+      if (selectedReportType === "quarterly") {
+        // The value already contains months like 202401;202402;202403
+        periodValues = selectedQuarterValue.split(";");
+      } else if (selectedReportType === "yearly") {
+        // Build 12 months of the selected year: 202401 to 202412
+        const selectedYear = selectedQuarterValue;
+        periodValues = Array.from({ length: 12 }, (_, i) => {
+          const month = String(i + 1).padStart(2, "0");
+          return `${selectedYear}${month}`;
+        });
+      }
+
+      // Convert periods into DHIS2 filter format
+      const encodedPeriod = encodeURIComponent(periodValues.join(";"));
+      const periodFilter = `pe:${encodedPeriod}`;
+
+      // Update UI label
+      const selectedText =
+        selectedReportType === "yearly"
+          ? "All"
+          : quarterSelect.options[quarterSelect.selectedIndex].text;
+
+      document.getElementById("selected-quarter-text").innerText = selectedText;// this is for selected report type if year then show the year otherwise Quarter with year
+      
+      // Clear old values when change the option values
+    
+      // tbody.innerHTML = "";
+
+     
+     
+renderTable(periodFilter);
+// document.getElementById("myTableBody").style.display = "table-row-group";
+      // renderTable(data); // pass the Api data in renderTable function to populate table
+    });
+
+    // Fetch Reusable Function for all the api's
+  async function renderTable(periodFilter) {
+    const api1 = `../api/analytics.json?filter=${periodFilter}&dimension=dx%3AZkDVhSbzeRq%3BUrdlhCguP6T%3BCl9XC0HVp1B%3BfxmvSiKfEpn%3BegST5Av3tJh%3BLmh1EJ2UXBL%3BLOMZy9q1euI%3BM14FqSaQu5Q%3BwiZlLaZYus3%3BePaxQu8511O%3Br5cHtnYeyXd%3BtrWWnuGDrlu%3Bb2ryjcOLjIt%3BnSSlc4m3NAZ%3BCYZuxghXedK%3Bqu5kmBNPMyO%3BZeX95mwRBgF%3BApY125Gzhp4%3BcQwGcqUFlrZ%3BDqd1n3Zlfkw%3BvVjDJMVR5zB%3BoQ8dt2o6mWV%3Bsz4PVwrCDQY&showHierarchy=false&hierarchyMeta=false&includeMetadataDetails=true&includeNumDen=true&skipRounding=false&completedOnly=false&outputIdScheme=UID&filter=ou:${selectedOrgUnit.id}`
+    const api2 = `../api/analytics.json?filter=${periodFilter}&dimension=dx%3AMwDoLDGps0V%3BllRKgaEZ3zD%3BWOLQ4DVzawM%3Bw4e3AokVXpH%3BSmHDspW9LR9%3Bb2yl0YuLE6l%3BzGnPpVYhU5x%3Bm2lhek9Um0I%3BBoQYrcKLJtJ%3BBI7LIJvcwVa%3Bnt0dp1oizi4%3BI0Ni5negIu5%3BegST5Av3tJh%3BNLIeH5JjPOa&showHierarchy=false&hierarchyMeta=false&includeMetadataDetails=true&includeNumDen=true&skipRounding=false&completedOnly=false&outputIdScheme=UID&filter=ou:${selectedOrgUnit.id}`
+    const api3 = `../api/analytics.json?filter=${periodFilter}&dimension=dx%3AhbKfd9S5Jf6%3BbwkuXJjZsEk%3Bi1hp3tAJis2%3BbTzvbsvrJBH%3By6Kzag46eE7%3BA75hq1NTFu3%3BlXWUKmEQdwJ%3BCKgS4VT9RAR%3BaNIUlsz5vWM%3Bzli244sbQUn%3BAoAjfFFpmyD%3BM14FqSaQu5Q%3BLmh1EJ2UXBL&showHierarchy=false&hierarchyMeta=false&includeMetadataDetails=true&includeNumDen=true&skipRounding=false&completedOnly=false&outputIdScheme=UID&filter=ou:${selectedOrgUnit.id}`; // Replace with your third API
 
     // Call all APIs
     const [data1, data2, data3] = await Promise.all([
@@ -1521,7 +1703,7 @@
     const dxValues = {};
     data1.rows.forEach((row) => {
       const dx = row[0];
-      const value = row[2];
+      const value = row[1];
 
       if (dx in dxMap1) {
         dxValues[dx] =value !== undefined && value !== null && value !== "" ? parseInt(value) : ""; // store Int Value if the value is present if no value then blank
@@ -1563,7 +1745,7 @@
     // });
     data2.rows.forEach((row) => {
       const dx = row[0];
-      const value = row[2];
+      const value = row[1];
 
       if (dx in maternalCareMap) {
         dxValues2[dx] = value !== undefined && value !== null && value !== "" ? parseInt(value) : "";// store Int Value if the value is present if no value then blank
@@ -1592,7 +1774,7 @@
     const dxValuesTable3 = {};
     data3.rows.forEach((row) => {
       const dx = row[0];
-      const value = row[2];
+      const value = row[1];
 
       if (dx in Table3) {
         dxValuesTable3[dx] = value !== undefined && value !== null && value !== "" ? parseInt(value) : "";// store Int Value if the value is present if no value then blank
@@ -1638,10 +1820,10 @@
     document.getElementById("region").innerText = region;
   }
   // Run it after page load
-  window.onload = () => {
-    renderTable();
+  // window.onload = () => {
+  //   renderTable();
 
-  };
+  // };
 
   var tableToExcel = (function () {
     var uri = 'data:application/vnd.ms-excel;base64,'
@@ -1656,26 +1838,7 @@
       document.getElementById("dlink").click();
     }
   })()
-//   function toggleServiceDeliveryContent() {
-//   // 1. Get numeric values
-//   const noAccessValue = parseInt(document.getElementById("b2ryjcOLjIt").textContent) || 0;
-//   const totalValue = parseInt(document.getElementById("fxmvSiKfEpn").textContent) || 0;
 
-//   // 2. Get all service delivery TDs
-//   const serviceDeliveryCells = document.querySelectorAll("td.serviceDeliveryCell");
-
-//   // 3. Decide visibility for each
-//   serviceDeliveryCells.forEach((td) => {
-//     const divs = td.querySelectorAll("div");
-//     if (noAccessValue < totalValue && noAccessValue !== 0) {
-//       // Show divs
-//       divs.forEach(div => div.style.display = "");
-//     } else {
-//       // Hide divs
-//       divs.forEach(div => div.style.display = "none");
-//     }
-//   });
-// }
 
 function toggleAllServiceDeliveryContent(cellClassName) {
   const serviceDeliveryCells = document.querySelectorAll(`td.${cellClassName}`);
