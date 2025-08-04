@@ -1,0 +1,608 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    thead>tr>td {
+        font-weight: bold;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle;" id="btnExport"
+    onclick="tableToExcel('dataTable', 'Country wise data - GLP', 'Country wise data.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<div align="center">
+    <label>
+        <strong>Start Year : </strong>
+        <input type="number" id="startDate" min="1990" step="1" value="2016">
+    </label>
+    <label>
+        <strong>End Year : </strong>
+        <input type="number" id="endDate" min="1990" step="1" value="2020">
+    </label>
+    <button id="tap" onclick="submitData()">Run</button>
+
+</div>
+<br><br>
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table id="dataTable" border="1" class="table  table-hover text-center" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; text-align: center">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById("loader").style.display = "none";
+
+    var date = new Date();
+    document.getElementById("startDate").max = date.getFullYear();
+    document.getElementById("endDate").max = date.getFullYear();
+    function submitData() {
+        if (parseInt(document.getElementById("startDate").value) > parseInt(document.getElementById("endDate").value)) return alert("Please Select dates Correctly!");
+        else {
+            $('#state').hide();
+            $('#loader').show();
+            setTimeout(function () {
+                getData();
+            }, 1000);
+        }
+
+    }
+
+    function getData() {
+
+
+        //For displaying heading
+        var namesOfIndicator = [
+            'Population',
+            'Total Number of  New Cases Detected',
+            'New Case Detection Rate',
+            'Number of cases registered for treatment at end of  the year',
+            'Prevalence Rate (per million Population)',
+            'Number of MB cases',
+            'Proportion of MB cases',
+            'Number of female cases',
+            'Proportion of females among new leprosy cases',
+            'Child population',
+            //'Children <5 years',
+            //'Chidlren 6-15 years',
+            'Children Under 15 Years of Age',
+            'Proportion of Child Cases',
+            'New Cases With Grade-2 Disabilities children (< 15  Years)',
+            'New Cases with Grade-2 Disabilities Adult (>= 15  Years)',
+            'New Cases with Grade-2 Disabilities (G2D Cases)',
+            "Proportion of New G2D Cases",
+            'New G2D Case Rate',
+            'Number of Relapses Reported During the Year',
+            'Number of Re-treatment cases Reported During the Year',
+            'Number of Total Re-treatment cases Reported During the Year',
+            'Cure Rate MB%',
+            'Cure Rate PB%',
+            'New non-autochthonous cases',
+            'Legistation against discrimination',
+            'Number of Cases tested for Drug Resistance',
+            'Number of Cases with Drug Resistance',
+            'Proportion examined',
+            'New cases detected among contacts',
+            'Proportion among all new cases'
+        ];
+
+        var dataElementIdRows = [
+            ["d1d6EWQZJGB.HllvX50cXC0"],
+            ["evXyDr6c7eu + gVmFx873rdZ + IQgrP2W9gTV + liZaznYiWwp"],
+            ["evXyDr6c7eu + gVmFx873rdZ + IQgrP2W9gTV + liZaznYiWwp", "d1d6EWQZJGB.HllvX50cXC0"],
+            ["bLR7YvL1f5O + mdupOTsRJ58 + lzbsUQJvvJB + LL3PpzJHqJZ"],
+            ["bLR7YvL1f5O + mdupOTsRJ58 + lzbsUQJvvJB + LL3PpzJHqJZ", "d1d6EWQZJGB.HllvX50cXC0"],
+            ["evXyDr6c7eu"],
+            ["evXyDr6c7eu", "evXyDr6c7eu + gVmFx873rdZ + IQgrP2W9gTV+ liZaznYiWwp"],
+            ["xdbnQxRVTBq + mNPlDlzmwru"],
+            ["xdbnQxRVTBq.HllvX50cXC0 + mNPlDlzmwru", "evXyDr6c7eu + gVmFx873rdZ + IQgrP2W9gTV - coycFHeZ257.HllvX50cXC0 + liZaznYiWwp"],
+            ["EnQPW5xZDPX.Ei6fwK40fzN + EnQPW5xZDPX.grw5pufOjWU + EnQPW5xZDPX.DGU1CWAZ6qw"],
+            ["evXyDr6c7eu.ZZFiCRpT37i + gVmFx873rdZ.ZZFiCRpT37i + IQgrP2W9gTV.ZZFiCRpT37i + TBTHguhWty1"],
+            ["evXyDr6c7eu.ZZFiCRpT37i + gVmFx873rdZ.ZZFiCRpT37i + IQgrP2W9gTV.ZZFiCRpT37i + TBTHguhWty1", "evXyDr6c7eu + gVmFx873rdZ + IQgrP2W9gTV + liZaznYiWwp"],
+            ["xl4EXfRMBrK.ZZFiCRpT37i"],
+            ["xl4EXfRMBrK.Te9RyzefSAz"],
+            ["xl4EXfRMBrK.Te9RyzefSAz + xl4EXfRMBrK.ZZFiCRpT37i + xl4EXfRMBrK.sdMU6tpPki6 + tzGljEoaVdT + uiiSia2NAnz"],
+            ["tzGljEoaVdT + xl4EXfRMBrK.Te9RyzefSAz + xl4EXfRMBrK.ZZFiCRpT37i + xl4EXfRMBrK.sdMU6tpPki6", "evXyDr6c7eu + gVmFx873rdZ + IQgrP2W9gTV + liZaznYiWwp"],
+            ["xl4EXfRMBrK + tzGljEoaVdT", "d1d6EWQZJGB.HllvX50cXC0"],
+            ["VBEhMPsLu53 + YVj2PYy0Slj + KJtRiyeoCGx"],
+            ["lhSRNgfsxYC + EHT4ON2ZtNl + vp8pxtgYBL2"],
+            ["VBEhMPsLu53 + lhSRNgfsxYC + EHT4ON2ZtNl + YVj2PYy0Slj + vp8pxtgYBL2 + KJtRiyeoCGx"],
+            ["TCJv5BNVYCw.HllvX50cXC0", "VVBrsKiEqdh.HllvX50cXC0"],
+            ["t5AmFhGyKw9.HllvX50cXC0", "PFNL3BPu3A6.HllvX50cXC0"],
+            ["nbDlMYKljTK + VGHGMWq9vSP.Te9RyzefSAz + VGHGMWq9vSP.ZZFiCRpT37i + VGHGMWq9vSP.sdMU6tpPki6"],
+            ["fWOu6CXWmYj"],
+            ["MJGjCnCK8qJ"],
+            ["CAwisvSGkaj.oSHl2cUvHmk + CAwisvSGkaj.qqJwrOzkzcz + CAwisvSGkaj.G0EY8ZnkmVI + sgdAybfDzTl.oSHl2cUvHmk + sgdAybfDzTl.qqJwrOzkzcz + sgdAybfDzTl.G0EY8ZnkmVI"],
+            ["cmco4MqWgCn + WXeGUvbB7zR + e6rzuYpUtYS + GuZ5MKrfrBp", "qlSO0fiGXD2 + F2MoZgKx6Lv + UuvQjDE9mQQ + qHIGkVqSItK"],
+            ["Y5OZLg0PC7G + qhuJC0EPCB5 + Xzuid5sSSg3 + xtzT5aaPdCq"],
+            ["Y5OZLg0PC7G + qhuJC0EPCB5 + Xzuid5sSSg3 + xtzT5aaPdCq", "evXyDr6c7eu + gVmFx873rdZ + IQgrP2W9gTV"],
+        ]
+        // ["MiHLzmsVFPf.xC5PhT2YVtr + ubgNtdy3h9H.xC5PhT2YVtr + tyHgOKrZsMJ.xC5PhT2YVtr"],
+        // ["MiHLzmsVFPf.GcQ4Ep0wmnH + ubgNtdy3h9H.GcQ4Ep0wmnH + tyHgOKrZsMJ.GcQ4Ep0wmnH"],
+        // ["nbDlMYKljTK.HllvX50cXC0"],
+        // ["GuZ5MKrfrBp.HllvX50cXC0", "qHIGkVqSItK.HllvX50cXC0"],
+        // ["Xzuid5sSSg3"],
+        // ["Xzuid5sSSg3.HllvX50cXC0", "evXyDr6c7eu + gVmFx873rdZ + IQgrP2W9gTV"],
+        var parentOU = [
+            {
+                id: "L9CbxlithLc",
+                name: "AFR"
+            },
+            {
+                id: "uWVIlmAl1r5",
+                name: "AMR"
+            },
+            {
+                id: "XHT7CFb5mEe",
+                name: "EMR"
+            },
+            {
+                id: "UzbbopOhq1L",
+                name: "EUR"
+            },
+            {
+                id: "vY40CQrh4Kk",
+                name: "SEAR"
+            },
+            {
+                id: "QvCHetFovQg",
+                name: "WPR"
+            }
+        ]
+
+        var dataElementIds = [
+            'd1d6EWQZJGB', 'gY7b9azcUQG', 'ElAjdwOrjMq', 'YgvbZE63e8T', 'sAXV6Hnve4i', 'evXyDr6c7eu', 'LhfXR2fKhsZ',
+            'xoC0X1KVsMB', 'KrvcvcTLqIh', 'SN25CAPYI6f', 'yMIaVLPC3P9', 'C6xcdI95huJ',
+            'xl4EXfRMBrK.ZZFiCRpT37i', 'xl4EXfRMBrK.Te9RyzefSAz', 'cyg9FDI48hW', 'j62SFyBOrSN', 'v1Fr4On014j',
+            'LLdQtu78PAq', 'fz4DVwYdO86', 'SSmKGrwFLyR', 'xWUvequQxeM', 'PQCJ1jNYVMU', 'uwdXw08gtIj', 'fWOu6CXWmYj',
+            'MJGjCnCK8qJ', 'wx907o56SAZ', 'KnyHgBaHlBg', 'kVoU4b1i87k', 'LGd7Q6ZntcI'
+        ]
+
+        //removed indicators from the list
+        //'trqV4BI71xI', 'Xzuid5sSSg3', 'M2kzreZCnhv''nbDlMYKljTK',
+
+        // removed two indicators from the list 
+        // "Children <5 years"- eBG4XbLqTmY 
+        // "'Chidlren 6-15 years'," - PS9m9ERoPaj
+
+        var startDate = parseInt(document.getElementById("startDate").value);
+        var endDate = parseInt(document.getElementById("endDate").value);
+        var endFullDate = () => {
+            var month = new Date(document.getElementById("endDate").value);
+            return `${month.getFullYear()}-12-` + new Date(month.getFullYear(), 12, 0).getDate();
+        }
+        var colspanValueHeading = namesOfIndicator.length * ((endDate - startDate) + 1);
+        var counter = 0;
+        var parentChild = {};
+        var valuesParentTotal = {
+            "x3i5oi4axNu": []
+        }, hasOUCommentedValue = {
+            "x3i5oi4axNu": []
+        }, valuesGlobalTotal = [];
+        var orgUnit = [];
+
+        var dates = function () {
+            var arr = [];
+            var noOfDays = endDate - startDate;
+            var count = startDate;
+            for (let i = 0; i <= noOfDays; i++) {
+                if (startDate <= endDate) {
+                    arr[i] = count;
+                    count++;
+                }
+            }
+            return arr;
+        }
+
+        var printHeading = '<tr style=" font-weight:400; text-align:center;">\
+                        <td rowspan="3" colspan="2" style="border:1px solid black;background:#ADD8E6;">Region and country</td>\
+                        <td style="border:1px solid black;background:#ADD8E6;" colspan="' + colspanValueHeading + '">Country Wise Data - GLP</td>\
+                        </tr>\
+                        <tr style=" font-weight:400; text-align:center;">\
+                        <td style="border:1px solid black;background:#ADD8E6;" colspan="' + colspanValueHeading + '">Reporting Year : - ' + startDate + ' to ' + endDate + '</td></tr>\
+                        <tr style=" font-weight:400; text-align:center;">'
+        for (let i = 0; i < namesOfIndicator.length; i++) {
+            printHeading += '<td class="diffCol" colspan=' + dates().length + ' style="border:1px solid black;background:#ADD8E6;">' + namesOfIndicator[i] + '</td>'
+        }
+        printHeading += '</tr>\
+                        <tr><td style="border:1px solid black;background:#ADD8E6;">Name</td>\
+                        <td style="border:1px solid black;background:#ADD8E6;">Code</td>';
+        for (let j = 0; j < namesOfIndicator.length; j++) {
+            for (let i = startDate; i <= endDate; i++) {
+                printHeading += '<td align="left" style="border:1px solid black; background-color:#DCDCDC">' + i + '</td>';
+            }
+        }
+        printHeading += "</tr>";
+        document.getElementById("tableHead").innerHTML = printHeading;
+
+
+        var selectedOrgUnit = '';
+        var parentName = {};
+        var parentOUId = [];
+
+        getOrgUnitChildren();
+
+        function getOrgUnitChildren() {
+            $.ajax({
+                type: 'GET',
+                async: false,
+                url: `../api/me.json?fields=organisationUnits[id,name]`,
+                data: JSON,
+                success: function (data, success) {
+                    selectedOrgUnit = data.organisationUnits[0];
+                }
+            });
+            $.ajax({
+                type: 'GET',
+                async: false,
+                url: `../api/organisationUnitGroups/HEf6oQ4zgMY.json?fields=id,name,organisationUnits[id,name,code,parent[id,name]]&paging=false`,
+                data: JSON,
+                success: function (res, success) {
+                    if (selectedOrgUnit.id == "x3i5oi4axNu") {
+                        parentOU.push({
+                            id: "x3i5oi4axNu",
+                            name: "Global"
+                        })
+                        parentOUId = parentOU.map(ou => ou.id);
+
+                        orgUnit = res.organisationUnits.sort((a, b) => a.name.localeCompare(b.name));
+                    } else {
+                        parentOUId.push(selectedOrgUnit.id);
+                        res.organisationUnits.forEach(ou => {
+                            if (ou.parent.id == selectedOrgUnit.id) {
+                                orgUnit.push(ou)
+                            }
+                        })
+                        orgUnit = orgUnit.sort((a, b) => a.name.localeCompare(b.name));
+                    }
+                    res.organisationUnits.forEach(ou => {
+                        if (ou.parent && ou.parent.id) {
+                            parentChild[ou.id] = ou.parent.id;
+                            parentName[ou.parent.id] = ou.parent.name;
+                        }
+                    })
+                }
+            });
+
+            var dataValuesParent = []
+            $.ajax({
+                type: 'GET',
+                async: false,
+                url: `../api/29/analytics.json?dimension=pe:${dates().join(";")}&dimension=dx:${dataElementIds.join(';')}&dimension=ou:${parentOUId.join(";")}&displayProperty=NAME`,
+                data: JSON,
+                success: function (data, success) {
+                    data.rows.forEach((values, index) => {
+                        dataValuesParent[`${values[2]}_${values[0]}.${values[1]}`] = values[3];
+                    });
+                }
+            });
+
+            var tabledata = '';
+            orgUnit.forEach(ou => {
+                var dataValues = {}, deValues = [], commentValues = {}, hasCommentedValue = {}, populationTotal = {};
+                $.ajax({
+                    type: 'GET',
+                    async: false,
+                    url: `../api/sqlViews/aXUMgTzs0qb/data.json?var=ou:${ou.id}&var=startDate:${startDate}-01-01&var=endDate:${endFullDate()}&paging=false`,
+                    data: JSON,
+                    success: function (data, success) {
+                        data.listGrid.rows.forEach((values, index) => {
+                            if (values[4]) {
+                                if (!dataValues[`${values[0]}_${values[6]}`]) dataValues[`${values[0]}_${values[6]}`] = Number(values[4]);
+                                else dataValues[[`${values[0]}_${values[6]}`]] += Number(values[4]);
+
+                                if (!dataValues[`${values[0]}.${values[1]}_${values[6]}`]) dataValues[`${values[0]}.${values[1]}_${values[6]}`] = Number(values[4]);
+
+                            }
+                            if (values[5]) {
+                                commentValues[`${values[0]}_${values[6]}`] = values[5];
+                                commentValues[`${values[0]}.${values[1]}_${values[6]}`] = values[5];
+                            }
+                        });
+                    }
+                });
+
+                console.log(dataValues)
+                dataElementIdRows.forEach((deRows, index) => {
+                    let rows = deRows[0].split(' + ')
+
+                    rows.forEach(de => {
+                        dates().forEach(pe => {
+                            if (dataValues[`${de}_${pe}`] || dataValues[`${de}_${pe}`] == 0) {
+                                if (!deValues[index + "_" + pe]) deValues[index + "_" + pe] = dataValues[`${de}_${pe}`]
+                                else deValues[index + "_" + pe] = dataValues[`${de}_${pe}`] + Number(deValues[index + "_" + pe])
+                            }
+                            if (commentValues[`${de}_${pe}`]) {
+                                hasCommentedValue[index + "_" + pe] = "NA";
+                            }
+                        })
+                    })
+                })
+
+                counter = 0;
+                if (!valuesParentTotal[parentChild[ou.id]]) valuesParentTotal[parentChild[ou.id]] = [];
+
+                tabledata += `<tr><td style="font:bold;">${(ou.name ? ou.name : '')}</td><td style="font:bold;">${(ou.code ? ou.code : '')}</td>`;
+
+                dataElementIdRows.forEach((de, index) => {
+                    dates().forEach(year => {
+                        let val = ""
+                        if (index == 2 || index == 4 || index == 16) {
+                            let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                            let deno = dataValues[`d1d6EWQZJGB.HllvX50cXC0_${year}`] ? dataValues[`d1d6EWQZJGB.HllvX50cXC0_${year}`] : '';
+                            val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 1000000).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                            tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+
+                        }
+                        else if (index == 6 || index == 11 || index == 15) 
+                         {
+                            // debugger;
+                            let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                            let deno = (dataValues[`evXyDr6c7eu_${year}`] ? dataValues[`evXyDr6c7eu_${year}`] : 0) + (dataValues[`gVmFx873rdZ_${year}`] ? dataValues[`gVmFx873rdZ_${year}`] : 0) + (dataValues[`IQgrP2W9gTV_${year}`] ? dataValues[`IQgrP2W9gTV_${year}`] : 0) + (dataValues[`liZaznYiWwp_${year}`] ? dataValues[`liZaznYiWwp_${year}`] : 0)
+                            val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 100).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                            tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+                            // debugger;
+                        }
+                        else if (index == 8) {
+
+                            let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                            let deno = (dataValues[`evXyDr6c7eu_${year}`] ? dataValues[`evXyDr6c7eu_${year}`] : 0) + (dataValues[`gVmFx873rdZ_${year}`] ? dataValues[`gVmFx873rdZ_${year}`] : 0) + (dataValues[`IQgrP2W9gTV_${year}`] ? dataValues[`IQgrP2W9gTV_${year}`] : 0) + (dataValues[`liZaznYiWwp_${year}`] ? dataValues[`liZaznYiWwp_${year}`] : 0) - (dataValues[`coycFHeZ257.HllvX50cXC0_${year}`] ? dataValues[`coycFHeZ257.HllvX50cXC0_${year}`] : 0)
+                            val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 100).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                            tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+
+                        }
+                        else if (index == 20) {
+
+                            let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                            let deno = dataValues[`VVBrsKiEqdh.HllvX50cXC0_${year}`] ? dataValues[`VVBrsKiEqdh.HllvX50cXC0_${year}`] : '';
+                            val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 100).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                            tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+
+                        }
+                        else if (index == 21) {
+
+                            let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                            let deno = dataValues[`PFNL3BPu3A6.HllvX50cXC0_${year}`] ? dataValues[`PFNL3BPu3A6.HllvX50cXC0_${year}`] : '';
+                            val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 100).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                            tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+
+                        }
+
+                        
+                        // else if (index == 26) {
+
+                        //     let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                        //     let deno = dataValues[`qHIGkVqSItK.HllvX50cXC0_${year}`] ? dataValues[`qHIGkVqSItK.HllvX50cXC0_${year}`] : '';
+                        //     val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 100).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                        //     tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+                        //     debugger;
+
+                        // }
+
+
+                        else if (index == 26) {
+
+                            let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                            let deno = (dataValues[`qlSO0fiGXD2_${year}`] ? dataValues[`qlSO0fiGXD2_${year}`] : 0) + (dataValues[`F2MoZgKx6Lv_${year}`] ? dataValues[`F2MoZgKx6Lv_${year}`] : 0) + (dataValues[`UuvQjDE9mQQ_${year}`] ? dataValues[`UuvQjDE9mQQ_${year}`] : 0) + (dataValues[`qHIGkVqSItK_${year}`] ? dataValues[`qHIGkVqSItK_${year}`] : 0);
+                            val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 100).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                            tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+                            debugger;
+
+                        }
+
+                        else if (index == 28) {
+                            debugger;
+                            let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                            let deno = (dataValues[`evXyDr6c7eu_${year}`] ? dataValues[`evXyDr6c7eu_${year}`] : 0) + (dataValues[`gVmFx873rdZ_${year}`] ? dataValues[`gVmFx873rdZ_${year}`] : 0) + (dataValues[`IQgrP2W9gTV_${year}`] ? dataValues[`IQgrP2W9gTV_${year}`] : 0)
+                            val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 100).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                            tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+                            debugger;
+                        }
+
+
+
+                        // else if (index == 28) {
+                        //     debugger;
+                        //     let num = deValues[`${index}_${year}`] || deValues[`${index}_${year}`] === 0 ? deValues[`${index}_${year}`] : "";
+                        //     let deno = (dataValues[`evXyDr6c7eu_${year}`] ? dataValues[`evXyDr6c7eu_${year}`] : 0) + (dataValues[`gVmFx873rdZ_${year}`] ? dataValues[`gVmFx873rdZ_${year}`] : 0) + (dataValues[`IQgrP2W9gTV_${year}`] ? dataValues[`IQgrP2W9gTV_${year}`] : 0)
+                        //     val = num && deno && num / deno && num / deno != "Infinity" || num === 0 ? deno === 0 ? "0.00" : ((num / deno) * 100).toFixed(2) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : '');
+                        //     tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+                        //     debugger;
+                        // }
+
+                        else {
+                            val = !isNaN(deValues[`${index}_${year}`]) ? Number(deValues[`${index}_${year}`]) : (hasCommentedValue[index + "_" + year] ? hasCommentedValue[index + "_" + year] : 'NR');
+                            tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+
+                        }
+                        if (parentChild[ou.id]) {
+                            val = val && !isNaN(val) || val === 0 ? Number(val) : ''
+                            debugger;
+                            if (!valuesParentTotal[parentChild[ou.id]][(counter)]) valuesParentTotal[parentChild[ou.id]][(counter)] = '';
+                            if (val || val === 0) valuesParentTotal[parentChild[ou.id]][(counter)] = Number(valuesParentTotal[parentChild[ou.id]][(counter)]) + Number(val);
+                            debugger;
+                            if (!valuesParentTotal['x3i5oi4axNu'][counter]) valuesParentTotal['x3i5oi4axNu'][counter] = '';
+                            if (val || val === 0) valuesParentTotal['x3i5oi4axNu'][counter] = Number(val) + Number(valuesParentTotal['x3i5oi4axNu'][counter]);
+                            debugger;
+                            if (hasCommentedValue[index + "_" + year]) {
+                                if (!hasOUCommentedValue[ou.id]) hasOUCommentedValue[ou.id] = {};
+                                hasOUCommentedValue[ou.id][counter] = hasCommentedValue[index + "_" + year]
+                                hasOUCommentedValue['x3i5oi4axNu'][counter] = hasCommentedValue[index + "_" + year];
+                            }
+
+                            counter++;
+                        }
+                    })
+                })
+
+                tabledata += '</tr>';
+
+            })
+
+            // for (parent in valuesParentTotal) {
+
+            //     tabledata += `<tr><td style="font:bold;background-color:#eaeaea">${parentName[parent]}</td><td style="font:bold;background-color:#eaeaea"></td>`;
+            //     let counter = 0;
+            //     dataElementIdRows.forEach((de, index) => {
+            //         dates().forEach(year => {
+            //             counter++;
+            //             let val = '';
+            //             if (index == 1 || index == 3 || index == 5) {
+            //                 let num = valuesParentTotal[parent][counter - (dates.length + 1)] ? valuesParentTotal[parent][counter - (dates.length + 1)] : ''
+            //                 let deno = populationTotal[parent][`d1d6EWQZJGB.HllvX50cXC0_${year}`] ? populationTotal[parent][`d1d6EWQZJGB.HllvX50cXC0_${year}`] : '';
+            //                 val = num && deno && num / deno && num / deno != "Infinity" || valuesParentTotal[parent][counter - (dates.length + 1)] == 0 ? ((num / deno) * 1000000).toFixed(2) : (hasOUCommentedValue[[parent]][counter] ? hasOUCommentedValue[[parent]][counter] : 'NR');
+            //                 tabledata += `<td style="font:bold; border:1px solid black;">${val}</td>`;
+
+            //             }
+
+            //             tabledata += `<td style="font:bold;background-color:#eaeaea">${dataValues[parent]}</td>`;
+            //         })
+            //     })
+            //     for (let values of valuesParentTotal[parent]) {
+            //         tabledata += `<td style="font:bold;background-color:#eaeaea">${(values % 1 != 0 ? values.toFixed(2) : values)}</td>`;
+            //     }
+            //     tabledata += `</tr>`;
+            // }
+
+            parentOU.forEach(ou => {
+                if (valuesParentTotal[ou.id]) {
+                    tabledata += `<tr><td style="font:bold;background-color:#eaeaea">${ou.name}</td><td style="font:bold;background-color:#eaeaea"></td>`;
+                    let counter = 0;
+                    debugger
+                    dataElementIds.forEach((de, index) => {
+                        dates().forEach(year => {
+                            let val = dataValuesParent[`${ou.id}_${de}.${year}`] ? Number(dataValuesParent[`${ou.id}_${de}.${year}`]) : (valuesParentTotal[ou.id] && valuesParentTotal[ou.id][counter] === 0 ? valuesParentTotal[ou.id][counter] : hasOUCommentedValue[ou.id] && hasOUCommentedValue[ou.id][counter] ? hasOUCommentedValue[ou.id][counter] : "NR");
+                            tabledata += `<td style="font:bold;background-color:#eaeaea">${val}</td>`;
+
+                            counter++;
+                        })
+                    })
+                    tabledata += `</tr>`;
+
+                }
+            })
+
+            // tabledata += '</tr>';
+            document.getElementById("tableBody").innerHTML = tabledata;
+            $('#state').show();
+            $('#loader').hide();
+
+
+        }
+
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
