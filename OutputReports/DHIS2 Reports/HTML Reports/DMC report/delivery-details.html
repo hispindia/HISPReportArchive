@@ -1,0 +1,378 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<!-- <script type="text/javascript"
+    src="http://gc.kes.v2.scr.kaspersky-labs.com/7EA5E9BB-55E1-4C31-9C21-4943DDFED2E4/main.js?attr=V9L8Gj_5iruZkhpSWCwNnilmpBxPUa3rfxv37AE_FLYdA6Qb07CSAqshGCoxL3HiBucmZvFwW09XIYHAROro3nLLcl6-nPKyb83sI1bWSzs"
+    charset="UTF-8"></script> -->
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    thead>tr>td {
+        font-weight: bold;
+        padding: 8px 12px;
+    }
+
+    div {
+            margin-bottom: 15px;
+        }
+
+    td {
+        padding: 10px;
+        text-align: center;
+        word-wrap: break-word;
+    }
+
+    th {
+        background-color: #fcdcdc;
+        text-align: center;
+        padding: auto;
+    }
+
+    tbody>tr>td {
+        font-weight: bold;
+        text-align: center;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('table-container')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span>
+    &nbsp;
+    Print
+</button>
+
+<!-- <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('table-container', 'Delivery Details', 'Delivery Details Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button> -->
+
+</div>
+
+<a id="dlink" style="display:none;"></a>
+
+<label for="start-date">Start Date:</label>
+<input type="date" id="start-date">
+
+<label for="end-date">End Date:</label>
+<input type="date" id="end-date">
+
+<button id="fetch-data-btn">Load Table</button>
+
+<div id="table-container"></div>
+
+<script>
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+
+    const dataElementIds = [
+        "TfdH5KvFmMy", // First Name
+        "iIf1gJ4FVdR", // DoB/Age
+        "ZQMF7taSAw8", // Household no.
+        "UqUO3PAulDj", // Education
+        "vuLLG8CaXCP", // Type of delivery
+        "IEIkeKFUteW", // Place of delivery
+        "YBMVx48hw5o"  // Outcome of delivery
+        // Jrax4JcLZK4 will come separately from API2
+    ];
+
+    function fetchAndRender(period) {
+        // Build date filter for API query
+        let dateFilter = "";
+        if (typeof period === "object" && period.startDate && period.endDate) {
+            dateFilter = `startDate=${period.startDate}&endDate=${period.endDate}`;
+        } else {
+            const pe = Array.isArray(period) ? period.join(';') : period;
+            dateFilter = `dimension=pe:${pe}`;
+        }
+
+        // API 1
+        const api1 = `https://ln2.hispindia.org/dmc/api/29/analytics/events/query/SUCUF657zNe.json?${dateFilter}&dimension=ou:fMTeIPKpZbI;OU_GROUP-lQ6TPDyeVLN&dimension=TfdH5KvFmMy&dimension=iIf1gJ4FVdR&dimension=ZQMF7taSAw8&dimension=UqUO3PAulDj&dimension=vuLLG8CaXCP&dimension=IEIkeKFUteW&dimension=YBMVx48hw5o&stage=u0c2uIZBvks&displayProperty=NAME&outputType=EVENT&desc=eventdate&paging=false&outputIdScheme=UID`;
+
+        // API 2 (with Household no. and Udai score)
+        const api2 = `https://ln2.hispindia.org/dmc/api/29/analytics/events/query/BgTTdBNKHwc.json?${dateFilter}&dimension=ou:fMTeIPKpZbI;OU_GROUP-lQ6TPDyeVLN&dimension=LnXjbhlMPYC&dimension=ZQMF7taSAw8&dimension=FudWXWCAAM9.Jrax4JcLZK4&stage=FudWXWCAAM9&displayProperty=NAME&outputType=EVENT&desc=eventdate&paging=false&outputIdScheme=UID`;
+
+        Promise.all([fetch(api1), fetch(api2)])
+            .then(responses => Promise.all(responses.map(res => res.json())))
+            .then(([data1, data2]) => buildFilteredTable(data1, data2, period))
+            .catch(err => console.error("❌ Fetch error:", err));
+    }
+
+    function buildFilteredTable(data1, data2, period) {
+        const headers1 = data1.headers || [];
+        const headers2 = data2.headers || [];
+        const rows1 = data1.rows || [];
+        const rows2 = data2.rows || [];
+
+        const meta = {
+            ...(data1.metaData?.items || {}),
+            ...(data2.metaData?.items || {})
+        };
+
+        // Indexes in API 1
+        const eventDateIndex = headers1.findIndex(h => h.name === "eventdate");
+        const ouIndex = headers1.findIndex(h => h.name === "ou");
+        const householdIndex1 = headers1.findIndex(h => h.name === "ZQMF7taSAw8");
+
+        // Indexes in API 2
+        const householdIndex2 = headers2.findIndex(h => h.name === "ZQMF7taSAw8");
+        const jraxIndex = headers2.findIndex(h => h.name.endsWith("Jrax4JcLZK4"));
+
+        // 🔑 Map Household No. → Udai Score
+        const householdToUdai = {};
+        rows2.forEach(row => {
+            const hh = row[householdIndex2];
+            const udaiScore = row[jraxIndex];
+            if (hh) householdToUdai[hh] = udaiScore;
+        });
+
+        // Build headerIndexMap for API1
+        const headerIndexMap = {};
+        headers1.forEach((h, i) => {
+            const id = h.name.includes('.') ? h.name.split('.').pop() : h.name;
+            if (dataElementIds.includes(id)) {
+                headerIndexMap[id] = i;
+            }
+        });
+
+        const filteredHeaderIds = dataElementIds;
+
+        // Merge rows
+        const mergedRows = rows1.map((row, index) => {
+            const eventDateRaw = row[eventDateIndex] || "";
+            const eventDate = eventDateRaw.split(" ")[0];
+            const ouId = row[ouIndex];
+            const ouName = meta[ouId]?.name || "—";
+            const householdNo = row[householdIndex1];
+            const udaiScore = householdToUdai[householdNo] || "—";
+
+            const displayRow = [
+                index + 1,  // S.No
+                eventDate,  // Event Date
+                ouName      // Health Center Name
+            ];
+
+            filteredHeaderIds.forEach(id => {
+                let rawValue = row[headerIndexMap[id]] || "";
+
+                if (id === "iIf1gJ4FVdR") {
+                    rawValue = rawValue.split(" ")[0];
+                }
+
+                if (meta[rawValue]?.name) {
+                    displayRow.push(meta[rawValue].name);
+                } else {
+                    const match = Object.values(meta).find(m => m.code === rawValue);
+                    displayRow.push(match ? match.name : rawValue || "—");
+                }
+            });
+
+            // ➕ Add Udai Score at the end
+            displayRow.push(udaiScore);
+
+            return displayRow;
+        });
+
+        const displayHeaders = [
+            "S.No",
+            "Event Date",
+            "Health Center Name",
+            ...filteredHeaderIds.map(id => meta[id]?.name || id),
+            "Udai Score"
+        ];
+
+        renderTable(displayHeaders, mergedRows, period);
+    }
+
+    function renderTable(headers, rows, period) {
+        const container = document.getElementById("table-container");
+
+        const table = document.createElement("table");
+        table.border = "1";
+        const thead = document.createElement("thead");
+        const tbody = document.createElement("tbody");
+
+        // Section title
+        const sectionRow = document.createElement("tr");
+        const sectionCell = document.createElement("th");
+        sectionCell.textContent = "Delivery Details";
+        sectionCell.colSpan = headers.length;
+        sectionCell.style.textAlign = "center";
+        sectionRow.appendChild(sectionCell);
+        thead.appendChild(sectionRow);
+
+        // Period info row
+        const infoRow = document.createElement("tr");
+        const infoCell = document.createElement("th");
+        let periodText;
+
+        if (typeof period === "object" && period.startDate && period.endDate) {
+            periodText = `${period.startDate} to ${period.endDate}`;
+        } else {
+            periodText = Array.isArray(period) ? period.join(", ") : period;
+        }
+
+        infoCell.textContent = `Period: ${periodText} | Facility: ${selectedOrgUnit.name}`;
+        infoCell.colSpan = headers.length;
+        infoCell.style.textAlign = "center";
+        infoRow.appendChild(infoCell);
+        thead.appendChild(infoRow);
+
+        // Table headers
+        const headerRow = document.createElement("tr");
+        headers.forEach(h => {
+            const th = document.createElement("th");
+            th.textContent = h;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+
+        // Data rows
+        rows.forEach(row => {
+            const tr = document.createElement("tr");
+            row.forEach(cell => {
+                const td = document.createElement("td");
+                td.textContent = cell || "—";
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        container.innerHTML = "";
+        container.appendChild(table);
+    }
+
+    // Event Listeners
+    document.getElementById("fetch-data-btn").addEventListener("click", () => {
+        const startDate = document.getElementById("start-date").value;
+        const endDate = document.getElementById("end-date").value;
+
+        if (!startDate || !endDate) {
+            alert("Please select both start and end dates.");
+            return;
+        }
+
+        fetchAndRender({ startDate, endDate });
+    });
+
+    window.onload = () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("end-date").value = today;
+
+        const lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        document.getElementById("start-date").value = lastMonth.toISOString().split('T')[0];
+
+        const startDate = document.getElementById("start-date").value;
+        const endDate = document.getElementById("end-date").value;
+        fetchAndRender({ startDate, endDate });
+    };
+</script>
+
+<script>
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+</script>
