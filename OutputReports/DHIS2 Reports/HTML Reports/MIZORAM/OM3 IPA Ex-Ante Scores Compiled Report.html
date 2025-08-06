@@ -366,7 +366,7 @@
                 'UPHC': ['NxpizrKetxX', 'dHuVSKPUOtv', 'MgBNehilt4X','RatMTqCbdoP','NWVTwAuFhu8','KyLrsPRsaOy','O6uZ5wJSIDM','ywXq4mJDhC2','sRo0KYPtSSb','dEh5Ge4GMrr','fhkXHuejOe9','uZ6gUvUnw7D','PRsCYxCeTcx','ulBPG1KFoqF','zDanki0LR8A','b4yvHbtL0LP','MiQWa6m05hn','MncGRZOpz5P','tze6k5digrL','Rex3P2ddpnK','tREbd3kCESt'],
                 'CHC / SDH': ['NxpizrKetxX','dHuVSKPUOtv','hEmw1SgUk5B','OApGB4RqNj2','nVsUOeemfuM','Wag2MMDU11i','LxkcyG5uB6P','aVp0MdFg6Jz','qVwhxqrpHue','SlyWuCZrZlV','HGCD1m0dxXV','Qj70QIMbOIB','JNU2mkoOQFx','AyT7JccdH3J','EnfVLUDAT2Y','AAQVlEg3Fpu','zdc2D3qvmgO','bFW1Lm7xHgp'],
                 'DH': ['NxpizrKetxX','dHuVSKPUOtv','VxbUxDaAkWa','RdSGHDTjdHG','eMJJhDAc0Fa','GnrmKd87gSI','j4uggA952Vi','tD6oBYAvn98','HYqtx7QRwew','RwsbRdO6buY','DUcaCVQcENy','UmgCJ4TRJ2z','HzWwN7ijfvO','rpbQ1GnS0dU','sAoofnHxMdM','lhkcJSi0858','POPDaE96GfE','B5KFVFGnOh0','FEZ0CMoRjwy','b6JPxOkX68O','YGM9kx0lv2C'],
-                'SHT': ['NxpizrKetxX', 'ociWIIMxm4Y', 'Zqtv9m6tXIh', 'iLbWxAsF9XO', 'fINfpV0hTRs', 'kHerGhHlafN', 'EbWojBgvxOD', 'I5xIWOv1NVX', 'wjBuomAHdr2', 'qtEoIDQISfe', 'frNOnokrMKo', 'oUSK4C7ysG0', 'e39Pp7oPc70', 'rTkivTYNAMw'],
+                'SHT': ['NxpizrKetxX', 'dHuVSKPUOtv', 't74ltsSf68i', 'Df7VRgqMvEp', 'OIezn65tpN5', 'C8YsYJzaegB', 'm9QOEyGCXLq', 'YoLFvclGCa3', 'nLLsH2AOTAN', 'V3OgbCiZHUJ', 'je23VNqB5hs', 'mVLROjY20Ib', 'GvDDhBesf5y', 'pdXzJIaTpJ6', 'Nf8NfMw6wAN', 'NM7Rfr4HSPa', 'Skl2xFuYZvA', 'WQJj6ZvuGeM', 'DZUSFXHl974'],
                 'DHT': ['NxpizrKetxX', 'dHuVSKPUOtv', 'HMJl1ihGttQ', 'BH0ne79iBdW', 'rFYAyQBq5uZ', 'mvMxxUm7C1d', 'kHRI6M7VeMq', 'GfGniN4O5Ib', 'Pus6IXftvwT', 'MR6DTd8WfXj', 'krs4kVOxr6s', 'CHa6lWCvzUa', 'kRWBZFZbseb', 'bKb96k49lpq', 'sriHepQzObV', 'nnGPlabpjOx', 'xWJHsHBdENm', 'x0eOZt7dq67', 'LwvDauUsAB9'],
                 'DHT_CI': ['NxpizrKetxX', 'dHuVSKPUOtv', 'FHh0DreGwAg', 'IhQHr47XxSx'],
             };
@@ -417,13 +417,17 @@
                 <td>${orgUnit}</td>
                 <td>${groupName}</td>`
                     dataElementIds[includedOrgUnitGroups[orgUnitId]].forEach((de, index) => {
-                        let val = (dataObj[de] ? dataObj[de] : 0);
+
+                        var val = 0;
+                        if(index == 0) val = (dataObj[de] ? dataObj[de] : 0);
+                        else val = formatNumber(dataObj[de]);
+                        
                         if (includedOrgUnitGroups[orgUnitId] == 'PHC' || includedOrgUnitGroups[orgUnitId] == 'UPHC' || includedOrgUnitGroups[orgUnitId] == 'CHC / SDH' || includedOrgUnitGroups[orgUnitId] == 'DH') if (index != 0 && index != 1) total += Number(val);
                         if (includedOrgUnitGroups[orgUnitId] == 'SHT' || includedOrgUnitGroups[orgUnitId] == 'DHT' || includedOrgUnitGroups[orgUnitId] == 'INS') if (index != 0) total += Number(val);
                         rows += `<td style="text-align:center">${val}</td>`
                     })
                     percent = total ? ((total / 1000) * 100).toFixed(2) : ''
-                    rows += `<td style="text-align:center">${total}</td><td style="text-align:center">${percent}</td></tr>`
+                    rows += `<td style="text-align:center">${formatNumber(total)}</td><td style="text-align:center">${percent}</td></tr>`
 
                     totalRows[groupName].push(rows);
                 }
@@ -432,6 +436,13 @@
     }
 
     }
+
+    function formatNumber(value) {
+        const num = Number(value);            
+        if (isNaN(num)) return '';
+        return Number.isInteger(num) ? num : Number(num.toFixed(2));
+    }
+
     var tablesToExcel = (function () {
         var uri = 'data:application/vnd.ms-excel;base64,'
             , tmplWorkbookXML = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
