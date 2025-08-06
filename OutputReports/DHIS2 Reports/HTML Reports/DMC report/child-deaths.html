@@ -27,7 +27,7 @@
     th {
         background-color: #fcdcdc;
         text-align: center;
-        padding: 8px 12px;
+        padding: auto;
     }
 
     tbody>tr>td {
@@ -126,9 +126,9 @@
     Print
 </button>
 
-<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
-    onclick="tableToExcel('deliveryTable', 'Delivery Details', 'Delivery Details Report.xls')"><span
-        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+<!-- <button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('table-container', 'Delivery Details', 'Delivery Details Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button> -->
 
 </div>
 
@@ -151,10 +151,9 @@
         "TfdH5KvFmMy", // First Name
         "iIf1gJ4FVdR", // DoB/Age
         "ZQMF7taSAw8", // Household no.
-        "UqUO3PAulDj", // Education
-        "vuLLG8CaXCP", // Type of delivery
-        "IEIkeKFUteW", // Place of delivery
-        "YBMVx48hw5o"  // Outcome of delivery
+        "CuxGIMl5pND", // Type of delivery
+        "Pb7og0xdqzy", // Place of delivery
+        "rqm7CSMhFIE"  // Outcome of delivery
         // Jrax4JcLZK4 will come separately from API2
     ];
 
@@ -169,10 +168,10 @@
         }
 
         // API 1
-        const api1 = `https://ln2.hispindia.org/dmc/api/29/analytics/events/query/SUCUF657zNe.json?${dateFilter}&dimension=ou:fMTeIPKpZbI;OU_GROUP-lQ6TPDyeVLN&dimension=TfdH5KvFmMy&dimension=iIf1gJ4FVdR&dimension=ZQMF7taSAw8&dimension=UqUO3PAulDj&dimension=vuLLG8CaXCP&dimension=IEIkeKFUteW&dimension=YBMVx48hw5o&stage=u0c2uIZBvks&displayProperty=NAME&outputType=EVENT&desc=eventdate&paging=false&outputIdScheme=UID`;
+        const api1 = `https://ln2.hispindia.org/dmc/api/29/analytics/events/query/SSLpOM0r1U7.json?${dateFilter}&dimension=ou:fMTeIPKpZbI;OU_GROUP-lQ6TPDyeVLN&dimension=TfdH5KvFmMy&dimension=PbEhJPnon0o&dimension=iIf1gJ4FVdR&dimension=ZQMF7taSAw8&dimension=CuxGIMl5pND&dimension=Pb7og0xdqzy&dimension=YZ3Nzdh7Psx.rqm7CSMhFIE:IN:1&stage=YZ3Nzdh7Psx&displayProperty=NAME&outputType=EVENT&desc=eventdate&paging=false&outputIdScheme=UID`;
 
         // API 2 (with Household no. and Udai score)
-        const api2 = `https://ln2.hispindia.org/dmc/api/29/analytics/events/query/BgTTdBNKHwc.json?${dateFilter}&dimension=ou:fMTeIPKpZbI;OU_GROUP-lQ6TPDyeVLN&dimension=LnXjbhlMPYC&dimension=ZQMF7taSAw8&dimension=FudWXWCAAM9.Jrax4JcLZK4&stage=FudWXWCAAM9&displayProperty=NAME&outputType=EVENT&desc=eventdate&paging=false&outputIdScheme=UID`;
+        const api2 = ` https://ln2.hispindia.org/dmc/api/29/analytics/events/query/BgTTdBNKHwc.json?${dateFilter}&dimension=ou:fMTeIPKpZbI;OU_GROUP-lQ6TPDyeVLN&dimension=LnXjbhlMPYC&dimension=ZQMF7taSAw8&dimension=FudWXWCAAM9.Jrax4JcLZK4&stage=FudWXWCAAM9&displayProperty=NAME&outputType=EVENT&desc=eventdate&paging=false&outputIdScheme=UID`;
 
         Promise.all([fetch(api1), fetch(api2)])
             .then(responses => Promise.all(responses.map(res => res.json())))
@@ -270,7 +269,6 @@
         const container = document.getElementById("table-container");
 
         const table = document.createElement("table");
-        table.id = "deliveryTable";
         table.border = "1";
         const thead = document.createElement("thead");
         const tbody = document.createElement("tbody");
@@ -327,21 +325,6 @@
         container.appendChild(table);
     }
 
-    var tableToExcel = (function () {
-        debugger;
-        var uri = 'data:application/vnd.ms-excel;base64,'
-            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
-            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
-            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
-        return function (table, name, filename) {
-            if (!table.nodeType) table = document.getElementById(table)
-            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
-            document.getElementById("dlink").href = uri + base64(format(template, ctx));
-            document.getElementById("dlink").download = filename;
-            document.getElementById("dlink").click();
-        }
-    })()
-
     // Event Listeners
     document.getElementById("fetch-data-btn").addEventListener("click", () => {
         const startDate = document.getElementById("start-date").value;
@@ -377,4 +360,18 @@
         window.print();
         document.body.innerHTML = restorepage;
     }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
 </script>
