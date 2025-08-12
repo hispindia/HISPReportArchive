@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Age-wise bifurcation - Rural Centres</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 4px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0d9c2;
+    }
+  </style>
+</head>
+<body>
+
+<h3>Age-wise bifurcation - Urban Centres</h3>
+<table id="ageTable">
+  <thead>
+    <tr>
+      <th rowspan="3">S.No</th>
+      <th rowspan="3">Age group</th>
+      <th colspan="4">6-18 years</th>
+      <th colspan="4">18-40 years</th>
+      <th colspan="4">40-60 years</th>
+      <th colspan="4">Above 60 years</th>
+      <th rowspan="3">Grand Total</th>
+    </tr>
+    <tr>
+      <th>Male</th><th>Female</th><th>Transgender</th><th>Total</th>
+      <th>Male</th><th>Female</th><th>Transgender</th><th>Total</th>
+      <th>Male</th><th>Female</th><th>Transgender</th><th>Total</th>
+      <th>Male</th><th>Female</th><th>Transgender</th><th>Total</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+async function loadAgeBifurcation() {
+  try {
+    const res = await fetch("https://ln2.hispindia.org/dmc/api/29/sqlViews/kAKv4q0LHVe/data?paging=false",
+     );
+    const data = await res.json();
+
+    if (!data.listGrid || !data.listGrid.rows) {
+      throw new Error("Unexpected API format");
+    }
+
+    const rows = data.listGrid.rows.map(r => ({
+      orgunit: r[0],
+      gender: r[1],
+      age_16_18: parseInt(r[2] || 0),
+      age_18_40: parseInt(r[3] || 0),
+      age_40_60: parseInt(r[4] || 0),
+      age_above_60: parseInt(r[5] || 0),
+      total_16_plus: parseInt(r[6] || 0)
+    }));
+
+    const grouped = {};
+    rows.forEach(row => {
+      if (!grouped[row.orgunit]) grouped[row.orgunit] = {};
+      grouped[row.orgunit][row.gender] = row;
+    });
+
+    const tbody = document.querySelector("#ageTable tbody");
+    let sno = 1;
+    Object.entries(grouped).forEach(([orgunit, genders]) => {
+      const male = genders["Male"] || {};
+      const female = genders["Female"] || {};
+      const trans = genders["Transgender"] || {};
+
+      const total6_18 = (male.age_16_18||0) + (female.age_16_18||0) + (trans.age_16_18||0);
+      const total18_40 = (male.age_18_40||0) + (female.age_18_40||0) + (trans.age_18_40||0);
+      const total40_60 = (male.age_40_60||0) + (female.age_40_60||0) + (trans.age_40_60||0);
+      const totalAbove60 = (male.age_above_60||0) + (female.age_above_60||0) + (trans.age_above_60||0);
+      const grandTotal = total6_18 + total18_40 + total40_60 + totalAbove60;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${sno++}</td>
+        <td>${orgunit}</td>
+        <td>${male.age_16_18||0}</td><td>${female.age_16_18||0}</td><td>${trans.age_16_18||0}</td><td>${total6_18}</td>
+        <td>${male.age_18_40||0}</td><td>${female.age_18_40||0}</td><td>${trans.age_18_40||0}</td><td>${total18_40}</td>
+        <td>${male.age_40_60||0}</td><td>${female.age_40_60||0}</td><td>${trans.age_40_60||0}</td><td>${total40_60}</td>
+        <td>${male.age_above_60||0}</td><td>${female.age_above_60||0}</td><td>${trans.age_above_60||0}</td><td>${totalAbove60}</td>
+        <td>${grandTotal}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  } catch (e) {
+    console.error("Error loading data:", e);
+  }
+}
+
+loadAgeBifurcation();
+</script>
+</body>
+</html>
