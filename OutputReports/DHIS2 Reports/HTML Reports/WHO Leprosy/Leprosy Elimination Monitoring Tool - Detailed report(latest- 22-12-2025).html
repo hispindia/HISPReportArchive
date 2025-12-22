@@ -1,0 +1,1183 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+  integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous" />
+<script src="https://code.highcharts.com/maps/highmaps.js"></script>
+<!-- <script src="https://code.highcharts.com/maps/modules/exporting.js"></script> -->
+<script src='https://code.highcharts.com/modules/exporting.js'></script>
+<script src='https://code.highcharts.com/modules/export-data.js'></script>
+
+<script src="https://code.highcharts.com/maps/modules/data.js"></script>
+<script src="https://code.highcharts.com/maps/modules/accessibility.js"></script>
+<script src="https://cdn.jsdelivr.net/lodash/4/lodash.min.js"></script>
+
+
+
+<!-- Add your CSS styles -->
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+  }
+
+  #mapContainer {
+    /* height: 500px;
+    min-width: 310px;
+    max-width: 800px; */
+    margin: 0 auto;
+  }
+
+  #csv {
+    display: none;
+  }
+</style>
+
+<style>
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 140px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    /* Position above the text */
+    left: 50%;
+    margin-left: -70px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+</style>
+
+<style>
+  table {
+    border-collapse: collapse;
+  }
+
+  thead>tr>td {
+    font-weight: bold;
+  }
+
+  tbody>tr>td {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+  }
+
+  /* Center the loader  */
+  #loader {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #34b4db;
+    width: 120px;
+    height: 120px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+  }
+
+  @-webkit-keyframes spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+      -webkit-transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
+<div style="width: 40%; margin-left:30%;">
+  <table class="table table-bordered">
+
+    <tr style="display:none;" id="startYearMarque">
+      <td colspan="6">
+        <span style="font-size: small;">Start year is based on the year since when data was provided by the country.
+        </span>
+      </td>
+    </tr>
+
+    <tr>
+
+      <td colspan="2" style="font-size: 15px;padding-top: 15px;" data-translate="text1">
+        Start Year
+
+      </td>
+      <td colspan="4" style="width: 60%;">
+        <select id="fromYear" type="text" class="form-control">
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-size: 15px;padding-top: 15px;" data-translate="text2">
+        End Year
+      </td>
+      <td colspan="4" style="width: 60%;">
+        <select id="toYear" type="text" class="form-control"></select>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2"><button onclick="handleSubmit()" class="btn btn-primary" id="tap"
+          data-translate="text0">Submit</button></td>
+      <td colspan="4" style="text-align: right;">
+        <div id="downloads">
+          <img src="https://img.icons8.com/dusk/35/000000/pdf.png" onmouseover="this.style.cursor='pointer'"
+            onclick="printContent('printing')" style="cursor: pointer; margin-right: 10px;">
+
+          <img src="https://img.icons8.com/?size=45&id=117561&format=png" onmouseover="this.style.cursor='pointer'"
+            onclick="tableToExcel('dataTable', 'Leprosy Elmination Monitoring Record', 'Leprosy Elmination Monitoring Record')"
+            style="cursor: pointer;">
+        </div>
+
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<a id="dlink" style="display: none"></a>
+<!-- <button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+  onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+  Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle" id="btnExport"
+  onclick="tableToExcel('dataTable', 'Leprosy Elmination Monitoring Record', 'Leprosy Elmination Monitoring Record')">
+  <span class="glyphicon glyphicon-download-alt" style="font-size: 15px"></span>Download As Excel
+</button> -->
+
+<div align="center" id="globalId">
+  <div id="loader" style="display: none"></div>
+  <div id="printing" class="animate-bottom">
+    <div class="" id="dataTable">
+      <table border="1" cellspacing="6" cellpadding="4"
+        style="border-collapse: collapse; text-align: center ; width: 100%;">
+        <thead id="table-head-indecator"></thead>
+      </table>
+      <table border="1" cellspacing="6" cellpadding="4"
+        style="border-collapse: collapse; text-align: center ; width: 100%;">
+        <thead id="table-head"></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <pre id="csv">Leprosy Elimination Monitoring Tool-SEAR Map
+  <!-- ... (your CSV data here) ... -->
+</pre>
+
+  <div id="mapContainer"></div>
+
+</div>
+
+
+<script>
+
+  var selectedOrgUnit = dhis2.report.organisationUnit;
+  var period = new Date().getFullYear()
+  // var period = dhis2.report.periods[0];
+  var ouHierarchy = dhis2?.report?.organisationUnitHierarchy?.length > 1 ? dhis2?.report?.organisationUnitHierarchy[1] : { id: "", code: "", name: "" };
+  const ouIds = selectedOrgUnit.id
+  var countryName = dhis2.report.organisationUnit.name
+
+  var featuresLatLng = []
+  var maldiveData = []
+  const mapLbel = `${selectedOrgUnit.name} - `
+  const exceptionColor = {
+    '3_or_more_cases_on_average_in_3_consecutive_years': '#35c9f3',
+    'query_operational_cause': '#bfbfbf'
+  }
+  const sporadicColor = {
+    'otherAdult': '#e65a76',
+    'otherChild': '#af5c99'
+  }
+
+
+
+  var locale = 'en'
+  var startDate;
+
+  $.ajax({
+    type: "GET",
+    async: false,
+    url: `../api/me.json?fields=settings`,
+    data: JSON,
+    success: function (data, status) {
+      locale = data.settings.keyUiLocale
+    }
+  });
+
+  $.ajax({
+    type: "GET",
+    async: false,
+    url: `../api/29/organisationUnits/${ouIds}.json?lavel=3&paging=false&fields=attributeValues`,
+    data: JSON,
+    success: function (data, status) {
+      startDate = data.attributeValues
+    }
+  });
+
+  console.log('dhis2:>>>>>>', dhis2)
+
+  var getYear = (currentYear, yearsBack) => {
+    let arrYear = [];
+    for (let i = yearsBack; i <= currentYear; i++) arrYear.push(i);
+    return arrYear;
+  };
+
+  function setInitialYear() {
+
+    let getRes = getYear(period, 2000)
+    let setFilterOption = ''
+
+    getRes.map(yr => {
+      setFilterOption += `<option value=${yr}>${yr}</option>`
+    })
+
+    document.getElementById("fromYear").innerHTML = setFilterOption
+    document.getElementById("toYear").innerHTML = setFilterOption
+    document.getElementById("toYear").value = new Date().getFullYear()
+
+    if (startDate.length > 0) {
+      document.getElementById("fromYear").value = startDate[0]?.value
+      document.getElementById("fromYear").disabled = true
+      document.getElementById("startYearMarque").style.display = 'contents'
+    }
+  }
+
+  function handleSubmit() {
+    translate()
+    let selectedFromYear = document.getElementById("fromYear").value;
+    let selectedToYear = document.getElementById("toYear").value;
+
+    if (!selectedFromYear || !selectedToYear) return alert('Please select start year and end year')
+    if (Number(selectedFromYear) === Number(selectedToYear)) return alert('Start year cannot be equal to end year')
+    if (Number(selectedFromYear) > Number(selectedToYear)) return alert('Start year cannot be gratter than end year')
+
+    var periods = getYear(selectedToYear, selectedFromYear).join(";");
+    const yrPeriods = periods.split(";")
+
+    let moldivesColorIds = {}
+
+    $("#printing").hide();
+
+    var tableHeadIndicator = `
+    <tr>
+    <td style="border: 1px solid black; background: #add8e6" colspan="${periods?.split(';')?.length + 5}" data-translate="text3">Leprosy Elimination Monitoring Tool-${countryName} (${selectedFromYear} to ${selectedToYear})</td>
+    </tr>
+    <tr>
+      <td colspan='1' style="border: 1px solid black; background:#ff114d;width:42px;"> </td>
+      <td style='text-align:left;border:none' colspan="${periods?.split(';')?.length + 4}"><span data-translate="text4">Phase 1 - Until interruption of transmission (5 years no autochthonous child cases)</span></td>
+    </tr>
+    <tr>
+      <td colspan='1' style="border: 1px solid black; background:#ffd067;width:42px;"> </td>
+      <td style='text-align:left;border:none' colspan="${periods?.split(';')?.length + 4}"> <span data-translate="text5">Phase 2 - Until elimination of leprosy disease (3 years no autochthonous cases)</span></td>
+      </tr>
+    <tr>
+      <td colspan='1' style="border: 1px solid black; background:#bae6b7;width:42px;"> </td>
+      <td style='text-align:left;border:none' colspan="${periods?.split(';')?.length + 4}"><span data-translate="text6">Phase 3 - Post-elimination phase (10 years no autochthonous cases)</span></td>
+    </tr>
+    <tr>
+      <td colspan='1' style="border: 1px solid black; background:#68ce6a;width:42px;"> </td>
+      <td style='text-align:left;border:none' colspan="${periods?.split(';')?.length + 4}"><span data-translate="text7">Non-endemic status</span></td>
+    </tr>
+    <tr>
+      <td colspan='1' style="border: 1px solid black; background:#e65a76;width:42px;"> </td>
+      <td style='text-align:left;border:none' colspan="${periods?.split(';')?.length + 4}"><span data-translate="text8">Sporadic autochthonous adult case</span></td>
+    </tr>
+    <tr>
+      <td colspan='1' style="border: 1px solid black; background:#af5c99;width:42px;"> </td>
+      <td style='text-align:left;border:none' colspan="${periods?.split(';')?.length + 4}"><span data-translate="text9">Sporadic autochthonous child case</span></td>
+    </tr>
+    <tr>
+      <td colspan='1' style="border: 1px solid black; background:#bfbfbf;width:42px;"> </td>
+      <td style='text-align:left;border:none' colspan="${periods?.split(';')?.length + 4}"><span data-translate="text10">Query operational cause of high number of new cases</span></td>
+    </tr>
+
+    <tr>
+      <td colspan='1' style="border: 1px solid black; background:#35c9f3;width:42px;"> </td>
+      <td style='text-align:left;border:none' colspan="${periods?.split(';')?.length + 4}"><span data-translate="text11">3 or more cases on average in 3 consecutive years; possible re-emergence to be investigated</span></td>
+
+    </tr>`
+
+
+    var tableHead = `
+      <tr>
+        <td style="border: 1px solid black; background: #add8e6" data-translate="text12">Area L1</td>
+        <td style="border: 1px solid black; background: #add8e6" data-translate="text13">Area code L1</td>
+        <td style="border: 1px solid black; background: #add8e6" data-translate="text14">Area L2</td>
+        <td style="border: 1px solid black; background: #add8e6" data-translate="text15">Area code L2</td>
+        <td style="border: 1px solid black; background: #add8e6" data-translate="text16">Age group</td>`;
+    periods.split(";").forEach((pe) => (tableHead += `<td style="border: 1px solid black; background: #add8e6">${pe}</td>`));
+    tableHead += "</tr>";
+
+
+    // $('#table-head').val(tableHead);
+    document.getElementById("table-head-indecator").innerHTML = tableHeadIndicator;
+    document.getElementById("table-head").innerHTML = tableHead;
+
+    $("#loader").show();
+    $("#printing").hide();
+
+    async function displayDataPhase1Only() {
+      $("#loader").show();
+      let tableRow = "";
+
+      let orgUnitChildren = await getOUChilren();
+      if (!orgUnitChildren.length) {
+        document.getElementById("table-body").innerHTML =
+          `<tr><td colspan="${periods.length + 5}">Organisation unit not found!!</td></tr>`;
+        $("#loader").hide();
+        return;
+      }
+
+      for (let ou of orgUnitChildren) {
+        let phases = {
+          phase1: { exists: false, consecutiveYears: 0, adultEmptyCount: 0 },
+          phase2: { exists: false, requiredYears: 3, consecutiveYears: 0 },
+          phase3: { exists: false, consecutiveYears: 0, childZeroYears: 0, yearsInPhase: 0 }
+        };
+        let otherAdult = "#e65a76"; // sporadic adult
+        let otherChild = "#af5c99";
+        let phaseTwoChild = [];
+        let phaseThreeChild = [];
+        let phaseThreeAdult = [];
+        let phaseThreeSum = [];
+        let last3Child = [];
+        let last3Total = [];
+        let cyanTriggeredPhase2 = false;
+        let cyanCountPhase2 = 0;
+        let cyanTriggeredPhase3 = false;
+        let greyTriggered = false;
+        let cyanCountPhase3 = 0;
+        let cyanTriggeredPhase4 = false;
+        let cyanCountPhase4 = 0;
+
+        let currentPhase = "phase1";
+
+        let childColors = [];
+        let adultColors = [];
+
+
+        let rowChildren = "";
+        let rowAdult = "";
+
+        let ouVal = await getData(periods, ou.id);
+
+        tableRow += `
+<tr>
+  <td rowspan="2">${ou.parent?.name || ""}</td>
+  <td rowspan="2">${ou.parent?.code || ""}</td>
+  <td rowspan="2">${ou.name}</td>
+  <td rowspan="2">${ou.code}</td>
+  <td>Children</td>
+`;
+
+        let cellData = [];
+
+
+        for (let p = 0; p < yrPeriods.length; p++) {
+          const period = yrPeriods[p];
+          let valChild = ouVal.children?.[period] ?? "";
+          let valAdult = ouVal.adult?.[period] ?? "";
+          let valChildNum = isNaN(valChild) ? 0 : Number(valChild);
+          let valAdultNum = isNaN(valAdult) ? 0 : Number(valAdult);
+
+          if (!phases.phase1.exists) {
+            if (valChildNum === 0) {
+              phases.phase1.consecutiveYears++;
+
+              // Track adult empty count after first 2 years
+              if (phases.phase1.consecutiveYears > 2) {
+                if (valAdultNum === 0) {
+                  phases.phase1.adultEmptyCount++;
+                } else {
+                  phases.phase1.adultEmptyCount = 0;
+                }
+              }
+            } else {
+              phases.phase1.consecutiveYears = 0;
+              phases.phase1.adultEmptyCount = 0;
+            }
+
+            currentPhase = "phase1";
+
+            if (phases.phase1.consecutiveYears >= 5) {
+              phases.phase1.exists = true;
+
+
+
+              // Skip phase 2 if last 3 adult years were zero
+              if (phases.phase1.adultEmptyCount >= 3) {
+                phases.phase2.exists = true;
+                phases.phase2.requiredYears = 0;
+              } else {
+                phases.phase2.requiredYears = 3;
+
+                // ✅ IMPORTANT PART
+                // If Phase 1 ended with 0/0, count it as first yellow year
+                if (valChildNum === 0 && valAdultNum === 0) {
+                  phases.phase2.consecutiveYears = 1;
+                }
+              }
+            }
+
+          }
+
+          // Phase 2 Logic: 3 consecutive years no cases (or less based on phase1)
+          else if (!phases.phase2.exists) {
+            if (valChildNum === 0 && valAdultNum === 0) {
+              phases.phase2.consecutiveYears++;
+              phaseTwoChild.push(valChild);
+            } else {
+              phases.phase2.consecutiveYears = 0;
+              phaseTwoChild.push(valChild);
+            }
+
+            currentPhase = "phase2";
+
+            if (phases.phase2.consecutiveYears >= phases.phase2.requiredYears) {
+              phases.phase2.exists = true;
+            }
+          }
+
+          // else if (!phases.phase3.exists) {
+
+          //   //No child AND no adult
+          //   if (valChildNum <= 0 && valAdultNum <= 0) {
+          //     phases.phase3.consecutiveYears++;
+          //   } else {
+          //     phases.phase3.consecutiveYears = 0;
+          //   }
+
+          //   // // No child ONLY (adult may exist)
+          //   // if (valChildNum <= 1) {
+          //   //   phases.phase3.childZeroYears++;
+          //   // } else {
+          //   //   phases.phase3.childZeroYears = 0;
+          //   // }
+
+          //   phaseThreeChild.push(valChild);
+          //   phaseThreeAdult.push(valAdult);
+          //   phaseThreeSum.push(valChildNum + valAdultNum);
+
+          //   currentPhase = "phase3";
+
+          //   // ✅ Phase 3 completion conditions
+          //   if (
+          //     phases.phase3.consecutiveYears >= 10 ||   // existing rule
+          //     phases.phase3.childZeroYears >= 10        // NEW rule
+          //   ) {
+          //     phases.phase3.exists = true;
+          //   }
+          // }
+
+          else if (!phases.phase3.exists) {
+
+            // Count EVERY year spent in Phase 3
+            phases.phase3.yearsInPhase++;
+
+            phaseThreeChild.push(valChild);
+            phaseThreeAdult.push(valAdult);
+            phaseThreeSum.push(valChildNum + valAdultNum);
+
+            currentPhase = "phase3";
+
+            // ✅ Phase 3 ends ONLY after 10 years
+            if (phases.phase3.yearsInPhase >= 10) {
+              phases.phase3.exists = true;
+            }
+          }
+
+
+          // Phase 4 Logic: After phase 3 completion
+          else {
+            currentPhase = "phase4";
+          }
+
+
+          let isSporadicChild = false;
+          let isSporadicAdult = false;
+          if (["phase2", "phase3", "phase4"].includes(currentPhase)) {
+            if (valChildNum > 0) isSporadicChild = true;
+          }
+          if (["phase3", "phase4"].includes(currentPhase)) {
+            if (valAdultNum > 0) isSporadicAdult = true;
+          }
+
+
+
+          cellData.push({
+            valChild: valChild,
+            valAdult: valAdult,
+            valChildNum,
+            valAdultNum,
+            phase: currentPhase,
+            isSporadicChild,
+            isSporadicAdult,
+            index: p
+          });
+        }
+
+        // Collect contiguous sequences of indices for phase2 & phase3
+        function collectPhaseSequences(phaseName) {
+          const seqs = [];
+          let cur = null;
+          for (let i = 0; i < cellData.length; i++) {
+            if (cellData[i].phase === phaseName) {
+              if (!cur) cur = [];
+              cur.push(i);
+            } else {
+              if (cur) { seqs.push(cur); cur = null; }
+            }
+          }
+          if (cur) seqs.push(cur);
+          return seqs;
+        }
+
+        function slidingThreeAvgMapped(vals, idxs) {
+          const result = {};
+          for (let i = 0; i <= vals.length - 3; i++) {
+            const a = vals[i], b = vals[i + 1], c = vals[i + 2];
+            if (typeof a === 'number' && !isNaN(a) && a > 0 && typeof b === 'number' && !isNaN(b) && b > 0 && typeof c === 'number' && !isNaN(c) && c > 0) {
+              const avg = (a + b + c) / 3;
+              if (avg >= 3) {
+                result[idxs[i]] = avg;
+                result[idxs[i + 1]] = avg;
+                result[idxs[i + 2]] = avg;
+                break; // only first matching window
+              }
+            }
+          }
+          return result;
+        }
+
+        const avgMapP2 = {};
+        const p2seqs = collectPhaseSequences("phase2");
+        for (const seq of p2seqs) {
+          const vals = seq.map(i => cellData[i].valChildNum);
+          const idxs = seq.slice();
+          const mapped = slidingThreeAvgMapped(vals, idxs);
+          Object.assign(avgMapP2, mapped);
+        }
+
+        const avgMapP3 = {};
+        const p3seqs = collectPhaseSequences("phase3");
+        for (const seq of p3seqs) {
+          const vals = seq.map(i => cellData[i].valChildNum + cellData[i].valAdultNum);
+          const idxs = seq.slice();
+          const mapped = slidingThreeAvgMapped(vals, idxs);
+          Object.assign(avgMapP3, mapped);
+        }
+        const avgMapP4 = {};
+        const p4seqs = collectPhaseSequences("phase4");
+
+        for (const seq of p4seqs) {
+          const vals = seq.map(i =>
+            cellData[i].valChildNum + cellData[i].valAdultNum
+          );
+          const idxs = seq.slice();
+          const mapped = slidingThreeAvgMapped(vals, idxs);
+          Object.assign(avgMapP4, mapped);
+        }
+
+
+        function getColor(phase) {
+          if (phase === "phase1") return '#ff114d';
+          if (phase === "phase2") return '#ffd067';
+          if (phase === "phase3") return '#bae6b7';
+          return '#68ce6a'; // phase4
+        }
+
+
+        for (let cell of cellData) {
+          let childBg = "";
+          let adultBg = "";
+
+
+
+
+
+
+          if (cell.phase === "phase1") {
+            childBg = getColor(cell.phase);
+            adultBg = getColor(cell.phase);
+
+          } else if (cell.phase === "phase2") {
+
+            if (cyanTriggeredPhase2) {
+              if (cyanCountPhase2 > 0) {
+                childBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+                cyanCountPhase2--;
+              } else {
+                childBg = exceptionColor['query_operational_cause'];
+              }
+
+            } else if (avgMapP2.hasOwnProperty(cell.index)) {
+              cyanTriggeredPhase2 = true;
+              cyanCountPhase2 = 3;
+              childBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+              cyanCountPhase2--;
+
+            } else {
+              // ✅ ADD sporadic child handling here
+              childBg = cell.isSporadicChild ? otherChild : getColor(cell.phase);
+            }
+
+            // Adult already correct
+            adultBg = cell.isSporadicAdult ? otherAdult : getColor(cell.phase);
+          }
+
+
+          else if (cell.phase === "phase3") {
+            // ✅ TERMINAL GREY OVERRIDE
+            if (greyTriggered) {
+              childBg = exceptionColor['query_operational_cause'];
+              adultBg = exceptionColor['query_operational_cause'];
+
+            }
+
+
+            if (cyanTriggeredPhase3) {
+              if (cyanCountPhase3 > 0) {
+                childBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+                adultBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+                cyanCountPhase3--;
+              } else {
+                childBg = exceptionColor['query_operational_cause'];
+                adultBg = exceptionColor['query_operational_cause'];
+                greyTriggered = true; // 🔒 lock forever
+              }
+
+            } else if (avgMapP3.hasOwnProperty(cell.index)) {
+              cyanTriggeredPhase3 = true;
+              cyanCountPhase3 = 3;
+              childBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+              adultBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+              cyanCountPhase3--;
+              greyTriggered = true;
+
+            } else {
+              childBg = cell.isSporadicChild ? otherChild : getColor(cell.phase);
+              adultBg = cell.isSporadicAdult ? otherAdult : getColor(cell.phase);
+            }
+
+
+          }
+          // else if (cell.phase === "phase4") {
+
+          //   // ✅ Grey must dominate phase4 as well
+          //   if (greyTriggered) {
+          //     childBg = exceptionColor['query_operational_cause'];
+          //     adultBg = exceptionColor['query_operational_cause'];
+          //   } else {
+          //     childBg = cell.isSporadicChild ? otherChild : getColor(cell.phase);
+          //     adultBg = cell.isSporadicAdult ? otherAdult : getColor(cell.phase);
+          //   }
+          // }
+          else if (cell.phase === "phase4") {
+
+            // 🔒 Grey dominates if already triggered
+            if (greyTriggered) {
+              childBg = exceptionColor['query_operational_cause'];
+              adultBg = exceptionColor['query_operational_cause'];
+            }
+
+            // 🟦 CYAN RULE FOR PHASE 4 (NEW)
+            else if (cyanTriggeredPhase4) {
+
+              if (cyanCountPhase4 > 0) {
+                childBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+                adultBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+                cyanCountPhase4--;
+              } else {
+                childBg = exceptionColor['query_operational_cause'];
+                adultBg = exceptionColor['query_operational_cause'];
+                greyTriggered = true;
+              }
+
+            } else if (avgMapP4.hasOwnProperty(cell.index)) {
+
+              cyanTriggeredPhase4 = true;
+              cyanCountPhase4 = 3;
+
+              childBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+              adultBg = exceptionColor['3_or_more_cases_on_average_in_3_consecutive_years'];
+
+              cyanCountPhase4--;
+            }
+
+            // 🟢 Normal phase4 behavior
+            else {
+              childBg = cell.isSporadicChild ? otherChild : getColor(cell.phase);
+              adultBg = cell.isSporadicAdult ? otherAdult : getColor(cell.phase);
+            }
+          }
+
+
+
+          rowChildren += `<td style="background:${childBg};border:1px solid black;">${cell.valChild}</td>`;
+          rowAdult += `<td style="background:${adultBg};border:1px solid black;">${cell.valAdult}</td>`;
+        }
+
+        tableRow += rowChildren + "</tr>";
+        tableRow += `<tr><td>Adult</td>${rowAdult}</tr>`;
+      }
+
+      document.getElementById("table-body").innerHTML = tableRow;
+      console.log("TABLE BODY ELEMENT:", document.getElementById("table-body"));
+
+      $("#loader").hide();
+      $("#printing").show();
+    }
+
+    displayDataPhase1Only();
+
+    async function getOUChilren() {
+      var orgUnitChildren = [];
+
+      var regions = {};
+      var resRegions = await (
+        await fetch(
+          "../api/organisationUnitGroups/znpMvXHhbPX.json?fields=id,name,organisationUnits[id,name]&paging=false"
+        )
+      ).json();
+      resRegions.organisationUnits.forEach((ou) => (regions[ou.id] = true));
+
+      var url =
+        "../api/organisationUnits/" +
+        selectedOrgUnit.id +
+        ".json?paging=false&fields=id,name,level.code";
+
+      let response = await fetch("../api/organisationUnitLevels.json");
+      var orgUnitLevel = await response.json();
+
+
+      for (let i = 0; i < orgUnitLevel.organisationUnitLevels.length; i++)
+        url += ",children[id,name,level,code";
+      url += "]";
+
+      response = await fetch(url);
+      var data = await response.json();
+
+      treeDown(data);
+
+      function treeDown(arr, parent) {
+        var key = {
+          id: arr.id,
+          name: arr.name,
+          code: arr.code ? arr.code : "",
+          children: arr.children,
+        };
+        if (key?.children?.length)
+          for (let i = 0; i < key?.children?.length; i++)
+            treeDown(key.children[i], key);
+        if (regions[key.id]) orgUnitChildren.push({ ...key, parent });
+      }
+      return orgUnitChildren;
+    }
+
+    async function getData(periods, ou) {
+      var dataCategory = {
+        adult: {},
+        children: {},
+      };
+      var resData = await (
+        await fetch(
+          `../api/sqlViews/CdIfs0o6Vo2/data.json?var=ou:${ou}&var=startDate:${selectedFromYear}-01-01&var=endDate:${selectedToYear}-12-31&paging=false`
+        )
+      ).json();
+
+      resData.listGrid.rows.forEach((row) => {
+        if (row[0] == "SmZe6komFZU") {
+          dataCategory["children"][row[6]] = row[4];
+        } else {
+          if (!dataCategory["adult"][row[6]])
+            dataCategory["adult"][row[6]] = row[4];
+        }
+      });
+
+      return dataCategory;
+    }
+  }
+
+  var tableToExcel = (function () {
+    var uri = "data:application/vnd.ms-excel;base64,",
+      template =
+        '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="https://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>',
+      base64 = function (s) {
+        return window.btoa(unescape(encodeURIComponent(s)));
+      },
+
+      format = function (s, c) {
+        return s.replace(/{(\w+)}/g, function (m, p) {
+          return c[p];
+        });
+      };
+    return function (table, name, filename) {
+
+      if (!table.nodeType) table = document.getElementById(table);
+      var ctx = { worksheet: name || "Worksheet", table: table.innerHTML };
+      document.getElementById("dlink").href =
+        uri + base64(format(template, ctx));
+      document.getElementById("dlink").download =
+        filename + "-" + selectedOrgUnit.name + ".xls";
+      document.getElementById("dlink").click();
+    };
+  })();
+
+  function printContent(el) {
+
+    const sYr = document.getElementById("fromYear").value
+    const eYr = document.getElementById("toYear").value
+
+    var restorepage = document.body.innerHTML;
+    var printcontent = document.getElementById(el).innerHTML;
+    var divToPrintHTML = '<style type="text/css" media="print">@page { size: landscape; }</style>' + printcontent;
+    document.body.innerHTML = divToPrintHTML;
+    window.print();
+    document.body.innerHTML = restorepage;
+
+    document.getElementById('fromYear').value = sYr;
+    document.getElementById('toYear').value = eYr;
+  }
+
+
+  setInitialYear()
+
+
+  function translate() {
+    // call api for lanuage
+    for (let i = 0; i < translations.length; i++) {
+      var field = translations[i];
+      if (!field.hasOwnProperty(locale)) return;
+      $('[data-translate="' + field.id + '"]').html(field[locale]);
+    }
+  }
+
+
+  // function averageOfThreeConsecutive(arr) {
+  // if (arr.length < 3) {
+  //  return []
+  // }
+
+  // let averages = [];
+
+  // for (let i = 0; i < arr.length - 2; i++) {
+  // if (Number(arr[i]) === 0 || Number(arr[i + 1]) === 0 || Number(arr[i + 2]) === 0) {
+  // averages.push(0);
+  //  } else {
+  //    let sum = Number(arr[i]) + Number(arr[i + 1]) + Number(arr[i + 2]);
+  //    let average = sum / 3;
+  //    averages.push(average);
+  //        averages.push(average);
+  //      }
+  //    }
+  //    return averages
+  //  }
+
+
+  // function averageOfThreeConsecutive(arr) {
+  //   const result = Array(arr.length).fill(0);
+
+  //   for (let i = 0; i <= arr.length - 3; i++) {
+  //     const a = Number(arr[i]);
+  //     const b = Number(arr[i + 1]);
+  //     const c = Number(arr[i + 2]);
+
+  //     // If any are NaN or 0-like, skip this window
+  //     if (a === 0 || b === 0 || c === 0) continue;
+
+  //     const avg = (a + b + c) / 3;
+
+  //     if (avg >= 3) {
+  //       result[i] = avg;
+  //       result[i + 1] = avg;
+  //       result[i + 2] = avg;
+  //     }
+  //   }
+
+  //   return result;
+  // }
+
+
+
+  function averageOfThreeConsecutive(arr) {
+    const result = Array(arr.length).fill(0);
+
+    for (let i = 0; i <= arr.length - 3; i++) {
+      const a = arr[i];
+      const b = arr[i + 1];
+      const c = arr[i + 2];
+
+      // Check if all three are valid numbers
+      if (
+        typeof a === 'number' &&
+        typeof b === 'number' &&
+        typeof c === 'number' &&
+        !isNaN(a) &&
+        !isNaN(b) &&
+        !isNaN(c)
+      ) {
+        const avg = (a + b + c) / 3;
+
+        if (avg >= 3) {
+          const avgRounded = 3;
+          result[i] = avgRounded;
+          result[i + 1] = avgRounded;
+          result[i + 2] = avgRounded;
+          break; // fill only the first matching triple
+        }
+      }
+    }
+
+    return result;
+  }
+
+
+
+
+
+
+
+  var translations = [
+    {
+      id: "",
+      ru: "",
+      en: "",
+      fr: "",
+      es: "",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text0",
+      ru: "",
+      en: "Submit",
+      fr: "",
+      es: "Entregar",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text1",
+      ru: "",
+      en: "Start Year",
+      fr: "",
+      es: "Año de inicio",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text2",
+      ru: "",
+      en: "End Year",
+      fr: "",
+      es: "Año final",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text3",
+      ru: "",
+      en: "Leprosy Elimination Monitoring Tool-" + countryName,
+      fr: "",
+      es: "Herramienta de seguimiento de la eliminación de la lepra-" + countryName,
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text4",
+      ru: "",
+      en: "Phase 1 - Until interruption of transmission (5 years no autochthonous child cases)",
+      fr: "",
+      es: "Fase 1 - Hasta la interrupción de la transmisión (5 años sin casos de niños autóctonos)",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text5",
+      ru: "",
+      en: "Phase 2 - Until elimination of leprosy disease (3 years no autochthonous cases)",
+      fr: "",
+      es: "Fase 2 - Hasta la eliminación de la enfermedad de lepra (3 años sin casos autóctonos)",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text6",
+      ru: "",
+      en: "Phase 3 - Post-elimination phase (10 years no autochthonous cases)",
+      fr: "",
+      es: "Fase 3 - Fase post-eliminación (10 años sin casos autóctonos)",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text7",
+      ru: "",
+      en: "Non-endemic status",
+      fr: "",
+      es: "Estado no endémico",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text8",
+      ru: "",
+      en: "Sporadic autochthonous adult case",
+      fr: "",
+      es: "Caso adulto autóctono esporádico",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text9",
+      ru: "",
+      en: "Sporadic autochthonous child case",
+      fr: "",
+      es: "Caso esporádico de niño autóctono",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text10",
+      ru: "",
+      en: "Query operational cause of high number of new cases",
+      fr: "",
+      es: "Consulta causa operativa de alto número de casos nuevos",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text11",
+      ru: "",
+      en: "3 or more cases on average in 3 consecutive years; possible re-emergence to be investigated",
+      fr: "",
+      es: "3 o más casos en promedio en 3 años consecutivos; posible reaparición a investigar",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text12",
+      ru: "",
+      en: "Area L1",
+      fr: "",
+      es: "Área L1",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text13",
+      ru: "",
+      en: "Area code L1",
+      fr: "",
+      es: "Código de área L1",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text14",
+      ru: "",
+      en: "Area L2",
+      fr: "",
+      es: "Área L2",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text15",
+      ru: "",
+      en: "Area code L2",
+      fr: "",
+      es: "Código de área L2",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text16",
+      ru: "",
+      en: "Age group",
+      fr: "",
+      es: "Grupo de edad",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text17",
+      ru: "",
+      en: "Children",
+      fr: "",
+      es: "niños",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text18",
+      ru: "",
+      en: "Adult",
+      fr: "",
+      es: "Adulta",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text19",
+      ru: "",
+      en: "Total new cases",
+      fr: "",
+      es: "Total de casos nuevos",
+      ar: "",
+      pt: "",
+    },
+    {
+      id: "text20",
+      ru: "",
+      en: "Organisation unit not found!!",
+      fr: "",
+      es: "¡¡Unidad organizativa no encontrada!!",
+      ar: "",
+      pt: "",
+    },
+
+
+  ]
+
+
+  translate()
+
+</script>
