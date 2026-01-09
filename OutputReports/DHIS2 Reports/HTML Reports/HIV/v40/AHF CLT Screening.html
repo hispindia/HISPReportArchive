@@ -1,0 +1,624 @@
+<!--Created for NCASC-->
+<!--Created Date 2020-06-26-->
+<!--Source code copyright by DHIS2 Tracker HISP  INDIA-->
+<!--Source code modified by Roshan Konda-->
+<!--Source code modified Date 2020-08-21-->
+
+<title>Custom Report-AHF</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
+    integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+    crossorigin="anonymous"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+<style>
+    .reporttable {
+        text-align: center;
+    }
+
+    /* Absolute Center Spinner */
+
+    .loading {
+        position: fixed;
+        z-index: 999;
+        height: 2em;
+        width: 2em;
+        overflow: show;
+        margin: auto;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        display: none;
+    }
+
+    /* Transparent Overlay */
+
+    .loading:before {
+        content: '';
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* :not(:required) hides these rules from IE9 and below */
+
+    .loading:not(:required) {
+        /* hide "loading..." text */
+        font: 0/0 a;
+        color: transparent;
+        text-shadow: none;
+        background-color: transparent;
+        border: 0;
+    }
+
+    .loading:not(:required):after {
+        content: '';
+        display: block;
+        font-size: 10px;
+        width: 1em;
+        height: 1em;
+        margin-top: -0.5em;
+        -webkit-animation: spinner 1500ms infinite linear;
+        -moz-animation: spinner 1500ms infinite linear;
+        -ms-animation: spinner 1500ms infinite linear;
+        -o-animation: spinner 1500ms infinite linear;
+        animation: spinner 1500ms infinite linear;
+        border-radius: 0.5em;
+        -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+        box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+    }
+
+    /* Animation */
+
+    @-webkit-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @-moz-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @-o-keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spinner {
+        0% {
+            -webkit-transform: rotate(0deg);
+            -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -o-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+            -moz-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    button {
+        cursor: pointer;
+    }
+</style>
+
+</head>
+
+<body>
+    <div class="loading" id="loader"></div>
+
+    <a id="dlink" style="display:none;"></a>
+    <div id="main">
+        <div style="width: 40%; margin-left:30%;">
+            <table class="table table-striped table-bordered">
+                <tr>
+                    <td style="font-size: 15px;padding-top: 15px;">
+                        Start Date:
+                    </td>
+                    <td style="width: 60%;">
+                        <input type="date" class=" form-control" id="start-date">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size: 15px;padding-top: 15px;">
+                        End Date:
+                    </td>
+                    <td style="width: 60%;">
+                        <input type="date" class=" form-control" id="end-date">
+                    </td>
+                </tr>
+                <tr>
+                    <td><button onClick="submit()" class="btn btn-primary" id="tap">Submit</button></td>
+                    <td style="text-align: right;">
+                        <img src="https://img.icons8.com/color/35/000000/ms-excel.png"
+                            onmouseover="this.style.cursor='pointer'"
+                            onclick="tableToExcel('report-table', 'CLT Screening', 'CLT Screening')"
+                            alt="xlsx" style="cursor: pointer;">
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <br>
+        <div id="report-table" style="display: none;">
+            <table class="table table-bordered table-striped table-hover" width="100%">
+                <thead>
+                    <tr>
+                        <td colspan="9" style="text-align: center;background-color: #296399;font-weight:bold; color:white;">CLT Screening</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="font-weight: bold;">Site Name: <span id="orgUnit"></span></td>
+                        <td colspan="4" style="font-weight: bold;">Total Screened: <span id="screened"></span></td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="font-weight: bold;">Reporting Period(s): <span id="period"></span></td>
+                        <td colspan="4" style="font-weight: bold;">Total Reactive: <span id="reactive"></span></td>
+                    </tr>
+                </thead>
+            </table>
+            <table class="table table-bordered table-striped table-hover" width="100%">
+                <thead>
+                    <tr>
+                        <th colspan="9" style="text-align: center;background: #3E75A8;color:white;">Screening outcomes by age and gender</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="2" style="background: #3E75A8;color:white;">Indicator</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Male</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Female</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Transgender/SM</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Totals</th>
+                    </tr>
+                    <tr>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-ageGender"></tbody>
+            </table>
+
+            <table class="table table-bordered table-striped table-hover" width="100%">
+                <thead>
+                    <tr>
+                        <th colspan="9" style="text-align: center;background: #3E75A8;color:white;">Screening outcomes by Risk Assessment</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="2" style="background: #3E75A8;color:white;">Indicator</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Male</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Female</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Transgender/SM</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Totals</th>
+                    </tr>
+                    <tr>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-riskAssessment"></tbody>
+            </table>
+            
+            <table class="table table-bordered table-striped table-hover" width="100%">
+                <thead>
+                    <tr>
+                        <th colspan="9" style="text-align: center;background: #3E75A8;color:white;">Screening outcomes by Risk Group (Vulnerable Key Population)</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="2" style="background: #3E75A8;color:white;">Indicator</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Male</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Female</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Transgender/SM</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Totals</th>
+                    </tr>
+                    <tr>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-riskGroup"></tbody>
+            </table>
+            
+            <table class="table table-bordered table-striped table-hover" width="100%">
+                <thead>
+                    <tr>
+                        <th colspan="9" style="text-align: center;background: #3E75A8;color:white;">Screening outcomes by First Time Tester</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="2" style="background: #3E75A8;color:white;">Indicator</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Male</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Female</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Transgender/SM</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Totals</th>
+                    </tr>
+                    <tr>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-firstTime"></tbody>
+            </table>
+            
+            <table class="table table-bordered table-striped table-hover" width="100%">
+                <thead>
+                    <tr>
+                        <th colspan="9" style="text-align: center;background: #3E75A8;color:white;">Screening outcomes by Repeat Tester</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="2" style="background: #3E75A8;color:white;">Previous Test Result</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Male</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Female</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Transgender/SM</th>
+                        <th colspan="2" style="text-align: center;background: #3E75A8;color:white;">Totals</th>
+                    </tr>
+                    <tr>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Screened</th>
+                        <th style="text-align: center;background: #3E75A8;color:white;">Reactive</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-repeated"></tbody>
+            </table>
+        </div>
+        
+
+    </div>
+</body>
+
+<script> 
+    document.getElementById("loader").style.display = "none";
+    document.getElementById("report-table").style.display = "none";
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+
+    const deAgeGender = [
+        {name: "1 - 9 Years", ids: ['u1CLAi0cXaL', 'aloJj3GJfoF', 'ppuAq0o925Y', 'AN3Jl0rP6Fn', '', '']},
+        {name: "10 - 14 Years", ids: ['aZne40yyyjV', 'HB3KQlas0XD', 'WtU4aLlsZK6', 'I16h7Pk7yWN', '', '']},
+        {name: "15 - 19 Years", ids: ['G1Hhxle2Qlw', 'Xmoxk3cgMLH', 'SVEemkBridW', 't0wLUlUIWAQ', 'wcxuQdmHwUF', 'XBywIcGzuhL']},
+        {name: "20 - 24 Years", ids: ['WedfCstAcLH', 'RWftxHGvmrs', 'PmVBWm9Eov7', 'ADOR7ZvMupV', 'boiypaxedEy', 'hVFpCeu8FGi']},
+        {name: "25 - 29 Years", ids: ['cASseEXGp4W', 'Nv7Y7jG7pIK', 'Imy2yIipnnj', 'VsLtUYJz2wS', 'HamIl9x5Oby', 'mNtdcIsCfqn']},
+        {name: "30 - 39 Years", ids: ['GTUFlviVZKV', 'hZwC606H8UF', 'E1pSQC4ltIX', 'EtrLJm0lJiu', 'MyeIgSP69u4', 'CIXfANYDMW2']},
+        {name: "40 - 49 Years", ids: ['MgDRCgp5N8N', 'qpB37ddT2P5', 'Lq4m9xo1gVm', 'pxUUOyksJBy', 'FymHXAFmXsH', 'w9UKP4CROY8']},
+        {name: "50 Years and older", ids: ['u7046GccIFH', 'L1JiKwy9rbN', 'vSyVIkUhL9z', 'oYrDQOoWqca', 'BApeF5CRTQr', 'BOPr6eqKoYM']},
+    ];
+    
+    const deAssessment = [
+        {name: 'Unprotected Sex', ids: ['BvvmyVg0TDC', 'ISFhjjfYvVe', 'V1a9P7rqBEr', 'IhQ5ySCf0yg', 'ctmwvaG0ivy', 'Jzbt1iqbBQM']},
+        {name: 'Sexual Partner of a person from a vulnerable population', ids: ['TalIQfLxRXs', 'KTlruzQfXJR', 'bSfn97hWmwo', 'iXZ0n1DgAlk', 'LVMMpaYWFyW', 'mNW46yJD62v']},
+        {name: 'Use of Injectable Drugs', ids: ['eE9XqhVmzP8', 'bN8xm9l2NoY', 'kLIpkvJsUpz', 'IkJ8NUMN2ZB', 'vTlHGzExmDn', 'COttzoJjqUZ']},
+        {name: 'Pregnancy (includes ANC and PMTCT)', ids: ['', '', 'XgI0ovMXFt4', 'nRgwmoJ3stz', 'LNJ4N0rI9n5', 'usTOBPm9H1J']},
+        {name: 'HIV-exposed Child', ids: ['nAOQwRQlPZ1', 'mkpTg7jx4Rb', 'nzPYgK0Fgd9', 'GKsjDcktRei', '', '']},
+        {name: 'PITC- Health Condition', ids: ['xMc51kofjBC', 'lvz1X9AzleB', 'fOKu52ZUCLo', 'vZhUnxzZ7iX', 'yhITNuChda7', 'gdPahIwYPDa']},
+        {name: 'HIV-positive partner', ids: ['WkYTLEzWbxy', 'cCmcqUid6KN', 'YaRgWoxK3Ih', 'idTQ11tNWQ4', 'JRLdtBwQkdg', 'hh9KrYvvxSL']},
+        {name: 'Non-consensual sex, intimate partner, violence (IPV) or rape', ids: ['Od0qfoSjRxc', 'bF96F7NzOui', 'WMkzBzpCZnz', 'DlY2saK5iaW', 'iDEHo6s9FQq', 'ccIGV3ekh18']},
+        {name: 'Occupational hazard - health care worker (HCW)', ids: ['HSL39pZNguN', 'jvMs3dH8ZGE', 'LNSqtzqstqG', 'WU7ndUyfTrc', 'kXwhtnw0C0w', 'zURpDlCYYPn']},
+        {name: 'Administrative reason', ids: ['HD6kgyfytZO', 'bd5RWZxxlMp', 'E9dwlFutw1I', 'h6EIjgWvfpk', 'E8jyF4UnFFV', 'zsWqGHLtaae']},
+        {name: 'Reason for testing not reported', ids: ['t7swChNGI7v', 'K4MSDdPIt68', 'eyUNheWmI8y', 'TD30zSzRnp2', 'SYm9DnzdJqN', 'an8dveo7wxi']},
+    ]
+    
+    const deGroup = [
+        {name: 'Person who inject drugs (PWID)', ids: ['VjtMsR6THEB', 'T2fiEscdsBh', 'v0SmxP11ZIq', 'RpiM3BwkvSv', 'O350yE6rCEr', 'ZuBcg52FvsE']},
+        {name: 'Gay, Bisexual and other Men having Sex with Men', ids: ['CdERK3Ndxv9', 'iXT6tIqfCoI', '', '', 'EoB9jJiBGJv', 'ixdDIEJjVTq']},
+        {name: 'Transgenders', ids: ['', '', '', '', 'W3J85tL0PRx', 'AZOPZO1WHbc']},
+        {name: 'Sex/entertainment Worker', ids: ['w7p594tlGjH', 'YEwcE8BSLzi', 'wASdoYfyPc4', 'YeNv3ZhkyNc', 'fOSsEgpyq1N', 'HvyyLyZp4zi']},
+        {name: 'Prisoner/detainee', ids: ['o79PzbPuycI', 'pJrQ5wBYGFC', 'rQTcoWD75SU', 'TXiwxCTEwra', 'jzPIQg6NL2B', 'EFEp66zjv4H']},
+        {name: 'Mobile and Migrant Populations', ids: ['ageOIJH3UNH', 'MnB4CXTFEmY', 'l9pnu46Q8rh', 'lkDDAbl2i0k', 'DaQNQKAaoQd', 'Pv1qFNlXQTY']},
+        {name: 'Vulnerable Population not reported', ids: ['FFJfYkF5C5K', 'KvwzBPnKJIM', 'ohP43a7Guuy', 'y15QX7ku8yw', 'WG47FQ9QSYj', 'LbjZmnsojMy']},
+    ]
+
+    const deFirstTime = [
+        {name: 'First Time Tester', ids: ['mSK1FdhVOBM', 'G7iXEbya2ft', 'MQDvpV3nsD0', 'KhRKGFYd5MN', 'N4DFBfxY19J', 'RQ8v2tQrU6P']}
+    ]
+
+    const deRepeated = [
+        {name: 'Negative', ids: ['jn445HE1MeT', 'XIIxKZxIoHb', 'BUFo7C36OjN', 'FPpiXt8wrdr', 'kkCUQZrwY0X', 'x0zAxR8sBbQ']},
+        {name: "Don't Know", ids: ['GyV4DvK0FQS', 'XLUl3SUisYB', 'gNYjXBd6amf', 'lWfcHeEA58d', 'laDv6BQrvaB', 'c0pkfhhUot2']}
+    ]
+
+    function submit() {
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        document.getElementById('report-table').style.display= "none";
+        if(new Date(startDate) > new Date(endDate) || !startDate || !endDate) {
+            alert("Please select dates correctly!");
+        } else {
+            document.getElementById('loader').style.display= "block";
+            setTimeout(()=> {
+                getData(startDate, endDate);
+            },1000)
+        }
+    }
+    function getData(startDate, endDate) {   
+        document.getElementById('orgUnit').innerHTML = selectedOrgUnit.name;
+        document.getElementById('period').innerHTML = startDate + ' to ' + endDate;
+
+        const getBetweenDates = function (startDate, endDate) {
+                var arr = [], lastDay, start, end;
+                var startYear = startDate.split("-");
+                var endYear = endDate.split("-");
+
+                for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+
+                    startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                    endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                    for (var j = startMonth; j <= endMonth; j++) {
+                        startDay = (i == startYear["0"] && startMonth == j) ? parseInt(startYear["2"]) : 1;
+                        lastDay = (endYear["0"] == i && endMonth == j) ? endYear["2"] : new Date(i, j, 0).getDate();
+
+                        for (var k = startDay; k <= lastDay; k++) {
+                            let checkMonth = j < 10 ? i + "0" + j : i + "" + j;
+                            let value = k < 10 ? checkMonth + "0" + k : checkMonth + "" + k;
+                            arr.push(value);
+                        }
+                    }
+                }
+
+                return arr;
+            }
+        const dates = getBetweenDates(startDate, endDate);
+        var dataElements = [
+            ...deAgeGender.flatMap(de => de.ids),
+            ...deAssessment.flatMap(de => de.ids),
+            ...deGroup.flatMap(de => de.ids),
+            ...deFirstTime.flatMap(de => de.ids),
+            ...deRepeated.flatMap(de => de.ids),
+        ]
+        dataElements = dataElements.filter(de => de);
+
+       $.ajax({
+            async: false,
+            type: "GET",
+            url: "../../analytics.json?dimension=ou:" + selectedOrgUnit.id + "&dimension=dx:" + dataElements.join(';') + "&filter=pe:" + dates.join(';') + "&displayProperty=NAME&outputIdScheme=UID",
+            success: function (res) {
+                const data = {};
+                res.rows.forEach(row => {
+                    data[row[0]] = row[2];
+                })
+                const totalScreening = {
+                    screened: 0,
+                    reactive: 0
+                }
+                var tableBody = '';
+                var totals = [0,0,0,0,0,0,0,0];
+                deAgeGender.forEach(de => {
+                    let screened = 0;
+                    let reactive = 0;
+                    tableBody += `<tr><td>${de.name}</td>`
+                    de.ids.forEach((id, index) => {
+                        let value = data[id] ? Number(data[id]) : '';
+                        if(index%2) screened += Number(value);
+                        else reactive += Number(value);
+                        totals[index] += Number(value);
+
+                        tableBody += `<td style="${id ? '':'background:#DCDCDC'}">${value}</td>`;
+                    })
+                    totals[6] += screened;
+                    totals[7] += reactive;
+                    totalScreening['screened'] += screened;
+                    totalScreening['reactive'] += reactive;
+                    tableBody += `<td>${screened}</td><td>${reactive}</td></tr>`
+                })
+                tableBody += '<tr><td style="font-weight:bold">Totals</td>'
+                totals.forEach(val => tableBody+=`<td style="font-weight:bold">${val}</td>`)
+                tableBody += '</tr>'
+                document.getElementById('tbody-ageGender').innerHTML = tableBody;
+                
+                tableBody = '';
+                totals = [0,0,0,0,0,0,0,0];
+                deAssessment.forEach(de => {
+                    let screened = 0;
+                    let reactive = 0;
+                    tableBody += `<tr><td>${de.name}</td>`
+                    de.ids.forEach((id, index) => {
+                        let value = data[id] ? Number(data[id]) : '';
+                        if(index%2) screened += Number(value);
+                        else reactive += Number(value);
+                        totals[index] += Number(value);
+
+                        tableBody += `<td style="${id ? '':'background:#DCDCDC'}">${value}</td>`;
+                    })
+                    totals[6] += screened;
+                    totals[7] += reactive;
+                    totalScreening['screened'] += screened;
+                    totalScreening['reactive'] += reactive;
+                    tableBody += `<td>${screened}</td><td>${reactive}</td></tr>`
+                })
+                tableBody += '<tr><td style="font-weight:bold">Totals</td>'
+                totals.forEach(val => tableBody+=`<td style="font-weight:bold">${val}</td>`)
+                tableBody += '</tr>'
+                document.getElementById('tbody-riskAssessment').innerHTML = tableBody;
+                
+                tableBody = '';
+                totals = [0,0,0,0,0,0,0,0];
+                deGroup.forEach(de => {
+                    let screened = 0;
+                    let reactive = 0;
+                    tableBody += `<tr><td>${de.name}</td>`
+                    de.ids.forEach((id, index) => {
+                        let value = data[id] ? Number(data[id]) : '';
+                        if(index%2) screened += Number(value);
+                        else reactive += Number(value);
+                        totals[index] += Number(value);
+
+                        tableBody += `<td style="${id ? '':'background:#DCDCDC'}">${value}</td>`;
+                    })
+                    totals[6] += screened;
+                    totals[7] += reactive;
+                    totalScreening['screened'] += screened;
+                    totalScreening['reactive'] += reactive;
+                    tableBody += `<td>${screened}</td><td>${reactive}</td></tr>`
+                })
+                tableBody += '<tr><td style="font-weight:bold">Totals</td>'
+                totals.forEach(val => tableBody+=`<td style="font-weight:bold">${val}</td>`)
+                tableBody += '</tr>'
+                document.getElementById('tbody-riskGroup').innerHTML = tableBody;
+                
+                tableBody = '';
+                totals = [0,0,0,0,0,0,0,0];
+                deFirstTime.forEach(de => {
+                    let screened = 0;
+                    let reactive = 0;
+                    tableBody += `<tr><td>${de.name}</td>`
+                    de.ids.forEach((id, index) => {
+                        let value = data[id] ? Number(data[id]) : '';
+                        if(index%2) screened += Number(value);
+                        else reactive += Number(value);
+                        totals[index] += Number(value);
+
+                        tableBody += `<td style="${id ? '':'background:#DCDCDC'}">${value}</td>`;
+                    })
+                    totals[6] += screened;
+                    totals[7] += reactive;
+                    totalScreening['screened'] += screened;
+                    totalScreening['reactive'] += reactive;
+                    tableBody += `<td>${screened}</td><td>${reactive}</td></tr>`
+                })
+                tableBody += '<tr><td style="font-weight:bold">Totals</td>'
+                totals.forEach(val => tableBody+=`<td style="font-weight:bold">${val}</td>`)
+                tableBody += '</tr>'
+                document.getElementById('tbody-firstTime').innerHTML = tableBody;
+                
+                tableBody = '';
+                totals = [0,0,0,0,0,0,0,0];
+                deRepeated.forEach(de => {
+                    let screened = 0;
+                    let reactive = 0;
+                    tableBody += `<tr><td>${de.name}</td>`
+                    de.ids.forEach((id, index) => {
+                        let value = data[id] ? Number(data[id]) : '';
+                        if(index%2) screened += Number(value);
+                        else reactive += Number(value);
+                        totals[index] += Number(value);
+
+                        tableBody += `<td style="${id ? '':'background:#DCDCDC'}">${value}</td>`;
+                    })
+                    totals[6] += screened;
+                    totals[7] += reactive;
+                    totalScreening['screened'] += screened;
+                    totalScreening['reactive'] += reactive;
+                    tableBody += `<td>${screened}</td><td>${reactive}</td></tr>`
+                })
+                tableBody += '<tr><td style="font-weight:bold">Totals</td>'
+                totals.forEach(val => tableBody+=`<td style="font-weight:bold">${val}</td>`)
+                tableBody += '</tr>'
+                document.getElementById('tbody-repeated').innerHTML = tableBody;
+
+                document.getElementById('screened').innerHTML = totalScreening.screened;
+                document.getElementById('reactive').innerHTML = totalScreening.reactive;
+                
+            }
+        });
+        
+        document.getElementById("report-table").style.display = "block";
+            document.getElementById('loader').style.display= "none";
+    }
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = `${filename}-${selectedOrgUnit.name}.xls`;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+
+    function downloadCSV() {
+
+        var reportName = 'transferIn_transferOut-' +  selectedOrgUnit.name ;
+        var hiddenElement = document.createElement('a');
+        hiddenElement.href = 'data:text/csv;charset=utf-8,';
+
+        let arr = "";
+        CSVFile.forEach((row,index) => {
+            if(index!=0) arr +="\n"
+            arr +=  row.join(",");
+        });
+        debugger;
+        hiddenElement.href += arr;
+        hiddenElement.target = '_blank';
+        hiddenElement.download = reportName + '.csv';
+        hiddenElement.click();
+    }
+
+</script>
