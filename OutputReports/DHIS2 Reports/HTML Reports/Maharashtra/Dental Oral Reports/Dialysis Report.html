@@ -1,0 +1,313 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Table</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+        integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            background-color: #fbe4d5;
+            margin-top: 8px;
+        }
+
+        th,
+        td {
+            border: 1px solid #000 !important;
+            padding: 8px !important;
+            text-align: center !important;
+        }
+
+        th {
+            font-weight: bold;
+            text-align: center;
+
+
+        }
+    </style>
+</head>
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('table-container')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span>
+    &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('opd-table', 'Hospital OPD Report', 'Hospital OPD Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+<table id="referralTable" border="1" style="border-collapse:collapse;">
+    <thead>
+        <thead>
+            <tr style="background-color: #f7caac;">
+                <th colspan="51">Dialysis Report</th>
+            </tr>
+        </thead>
+        <thead>
+            <tr style="background-color: #8eaadb;">
+                <th>Circle</th>
+                <th colspan="4">From: <span id="from-date"></span></th>
+                <th colspan="4">To: <span id="to-date"></span></th>
+                <th colspan="42"></th>
+            </tr>
+        </thead>
+        <thead>
+            <thead>
+                <tr>
+                    <th rowspan="3">Name of the hospital</th>
+
+                    <th colspan="5">Total number of Haemodialysis</th>
+                    <th colspan="3">Total Number of Peritonial Dialysis</th>
+                    <th colspan="5">Total number of dialysis on renal failure</th>
+                </tr>
+
+                <tr>
+                    <!-- Haemodialysis -->
+                    <th colspan="2">Male</th>
+                    <th colspan="2">Female</th>
+                    <th rowspan="2">Total</th>
+
+                    <!-- Peritonial Dialysis -->
+                    <th colspan="2">Female</th>
+                    <th rowspan="2">Total</th>
+
+                    <!-- Renal failure dialysis -->
+                    <th colspan="2">Male</th>
+                    <th colspan="2">Female</th>
+                    <th rowspan="2">Total</th>
+                </tr>
+
+                <tr>
+                    <!-- Haemo -->
+                    <th>Adult</th>
+                    <th>Pediatric</th>
+                    <th>Adult</th>
+                    <th>Pediatric</th>
+
+                    <!-- Peritoneal -->
+                    <th>Adult</th>
+                    <th>Pediatric</th>
+
+                    <!-- Renal -->
+                    <th>Adult</th>
+                    <th>Pediatric</th>
+                    <th>Adult</th>
+                    <th>Pediatric</th>
+                </tr>
+            </thead>
+
+        <tbody id="referralBody"></tbody>
+
+</table>
+
+<script>
+    document.getElementsByClassName("hideInPrint")["0"] && (document.getElementsByClassName("hideInPrint")["0"].style.display = "none");
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var orgUnit = dhis2.report.organisationUnitChildren;
+    var organisationUnitChildren = orgUnit.sort((a, b) => a.name.localeCompare(b.name));
+    var level = dhis2.report.organisationUnitHierarchy.length;
+
+    var orgUnitData = [];
+    var printTotalValue = [];
+    var orgUnitHierarchy = {};
+
+    // Extract dates from URL parameters
+    var urlParams = new URLSearchParams(location.search);
+    var startMonth = urlParams.get('sd') ? urlParams.get('sd').slice(0, 10) : null;
+    var endMonth = urlParams.get('ed') ? urlParams.get('ed').slice(0, 10) : null;
+
+    if (!startMonth && location.href.includes("&sd=")) {
+        var sdPart = location.href.split("&sd=")[1];
+        startMonth = sdPart ? sdPart.slice(0, 10) : null;
+    }
+    if (!endMonth && location.href.includes("&ed=")) {
+        var edPart = location.href.split("&ed=")[1];
+        endMonth = edPart ? edPart.slice(0, 10) : null;
+    }
+
+    if (!startMonth || !endMonth) {
+        alert("Please select start and end dates");
+        if ($('#loader').length) $('#loader').hide();
+    } else {
+        var monthArr = [startMonth, endMonth];
+
+        if (startMonth.split("-").join("") > endMonth.split("-").join("")) {
+            alert("Please select dates correctly");
+            if ($('#loader').length) $('#loader').hide();
+        } else {
+            var selectedOrgUnitEl = document.getElementById("selected-orgUnit");
+            if (selectedOrgUnitEl) selectedOrgUnitEl.innerHTML = selectedOrgUnit.name;
+
+            var selectedDateEl = document.getElementById("selected-date");
+            if (selectedDateEl) selectedDateEl.innerHTML = months[startMonth.split("-")["1"] - 1] + " " + startMonth.split("-")["0"] + " to " + months[endMonth.split("-")["1"] - 1] + " " + endMonth.split("-")["0"];
+
+            var dataTableEl = document.getElementById("dataTable");
+            if (dataTableEl) dataTableEl.style.visibility = "hidden";
+
+            var tableBodyEl = document.getElementById("tableBody");
+            if (tableBodyEl) tableBodyEl.innerHTML = "";
+
+            if ($('#loader').length) $('#loader').show();
+
+            setTimeout(function () { getData(monthArr); }, 1000);
+        }
+    }
+
+    function getData(smToem) {
+        var includedOrgUnitGroups = [];
+        var numberOfDays = 0;
+        var financialYear = [];
+
+        const HAEMO = {
+            maleAdult: "K83UTdEHFP0.M1lIkrb3cKW",
+            malePed: "K83UTdEHFP0.eNZFUFh35YQ",
+            femaleAdult: "K83UTdEHFP0.l9iZvDjyYVs",
+            femalePed: "K83UTdEHFP0.QotRB0qcy3R"
+        };
+
+        const PERITONEAL = {
+            femaleAdult: "RvWyL3z8dhv.l9iZvDjyYVs",
+            femalePed: "RvWyL3z8dhv.QotRB0qcy3R"
+        };
+
+        const RENAL = {
+            maleAdult: "b4SWKuwzjSZ.M1lIkrb3cKW",
+            malePed: "b4SWKuwzjSZ.eNZFUFh35YQ",
+            femaleAdult: "b4SWKuwzjSZ.l9iZvDjyYVs",
+            femalePed: "b4SWKuwzjSZ.QotRB0qcy3R"
+        };
+
+        const columnMap = [
+            ...Object.values(HAEMO),
+            ...Object.values(PERITONEAL),
+            ...Object.values(RENAL)
+        ];
+
+
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [];
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+            var numberOfDays = 0;
+            var financialYear = [];
+
+            for (var i = parseInt(startYear[0]); i <= parseInt(endYear[0]); i++) {
+                var startMonth = (i > parseInt(startYear[0])) ? 1 : parseInt(startYear[1]);
+                var endMonth = (i == endYear[0]) ? parseInt(endYear[1]) : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    numberOfDays += new Date(i, j, 0).getDate();
+                    arr.push(value);
+
+                    if (j < 4) {
+                        if (!financialYear.includes((i - 1) + "April")) financialYear.push((i - 1) + "April");
+                    } else {
+                        if (!financialYear.includes(i + "April")) financialYear.push(i + "April");
+                    }
+                }
+            }
+
+            return arr;
+        };
+
+        // Example usage
+        var smToEm = getBetweenDates(smToem[0], smToem[1]);
+
+        //Display in table headers
+        document.getElementById("from-date").textContent = smToem[0];
+        document.getElementById("to-date").textContent = smToem[1];
+
+        var isHospital = {};
+
+
+        async function loadReferralTable() {
+
+            const url =
+                "../api/26/analytics.json?dimension=dx:" +
+                columnMap.join(";") +
+                "&dimension=pe:" + smToEm.join(";") +
+                "&dimension=ou:b3vBdsycgAD;OU_GROUP-S57GNhlxPe7" +
+                "&displayProperty=NAME&outputIdScheme=UID";
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const rows = {};
+
+            // Initialize rows
+            data.metaData.dimensions.ou.forEach(ou => {
+                rows[ou] = {
+                    ouName: data.metaData.items[ou].name,
+                    ...Object.fromEntries(columnMap.map(dx => [dx, 0]))
+                };
+            });
+
+            // Fill values
+            data.rows.forEach(r => {
+                const dx = r[0];
+                const ou = r[2];
+                rows[ou][dx] = Number(r[3] || 0);
+            });
+
+            // Build table
+            let html = "";
+            Object.values(rows).forEach(row => {
+
+                const haemoTotal =
+                    row[HAEMO.maleAdult] +
+                    row[HAEMO.malePed] +
+                    row[HAEMO.femaleAdult] +
+                    row[HAEMO.femalePed];
+
+                const periTotal =
+                    row[PERITONEAL.femaleAdult] +
+                    row[PERITONEAL.femalePed];
+
+                const renalTotal =
+                    row[RENAL.maleAdult] +
+                    row[RENAL.malePed] +
+                    row[RENAL.femaleAdult] +
+                    row[RENAL.femalePed];
+
+                html += `<tr>
+    <td>${row.ouName}</td>
+
+    <!-- Haemodialysis (5) -->
+    <td>${row[HAEMO.maleAdult]}</td>
+    <td>${row[HAEMO.malePed]}</td>
+    <td>${row[HAEMO.femaleAdult]}</td>
+    <td>${row[HAEMO.femalePed]}</td>
+    <td><b>${haemoTotal}</b></td>
+
+    <!-- Peritoneal Dialysis (3) -->
+    <td>${row[PERITONEAL.femaleAdult]}</td>
+    <td>${row[PERITONEAL.femalePed]}</td>
+    <td><b>${periTotal}</b></td>
+
+    <!-- Renal Failure Dialysis (5) -->
+    <td>${row[RENAL.maleAdult]}</td>
+    <td>${row[RENAL.malePed]}</td>
+    <td>${row[RENAL.femaleAdult]}</td>
+    <td>${row[RENAL.femalePed]}</td>
+    <td><b>${renalTotal}</b></td>
+</tr>`;
+
+            });
+
+            document.getElementById("referralBody").innerHTML = html;
+        }
+
+        loadReferralTable();
+    }
+</script>

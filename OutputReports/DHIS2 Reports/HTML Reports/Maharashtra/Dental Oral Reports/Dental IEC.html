@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>11. IEC Developed</title>
+    <style>
+        body {
+            font-family: Arial;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            /* //text-align: center; */
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 6px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        #dateRow th {
+            text-align: left !important;
+        }
+
+        thead th {
+            background: #e6e6e6;
+            text-align: center !important;
+        }
+
+        .title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <a id="dlink" style="display:none;"></a>
+
+    <button type="button" class="btn btn-default btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+        <span class="glyphicon glyphicon-chevron-left" style="font-size:15px;"></span>&nbsp; Goto Report Selection Page
+    </button>
+    <button type="button" class="btn btn-primary btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="printContent('table-container')">
+        <span class="glyphicon glyphicon-print" style="font-size:15px;"></span>&nbsp; Print
+    </button>
+    <button type="button" class="btn btn-success btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="tableToExcel('table-container','Dental IEC Report','Dental IEC Report.xls')">
+        <span class="glyphicon glyphicon-download-alt" style="font-size:15px;"></span> Download As Excel
+    </button>
+
+    <!-- <div class="report-header">
+        <strong>Organisation Unit:</strong> <span id="selected-orgUnit"></span>
+        &nbsp;&nbsp;
+        <strong>Period:</strong> <span id="selected-date"></span>
+    </div> -->
+
+    <div id="loadingMsg">Loading report data, please wait...</div>
+
+    <div id="table-container">
+
+        <table>
+
+            <thead>
+
+                <!-- TITLE -->
+                <tr>
+                    <th colspan="14" class="title">11. IEC Developed</th>
+                </tr>
+                <tr>
+                    <th colspan="14"><strong>Organisation Unit:</strong> <span id="selected-orgUnit"></span>
+                    </th>
+                </tr>
+
+                <!-- DATE ROW -->
+
+                <tr id="dateRow">
+                    <th colspan="14" style="text-align: left !important;"><strong>Period:</strong> <span
+                            id="selected-date"></span></th>
+                </tr>
+
+                <!-- SECTION HEADERS -->
+                <tr>
+                    <th rowspan="2">Sno</th>
+                    <th rowspan="2">Facility</th>
+
+                    <th colspan="2">11.1 Posters</th>
+                    <th colspan="2">11.2 TV Commercials</th>
+                    <th colspan="2">11.3 Radio Jingles</th>
+                    <th colspan="2">11.4 Printed Advertisements</th>
+                    <th colspan="2">11.6 Pamphlets</th>
+                    <th colspan="2">11.7 Any Other</th>
+                </tr>
+
+                <!-- SUB HEADERS -->
+                <tr>
+                    <th>Number</th>
+                    <th>Number Disseminated</th>
+
+                    <th>Number</th>
+                    <th>Number Disseminated</th>
+
+                    <th>Number</th>
+                    <th>Number Disseminated</th>
+
+                    <th>Number</th>
+                    <th>Number Disseminated</th>
+
+                    <th>Number</th>
+                    <th>Number Disseminated</th>
+
+                    <th>Number</th>
+                    <th>Number Disseminated</th>
+                </tr>
+
+            </thead>
+            <tbody id="tableBody"></tbody>
+
+
+        </table>
+    </div>
+
+    <script>
+
+        // ─────────────────────────────────────────────
+        // DHIS2 CONTEXT
+        // ─────────────────────────────────────────────
+        var selectedOrgUnit = dhis2.report.organisationUnit;
+        var ROOT_OU_ID = selectedOrgUnit.id;
+
+        // ─────────────────────────────────────────────
+        // DATE EXTRACTION
+        // ─────────────────────────────────────────────
+        var urlParams = new URLSearchParams(location.search);
+        var startMonth = urlParams.get("sd") ? urlParams.get("sd").slice(0, 7) : null;
+        var endMonth = urlParams.get("ed") ? urlParams.get("ed").slice(0, 7) : null;
+
+        // Fallback if needed
+        if (!startMonth && location.href.indexOf("&sd=") !== -1) {
+            startMonth = location.href.split("&sd=")[1].slice(0, 7);
+        }
+        if (!endMonth && location.href.indexOf("&ed=") !== -1) {
+            endMonth = location.href.split("&ed=")[1].slice(0, 7);
+        }
+
+        // ─────────────────────────────────────────────
+        // PERIOD BUILDER
+        // ─────────────────────────────────────────────
+        function buildPeriodParam(start, end) {
+            if (!start) return null;
+            if (!end || start === end) return start.replace("-", "");
+
+            var periods = [];
+            var sp = start.split("-");
+            var ep = end.split("-");
+            var y = parseInt(sp[0]), m = parseInt(sp[1]);
+            var ey = parseInt(ep[0]), em = parseInt(ep[1]);
+
+            while (y < ey || (y === ey && m <= em)) {
+                periods.push(y + (m < 10 ? "0" : "") + m);
+                m++;
+                if (m > 12) { m = 1; y++; }
+            }
+            return periods.join(";");
+        }
+
+        var periodParam = buildPeriodParam(startMonth, endMonth);
+
+        // ─────────────────────────────────────────────
+        // SECTION → dx MAPPING
+        // ─────────────────────────────────────────────
+        var SECTIONS = [
+            {
+                name: "11.1 Posters",
+                dx: ["njS6WvKojHH.HllvX50cXC0", "plIYILDBOBv.HllvX50cXC0"]
+            },
+            {
+                name: "11.2 TV Commercials",
+                dx: ["ufXZvFF8zcu.HllvX50cXC0", "nsprJ4zw2QZ.HllvX50cXC0"]
+            },
+            {
+                name: "11.3 Radio Jingles",
+                dx: ["Du79CWYt8JK.HllvX50cXC0", "NSWLqDD5AKo.HllvX50cXC0"]
+            },
+            {
+                name: "11.4 Printed Advertisements",
+                dx: ["O9qQJmxJvTO.HllvX50cXC0", "Jmt8sloaXqR.HllvX50cXC0"]
+            },
+            {
+                name: "11.6 Pamphlets",
+                dx: ["S2Qab9yN4UX.HllvX50cXC0", "tAL1NO4Eiyn.HllvX50cXC0"]
+            },
+            {
+                name: "11.7 Any Other",
+                dx: ["R9AzeA4TotS.HllvX50cXC0", "H4FBjiQZTGL.HllvX50cXC0"]
+            }
+        ];
+
+        var TOTAL_COLS = 14;
+
+        // ─────────────────────────────────────────────
+        // SHOW HEADER
+        // ─────────────────────────────────────────────
+        function showReportHeader() {
+
+            var ouEl = document.getElementById("selected-orgUnit");
+            if (ouEl) ouEl.innerHTML = selectedOrgUnit.name;
+
+            if (!startMonth) return;
+
+            var months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+
+            var dateEl = document.getElementById("selected-date");
+            if (dateEl) {
+                var sp = startMonth.split("-");
+                var label = months[parseInt(sp[1]) - 1] + " " + sp[0];
+
+                if (endMonth && endMonth !== startMonth) {
+                    var ep = endMonth.split("-");
+                    label += " to " + months[parseInt(ep[1]) - 1] + " " + ep[0];
+                }
+
+                dateEl.innerHTML = label;
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // BUILD ANALYTICS URL
+        // ─────────────────────────────────────────────
+        function buildAnalyticsUrl(period, ouId) {
+
+            var dxList = [];
+            SECTIONS.forEach(sec => sec.dx.forEach(d => dxList.push(d)));
+
+            return "../api/26/analytics.json"
+                + "?dimension=dx:" + dxList.join(";")
+                + "&dimension=ou:OU_GROUP-S57GNhlxPe7;" + ouId
+                + "&filter=pe:" + period
+                + "&displayProperty=NAME&outputIdScheme=UID";
+        }
+
+        // ─────────────────────────────────────────────
+        // TABLE CELL BUILDERS
+        // ─────────────────────────────────────────────
+        function sectionCells(vals, dxList) {
+            var html = "";
+            dxList.forEach(dx => {
+                var v = (vals && vals[dx]) ? vals[dx] : 0;
+                html += "<td>" + v + "</td>";
+            });
+            return html;
+        }
+
+        function allSectionCells(vals) {
+            var html = "";
+            SECTIONS.forEach(sec => html += sectionCells(vals, sec.dx));
+            return html;
+        }
+
+        // ─────────────────────────────────────────────
+        // FIND FACILITIES
+        // ─────────────────────────────────────────────
+        function findFacilitiesUnder(node, set) {
+            var found = [];
+            if (set[node.id]) found.push({ id: node.id, name: node.name });
+
+            (node.children || []).forEach(ch => {
+                found = found.concat(findFacilitiesUnder(ch, set));
+            });
+
+            return found;
+        }
+
+        // ─────────────────────────────────────────────
+        // LOAD REPORT
+        // ─────────────────────────────────────────────
+        function loadReport() {
+
+            showReportHeader();
+
+            if (!periodParam) {
+                alert("No period selected.");
+                return;
+            }
+
+            var ANALYTICS_URL = buildAnalyticsUrl(periodParam, ROOT_OU_ID);
+
+            fetch("../api/26/organisationUnitLevels.json")
+                .then(r => r.json())
+                .then(levels => {
+
+                    var depth = levels.organisationUnitLevels.length - 1;
+                    var open = "", close = "";
+
+                    for (var i = 0; i < depth; i++) {
+                        open += "children[id,name,level,";
+                        close += "]";
+                    }
+
+                    var ouUrl = "../api/26/organisationUnits/" + ROOT_OU_ID
+                        + ".json?paging=false&fields=id,name,level,"
+                        + open + "id,name,level" + close;
+
+                    return Promise.all([
+                        fetch(ANALYTICS_URL).then(r => r.json()),
+                        fetch(ouUrl).then(r => r.json())
+                    ]);
+                })
+                .then(([analytics, ouTree]) => {
+
+                    var dxIdx = 0, ouIdx = 1, valIdx = 2;
+                    analytics.headers.forEach((h, i) => {
+                        if (h.name === "dx") dxIdx = i;
+                        if (h.name === "ou") ouIdx = i;
+                        if (h.name === "value") valIdx = i;
+                    });
+
+                    var ouVals = {};
+
+                    analytics.rows.forEach(row => {
+                        var dx = row[dxIdx];
+                        var ou = row[ouIdx];
+                        var val = Number(row[valIdx] || 0);
+
+                        if (!ouVals[ou]) ouVals[ou] = {};
+                        ouVals[ou][dx] = (ouVals[ou][dx] || 0) + val;
+                    });
+
+                    var ouSet = {};
+                    analytics.metaData.dimensions.ou.forEach(o => ouSet[o] = true);
+
+                    var html = "";
+                    var sno = 1;
+                    var stateTotals = {};
+
+                    function addTotals(t, v) {
+                        if (!v) return;
+                        Object.keys(v).forEach(k => {
+                            t[k] = (t[k] || 0) + v[k];
+                        });
+                    }
+
+                    (ouTree.children || [])
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .forEach(circle => {
+
+                            var circleTotals = {};
+
+                            (circle.children || [])
+                                .sort((a, b) => a.name.localeCompare(b.name))
+                                .forEach(district => {
+
+                                    var facilities = findFacilitiesUnder(district, ouSet);
+                                    if (!facilities.length) return;
+
+                                    html += "<tr style='background:#c0c0c0;font-weight:bold'>"
+                                        + "<td colspan='" + TOTAL_COLS + "' style='text-align:left'>"
+                                        + circle.name + " - " + district.name
+                                        + "</td></tr>";
+
+                                    var distTotals = {};
+
+                                    facilities.forEach(f => {
+
+                                        var vals = ouVals[f.id] || {};
+
+                                        addTotals(distTotals, vals);
+                                        addTotals(circleTotals, vals);
+                                        addTotals(stateTotals, vals);
+
+                                        html += "<tr>"
+                                            + "<td>" + sno + "</td>"
+                                            + "<td style='text-align:left'>" + f.name + "</td>"
+                                            + allSectionCells(vals)
+                                            + "</tr>";
+
+                                        sno++;
+                                    });
+
+                                    html += "<tr style='background:#e0e0e0;font-weight:bold'>"
+                                        + "<td></td>"
+                                        + "<td style='text-align:left'>" + district.name + " Total</td>"
+                                        + allSectionCells(distTotals)
+                                        + "</tr>";
+                                });
+
+                            html += "<tr style='background:#8c8c8c;color:#fff;font-weight:bold'>"
+                                + "<td></td>"
+                                + "<td style='text-align:left'>" + circle.name + " Total</td>"
+                                + allSectionCells(circleTotals)
+                                + "</tr>";
+                        });
+
+                    html += "<tr style='background:#404040;color:#fff;font-weight:bold'>"
+                        + "<td></td>"
+                        + "<td style='text-align:left'>State Total</td>"
+                        + allSectionCells(stateTotals)
+                        + "</tr>";
+
+                    document.getElementById("tableBody").innerHTML = html;
+
+                    var l = document.getElementById("loadingMsg");
+                    if (l) l.style.display = "none";
+                });
+        }
+
+        // ─────────────────────────────────────────────
+        // START
+        // ─────────────────────────────────────────────
+        loadReport();
+
+        // ─────────────────────────────────────────────
+        // EXCEL EXPORT
+        // ─────────────────────────────────────────────
+        function tableToExcel(tableId, filename = 'Report.xls') {
+
+            var table = document.getElementById(tableId);
+            if (!table) {
+                alert("Table not found!");
+                return;
+            }
+
+            var clone = table.cloneNode(true);
+
+            // 🔹 Apply borders + alignment
+            var cells = clone.querySelectorAll("th, td");
+
+            cells.forEach(function (cell) {
+                cell.style.border = "1px solid black";
+                cell.style.textAlign = "center";
+                cell.style.verticalAlign = "middle";
+            });
+
+            // 🔹 IMPORTANT: Color header cells (Excel-safe)
+            var headerCells = clone.querySelectorAll("thead th");
+
+            headerCells.forEach(function (th) {
+                th.style.fontWeight = "bold";
+                th.style.border = "1px solid black";
+
+                // Excel-safe background
+                th.style.backgroundColor = "#e6e6e6";
+                th.setAttribute("bgcolor", "#e6e6e6");
+            });
+            // 🔹 Left-align rows that span full width (Circle/District headers)
+            var spanCells = clone.querySelectorAll("td[colspan]");
+
+            spanCells.forEach(function (td) {
+
+                // Override center alignment
+                td.style.textAlign = "left";
+                td.style.setProperty("text-align", "left", "important");
+
+                td.style.fontWeight = "bold";
+
+                // Grey background like report
+                td.setAttribute("bgcolor", "#c0c0c0");
+            });
+
+            var html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        ${clone.outerHTML}
+    </body>
+    </html>`;
+
+            var blob = new Blob([html], {
+                type: "application/vnd.ms-excel;charset=utf-8;"
+            });
+
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ─────────────────────────────────────────────
+        // START — single call, no recursion
+        // ─────────────────────────────────────────────
+
+        // ─── PRINT ────────────────────────────────────────────────────────────────
+        function printContent(elementId) {
+            var content = document.getElementById(elementId);
+            if (!content) { return; }
+            var printWindow = window.open('', '', 'width=1200,height=800');
+            printWindow.document.write('<html><head><title>Laboratory Work</title>');
+            printWindow.document.write('<style>body{font-family:Arial;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:6px;font-size:10px;text-align:center;}</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(content.innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }
+
+
+    </script>
+
+</body>
+
+</html>

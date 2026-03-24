@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>11. IEC Developed</title>
+    <style>
+        body {
+            font-family: Arial;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            /* //text-align: center; */
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 6px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        #dateRow th {
+            text-align: left !important;
+        }
+
+        thead th {
+            background: #e6e6e6;
+            text-align: center !important;
+        }
+
+        .title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <a id="dlink" style="display:none;"></a>
+
+    <button type="button" class="btn btn-default btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+        <span class="glyphicon glyphicon-chevron-left" style="font-size:15px;"></span>&nbsp; Goto Report Selection Page
+    </button>
+    <button type="button" class="btn btn-primary btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="printContent('table-container')">
+        <span class="glyphicon glyphicon-print" style="font-size:15px;"></span>&nbsp; Print
+    </button>
+    <button type="button" class="btn btn-success btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="tableToExcel('table-container','Dental Oral Health promotion activity Report','Dental Oral Health promotion activity Report.xls')">
+        <span class="glyphicon glyphicon-download-alt" style="font-size:15px;"></span> Download As Excel
+    </button>
+
+    <!-- <div class="report-header">
+        <strong>Organisation Unit:</strong> <span id="selected-orgUnit"></span>
+        &nbsp;&nbsp;
+        <strong>Period:</strong> <span id="selected-date"></span>
+    </div> -->
+
+    <div id="loadingMsg">Loading report data, please wait...</div>
+
+    <div id="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th colspan="14" style="font-size:14px; font-weight:bold;">
+                        9. Oral Health Promotion Activity
+                    </th>
+                </tr>
+
+
+                <!-- DATE ROW -->
+
+                <tr id="dateRow">
+                    <th colspan="14" style="text-align: left !important;"><strong>Period:</strong> <span
+                            id="selected-date"></span></th>
+                </tr>
+
+                <!-- SECTION HEADERS -->
+                <tr>
+                    <th rowspan="3">Sno</th>
+                    <th rowspan="3">Facility</th>
+
+                    <th colspan="4">9.1 Camps organized in Villages</th>
+                    <th colspan="4">9.2 Health education sessions in Villages</th>
+                    <th colspan="4">9.3 Health education sessions in Schools</th>
+                </tr>
+
+                <!-- SUB HEADERS -->
+                <tr>
+                    <th rowspan="2">No. of Camps/Sessions</th>
+                    <th rowspan="2">Population Screened</th>
+                    <th rowspan="2">Patients treated</th>
+                    <th rowspan="2">Population covered</th>
+
+                    <th rowspan="2">No. of Camps/Sessions</th>
+                    <th rowspan="2">Population Screened</th>
+                    <th rowspan="2">Patients treated</th>
+                    <th rowspan="2">Population covered</th>
+
+                    <th rowspan="2">No. of Camps/Sessions</th>
+                    <th rowspan="2">Population Screened</th>
+                    <th rowspan="2">Patients treated</th>
+                    <th rowspan="2">Population covered</th>
+                </tr>
+
+            </thead>
+            <tbody id="tableBody"></tbody>
+
+
+        </table>
+    </div>
+
+    <script>
+
+        // ─────────────────────────────────────────────
+        // DHIS2 CONTEXT
+        // ─────────────────────────────────────────────
+        var selectedOrgUnit = dhis2.report.organisationUnit;
+        var ROOT_OU_ID = selectedOrgUnit.id;
+
+        // ─── DATE EXTRACTION ─────────────────────────────────────────────────────
+        var urlParams = new URLSearchParams(location.search);
+        var startMonth = urlParams.get("sd") ? urlParams.get("sd").slice(0, 7) : null;
+        var endMonth = urlParams.get("ed") ? urlParams.get("ed").slice(0, 7) : null;
+
+        // Fallback: parse from raw href if URLSearchParams missed them
+        if (!startMonth && location.href.indexOf("&sd=") !== -1) {
+            startMonth = location.href.split("&sd=")[1].slice(0, 7);
+        }
+        if (!endMonth && location.href.indexOf("&ed=") !== -1) {
+            endMonth = location.href.split("&ed=")[1].slice(0, 7);
+        }
+
+        // ─── PERIOD BUILDER ───────────────────────────────────────────────────────
+        function buildPeriodParam(start, end) {
+            if (!start) return null;
+            if (!end || start === end) return start.replace("-", "");
+
+            var periods = [];
+            var sp = start.split("-"), ep = end.split("-");
+            var y = parseInt(sp[0]), m = parseInt(sp[1]);
+            var ey = parseInt(ep[0]), em = parseInt(ep[1]);
+
+            while (y < ey || (y === ey && m <= em)) {
+                periods.push(y + (m < 10 ? "0" : "") + m);
+                m++;
+                if (m > 12) { m = 1; y++; }
+            }
+            return periods.join(";");
+        }
+
+        // ✅ Build periodParam once — this is what gets passed to the API
+        var periodParam = buildPeriodParam(startMonth, endMonth);
+
+        // ─────────────────────────────────────────────
+        // SECTION → dx MAPPING (INDICATOR.COC)
+        // ─────────────────────────────────────────────
+        var SECTIONS = [
+            {
+                name: "",
+                dx: [
+                    "mEVcybWUM9t.EGVmBQC3Fx3",
+                    "mEVcybWUM9t.T1gDJfRoXU0",
+                    "mEVcybWUM9t.kwYWDIeEgxY",
+                    "mEVcybWUM9t.B7UPk2IN3Ku",
+                ]
+            },
+            {
+                name: "",
+                dx: [
+                    "up9eTxijsqY.EGVmBQC3Fx3",
+                    "up9eTxijsqY.T1gDJfRoXU0",
+                    "up9eTxijsqY.kwYWDIeEgxY",
+                    "up9eTxijsqY.B7UPk2IN3Ku",
+                ]
+            },
+            {
+                name: "",
+                dx: [
+                    "LphryTwSbEC.EGVmBQC3Fx3",
+                    "LphryTwSbEC.T1gDJfRoXU0",
+                    "LphryTwSbEC.kwYWDIeEgxY",
+                    "LphryTwSbEC.B7UPk2IN3Ku"
+                ]
+            },
+        ];
+
+        
+        var TOTAL_COLS = 14;
+
+        var MONTHS = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        // ─────────────────────────────────────────────
+        // BUILD ANALYTICS URL
+        // ─────────────────────────────────────────────
+        function buildAnalyticsUrl(period, ouId) {
+            var dxList = [];
+            SECTIONS.forEach(function (sec) {
+                sec.dx.forEach(function (d) { dxList.push(d); });
+            });
+
+            return "../api/26/analytics.json"
+                + "?dimension=dx:" + dxList.join(";")
+                + "&dimension=ou:OU_GROUP-S57GNhlxPe7;" + ouId
+                + "&filter=pe:" + period
+                + "&displayProperty=NAME&outputIdScheme=UID";
+        }
+
+        // ─────────────────────────────────────────────
+        // BUILD CELLS
+        // ─────────────────────────────────────────────
+        function sectionCells(vals, dxList) {
+            var html = "";
+            for (var i = 0; i < dxList.length; i++) {
+                var v = (vals && vals[dxList[i]]) ? vals[dxList[i]] : 0;
+                html += "<td>" + v + "</td>";
+            }
+            return html;
+        }
+
+        function allSectionCells(vals) {
+            var html = "";
+            SECTIONS.forEach(function (sec) {
+                html += sectionCells(vals, sec.dx);
+            });
+            return html;
+        }
+
+        // ─────────────────────────────────────────────
+        // FIND FACILITIES
+        // ─────────────────────────────────────────────
+        function findFacilitiesUnder(node, set) {
+            var found = [];
+            if (set[node.id]) found.push({ id: node.id, name: node.name });
+            (node.children || []).forEach(function (ch) {
+                found = found.concat(findFacilitiesUnder(ch, set));
+            });
+            return found;
+        }
+
+        // ─────────────────────────────────────────────
+        // ADD TOTALS HELPER
+        // ─────────────────────────────────────────────
+        function addTotals(target, vals) {
+            if (!vals) return;
+            Object.keys(vals).forEach(function (k) {
+                target[k] = (target[k] || 0) + vals[k];
+            });
+        }
+
+        // ─────────────────────────────────────────────
+        // SHOW HEADER
+        // ─────────────────────────────────────────────
+        function showReportHeader() {
+            var ouEl = document.getElementById("selected-orgUnit");
+            if (ouEl) ouEl.innerHTML = selectedOrgUnit.name;
+
+            var dateEl = document.getElementById("selected-date");
+            if (dateEl) {
+                var sp = startMonth.split("-"), ep = endMonth.split("-");
+                var label = MONTHS[parseInt(sp[1]) - 1] + " " + sp[0];
+                if (endMonth !== startMonth) {
+                    label += " to " + MONTHS[parseInt(ep[1]) - 1] + " " + ep[0];
+                }
+                dateEl.innerHTML = label;
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // LOAD REPORT  ← single entry point, no recursion
+        // ─────────────────────────────────────────────
+        function loadReport() {
+
+            var loadingMsg = document.getElementById("loadingMsg");
+
+            // ── Validate dates ──────────────────────────
+            if (!startMonth || !endMonth) {
+                alert("Please select start and end dates");
+                if (loadingMsg) loadingMsg.style.display = "none";
+                return;
+            }
+            if (startMonth.replace("-", "") > endMonth.replace("-", "")) {
+                alert("Please select dates correctly (start must be before end)");
+                if (loadingMsg) loadingMsg.style.display = "none";
+                return;
+            }
+
+            // ── Render header ───────────────────────────
+            showReportHeader();
+
+            // ── Clear existing table body ───────────────
+            var tableBodyEl = document.getElementById("tableBody");
+            if (tableBodyEl) tableBodyEl.innerHTML = "";
+
+            // ✅ Use periodParam (built at the top) — NOT an undefined variable
+            var ANALYTICS_URL = buildAnalyticsUrl(periodParam, ROOT_OU_ID);
+
+            // ── Fetch org unit levels to build the OU tree ──
+            fetch("../api/26/organisationUnitLevels.json")
+                .then(function (r) { return r.json(); })
+                .then(function (levels) {
+
+                    var depth = levels.organisationUnitLevels.length - 1;
+                    var open = "", close = "";
+                    for (var i = 0; i < depth; i++) {
+                        open += "children[id,name,level,";
+                        close += "]";
+                    }
+
+                    var ouUrl = "../api/26/organisationUnits/" + ROOT_OU_ID
+                        + ".json?paging=false&fields=id,name,level,"
+                        + open + "id,name,level" + close;
+
+                    return Promise.all([
+                        fetch(ANALYTICS_URL).then(function (r) { return r.json(); }),
+                        fetch(ouUrl).then(function (r) { return r.json(); })
+                    ]);
+
+                })
+                .then(function (results) {
+
+                    var analytics = results[0];
+                    var ouTree = results[1];
+
+                    // ── Detect column indexes ─────────────────
+                    var dxIdx = 0, ouIdx = 1, valIdx = 2;
+                    analytics.headers.forEach(function (h, i) {
+                        if (h.name === "dx") dxIdx = i;
+                        if (h.name === "ou") ouIdx = i;
+                        if (h.name === "value") valIdx = i;
+                    });
+
+                    // ── Build OU → dx → value map ─────────────
+                    var ouVals = {};
+                    analytics.rows.forEach(function (row) {
+                        var dx = row[dxIdx];
+                        var ou = row[ouIdx];
+                        var val = Number(row[valIdx] || 0);
+
+                        if (!ouVals[ou]) ouVals[ou] = {};
+                        ouVals[ou][dx] = (ouVals[ou][dx] || 0) + val;
+                    });
+
+                    // ── Build set of OUs returned by analytics ──
+                    var ouSet = {};
+                    analytics.metaData.dimensions.ou.forEach(function (o) {
+                        ouSet[o] = true;
+                    });
+
+                    // ── Build table HTML ──────────────────────
+                    var html = "";
+                    var sno = 1;
+                    var stateTotals = {};
+
+                    (ouTree.children || [])
+                        .sort(function (a, b) { return a.name.localeCompare(b.name); })
+                        .forEach(function (circle) {
+
+                            var circleTotals = {};
+
+                            (circle.children || [])
+                                .sort(function (a, b) { return a.name.localeCompare(b.name); })
+                                .forEach(function (district) {
+
+                                    var facilities = findFacilitiesUnder(district, ouSet);
+                                    if (!facilities.length) return;
+
+                                    // District header row
+                                    html += "<tr style='background:#c0c0c0;font-weight:bold'>"
+                                        + "<td colspan='" + TOTAL_COLS + "' style='text-align:left'>"
+                                        + circle.name + " - " + district.name
+                                        + "</td></tr>";
+
+                                    var distTotals = {};
+
+                                    facilities.forEach(function (f) {
+                                        var vals = ouVals[f.id] || {};
+
+                                        addTotals(distTotals, vals);
+                                        addTotals(circleTotals, vals);
+                                        addTotals(stateTotals, vals);
+
+                                        html += "<tr>"
+                                            + "<td>" + sno + "</td>"
+                                            + "<td style='text-align:left'>" + f.name + "</td>"
+                                            + allSectionCells(vals)
+                                            + "</tr>";
+
+                                        sno++;
+                                    });
+
+                                    // District total row
+                                    html += "<tr style='background:#e0e0e0;font-weight:bold'>"
+                                        + "<td></td>"
+                                        + "<td style='text-align:left'>" + district.name + " Total</td>"
+                                        + allSectionCells(distTotals)
+                                        + "</tr>";
+                                });
+
+                            // Circle total row
+                            html += "<tr style='background:#8c8c8c;color:#fff;font-weight:bold'>"
+                                + "<td></td>"
+                                + "<td style='text-align:left'>" + circle.name + " Total</td>"
+                                + allSectionCells(circleTotals)
+                                + "</tr>";
+                        });
+
+                    // State total row
+                    html += "<tr style='background:#404040;color:#fff;font-weight:bold'>"
+                        + "<td></td>"
+                        + "<td style='text-align:left'>State Total</td>"
+                        + allSectionCells(stateTotals)
+                        + "</tr>";
+
+                    document.getElementById("tableBody").innerHTML = html;
+
+                    // Hide loading message
+                    if (loadingMsg) loadingMsg.style.display = "none";
+
+                })
+                .catch(function (err) {
+                    console.error("Report load error:", err);
+                    if (loadingMsg) loadingMsg.innerHTML = "Error loading report. Please try again.";
+                });
+        }
+
+        // ─────────────────────────────────────────────
+        // EXCEL EXPORT
+        // ─────────────────────────────────────────────
+        function tableToExcel(tableId, filename = 'Report.xls') {
+
+            var table = document.getElementById(tableId);
+            if (!table) {
+                alert("Table not found!");
+                return;
+            }
+
+            var clone = table.cloneNode(true);
+
+            // 🔹 Apply borders + alignment
+            var cells = clone.querySelectorAll("th, td");
+
+            cells.forEach(function (cell) {
+                cell.style.border = "1px solid black";
+                cell.style.textAlign = "center";
+                cell.style.verticalAlign = "middle";
+            });
+
+            // 🔹 IMPORTANT: Color header cells (Excel-safe)
+            var headerCells = clone.querySelectorAll("thead th");
+
+            headerCells.forEach(function (th) {
+                th.style.fontWeight = "bold";
+                th.style.border = "1px solid black";
+
+                // Excel-safe background
+                th.style.backgroundColor = "#e6e6e6";
+                th.setAttribute("bgcolor", "#e6e6e6");
+            });
+            // 🔹 Left-align rows that span full width (Circle/District headers)
+            var spanCells = clone.querySelectorAll("td[colspan]");
+
+            spanCells.forEach(function (td) {
+
+                // Override center alignment
+                td.style.textAlign = "left";
+                td.style.setProperty("text-align", "left", "important");
+
+                td.style.fontWeight = "bold";
+
+                // Grey background like report
+                td.setAttribute("bgcolor", "#c0c0c0");
+            });
+
+            var html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        ${clone.outerHTML}
+    </body>
+    </html>`;
+
+            var blob = new Blob([html], {
+                type: "application/vnd.ms-excel;charset=utf-8;"
+            });
+
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ─────────────────────────────────────────────
+        // START — single call, no recursion
+        // ─────────────────────────────────────────────
+        loadReport();
+
+        // ─── PRINT ────────────────────────────────────────────────────────────────
+        function printContent(elementId) {
+            var content = document.getElementById(elementId);
+            if (!content) { return; }
+            var printWindow = window.open('', '', 'width=1200,height=800');
+            printWindow.document.write('<html><head><title>Laboratory Work</title>');
+            printWindow.document.write('<style>body{font-family:Arial;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:6px;font-size:10px;text-align:center;}</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(content.innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }
+
+    </script>
+
+</body>
+
+</html>

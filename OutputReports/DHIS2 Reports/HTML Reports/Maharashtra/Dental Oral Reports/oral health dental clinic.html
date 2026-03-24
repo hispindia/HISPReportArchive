@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Functional Oral Health Dental Clinic</title>
+
+    <style>
+        body {
+            font-family: Arial;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 6px;
+            font-size: 12px;
+            text-align: left;        
+        }
+
+        thead th {
+            background: #e6e6e6;
+            font-weight: bold;
+            text-align: center !important;
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center !important;
+        }
+
+        /* tbody td:nth-child(2) {
+            text-align: left;
+        } */
+    </style>
+
+</head>
+
+<body>
+
+    <button type="button" class="btn btn-default btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+        <span class="glyphicon glyphicon-chevron-left" style="font-size:15px;"></span>&nbsp; Goto Report Selection Page
+    </button>
+    <button type="button" class="btn btn-primary btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="printContent('table-container')">
+        <span class="glyphicon glyphicon-print" style="font-size:15px;"></span>&nbsp; Print
+    </button>
+    <button type="button" class="btn btn-success btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="tableToExcel('table-container','Dental Oral Health Report','Dental Oral Health Report.xls')">
+        <span class="glyphicon glyphicon-download-alt" style="font-size:15px;"></span> Download As Excel
+    </button>
+
+    <div id="loadingMsg">Loading report...</div>
+
+    <div id="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th colspan="38" style="text-align:left;">8.Functional Oral Health Dental Clinic</th>
+                </tr>
+
+                <tr id="dateRow">
+                    <th colspan="5" style="text-align: left !important;">
+                        <strong>Period:</strong> <span id="selected-date"></span>
+                    </th>
+                </tr>
+
+                <tr>
+                    <th rowspan="3">Sno</th>
+                    <th rowspan="3">Facility</th>
+                    <th rowspan="2">Dental Clinic Functional</th>
+                    <th colspan="2">Non Functional due to</th>
+                </tr>
+
+                <tr>
+                    <th>Lack of HR</th>
+                    <th>Lack of Equipment</th>
+                </tr>
+
+                <tr>
+                    <th>If Yes = 1</th>
+                    <th>If HR = 1</th>
+                    <th>If Equipment = 1</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="tableBody"></tbody>
+
+        </table>
+
+    </div>
+
+    <script>
+
+        // DHIS2 CONTEXT
+        var selectedOrgUnit = dhis2.report.organisationUnit;
+        var ROOT_OU_ID = selectedOrgUnit.id;
+
+        var urlParams = new URLSearchParams(location.search);
+        var periodParam = urlParams.get("pe");
+
+        // DATA ELEMENTS
+        var FUNCTIONAL_DX = "qcj0HEWF5xP";
+        var REASON_DX = "jbaIGi4Xje3";
+
+        var TOTAL_COLS = 5;
+
+
+        // SHOW PERIOD
+        function showPeriod() {
+
+            var months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+
+            var dateEl = document.getElementById("selected-date");
+            if (!dateEl) return;
+
+            var urlParams = new URLSearchParams(location.search);
+
+            var startMonth = urlParams.get("sd");
+            var endMonth = urlParams.get("ed");
+
+            // ✅ PRIORITY 1 : Date Range (sd / ed)
+            if (startMonth) {
+
+                var sp = startMonth.split("-");
+                var label = months[parseInt(sp[1]) - 1] + " " + sp[0];
+
+                if (endMonth && endMonth !== startMonth) {
+                    var ep = endMonth.split("-");
+                    label += " to " + months[parseInt(ep[1]) - 1] + " " + ep[0];
+                }
+
+                dateEl.innerHTML = label;
+                return;
+            }
+
+            // ✅ PRIORITY 2 : Single period (pe)
+            if (periodParam && periodParam.length === 6) {
+
+                var year = periodParam.substring(0, 4);
+                var month = parseInt(periodParam.substring(4, 6));
+
+                dateEl.innerHTML = months[month - 1] + " " + year;
+            }
+        }
+
+
+        // BUILD ANALYTICS URL
+        function buildAnalyticsUrl() {
+
+            return "../api/26/analytics.json"
+                + "?dimension=dx:" + FUNCTIONAL_DX + ";" + REASON_DX
+                + "&dimension=pe:" + periodParam
+                + "&dimension=ou:" + ROOT_OU_ID + ";OU_GROUP-S57GNhlxPe7"
+                + "&displayProperty=NAME"
+                + "&outputIdScheme=UID";
+
+        }
+
+
+        // FIND FACILITIES
+        function findFacilities(node, set) {
+
+            var list = [];
+
+            if (set[node.id])
+                list.push({ id: node.id, name: node.name });
+
+            (node.children || []).forEach(function (c) {
+
+                list = list.concat(findFacilities(c, set));
+
+            });
+
+            return list;
+
+        }
+
+
+        // LOAD REPORT
+        function loadReport() {
+
+            showPeriod();
+
+            var ANALYTICS_URL = buildAnalyticsUrl();
+
+            fetch("../api/26/organisationUnitLevels.json")
+
+                .then(r => r.json())
+
+                .then(levels => {
+
+                    var depth = levels.organisationUnitLevels.length - 1;
+
+                    var open = "", close = "";
+
+                    for (var i = 0; i < depth; i++) {
+
+                        open += "children[id,name,level,";
+                        close += "]";
+
+                    }
+
+                    var ouUrl = "../api/26/organisationUnits/" + ROOT_OU_ID
+                        + ".json?paging=false&fields=id,name,level,"
+                        + open + "id,name,level" + close;
+
+                    return Promise.all([
+                        fetch(ANALYTICS_URL).then(r => r.json()),
+                        fetch(ouUrl).then(r => r.json())
+                    ]);
+
+                })
+
+                .then(([analytics, ouTree]) => {
+
+                    var dxIndex = 0;
+                    var ouIndex = 1;
+                    var valueIndex = 2;
+
+                    analytics.headers.forEach(function (h, i) {
+
+                        if (h.name === "dx") dxIndex = i;
+                        if (h.name === "ou") ouIndex = i;
+                        if (h.name === "value") valueIndex = i;
+
+                    });
+
+
+                    // VALUE MAP
+                    var values = {};
+
+                    analytics.rows.forEach(function (row) {
+
+                        var dx = row[dxIndex];
+                        var ou = row[ouIndex];
+                        var val = row[valueIndex];
+
+                        if (!values[ou])
+                            values[ou] = { functional: 0, hr: 0, equip: 0 };
+
+
+                        // FUNCTIONAL
+                        if (dx === FUNCTIONAL_DX) {
+
+                            values[ou].functional = (val === "true") ? 1 : 0;
+
+                        }
+
+
+                        // NON FUNCTIONAL REASON
+                        if (dx === REASON_DX) {
+
+                            if (val === "1" || val === "1.0") {
+
+                                values[ou].hr = 1;
+
+                            }
+
+                            if (val === "2" || val === "2.0") {
+
+                                values[ou].equip = 1;
+
+                            }
+
+                        }
+
+                    });
+
+
+                    // OU SET
+                    var ouSet = {};
+
+                    if (analytics.metaData && analytics.metaData.dimensions && analytics.metaData.dimensions.ou) {
+
+                        analytics.metaData.dimensions.ou.forEach(function (o) {
+                            ouSet[o] = true;
+                        });
+
+                    }
+
+
+                    var html = "";
+                    var sno = 1;
+
+                    var stateTotals = { functional: 0, hr: 0, equip: 0 };
+
+
+                    // LOOP TREE
+                    (ouTree.children || [])
+
+                        .sort((a, b) => a.name.localeCompare(b.name))
+
+                        .forEach(function (circle) {
+
+                            var circleTotals = { functional: 0, hr: 0, equip: 0 };
+
+                            (circle.children || [])
+
+                                .sort((a, b) => a.name.localeCompare(b.name))
+
+                                .forEach(function (district) {
+
+                                    var facilities = findFacilities(district, ouSet);
+
+                                    if (!facilities.length) return;
+
+                                    html += "<tr style='background:#c0c0c0;font-weight:bold'>"
+                                        + "<td colspan='" + TOTAL_COLS + "' style='text-align:left !important'>"
+                                        + circle.name + " - " + district.name
+                                        + "</td></tr>";
+
+                                    var distTotals = { functional: 0, hr: 0, equip: 0 };
+
+                                    facilities.forEach(function (f) {
+
+                                        var v = values[f.id] || { functional: 0, hr: 0, equip: 0 };
+
+                                        distTotals.functional += v.functional;
+                                        distTotals.hr += v.hr;
+                                        distTotals.equip += v.equip;
+
+                                        circleTotals.functional += v.functional;
+                                        circleTotals.hr += v.hr;
+                                        circleTotals.equip += v.equip;
+
+                                        stateTotals.functional += v.functional;
+                                        stateTotals.hr += v.hr;
+                                        stateTotals.equip += v.equip;
+
+                                        html += "<tr>"
+                                            + "<td>" + sno + "</td>"
+                                            + "<td>" + f.name + "</td>"
+                                            + "<td>" + v.functional + "</td>"
+                                            + "<td>" + v.hr + "</td>"
+                                            + "<td>" + v.equip + "</td>"
+                                            + "</tr>";
+
+                                        sno++;
+
+                                    });
+
+                                    html += "<tr style='background:#e0e0e0;font-weight:bold'>"
+                                        + "<td></td>"
+                                        + "<td>" + district.name + " Total</td>"
+                                        + "<td>" + distTotals.functional + "</td>"
+                                        + "<td>" + distTotals.hr + "</td>"
+                                        + "<td>" + distTotals.equip + "</td>"
+                                        + "</tr>";
+
+                                });
+
+                            html += "<tr style='background:#8c8c8c;color:#fff;font-weight:bold'>"
+                                + "<td></td>"
+                                + "<td>" + circle.name + " Total</td>"
+                                + "<td>" + circleTotals.functional + "</td>"
+                                + "<td>" + circleTotals.hr + "</td>"
+                                + "<td>" + circleTotals.equip + "</td>"
+                                + "</tr>";
+
+                        });
+
+
+                    html += "<tr style='background:#404040;color:#fff;font-weight:bold'>"
+                        + "<td></td>"
+                        + "<td>State Total</td>"
+                        + "<td>" + stateTotals.functional + "</td>"
+                        + "<td>" + stateTotals.hr + "</td>"
+                        + "<td>" + stateTotals.equip + "</td>"
+                        + "</tr>";
+
+                    document.getElementById("tableBody").innerHTML = html;
+
+                    document.getElementById("loadingMsg").style.display = "none";
+
+                });
+
+        }
+
+        // START
+        loadReport();
+
+
+        function tableToExcel(tableId, filename = 'Report.xls') {
+
+            var table = document.getElementById(tableId);
+            if (!table) {
+                alert("Table not found!");
+                return;
+            }
+
+            var clone = table.cloneNode(true);
+
+            // 🔹 Apply borders + alignment
+            var cells = clone.querySelectorAll("th, td");
+
+            cells.forEach(function (cell) {
+                cell.style.border = "1px solid black";
+                cell.style.textAlign = "center";
+                cell.style.verticalAlign = "middle";
+            });
+
+            // 🔹 IMPORTANT: Color header cells (Excel-safe)
+            var headerCells = clone.querySelectorAll("thead th");
+
+            headerCells.forEach(function (th) {
+                th.style.fontWeight = "bold";
+                th.style.border = "1px solid black";
+
+                // Excel-safe background
+                th.style.backgroundColor = "#e6e6e6";
+                th.setAttribute("bgcolor", "#e6e6e6");
+            });
+            // 🔹 Left-align rows that span full width (Circle/District headers)
+            var spanCells = clone.querySelectorAll("td[colspan]");
+
+            spanCells.forEach(function (td) {
+
+                // Override center alignment
+                td.style.textAlign = "left";
+                td.style.setProperty("text-align", "left", "important");
+
+                td.style.fontWeight = "bold";
+
+                // Grey background like report
+                td.setAttribute("bgcolor", "#c0c0c0");
+            });
+
+            var html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        ${clone.outerHTML}
+    </body>
+    </html>`;
+
+            var blob = new Blob([html], {
+                type: "application/vnd.ms-excel;charset=utf-8;"
+            });
+
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+    </script>
+    <!-- printing script -->
+    <script type="text/javascript">
+        function printContent(el) {
+            var restorepage = document.body.innerHTML;
+            var printcontent = document.getElementById(el).innerHTML;
+            document.body.innerHTML = printcontent;
+            window.print();
+            document.body.innerHTML = restorepage;
+        }
+
+    </script>
+
+
+    </script>
+
+</body>
+
+</html>

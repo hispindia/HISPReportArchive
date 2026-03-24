@@ -1,0 +1,535 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Table</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+        integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            /* background-color: #fbe4d5; */
+            margin-top: 8px;
+        }
+
+        th,
+        td {
+            border: 1px solid #000 !important;
+            padding: 8px !important;
+            text-align: center !important;
+        }
+
+        th {
+            font-weight: bold;
+            text-align: center;
+            background: #cfd8dc;
+
+        }
+
+        .district-total {
+            background: #cfd8dc;
+            font-weight: bold;
+        }
+
+        .circle-total {
+            background: #b2dfdb;
+            font-weight: bold;
+        }
+
+        .state-total {
+            background: #80cbc4;
+            font-weight: bold;
+        }
+
+        .loader {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            margin: -25px 0 0 -25px;
+            border: 6px solid #e0e0e0;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" id="btnBack" class="btn brn-default btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+    <span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span>&nbsp; Goto Report Selection Page
+</button>
+
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle; cursor:pointer"
+    onclick="printContent('table-container')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span>
+    &nbsp;
+    Print
+</button>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('opd-table', 'Hospital OPD Report', 'Hospital OPD Report.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+<table id="referralTable" border="1" style="border-collapse:collapse;">
+    <!-- Title Row -->
+    <tr>
+        <th colspan="10" style="font-size: 18px; font-weight: bold;">
+            Outcome of Patients
+        </th>
+    </tr>
+
+    <!-- Facility & Period Row -->
+    <tr>
+        <th colspan="3" style="text-align: left;">Facility </th>
+        <th colspan="1">Period </th>
+        <th colspan="3.0">From : <span id="from-date"></span></th>
+        <th colspan="3">To :<span id="to-date"></span></th>
+    </tr>
+
+    <!-- Main Header Row -->
+    <tr>
+        <th rowspan="2">S.N.</th>
+        <th rowspan="2">Name of Hospital</th>
+        <th rowspan="2">Total IPD</th>
+        <th rowspan="2">Remaining Patients</th>
+        <th colspan="2">Total Discharge</th>
+        <th rowspan="2">Referred Out</th>
+        <th rowspan="2">LAMA</th>
+        <th rowspan="2">Absconded</th>
+        <th rowspan="2">Total Deaths</th>
+    </tr>
+
+    <!-- Sub-header for Total Discharge -->
+    <tr>
+        <th>Cured</th>
+        <th>Relieved</th>
+    </tr>
+    </thead>
+    <tbody id="referralBody"></tbody>
+</table>
+<div id="loader" class="loader"></div>
+<script>
+    document.getElementsByClassName("hideInPrint")["0"] && (document.getElementsByClassName("hideInPrint")["0"].style.display = "none");
+
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var selectedOrgUnit = dhis2.report.organisationUnit;
+    var orgUnit = dhis2.report.organisationUnitChildren;
+    var organisationUnitChildren = orgUnit.sort((a, b) => a.name.localeCompare(b.name));
+    var level = dhis2.report.organisationUnitHierarchy.length;
+
+    var orgUnitData = [];
+    var printTotalValue = [];
+    var orgUnitHierarchy = {};
+
+    // Extract dates from URL parameters
+    var urlParams = new URLSearchParams(location.search);
+    var startMonth = urlParams.get('sd') ? urlParams.get('sd').slice(0, 10) : null;
+    var endMonth = urlParams.get('ed') ? urlParams.get('ed').slice(0, 10) : null;
+
+    if (!startMonth && location.href.includes("&sd=")) {
+        var sdPart = location.href.split("&sd=")[1];
+        startMonth = sdPart ? sdPart.slice(0, 10) : null;
+    }
+    if (!endMonth && location.href.includes("&ed=")) {
+        var edPart = location.href.split("&ed=")[1];
+        endMonth = edPart ? edPart.slice(0, 10) : null;
+    }
+
+    if (!startMonth || !endMonth) {
+        alert("Please select start and end dates");
+        if ($('#loader').length) $('#loader').hide();
+    } else {
+        var monthArr = [startMonth, endMonth];
+
+        if (startMonth.split("-").join("") > endMonth.split("-").join("")) {
+            alert("Please select dates correctly");
+            if ($('#loader').length) $('#loader').hide();
+        } else {
+            var selectedOrgUnitEl = document.getElementById("selected-orgUnit");
+            if (selectedOrgUnitEl) selectedOrgUnitEl.innerHTML = selectedOrgUnit.name;
+
+            var selectedDateEl = document.getElementById("selected-date");
+            if (selectedDateEl) selectedDateEl.innerHTML = months[startMonth.split("-")["1"] - 1] + " " + startMonth.split("-")["0"] + " to " + months[endMonth.split("-")["1"] - 1] + " " + endMonth.split("-")["0"];
+
+            var dataTableEl = document.getElementById("dataTable");
+            if (dataTableEl) dataTableEl.style.visibility = "hidden";
+
+            var tableBodyEl = document.getElementById("tableBody");
+            if (tableBodyEl) tableBodyEl.innerHTML = "";
+
+            if ($('#loader').length) $('#loader').show();
+
+            setTimeout(function () { getData(monthArr); }, 1000);
+        }
+    }
+
+    function getData(smToem) {
+        var includedOrgUnitGroups = [];
+        var numberOfDays = 0;
+        var financialYear = [];
+
+        const columnMap = [
+            "quosTJc8kVH",
+            "cOTTvm5Zk89",
+            "t91i3jU0gTb",
+            "yT6mDHQAC2C",
+            "iR9YcEhMzWr",
+            "R5PRHo2takU",
+            "CYEqYmz7arb",
+            "VUakSf7kOfA"
+        ];
+
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [];
+            var fyArr = [];
+
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear[0]); i <= parseInt(endYear[0]); i++) {
+                var startMonth = (i > parseInt(startYear[0])) ? 1 : parseInt(startYear[1]);
+                var endMonth = (i == endYear[0]) ? parseInt(endYear[1]) : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let value = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(value);
+
+                    // Financial year logic
+                    if (j < 4) {
+                        if (!fyArr.includes((i - 1) + "April"))
+                            fyArr.push((i - 1) + "April");
+                    } else {
+                        if (!fyArr.includes(i + "April"))
+                            fyArr.push(i + "April");
+                    }
+                }
+            }
+
+            return {
+                periods: arr,
+                financialYears: fyArr
+            };
+        };
+
+        // // Example usage
+        // var smToEm = getBetweenDates(smToem[0], smToem[1]);
+
+        const dateInfo = getBetweenDates(smToem[0], smToem[1]);
+        smToEm = dateInfo.periods;
+        financialYear = dateInfo.financialYears;
+
+        //Display in table headers
+        document.getElementById("from-date").textContent = smToem[0];
+        document.getElementById("to-date").textContent = smToem[1];
+
+        var isHospital = {};
+
+        if (financialYear.length > 0) {
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: `../api/analytics.json?dimension=dx:fePK3YQItlG&dimension=pe:${financialYear.join(";")}&dimension=ou:${selectedOrgUnit.id};OU_GROUP-S57GNhlxPe7&displayProperty=NAME&paging=false`,
+                data: JSON,
+                success: function (data, status) {
+                    if (data.rows) {
+                        data.rows.forEach(row => {
+                            var ouId = row[2];
+                            var deId = row[0];
+                            var value = row[3];
+
+                            if (!orgUnitData[ouId]) orgUnitData[ouId] = {};
+                            if (!orgUnitData[ouId][deId]) orgUnitData[ouId][deId] = 0;
+                            orgUnitData[ouId][deId] = Number(value) + Number(orgUnitData[ouId][deId]);
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Financial Year API Error:", error);
+                }
+            });
+        }
+        function renderData() {
+            $('#loader').show();
+
+
+            var url = '../api/organisationUnits/' + selectedOrgUnit.id +
+                '.json?paging=false&fields=id,name,level,dataSets[id]';
+
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: '../api/organisationUnitLevels.json',
+                success: function (data) {
+                    for (let i = 0; i < data.organisationUnitLevels.length; i++) {
+                        url += ',children[id,name,level,dataSets[id]';
+                    }
+                    url += ']';
+                }
+            });
+
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: url,
+                success: function (data) {
+
+                    var levelColor = [];
+                    levelColor["2"] = "#89CFF0";
+                    levelColor["3"] = "#A0D6B4";
+                    levelColor["4"] = "#B2BEB5";
+                    levelColor["6"] = "#FFCC99";
+
+                    treeDown(data, levelColor, null, null);
+
+                    // ✅ hierarchy is READY here
+                    loadReferralTable();
+
+                    var dataTableEl = document.getElementById("dataTable");
+                    if (dataTableEl) dataTableEl.style.visibility = "visible";
+                    // if ($('#loader').length) $('#loader').hide();
+                    var printingEl = document.getElementById("printing");
+                    if (printingEl) printingEl.style.display = "block";
+                }
+            });
+
+            function treeDown(arr, color, parentName, parentLevel) {
+
+                var key = arr;
+
+                if (parentName && parentLevel) {
+                    orgUnitHierarchy[key.id] ??= {};
+                    orgUnitHierarchy[key.id][parentLevel] = parentName;
+                }
+
+                if (key.children && key.children.length && key.level != 7) {
+
+                    key.children.sort((a, b) => a.name.localeCompare(b.name));
+
+                    for (let i = 0; i < key.children.length; i++) {
+
+                        orgUnitHierarchy[key.children[i].id] ??= {};
+
+                        if (orgUnitHierarchy[key.id]) {
+                            Object.keys(orgUnitHierarchy[key.id]).forEach(lvl => {
+                                orgUnitHierarchy[key.children[i].id][lvl] =
+                                    orgUnitHierarchy[key.id][lvl];
+                            });
+                        }
+
+                        orgUnitHierarchy[key.children[i].id][key.level] = key.name;
+                        treeDown(key.children[i], color, key.name, key.level);
+                    }
+                }
+            }
+        }
+
+        function isStateSelected() {
+            const ouIds = Object.keys(orgUnitHierarchy);
+            for (let ou of ouIds) {
+                const levels = Object.keys(orgUnitHierarchy[ou] || {}).length;
+                if (levels >= 3) return true; // State → Circle → District
+            }
+            return false;
+        }
+
+
+        /* 🔎 Detect State, Circle & District levels safely */
+        function detectLevels() {
+            for (let ou in orgUnitHierarchy) {
+                const levels = Object.keys(orgUnitHierarchy[ou])
+                    .map(Number)
+                    .sort((a, b) => a - b);
+
+                if (levels.length >= 3) {
+                    return {
+                        stateLevel: levels[levels.length - 3],
+                        circleLevel: levels[levels.length - 2],
+                        districtLevel: levels[levels.length - 1]
+                    };
+                }
+            }
+            return null;
+        }
+
+
+        async function loadReferralTable() {
+
+            const levels = detectLevels();
+            if (!levels) {
+                console.error("Hierarchy not ready");
+                return;
+            }
+
+            const STATE_LEVEL = levels.stateLevel;
+            const CIRCLE_LEVEL = levels.circleLevel;
+            const DISTRICT_LEVEL = levels.districtLevel;
+
+
+            const url =
+                "../api/26/analytics.json?dimension=dx:" +
+                columnMap.join(";") +
+                "&dimension=pe:" + smToEm.join(";") +
+                "&dimension=ou:b3vBdsycgAD;OU_GROUP-S57GNhlxPe7" +
+                "&displayProperty=NAME&outputIdScheme=UID";
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const grouped = {};           // state → circle → district → rows
+            const districtTotals = {};    // state → circle → district → dx
+            const circleTotals = {};      // state → circle → dx
+            const stateTotals = {};       // state → dx
+
+
+            data.metaData.dimensions.ou.forEach(ou => {
+
+                const hierarchy = orgUnitHierarchy[ou];
+                if (!hierarchy) return;
+
+                const state = hierarchy[STATE_LEVEL];
+                const circle = hierarchy[CIRCLE_LEVEL];
+                const district = hierarchy[DISTRICT_LEVEL];
+
+                if (!state || !circle || !district) return;
+
+                /* ---- GROUPING ---- */
+                grouped[state] ??= {};
+                grouped[state][circle] ??= {};
+                grouped[state][circle][district] ??= [];
+
+                /* ---- TOTALS ---- */
+                districtTotals[state] ??= {};
+                districtTotals[state][circle] ??= {};
+                districtTotals[state][circle][district] ??= {};
+
+                circleTotals[state] ??= {};
+                circleTotals[state][circle] ??= {};
+
+                stateTotals[state] ??= {};
+
+                const row = {
+                    _ou: ou,
+                    ouName: data.metaData.items[ou].name,
+                    values: {}
+                };
+
+                columnMap.forEach(dx => {
+                    row.values[dx] = 0;
+
+                    districtTotals[state][circle][district][dx] ??= 0;
+                    circleTotals[state][circle][dx] ??= 0;
+                    stateTotals[state][dx] ??= 0;
+                });
+
+                grouped[state][circle][district].push(row);
+            });
+
+
+            /* 2️⃣ Fill values + aggregate */
+            data.rows.forEach(r => {
+
+                const dx = r[0];
+                const ou = r[2];
+                const value = Number(r[3] || 0);
+                if (!columnMap.includes(dx)) return;
+
+                const hierarchy = orgUnitHierarchy[ou];
+                if (!hierarchy) return;
+
+                const state = hierarchy[STATE_LEVEL];
+                const circle = hierarchy[CIRCLE_LEVEL];
+                const district = hierarchy[DISTRICT_LEVEL];
+
+                const row = grouped[state]?.[circle]?.[district]?.find(x => x._ou === ou);
+                if (!row) return;
+
+                /* ---- FACILITY ---- */
+                row.values[dx] += value;
+
+                /* ---- TOTALS ---- */
+                districtTotals[state][circle][district][dx] += value;
+                circleTotals[state][circle][dx] += value;
+                stateTotals[state][dx] += value;
+            });
+
+            let sn = 1; 
+            let html = "";
+
+            if (isStateSelected()) {
+
+                Object.keys(grouped).sort().forEach(state => {
+
+
+                    Object.keys(grouped[state]).sort().forEach(circle => {
+
+
+                        Object.keys(grouped[state][circle]).sort().forEach(district => {
+
+
+                            /* 🟨 FACILITY ROWS */
+                            grouped[state][circle][district].forEach(r => {
+                                html += `
+<tr>
+    <td>${sn++}</td>
+    <td>${r.ouName}</td>
+    ${columnMap.map(dx => `<td>${r.values[dx]}</td>`).join("")}
+</tr>`;
+                            });
+
+
+                            /* 🟧 DISTRICT TOTAL */
+                            html += `
+<tr class="district-total">
+    <td colspan="2"><b>${district} Total</b></td>
+    ${columnMap.map(dx =>
+                                `<td><b>${districtTotals[state][circle][district][dx]}</b></td>`
+                            ).join("")}
+</tr>`;
+                        });
+
+                        /* 🟩 CIRCLE TOTAL */
+                        html += `
+<tr class="circle-total">
+    <td colspan="2"><b>${circle} Total</b></td>
+    ${columnMap.map(dx =>
+                            `<td><b>${circleTotals[state][circle][dx]}</b></td>`
+                        ).join("")}
+</tr>`;
+                    });
+
+                    /* 🔴 STATE TOTAL  */
+                    html += `
+<tr class="state-total">
+    <td colspan="2"><b>${state} Total</b></td>
+    ${columnMap.map(dx =>
+                        `<td><b>${stateTotals[state][dx]}</b></td>`
+                    ).join("")}
+</tr>`;
+                });
+            }
+
+
+            console.log(html);
+
+            document.getElementById("referralBody").innerHTML = html;
+            $('#loader').hide();
+        }
+
+        /* 🔑 ENTRY POINT */
+        renderData();
+    }
+</script>

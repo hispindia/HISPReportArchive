@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>6 HR Details - Vacancy Position</title>
+
+    <style>
+        body {
+            font-family: Arial;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 6px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+
+
+        thead th {
+            background: #e6e6e6;
+            text-align: center !important;
+        }
+
+        .title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <a id="dlink" style="display:none;"></a>
+
+    <button type="button" class="btn btn-default btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="location.href='../dhis-web-reports-app/index.html#/generate-report'">
+        <span class="glyphicon glyphicon-chevron-left" style="font-size:15px;"></span>&nbsp; Goto Report Selection Page
+    </button>
+    <button type="button" class="btn btn-primary btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="printContent('table-container')">
+        <span class="glyphicon glyphicon-print" style="font-size:15px;"></span>&nbsp; Print
+    </button>
+    <button type="button" class="btn btn-success btn-sm" style="vertical-align:middle;cursor:pointer"
+        onclick="tableToExcel('table-container','Dental Human Resource Report','Dental Human Resource Report.xls')">
+        <span class="glyphicon glyphicon-download-alt" style="font-size:15px;"></span> Download As Excel
+    </button>
+
+
+
+    <div id="loadingMsg">Loading report data, please wait...</div>
+
+    <!-- <div id="table-container">
+        <div class="report-header">
+            <strong>Organisation Unit:</strong> <span id="selected-orgUnit"></span>
+            &nbsp;&nbsp;
+            <strong>Period:</strong> <span id="selected-date"></span>
+        </div> -->
+    <table>
+        <thead>
+
+            <tr>
+                <th colspan="34" class="title">
+                    6 HR Details - Vacancy Position
+                </th>
+            </tr>
+            <tr>
+                <th colspan="34"><strong>Organisation Unit:</strong> <span id="selected-orgUnit"></span>
+                </th>
+            </tr>
+
+            <tr>
+                <th colspan="34" id="reportPeriod"></th>
+            </tr>
+
+            <tr>
+                <th rowspan="2">Sno</th>
+                <th rowspan="2">Facility</th>
+
+                <th colspan="4">6.1 Dental Surgeon</th>
+                <th colspan="4">6.1.1 Dental Surgeon (BDS)</th>
+                <th colspan="4">6.1.2 Dental Surgeon (MDS)</th>
+                <th colspan="4">6.2 Dental Hygienist</th>
+                <th colspan="4">6.3 Dental Technician</th>
+                <th colspan="4">6.4 Dental Assistant</th>
+                <th colspan="4">6.5 Nurse in Dental Unit</th>
+                <th colspan="4">6.6 Others</th>
+            </tr>
+
+            <tr>
+                <!-- 8 sections × 4 columns -->
+                <th>Approved posts under Regular Cadre</th>
+                <th>In-place under Regular Cadre</th>
+                <th>Contractual posts sanctioned under NHM</th>
+                <th>Contractual In-place under NHM</th>
+                <th>Approved posts under Regular Cadre</th>
+                <th>In-place under Regular Cadre</th>
+                <th>Contractual posts sanctioned under NHM</th>
+                <th>Contractual In-place under NHM</th>
+                <th>Approved posts under Regular Cadre</th>
+                <th>In-place under Regular Cadre</th>
+                <th>Contractual posts sanctioned under NHM</th>
+                <th>Contractual In-place under NHM</th>
+                <th>Approved posts under Regular Cadre</th>
+                <th>In-place under Regular Cadre</th>
+                <th>Contractual posts sanctioned under NHM</th>
+                <th>Contractual In-place under NHM</th>
+                <th>Approved posts under Regular Cadre</th>
+                <th>In-place under Regular Cadre</th>
+                <th>Contractual posts sanctioned under NHM</th>
+                <th>Contractual In-place under NHM</th>
+                <th>Approved posts under Regular Cadre</th>
+                <th>In-place under Regular Cadre</th>
+                <th>Contractual posts sanctioned under NHM</th>
+                <th>Contractual In-place under NHM</th>
+                <th>Approved posts under Regular Cadre</th>
+                <th>In-place under Regular Cadre</th>
+                <th>Contractual posts sanctioned under NHM</th>
+                <th>Contractual In-place under NHM</th>
+                <th>Approved posts under Regular Cadre</th>
+                <th>In-place under Regular Cadre</th>
+                <th>Contractual posts sanctioned under NHM</th>
+                <th>Contractual In-place under NHM</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="tableBody"></tbody>
+    </table>
+    </div>
+    <script>
+
+        // ─────────────────────────────────────────────
+        // DHIS2 CONTEXT
+        // ─────────────────────────────────────────────
+        var selectedOrgUnit = dhis2.report.organisationUnit;
+        var ROOT_OU_ID = selectedOrgUnit.id;
+
+        // Period from URL (?pe=YYYYMM)
+        var urlParams = new URLSearchParams(location.search);
+        var periodParam = urlParams.get("pe");
+
+        // ─────────────────────────────────────────────
+        // SECTION → dx MAPPING (INDICATOR.COC)
+        // ⭐ REPLACE WITH YOUR REAL dx VALUES
+        // ─────────────────────────────────────────────
+        var SECTIONS = [
+
+            {
+                name: "Dental Surgeon",
+                dx: [
+                    "mGUU3ooyGET.O4hQQJqdxtK", // Sanctioned Regular
+                    "mGUU3ooyGET.uH7cv7oizwg", // In-place Regular
+                    "mGUU3ooyGET.DtvDjSSyj4n", // Sanctioned Contractual
+                    "mGUU3ooyGET.cOFdTjlL4Cs"  // In-place Contractual
+                ]
+            },
+
+            {
+                name: "Dental Surgeon (BDS)",
+                dx: [
+                    "fPWPIoeti7l.O4hQQJqdxtK",
+                    "fPWPIoeti7l.uH7cv7oizwg",
+                    "fPWPIoeti7l.DtvDjSSyj4n",
+                    "fPWPIoeti7l.cOFdTjlL4Cs"
+                ]
+            },
+
+            {
+                name: "Dental Surgeon (MDS)",
+                dx: [
+                    "WgeoklZnTHe.O4hQQJqdxtK",
+                    "WgeoklZnTHe.uH7cv7oizwg",
+                    "WgeoklZnTHe.DtvDjSSyj4n",
+                    "WgeoklZnTHe.cOFdTjlL4Cs"
+                ]
+            },
+
+            {
+                name: "Dental Hygienist",
+                dx: [
+                    "d1er7WZAiPm.O4hQQJqdxtK",
+                    "d1er7WZAiPm.uH7cv7oizwg",
+                    "d1er7WZAiPm.DtvDjSSyj4n",
+                    "d1er7WZAiPm.cOFdTjlL4Cs"
+                ]
+            },
+
+            {
+                name: "Dental Technician",
+                dx: [
+                    "sHmStizNX5k.O4hQQJqdxtK",
+                    "sHmStizNX5k.uH7cv7oizwg",
+                    "sHmStizNX5k.DtvDjSSyj4n",
+                    "sHmStizNX5k.cOFdTjlL4Cs"
+                ]
+            },
+
+            {
+                name: "Dental Assistant",
+                dx: [
+                    "u75EkGT8KYx.O4hQQJqdxtK",
+                    "u75EkGT8KYx.uH7cv7oizwg",
+                    "u75EkGT8KYx.DtvDjSSyj4n",
+                    "u75EkGT8KYx.cOFdTjlL4Cs"
+                ]
+            },
+
+            {
+                name: "Nurse in Dental Unit",
+                dx: [
+                    "c3vsDaJvD7J.O4hQQJqdxtK",
+                    "c3vsDaJvD7J.uH7cv7oizwg",
+                    "c3vsDaJvD7J.DtvDjSSyj4n",
+                    "c3vsDaJvD7J.cOFdTjlL4Cs"
+                ]
+            },
+
+            {
+                name: "Others",
+                dx: [
+                    "ZxvdXPNh6Mi.O4hQQJqdxtK",
+                    "ZxvdXPNh6Mi.uH7cv7oizwg",
+                    "ZxvdXPNh6Mi.DtvDjSSyj4n",
+                    "ZxvdXPNh6Mi.cOFdTjlL4Cs"
+                ]
+            }
+
+        ];
+
+
+
+        var TOTAL_COLS = 34;
+
+        // ─────────────────────────────────────────────
+        // SHOW HEADER (OU + PERIOD)
+        // ─────────────────────────────────────────────
+        function showReportHeader() {
+
+            var ouEl = document.getElementById("selected-orgUnit");
+            if (ouEl) ouEl.innerHTML = selectedOrgUnit.name;
+
+            var months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+
+            if (periodParam && periodParam.length === 6) {
+
+                var year = periodParam.substring(0, 4);
+                var month = parseInt(periodParam.substring(4, 6), 10);
+                var label = months[month - 1] + " " + year;
+
+                var d = document.getElementById("selected-date");
+                if (d) d.innerHTML = label;
+
+                var rp = document.getElementById("reportPeriod");
+                if (rp) rp.innerHTML = "Period: " + label;
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // BUILD ANALYTICS URL
+        // ─────────────────────────────────────────────
+        function buildAnalyticsUrl(period, ouId) {
+
+            var dxList = [];
+            SECTIONS.forEach(sec => sec.dx.forEach(d => dxList.push(d)));
+
+            return "../api/26/analytics.json"
+                + "?dimension=dx:" + dxList.join(";")
+                + "&dimension=ou:OU_GROUP-S57GNhlxPe7;" + ouId
+                + "&filter=pe:" + period
+                + "&displayProperty=NAME&outputIdScheme=UID";
+        }
+
+        // ─────────────────────────────────────────────
+        // BUILD CELLS
+        // ─────────────────────────────────────────────
+        function sectionCells(vals, dxList) {
+
+            var html = "";
+            for (var i = 0; i < 4; i++) {
+                var v = (vals && vals[dxList[i]]) ? vals[dxList[i]] : 0;
+                html += "<td>" + v + "</td>";
+            }
+            return html;
+        }
+
+        function allSectionCells(vals) {
+            var html = "";
+            SECTIONS.forEach(sec => html += sectionCells(vals, sec.dx));
+            return html;
+        }
+
+        // ─────────────────────────────────────────────
+        // FIND FACILITIES
+        // ─────────────────────────────────────────────
+        function findFacilitiesUnder(node, set) {
+
+            var found = [];
+            if (set[node.id]) found.push({ id: node.id, name: node.name });
+
+            (node.children || []).forEach(ch => {
+                found = found.concat(findFacilitiesUnder(ch, set));
+            });
+
+            return found;
+        }
+
+        // ─────────────────────────────────────────────
+        // LOAD REPORT
+        // ─────────────────────────────────────────────
+        function loadReport() {
+
+            showReportHeader();
+
+            var ANALYTICS_URL = buildAnalyticsUrl(periodParam, ROOT_OU_ID);
+
+            fetch("../api/26/organisationUnitLevels.json")
+                .then(r => r.json())
+                .then(levels => {
+
+                    var depth = levels.organisationUnitLevels.length - 1;
+                    var open = "", close = "";
+                    for (var i = 0; i < depth; i++) { open += "children[id,name,level,"; close += "]"; }
+
+                    var ouUrl = "../api/26/organisationUnits/" + ROOT_OU_ID
+                        + ".json?paging=false&fields=id,name,level," + open + "id,name,level" + close;
+
+                    return Promise.all([
+                        fetch(ANALYTICS_URL).then(r => r.json()),
+                        fetch(ouUrl).then(r => r.json())
+                    ]);
+
+                })
+                .then(([analytics, ouTree]) => {
+
+                    // Detect indexes
+                    var dxIdx = 0, ouIdx = 1, valIdx = 2;
+                    analytics.headers.forEach((h, i) => {
+                        if (h.name === "dx") dxIdx = i;
+                        if (h.name === "ou") ouIdx = i;
+                        if (h.name === "value") valIdx = i;
+                    });
+
+                    // Build OU → dx → value map
+                    var ouVals = {};
+
+                    analytics.rows.forEach(row => {
+                        var dx = row[dxIdx];
+                        var ou = row[ouIdx];
+                        var val = Number(row[valIdx] || 0);
+
+                        if (!ouVals[ou]) ouVals[ou] = {};
+                        ouVals[ou][dx] = (ouVals[ou][dx] || 0) + val;
+                    });
+
+                    var ouSet = {};
+                    analytics.metaData.dimensions.ou.forEach(o => ouSet[o] = true);
+
+                    var html = "";
+                    var sno = 1;
+                    var stateTotals = {};
+
+                    function addTotals(t, v) {
+                        if (!v) return;
+                        Object.keys(v).forEach(k => t[k] = (t[k] || 0) + v[k]);
+                    }
+
+                    (ouTree.children || [])
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .forEach(circle => {
+
+                            var circleTotals = {};
+
+                            (circle.children || [])
+                                .sort((a, b) => a.name.localeCompare(b.name))
+                                .forEach(district => {
+
+                                    var facilities = findFacilitiesUnder(district, ouSet);
+                                    if (!facilities.length) return;
+
+                                    html += "<tr style='background:#c0c0c0;font-weight:bold'>"
+                                        + "<td colspan='" + TOTAL_COLS + "' style='text-align:left'>"
+                                        + circle.name + " - " + district.name + "</td></tr>";
+
+                                    var distTotals = {};
+
+                                    facilities.forEach(f => {
+
+                                        var vals = ouVals[f.id] || {};
+
+                                        addTotals(distTotals, vals);
+                                        addTotals(circleTotals, vals);
+                                        addTotals(stateTotals, vals);
+
+                                        html += "<tr>"
+                                            + "<td>" + sno + "</td>"
+                                            + "<td style='text-align:left'>" + f.name + "</td>"
+                                            + allSectionCells(vals)
+                                            + "</tr>";
+
+                                        sno++;
+                                    });
+
+                                    html += "<tr style='background:#e0e0e0;font-weight:bold'>"
+                                        + "<td></td>"
+                                        + "<td style='text-align:left'>" + district.name + " Total</td>"
+                                        + allSectionCells(distTotals)
+                                        + "</tr>";
+                                });
+
+                            html += "<tr style='background:#8c8c8c;color:#fff;font-weight:bold'>"
+                                + "<td></td>"
+                                + "<td style='text-align:left'>" + circle.name + " Total</td>"
+                                + allSectionCells(circleTotals)
+                                + "</tr>";
+                        });
+
+                    html += "<tr style='background:#404040;color:#fff;font-weight:bold'>"
+                        + "<td></td>"
+                        + "<td style='text-align:left'>State Total</td>"
+                        + allSectionCells(stateTotals)
+                        + "</tr>";
+
+                    document.getElementById("tableBody").innerHTML = html;
+
+                    // Hide loading message
+                    var l = document.getElementById("loadingMsg");
+                    if (l) l.style.display = "none";
+
+                });
+
+        }
+
+        // ─────────────────────────────────────────────
+        // START
+        // ─────────────────────────────────────────────
+        loadReport();
+
+        function tableToExcel(tableId, filename = 'Report.xls') {
+
+            var table = document.getElementById(tableId);
+            if (!table) {
+                alert("Table not found!");
+                return;
+            }
+
+            var clone = table.cloneNode(true);
+
+            // 🔹 Apply borders + alignment
+            var cells = clone.querySelectorAll("th, td");
+
+            cells.forEach(function (cell) {
+                cell.style.border = "1px solid black";
+                cell.style.textAlign = "center";
+                cell.style.verticalAlign = "middle";
+            });
+
+            // 🔹 IMPORTANT: Color header cells (Excel-safe)
+            var headerCells = clone.querySelectorAll("thead th");
+
+            headerCells.forEach(function (th) {
+                th.style.fontWeight = "bold";
+                th.style.border = "1px solid black";
+
+                // Excel-safe background
+                th.style.backgroundColor = "#e6e6e6";
+                th.setAttribute("bgcolor", "#e6e6e6");
+            });
+            // 🔹 Left-align rows that span full width (Circle/District headers)
+            var spanCells = clone.querySelectorAll("td[colspan]");
+
+            spanCells.forEach(function (td) {
+
+                // Override center alignment
+                td.style.textAlign = "left";
+                td.style.setProperty("text-align", "left", "important");
+
+                td.style.fontWeight = "bold";
+
+                // Grey background like report
+                td.setAttribute("bgcolor", "#c0c0c0");
+            });
+
+            var html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        ${clone.outerHTML}
+    </body>
+    </html>`;
+
+            var blob = new Blob([html], {
+                type: "application/vnd.ms-excel;charset=utf-8;"
+            });
+
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+    </script>
+    <!-- printing script -->
+    <script type="text/javascript">
+        function printContent(el) {
+            var restorepage = document.body.innerHTML;
+            var printcontent = document.getElementById(el).innerHTML;
+            document.body.innerHTML = printcontent;
+            window.print();
+            document.body.innerHTML = restorepage;
+        }
+
+    </script>
+
+    </script>
+</body>
+
+</html>
