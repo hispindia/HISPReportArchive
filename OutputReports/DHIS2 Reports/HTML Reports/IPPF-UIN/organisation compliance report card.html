@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compliance Screening Report</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        color: #222;
+        background: #fff;
+        padding: 24px;
+      }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .summary-card {
+        background: #e8f0f8;
+        border-radius: 6px;
+        padding: 16px;
+        text-align: center;
+      }
+      .summary-num {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+      .summary-label {
+        font-size: 11px;
+        color: #555;
+      }
+      h3 {
+        font-size: 15px;
+        font-weight: bold;
+        color: #1a3c5e;
+        margin: 20px 0 6px;
+      }
+      hr.rule {
+        border: none;
+        border-top: 1.5px solid #c5d8ec;
+        margin-bottom: 12px;
+      }
+      .tbl-wrap {
+        overflow-x: auto;
+        margin-bottom: 24px;
+      }
+      table.s1 {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+        min-width: 860px;
+      }
+      table.s1 thead th {
+        background: #d9e6f2;
+        border: 1px solid #b0c9e0;
+        padding: 8px 6px;
+        font-weight: bold;
+        font-size: 10px;
+        color: #1a3c5e;
+        text-align: center;
+        vertical-align: middle;
+      }
+      table.s1 thead th:first-child,
+      table.s1 thead th:nth-child(2) {
+        text-align: left;
+      }
+      table.s1 tbody td {
+        border: 1px solid #d0d8e0;
+        padding: 7px 6px;
+        text-align: center;
+        vertical-align: middle;
+      }
+      table.s1 tbody td:first-child,
+      table.s1 tbody td:nth-child(2) {
+        text-align: left;
+      }
+      table.s1 tbody tr:nth-child(even) td {
+        background: #f4f8fc;
+      }
+      table.s1 tbody tr:hover td {
+        background: #eaf2fb;
+      }
+      .chk-green {
+        color: #2e7d32;
+        font-size: 15px;
+      }
+      .chk-orange {
+        color: #e65100;
+        font-size: 15px;
+      }
+      .chk-red {
+        color: #c62828;
+        font-size: 15px;
+      }
+      .section2-intro {
+        font-size: 12px;
+        color: #444;
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+      .flag-num-heading {
+        font-size: 13px;
+        font-weight: bold;
+        color: #2b87a8;
+        margin: 24px 0 8px;
+      }
+      .flag-num-heading:first-child {
+        margin-top: 0;
+      }
+      table.fdt {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      table.fdt td {
+        border: 1px solid #c0d8e8;
+        padding: 8px 12px;
+        vertical-align: top;
+        line-height: 1.5;
+      }
+      table.fdt tr:nth-child(odd) td.lbl {
+        background: #c8dcea;
+      }
+      table.fdt tr:nth-child(even) td.lbl {
+        background: #d8eaf4;
+      }
+      table.fdt td.lbl {
+        font-weight: bold;
+        color: #1a3c5e;
+        width: 175px;
+        white-space: nowrap;
+      }
+      table.fdt tr:nth-child(odd) td.val {
+        background: #f2f8fc;
+      }
+      table.fdt tr:nth-child(even) td.val {
+        background: #ffffff;
+      }
+      table.fdt tr.waiver td.lbl {
+        background: #f0cece !important;
+        color: #6b1a1a;
+      }
+      table.fdt tr.waiver td.val {
+        background: #fdf0f0 !important;
+      }
+      .no-flag {
+        color: #555;
+        font-size: 13px;
+        padding: 10px 0;
+      }
+      .loading {
+        color: #888;
+        font-size: 13px;
+        padding: 16px 0;
+      }
+      .error-msg {
+        color: #c62828;
+        background: #fdf0f0;
+        border: 1px solid #f0cece;
+        border-radius: 4px;
+        padding: 12px 16px;
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  </head>
+  <body>
+    <div style="text-align: right; margin-bottom: 10px">
+      <button
+        id="downloadBtn"
+        onclick="downloadPDF('reportContent')"
+        style="
+          padding: 8px 15px;
+          background: #2b7da3;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        Download PDF
+      </button>
+    </div>
+
+    <div id="reportContent">
+      <div style="margin-bottom: 24px">
+        <h2
+          id="main-title-heading"
+          style="
+            color: #2b5d7d;
+            letter-spacing: 1px;
+            text-align: center;
+            font-size: 18p x;
+          "
+        >
+          ORGANISATION COMPLIANCE REPORT CARD
+        </h2>
+        <h3
+          style="color: #2b7da3; margin-top: -5px; text-align: center"
+          id="org-name-heading"
+        >
+          Organisation: —
+        </h3>
+        <p
+          style="
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+          "
+        >
+          AML / KYC Screening Summary
+        </p>
+        <p style="text-align: center; font-size: 12px; color: #555">
+          Generated: <span id="report-date-top"></span>
+        </p>
+        <hr
+          style="
+            border: 0;
+            border-top: 2px solid #2b7da3;
+            width: 90%;
+            margin: 15px auto;
+          "
+        />
+        <p
+          style="
+            font-size: 11px;
+            color: #888;
+            font-style: italic;
+            text-align: center;
+          "
+        >
+          Source: Acuity Online Compliance System
+        </p>
+        <p
+          style="
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 5px;
+            text-align: center;
+          "
+        >
+          Data retrieved via IPPF UN System Integration
+        </p>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-num" id="sum-total" style="color: #2b7da3">—</div>
+          <div class="summary-label">Total Checks Performed</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num" id="sum-flags" style="color: #c62828">—</div>
+          <div class="summary-label">Flags / Matches Found</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num" id="sum-ind" style="color: #e65100">—</div>
+          <div class="summary-label">Individuals Flagged</div>
+        </div>
+      </div>
+
+      <p id="loading-msg" class="loading">Loading compliance data…</p>
+
+      <div id="main-content" style="display: none">
+        <h3>Section 1: Compliance Screening Summary</h3>
+        <hr class="rule" />
+        <div class="tbl-wrap">
+          <table class="s1">
+            <thead id="tableHeader"></thead>
+            <tbody id="complianceTableBody"></tbody>
+          </table>
+        </div>
+        <p style="font-size: 11px; margin-bottom: 20px">
+        <b>Legend:</b>
+        <span style="color: #2e7d32">✔ Clear</span> &nbsp;|&nbsp;
+        <span style="color: #e65100">✔ Auto Cleared (PEP / Enforcement)</span> &nbsp;|&nbsp;
+        <span style="color: #e65100">✔ Waiver Approved</span> &nbsp;|&nbsp;
+        <span style="color: #c62828">✖ Waiver Required / Rejected</span>
+      </p>
+        <h3>Section 2: Flag &amp; Match Details</h3>
+        <hr class="rule" />
+        <p class="section2-intro">
+          This section provides detailed information for each individual or
+          entity for which a flag or possible match was identified during the
+          Acuity compliance screening. These entries require review and a risk
+          decision before onboarding or continued engagement.
+        </p>
+        <div id="flagSection"></div>
+
+        <div style="font-family: Arial, sans-serif; margin-top: 30px">
+          <h3 style="color: #2b5d7d">
+            Section 3: Data Source &amp; Disclaimer
+          </h3>
+          <h4 style="color: #2b7da3; margin-bottom: 5px">Data Source</h4>
+          <p style="font-size: 12px; color: #444; text-align: justify">
+            All compliance screening data presented in this report has been
+            retrieved from the Acuity Online Compliance System via an automated
+            integration with the IPPF Unified Identification Number (UIN)
+            system. The data retrieval was completed on
+            <span id="report-date-s3"></span>.
+          </p>
+          <h4 style="color: #2b7da3; margin-top: 15px">Disclaimer</h4>
+          <ol
+            style="
+              font-size: 12px;
+              color: #444;
+              padding-left: 18px;
+              text-align: justify;
+            "
+          >
+            <li>
+              Acuity Online Compliance System is the primary source of all
+              screening results, flag descriptions, and match data included in
+              this report.
+            </li>
+            <li>
+              IPPF's Unified Identification Number (UIN) system functions solely
+              as a storage and display platform for the data received from
+              Acuity.
+            </li>
+            <li>
+              All flags and screening outcomes must be reviewed by an authorized
+              compliance officer before any risk decision is made.
+            </li>
+            <li>
+              This report is confidential and intended only for authorized
+              personnel within IPPF's compliance and governance functions.
+            </li>
+            <li>
+              Any decision taken based on the information in this report should
+              be supported by independent verification where necessary.
+            </li>
+            <li>
+              This report reflects the dataset available at the time of report
+              generation. As the source system is updated, this information may
+              change.
+            </li>
+            <li>
+              Acuity remains the authoritative system of record for all
+              underlying screening data.
+            </li>
+          </ol>
+          <hr
+            style="border: 0; border-top: 2px solid #2b7da3; margin-top: 20px"
+          />
+          <p style="font-size: 10px; color: #777; text-align: center">
+            Report generated: <span id="report-date-footer"></span> | Source:
+            Acuity Online Compliance System | Distributed via: IPPF UIN System
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const BASE = "https://links.hispindia.org/ippf_uin/api";
+
+      const riskNames = [
+        'Arms Trafficking & WMD',
+        'Terrorism',
+        'Money Laundering',
+        'Drug Trafficking',
+        'Fraud',
+        'Wanted Individuals',
+        'Global Sanction List',
+        'PEP',
+        'Enforcement'
+      ];
+
+      const DE_ROLE_MAP = {
+        'UkQI1dWzZOv': 'organisation',
+        'daG91uRV8pi': 'President',
+        'uT1NdSet4eo': 'Vice President',
+        'DMJOfwrOwo8': 'Secretary',
+        'fKFIKK33FRc': 'Treasurer',
+        'xCJOBTvagP9': 'Youth Member',
+        'RA5zVHd7pVO': 'Chief Executive Officer',
+        'glFVJpRaGWK': 'Director of Finance',
+        'YjmSPK8DMOZ': 'Director of HR',
+        'U4OSVfrlPxQ': 'Director of Programs',
+        'TfCXfVv6j2O': 'Bank Account',
+      };
+
+      const RISK_CODE_MAP = {
+        'Arms Trafficking & WMD': 'AT',
+        'Terrorism': 'TWIf',
+        'Money Laundering': 'ML',
+        'Drug Trafficking': 'DT',
+        'Fraud': 'FR',
+        'Wanted Individuals': 'GSL',
+        'Global Sanction List': 'GSL',
+        'PEP': 'PEP',
+        'Enforcement': 'EN',
+      };
+
+      const PROGRAM_STAGE_PDF = 'pHiRWkSg9Wx';
+
+      let orgName = null;
+      let pdfData = {};
+      let allEvents = [];
+
+      function formatDate(isoStr) {
+        if (!isoStr) return '—';
+        return new Date(isoStr).toLocaleString('en-GB', {
+          day: 'numeric', month: 'long', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', timeZone: 'UTC'
+        }) + ' UTC';
+      }
+
+      function getFlaggedCategories(resultText) {
+        if (!resultText || resultText.includes('No Records Found')) return [];
+        const lower = resultText.toLowerCase();
+        return riskNames.filter(cat => lower.includes(cat.toLowerCase()));
+      }
+
+      document.addEventListener("DOMContentLoaded", async function () {
+
+        const params = new URLSearchParams(window.parent.location.hash.split('?')[1]);
+        const teiUId = params.get('affiliate');
+
+        if (!teiUId) {
+          document.getElementById("loading-msg").innerHTML =
+            `<div class="error-msg">Missing TEI ID</div>`;
+          return;
+        }
+
+        const teRes = await fetch(`${BASE}/tracker/trackedEntities.json?paging=false&trackedEntity=${teiUId}&fields=trackedEntity,attributes[attribute,value],enrollments[enrollment,program,events[event,programStage,occurredAt,dataValues[dataElement,value]]]`);
+        const teData = await teRes.json();
+
+        const trackedEntity = teData.trackedEntities[0];
+
+        trackedEntity?.enrollments?.forEach(en => {
+          en.events?.forEach(event => {
+            const eventObj = {
+              eventId: event.event,
+              programStage: event.programStage,
+              occurredAt: event.occurredAt,
+              data: {}
+            };
+            event.dataValues.forEach(dv => {
+              eventObj.data[dv.dataElement] = dv.value;
+            });
+            allEvents.push(eventObj);
+          });
+        });
+
+        const pdfEvent = allEvents.find(e => e.programStage === PROGRAM_STAGE_PDF);
+        pdfData = pdfEvent?.data || {};
+
+        const dataStoreRes = await fetch(`${BASE}/dataStore/accuityResponse/${teiUId}`);
+        const allRecords = await dataStoreRes.json();
+        console.log("Total Records:", allRecords.length);
+
+        const personMap = new Map();
+
+        for (const rec of allRecords) {
+          const deUID = rec.id?.split('_')[0];
+          const designation = DE_ROLE_MAP[deUID];
+          const finalDesignation = designation || "Unknown";
+          const name = rec[deUID] || rec.value || "—";
+
+          const resultText = rec[rec.id];
+
+          if (designation === 'organisation') {
+            orgName = name;
+          }
+          const key = `${rec.event_uid}_${deUID}_${rec.id}`;
+
+          if (!personMap.has(key)) {
+            personMap.set(key, {
+              name,
+              designation,
+              memberId: deUID,
+              date: formatDate(rec.date),
+              flaggedCategories: new Set(),
+              screeningResult: resultText || 'No Records Found'
+            });
+          }
+
+          const flagged = getFlaggedCategories(resultText);
+          flagged.forEach(cat => {
+            personMap.get(key).flaggedCategories.add(cat);
+          });
+        }
+
+        console.log("After Mapping:", personMap.size);
+        if (orgName) {
+          document.getElementById("org-name-heading").textContent = `Organisation: ${orgName}`;
+        }
+
+        const dataElementsRes = await fetch(`${BASE}/dataElements.json?paging=false&filter=code:!null&fields=id,code`);
+        const deData = await dataElementsRes.json();
+
+        const dataElementCodeMap = {};
+        deData.dataElements.forEach(de => {
+          dataElementCodeMap[de.code] = de.id;
+        });
+
+        const persons = [...personMap.values()];
+
+        let totalFlags = 0;
+        let individualOut = 0;
+        let rowsHtml = '';
+        const flagDetails = [];
+
+        for (const p of persons) {
+          const uniqueFlags = [...p.flaggedCategories];
+          if (uniqueFlags.length > 0) individualOut++;
+
+          const cells = riskNames.map(cat => {
+
+          const code = RISK_CODE_MAP[cat];
+          const memberId = p.memberId;
+
+          const statusKey = `${code}-Status-${memberId}`;
+          const statusDe = dataElementCodeMap[statusKey];
+
+          const value = statusDe ? pdfData[statusDe] : null;
+
+          const isFlagged = p.flaggedCategories.has(cat);
+
+          if (!isFlagged) {
+            return `<td><span class="chk-green">✔</span></td>`;
+          }
+
+          totalFlags++;
+
+          if (cat === 'PEP' || cat === 'Enforcement') {
+            return `<td><span class="chk-orange">✔</span></td>`;
+          }
+
+          if (value === "Approve") {
+            return `<td><span class="chk-green">✔</span></td>`;
+          }
+
+          if (value === "Reject") {
+            return `<td><span class="chk-orange">✖</span></td>`;
+          }
+
+          return `<td><span class="chk-red">✖</span></td>`;
+
+        }).join('');
+
+          flagDetails.push({
+            name: p.name,
+            designation: p.designation,
+            flaggedCategories: uniqueFlags,
+            screeningResult: p.screeningResult,
+            date: p.date
+          });
+
+          rowsHtml += `<tr><td>${p.name}</td><td>${p.designation}</td>${cells}</tr>`;
+        }
+
+        document.getElementById('complianceTableBody').innerHTML =
+          rowsHtml || '<tr><td colspan="10" style="color:#888;text-align:center;padding:20px;">No data returned.</td></tr>';
+
+        document.getElementById('sum-total').textContent = persons.length;
+        document.getElementById('sum-flags').textContent = totalFlags;
+        document.getElementById('sum-ind').textContent = individualOut;
+
+        document.getElementById('flagSection').innerHTML = flagDetails.length
+          ? flagDetails.map((f, i) => `
+            <p class="flag-num-heading">Individual ${i + 1} of ${flagDetails.length}</p>
+            <table class="fdt">
+              <tr><td class="lbl">Organisation</td><td class="val">${orgName || '—'}</td></tr>
+              <tr><td class="lbl">Individual / Entity</td><td class="val">${f.name}</td></tr>
+              <tr><td class="lbl">Designation</td><td class="val">${f.designation || '-'}</td></tr>
+              <tr><td class="lbl">Date of Check</td><td class="val">${f.date}</td></tr>
+              <tr><td class="lbl">Source</td><td class="val">Acuity Online Compliance System</td></tr>
+              <tr><td class="lbl">Screening Result</td><td class="val">${f.screeningResult || '-'}</td></tr>
+            </table>
+          `).join('')
+          : '<p class="no-flag">No flags found. All individuals are clear.</p>';
+
+        document.getElementById('loading-msg').style.display = 'none';
+        document.getElementById('main-content').style.display = '';
+});
+    </script>
+
+    <script>
+      async function generateAndDownloadPDF(content) {
+        const orgName =
+          document.getElementById("org-name-heading")?.textContent;
+        const fileName = `${orgName.replace(/[^a-zA-Z0-9]/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+        const blob = await html2pdf()
+          .set({
+            margin: [10, 10, 10, 10],
+            filename: fileName,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
+            pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+          })
+          .from(content)
+          .outputPdf("blob");
+
+        const url = URL.createObjectURL(blob);
+        Object.assign(document.createElement("a"), {
+          href: url,
+          download: fileName,
+        }).click();
+        URL.revokeObjectURL(url);
+
+        return { blob, fileName };
+      }
+
+      async function downloadPDF() {
+        const content = document.getElementById("reportContent");
+        const btn = document.getElementById("downloadBtn");
+        const originalLabel = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Generating PDF…";
+
+        try {
+          const eventUid = storedValue.event;
+          console.log('eventUId', eventUid);
+          const existingFileResource = storedValue[FILE_RESOURCE_DE];
+          console.log("-----", existingFileResource);
+          if (existingFileResource) {
+            console.log("File Resource already Exist", existingFileResource);
+            const { blob, fileName } = await generateAndDownloadPDF(content);
+            btn.textContent = "Downloaded";
+            setTimeout(() => {
+              btn.disable = false;
+              btn.textContent = originalLabel;
+            }, 2000);
+            return;
+          }
+
+          btn.textContent = "Generating PDF…";
+          const { blob, fileName } = await generateAndDownloadPDF(content);
+
+          btn.textContent = "Uploading to DHIS2...";
+          const formData = new FormData();
+          formData.append("file", blob, fileName);
+          formData.append("domain", 'DATA_VALUE');
+
+
+          const uploadRes = await fetch(`${BASE}/fileResources`, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!uploadRes.ok)
+            throw new Error(`Upload failed: ${uploadRes.status}`);
+
+          const uploadData = await uploadRes.json();
+        
+          const fileResourceId = uploadData?.response?.fileResource?.id
+          console.log("file Resource Id:",fileResourceId);
+          if (!fileResourceId) throw new Error('No fileResource ID returned.');
+
+          btn.disabled = true;
+          textContent = 'Saving reference…';
+
+          const patchRes = await fetch(`${BASE}/tracker?async=false`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              events: [{
+                orgUnit: storedValue.orgUnit,
+                program: storedValue.program,
+                programStage: storedValue.programStage,
+                enrollment: storedValue.enrollment,
+                occurredAt: storedValue.occurredAt,
+                event: eventUid,             
+                dataValues: [{
+                  dataElement: FILE_RESOURCE_DE,  
+                  value: fileResourceId          
+                }]
+              }]
+            })
+          });
+
+      if (!patchRes.ok) throw new Error(`Failed to save: ${patchRes.status}`);
+
+      console.log('File resource saved successfully');
+      btn.textContent = '✔ Done!';
+
+      setTimeout(() => { btn.disabled = false; btn.textContent = originalLabel; }, 3000);
+        } catch (err) {
+          console.error("ERROR:", err);
+          alert(`Error: ${err.message}`);
+          btn.disabled = false;
+          btn.textContent = originalLabel;
+        }
+      }
+    </script>
+  </body>
+</html>
