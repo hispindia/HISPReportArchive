@@ -265,7 +265,7 @@
         </div>
         <div class="summary-card">
           <div class="summary-num" id="sum-ind" style="color: #e65100">—</div>
-          <div class="summary-label">Individuals Flagged</div>
+          <div class="summary-label">Flags Waived Off</div>
         </div>
       </div>
 
@@ -408,13 +408,21 @@
       let pdfData = {};
       let allEvents = [];
 
-      function formatDate(isoStr) {
+       function formatDate(isoStr) {
         if (!isoStr) return '—';
-        return new Date(isoStr).toLocaleString('en-GB', {
-          day: 'numeric', month: 'long', year: 'numeric',
-          hour: '2-digit', minute: '2-digit', timeZone: 'UTC'
-        }) + ' UTC';
+
+        const date = new Date(isoStr);
+
+        const day = date.getUTCDate();
+        const month = date.toLocaleString('en-GB', { month: 'long', timeZone: 'UTC' });
+        const year = date.getUTCFullYear();
+
+        const hours = String(date.getUTCHours()).padStart(2, '0');
+        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+
+        return `${day} ${month} ${year} at ${hours}:${minutes} UTC`;
       }
+
 
       function getFlaggedCategories(resultText) {
         if (!resultText || resultText.includes('No Records Found')) return [];
@@ -423,7 +431,11 @@
       }
 
       document.addEventListener("DOMContentLoaded", async function () {
+        const currentDate = formatDate(new Date().toISOString());
 
+        document.getElementById("report-date-top").textContent = currentDate;
+        document.getElementById("report-date-s3").textContent = currentDate;
+        document.getElementById("report-date-footer").textContent = currentDate;
         const params = new URLSearchParams(window.parent.location.hash.split('?')[1]);
         const teiUId = params.get('affiliate');
 
@@ -464,10 +476,13 @@
 
         for (const rec of allRecords) {
           const deUID = rec.id?.split('_')[0];
-          const designation = DE_ROLE_MAP[deUID];
+          const designation = DE_ROLE_MAP[deUID] || '--';
           const finalDesignation = designation || "Unknown";
-          const name = rec[deUID] || rec.value || "—";
+          const name = rec[deUID] || rec.value;
 
+          if (!name || name.trim() === "" || name === "—") {
+            continue;
+          }
           const resultText = rec[rec.id];
 
           if (designation === 'organisation') {
@@ -480,7 +495,7 @@
               name,
               designation,
               memberId: deUID,
-              date: formatDate(rec.date),
+              date: formatDate(new Date().toISOString()),
               flaggedCategories: new Set(),
               screeningResult: resultText || 'No Records Found'
             });
@@ -550,8 +565,6 @@
 
         }).join('');
 
-          if( !p.name && !p.designation) continue;
-          
           flagDetails.push({
             name: p.name,
             designation: p.designation,
@@ -559,9 +572,8 @@
             screeningResult: p.screeningResult,
             date: p.date
           });
-          const displayName = p.name || '';
-          const displayDesignation = p.designation || '';
-          rowsHtml += `<tr><td>${p.displayName}</td><td>${p.displayDesignation}</td>${cells}</tr>`;
+
+          rowsHtml += `<tr><td>${p.name}</td><td>${p.designation}</td>${cells}</tr>`;
         }
 
         const headerHtml = `<tr>${['Individual / Entity Name', 'Designation', ...riskNames].map(h => `<th>${h}</th>`).join('')}</tr>`;
@@ -573,7 +585,6 @@
         document.getElementById('sum-total').textContent = persons.length;
         document.getElementById('sum-flags').textContent = totalFlags;
         document.getElementById('sum-ind').textContent = individualOut;
-
         document.getElementById('flagSection').innerHTML = flagDetails.length
           ? flagDetails.map((f, i) => `
             <p class="flag-num-heading">Individual ${i + 1} of ${flagDetails.length}</p>
@@ -620,7 +631,7 @@
 
         return { blob, fileName };
       }
-
+     
       async function downloadPDF() {
         const content = document.getElementById("reportContent");
         const btn = document.getElementById("downloadBtn");
