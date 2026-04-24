@@ -178,7 +178,7 @@
     <div style="text-align: right; margin-bottom: 10px">
       <button
         id="downloadBtn"
-        onclick="downloadPDF('reportContent')"
+        onclick="downloadPDF()"
         style="
           padding: 8px 15px;
           background: #2b7da3;
@@ -371,13 +371,13 @@
         'Drug Trafficking',
         'Fraud',
         'Wanted Individuals',
-        'Global Sanction List',
+        'Wanted Individuals/Global Sanction List/Associated Entity',
         'PEP',
         'Enforcement'
       ];
 
       const DE_ROLE_MAP = {
-        'UkQI1dWzZOv': 'organisation',
+        'UkQI1dWzZOv': 'Organisation',
         'daG91uRV8pi': 'President',
         'uT1NdSet4eo': 'Vice President',
         'DMJOfwrOwo8': 'Secretary',
@@ -388,6 +388,8 @@
         'YjmSPK8DMOZ': 'Director of HR',
         'U4OSVfrlPxQ': 'Director of Programs',
         'TfCXfVv6j2O': 'Bank Account',
+        'cvI0Tq2uPjC': 'Bank',
+        'CkulnRpyanv': 'Bank'
       };
 
       const RISK_CODE_MAP = {
@@ -400,6 +402,8 @@
         'Global Sanction List': 'GSL',
         'PEP': 'PEP',
         'Enforcement': 'EN',
+        "Sanction List": 'SL',
+        "Associated Entity": 'AE'
       };
 
       const PROGRAM_STAGE_PDF = 'pHiRWkSg9Wx';
@@ -427,7 +431,16 @@
       function getFlaggedCategories(resultText) {
         if (!resultText || resultText.includes('No Records Found')) return [];
         const lower = resultText.toLowerCase();
-        return riskNames.filter(cat => lower.includes(`.${cat.toLowerCase()}`));
+        return riskNames.filter(cat => {
+          if (cat === 'Wanted Individuals/Global Sanction List/Associated Entity') {
+            return lower.includes('.wanted individuals') ||
+                  lower.includes('.sanction list') ||
+                  lower.includes('.global sanction list') ||
+                  lower.includes('.associated entity')
+          }
+        
+        return lower.includes(`.${cat.toLowerCase()}`)
+        });
       }
 
       document.addEventListener("DOMContentLoaded", async function () {
@@ -475,6 +488,7 @@
         const personMap = new Map();
 
         for (const rec of allRecords) {
+          debugger;
           const deUID = rec.id?.split('_')[0];
           const designation = DE_ROLE_MAP[deUID] || '--';
           const finalDesignation = designation || "Unknown";
@@ -577,7 +591,12 @@
           rowsHtml += `<tr><td>${p.name}</td><td>${p.designation}</td>${cells}</tr>`;
         }
 
-        const headerHtml = `<tr>${['Individual / Entity Name', 'Designation', ...riskNames].map(h => `<th>${h}</th>`).join('')}</tr>`;
+        const headerHtml = `<tr>${['Individual / Entity Name', 'Designation', ...riskNames].map(h => {
+          if (h === 'Wanted Individuals/Global Sanction List/Associated Entity') {
+            return `<th style="min-width: 160px;">${h.replace(/\//g, '/ ')}</th>`; //for space
+          }
+          return `<th>${h}</th>`;
+        }).join('')}</tr>`;
         document.getElementById('tableHeader').innerHTML = headerHtml;
 
         document.getElementById('complianceTableBody').innerHTML =
@@ -633,87 +652,96 @@
         return { blob, fileName };
       }
      
-      async function downloadPDF() {
-        const content = document.getElementById("reportContent");
-        const btn = document.getElementById("downloadBtn");
-        const originalLabel = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = "Generating PDF…";
+      // async function downloadPDF() {
+        // const content = document.getElementById("reportContent");
+        // const btn = document.getElementById("downloadBtn");
+        // const originalLabel = btn.textContent;
+        // btn.disabled = true;
+        // btn.textContent = "Generating PDF…";
 
-        try {
-          const eventUid = storedValue.event;
-          console.log('eventUId', eventUid);
-          const existingFileResource = storedValue[FILE_RESOURCE_DE];
-          console.log("-----", existingFileResource);
-          if (existingFileResource) {
-            console.log("File Resource already Exist", existingFileResource);
-            const { blob, fileName } = await generateAndDownloadPDF(content);
-            btn.textContent = "Downloaded";
-            setTimeout(() => {
-              btn.disable = false;
-              btn.textContent = originalLabel;
-            }, 2000);
-            return;
-          }
+        // try {
+        //   const eventUid = storedValue.event;
+        //   console.log('eventUId', eventUid);
+        //   const existingFileResource = storedValue[FILE_RESOURCE_DE];
+        //   console.log("-----", existingFileResource);
+        //   if (existingFileResource) {
+        //     console.log("File Resource already Exist", existingFileResource);
+        //     const { blob, fileName } = await generateAndDownloadPDF(content);
+        //     btn.textContent = "Downloaded";
+        //     setTimeout(() => {
+        //       btn.disable = false;
+        //       btn.textContent = originalLabel;
+        //     }, 2000);
+        //     return;
+        //   }
 
-          btn.textContent = "Generating PDF…";
-          const { blob, fileName } = await generateAndDownloadPDF(content);
+      //     btn.textContent = "Generating PDF…";
+      //     const { blob, fileName } = await generateAndDownloadPDF(content);
 
-          btn.textContent = "Uploading to DHIS2...";
-          const formData = new FormData();
-          formData.append("file", blob, fileName);
-          formData.append("domain", 'DATA_VALUE');
+      //     btn.textContent = "Uploading to DHIS2...";
+      //     const formData = new FormData();
+      //     formData.append("file", blob, fileName);
+      //     formData.append("domain", 'DATA_VALUE');
 
 
-          const uploadRes = await fetch(`${BASE}/fileResources`, {
-            method: "POST",
-            body: formData,
-          });
+      //     const uploadRes = await fetch(`${BASE}/fileResources`, {
+      //       method: "POST",
+      //       body: formData,
+      //     });
 
-          if (!uploadRes.ok)
-            throw new Error(`Upload failed: ${uploadRes.status}`);
+      //     if (!uploadRes.ok)
+      //       throw new Error(`Upload failed: ${uploadRes.status}`);
 
-          const uploadData = await uploadRes.json();
+      //     const uploadData = await uploadRes.json();
         
-          const fileResourceId = uploadData?.response?.fileResource?.id
-          console.log("file Resource Id:",fileResourceId);
-          if (!fileResourceId) throw new Error('No fileResource ID returned.');
+      //     const fileResourceId = uploadData?.response?.fileResource?.id
+      //     console.log("file Resource Id:",fileResourceId);
+      //     if (!fileResourceId) throw new Error('No fileResource ID returned.');
 
-          btn.disabled = true;
-          textContent = 'Saving reference…';
+      //     btn.disabled = true;
+      //     textContent = 'Saving reference…';
 
-          const patchRes = await fetch(`${BASE}/tracker?async=false`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              events: [{
-                orgUnit: storedValue.orgUnit,
-                program: storedValue.program,
-                programStage: storedValue.programStage,
-                enrollment: storedValue.enrollment,
-                occurredAt: storedValue.occurredAt,
-                event: eventUid,             
-                dataValues: [{
-                  dataElement: FILE_RESOURCE_DE,  
-                  value: fileResourceId          
-                }]
-              }]
-            })
-          });
+      //     const patchRes = await fetch(`${BASE}/tracker?async=false`, {
+      //       method: 'POST',
+      //       headers: { 'Content-Type': 'application/json' },
+      //       body: JSON.stringify({
+      //         events: [{
+      //           orgUnit: storedValue.orgUnit,
+      //           program: storedValue.program,
+      //           programStage: storedValue.programStage,
+      //           enrollment: storedValue.enrollment,
+      //           occurredAt: storedValue.occurredAt,
+      //           event: eventUid,             
+      //           dataValues: [{
+      //             dataElement: FILE_RESOURCE_DE,  
+      //             value: fileResourceId          
+      //           }]
+      //         }]
+      //       })
+      //     });
 
-      if (!patchRes.ok) throw new Error(`Failed to save: ${patchRes.status}`);
+      // if (!patchRes.ok) throw new Error(`Failed to save: ${patchRes.status}`);
 
-      console.log('File resource saved successfully');
-      btn.textContent = '✔ Done!';
+      // console.log('File resource saved successfully');
+      // btn.textContent = '✔ Done!';
 
-      setTimeout(() => { btn.disabled = false; btn.textContent = originalLabel; }, 3000);
-        } catch (err) {
-          console.error("ERROR:", err);
-          alert(`Error: ${err.message}`);
-          btn.disabled = false;
-          btn.textContent = originalLabel;
-        }
+      // setTimeout(() => { btn.disabled = false; btn.textContent = originalLabel; }, 3000);
+      //   } catch (err) {
+      //     console.error("ERROR:", err);
+      //     alert(`Error: ${err.message}`);
+      //     btn.disabled = false;
+      //     btn.textContent = originalLabel;
+      //   }
+      
+     async function downloadPDF() {
+      const content = document.getElementById("reportContent");
+      if (!content) {
+        alert("No content found");
+        return;
       }
+
+      await generateAndDownloadPDF(content);
+    }
     </script>
   </body>
 </html>
