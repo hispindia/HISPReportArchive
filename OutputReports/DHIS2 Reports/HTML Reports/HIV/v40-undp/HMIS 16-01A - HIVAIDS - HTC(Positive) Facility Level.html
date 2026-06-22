@@ -1,0 +1,330 @@
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+</head>
+
+<body>
+
+    <a id="dlink" style="display:none;"></a>
+
+    <div style="width: 40%; margin-left:30%;">
+
+        <div id="nepali-format">
+            <table class="table table-borderless table-striped" style="text-align: center;">
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td style="font-size: 15px;padding-top: 15px;">Select Year :</td>
+                    <td style="width: 60%;"><select class="form-control" id="select-year"
+                            onchange="getMonths(this.value)"></select>
+                </tr>
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td style="font-size: 15px;padding-top: 15px;">Select Month :</td>
+                    <td style="width: 60%;"><select class="form-control" id="select-month"></select>
+                </tr>
+
+            </table>
+
+        </div>
+        <div>
+            <table class="table">
+                <tr style="border: 1px solid #DDDDDD;">
+                    <td><button onClick="submitValues()" class="btn" id="tap">Submit</button></td>
+                    <td style="text-align: right">
+                        <img src="https://img.icons8.com/color/35/000000/ms-excel.png"
+                            onmouseover="this.style.cursor='pointer'"
+                            onClick="tableToExcel('table-first', 'HMIS 16-01A - HIVAIDS - HTC(Positive)', 'HMIS 16-01A - HIVAIDS - HTC(Positive)')"
+                            alt="xls">
+                        <img src="https://img.icons8.com/ultraviolet/35/000000/print.png" alt="print"
+                            onmouseover="this.style.cursor='pointer'" onclick="printContent('#printData')">
+                        <!-- <span id="csv-download">
+                            <img src="https://img.icons8.com/dusk/35/000000/export-csv.png" alt="print"
+                                onmouseover="this.style.cursor='pointer'" onclick="downloadCSV()">
+                        </span> -->
+                    </td>
+                </tr>
+                <tr id="loader" style="display:none">
+                    <td>
+                        <h2>Loading...</h2>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+    <div id="print-data">
+        <table class="table table-bordered" id="table-first" style="width:98%;" align="center">
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        //DHIS2
+        selectedOU = dhis2.report.organisationUnit;
+
+        var startWeek, endWeek, nepaliDate;
+
+        var deHead = [
+            'यौनकर्मी',
+            'सुइद्वारा लागू पदार्थ प्रयोग गर्नेहरु',
+            'पुरूष समलिंगी र तेस्रोलिंगी',
+            'रगत वा अन्य अंग लिनेहरू',
+            'यौनकर्मीका  ग्राहकहरु',
+            'आप्रवासीहरू वा रोजगारीका लागि विदेशिनेहरु',
+            'आप्रवासीहरू वा रोजगारका लागि विदेश जानेहरूको जीवन साथी',
+            'जेलका कैदी बन्दीहरु',
+            'अन्य',
+            'उमेर समूह'
+        ]
+        var deGender = [
+            'म',
+            'पु',
+            'योअ'
+        ]
+        var tableFirstNep = ` <tr>
+                    <td colspan="32"
+                        style="text-align:center; background: rgb(39, 102, 150);font-size:20px; color:white">
+                        १६. एचआइभी कार्यक्रम - HIV Testing and Counselling
+                    </td>
+                </tr>
+
+                <tr style="text-align:left; color:white">
+                    <td colspan="8" style="background: rgb(39, 102, 150);">
+                        एआरटी केन्द्रको नाम: &nbsp;<span id="ouName"></span>
+                    </td>
+                    <td colspan="8" style="background: rgb(39, 102, 150);">
+                        रिपोटिंग महिना: <span id="nepali-date"></span>
+                    </td>
+                    <td colspan="8" style="background: rgb(39, 102, 150);">
+                        मिति देखी: &nbsp;<span id="periodFrom"></span>
+                    </td>
+                    <td colspan="8" style="background: rgb(39, 102, 150);">
+                        मिति सम्म: &nbsp;<span id="periodTo"></span>
+                    </td>
+                </tr>
+
+                <tr style="background:#f2f2f2">
+                    <td rowspan="4"> नतिजा सहित परामर्श र परिक्षण </td>
+                    <td rowspan="2"> सूचक</td>`
+        deHead.forEach(de => tableFirstNep += `<td colspan='3' >${de}</td>`)
+        tableFirstNep += '</tr><tr style="background:#f2f2f2">'
+        deHead.forEach((de, index) => {
+            if (index == 9) tableFirstNep += `<td >&lt;15 वर्ष</td><td >15-49 वर्ष</td><td >50+ वर्ष</td>`;
+            else deGender.forEach(gender => tableFirstNep += `<td >${gender}</td>`)
+        })
+        tableFirstNep += '</tr><tr style="background:#f2f2f2">'
+        for (let i = 1; i <= 31; i++) tableFirstNep += `<td >${i}</td>`
+        tableFirstNep += '</tr>'
+
+        var year = "";
+        var dates = [
+            ["2076", "1", "Baisakh", "2019-04-14", "2019-05-14"],
+            ["2076", "2", "Jestha", "2019-05-15", "2019-06-15"],
+            ["2076", "3", "Asadh", "2019-06-16", "2019-07-16"],
+            ["2076", "4", "Shrawan", "2019-07-17", "2019-08-17"],
+            ["2076", "5", "Bharda ", "2019-08-18", "2019-09-17"],
+            ["2076", "6", "Ashwin", "2019-09-18", "2019-10-17"],
+            ["2076", "7", "Kartik", "2019-10-18", "2019-11-16"],
+            ["2076", "8", "Mansir", "2019-11-17", "2019-12-16"],
+            ["2076", "9", "Poush", "2019-12-17", "2020-01-14"],
+            ["2076", "10", "Magh", "2020-01-15", "2020-02-12"],
+            ["2076", "11", "Falgun", "2020-02-13", "2020-03-13"],
+            ["2076", "12", "Chaitra", "2020-03-14", "2020-04-12"],
+            ["2077", "1", "Baisakh", "2020-04-13", "2020-05-13"],
+            ["2077", "2", "Jestha", "2020-05-14", "2020-06-14"],
+            ["2077", "3", "Asadh", "2020-06-15", "2020-07-15"],
+            ["2077", "4", "Shrawan", "2020-07-16", "2020-08-16"],
+            ["2077", "5", "Bharda", "2020-08-17", "2020-09-16"],
+            ["2077", "6", "Ashwin", "2020-09-17", "2020-10-16"],
+            ["2077", "7", "Kartik", "2020-10-17", "2020-11-15"],
+            ["2077", "8", "Mansir", "2020-11-16", "2020-12-15"],
+            ["2077", "9", "Poush", "2020-12-16", "2021-01-13"],
+            ["2077", "10", "Magh", "2021-01-14", "2021-02-12"],
+            ["2077", "11", "Falgun", "2021-02-13", "2021-03-13"],
+            ["2077", "12", "Chaitra", "2021-03-14", "2021-04-13"],
+            ["2078", "1", "Baisakh", "2021-04-14", "2021-05-14"],
+            ["2078", "2", "Jestha", "2021-05-15", "2021-06-14"],
+            ["2078", "3", "Asar", "2021-06-15", "2021-07-15"],
+            ["2078", "4", "Shrawan", "2021-07-16", "2021-08-16"],
+            ["2078", "5", "Bhadra", "2021-08-17", "2021-09-16"],
+            ["2078", "6", "Ashwin", "2021-09-17", "2021-10-17"],
+            ["2078", "7", "Kartik", "2021-10-18", "2021-11-16"],
+            ["2078", "8", "Mansir", "2021-11-17", "2021-12-15"],
+            ["2078", "9", "Poush", "2021-12-16", "2022-01-14"],
+            ["2078", "10", "Magh", "2022-01-15", "2022-02-12"],
+            ["2078", "11", "Falgun", "2022-02-13", "2022-03-14"],
+            ["2078", "12", "Chaitra", "2022-03-15", "2022-04-13"],
+            ["2079", "1", "Baisakh", "2022-04-14", "2022-05-14"],
+            ["2079", "2", "Jestha", "2022-05-15", "2022-06-14"],
+            ["2079", "3", "Asar", "2022-06-15", "2022-07-16"],
+            ["2079", "4", "Shrawan", "2022-07-17", "2022-08-16"],
+            ["2079", "5", "Bhadra", "2022-08-17", "2022-09-16"],
+            ["2079", "6", "Ashwin", "2022-09-17", "2022-10-17"],
+            ["2079", "7", "Kartik", "2022-10-18", "2022-11-16"],
+            ["2079", "8", "Mansir", "2022-11-17", "2022-12-15"],
+            ["2079", "9", "Poush", "2022-12-16", "2023-01-14"],
+            ["2079", "10", "Magh", "2023-01-15", "2023-02-12"],
+            ["2079", "11", "Falgun", "2023-02-13", "2023-03-14"],
+            ["2079", "12", "Chaitra", "2023-03-15", "2023-04-13"],
+            ["2080", "1", "Baisakh", "2023-04-14", "2023-05-14"],
+            ["2080", "2", "Jestha", "2023-05-15", "2023-06-15"],
+            ["2080", "3", "Asar", "2023-06-16", "2023-07-16"],
+            ["2080", "4", "Shrawan", "2023-07-17", "2023-08-17"],
+            ["2080", "5", "Bhadra", "2023-08-18", "2023-09-17"],
+            ["2080", "6", "Ashwin", "2023-09-18", "2023-10-17"],
+            ["2080", "7", "Kartik", "2023-10-18", "2023-11-16"],
+            ["2080", "8", "Mansir", "2023-11-17", "2023-12-16"],
+            ["2080", "9", "Poush", "2023-12-17", "2024-01-14"],
+            ["2080", "10", "Magh", "2024-01-15", "2024-02-12"],
+            ["2080", "11", "Falgun", "2024-02-13", "2024-03-13"],
+            ["2080", "12", "Chaitra", "2024-03-14", "2024-04-12"]
+        ];
+
+        dates.forEach(date => {
+            if (year != date["0"]) {
+                document.querySelector("#select-year").innerHTML += '<option>' + date["0"] + '</option>';
+                year = date["0"]
+            }
+        });
+
+        dates.forEach(date => {
+            if (date["0"] == document.querySelector("#select-year").value) document.querySelector("#select-month").innerHTML += '<option>' + date["2"] + '</option>';
+
+        });
+
+        function getMonths(value) {
+            document.querySelector("#select-month").innerHTML = ''
+            dates.forEach(date => {
+                if (date["0"] == value) document.querySelector("#select-month").innerHTML += '<option>' + date["2"] + '</option>';
+            });
+        }
+
+        function submitValues() {
+            document.querySelector('#table-first > #tableBody').innerHTML = tableFirstNep;
+
+            dates.forEach(date => {
+                if (document.querySelector("#select-year").value == date["0"] && document.querySelector("#select-month").value == date["2"]) {
+                    startWeek = date["3"];
+                    endWeek = date["4"];
+                }
+            });
+
+            if (new Date(startWeek) > new Date(endWeek) || !startWeek || !endWeek) {
+                alert("Please select dates correctly");
+                return;
+            }
+
+            for (let i = 0; i < dates.length; i++) {
+
+                if (dates[i]["3"] == startWeek && dates[i]["4"] == endWeek) {
+                    nepaliDate = dates[i]["2"] + " " + dates[i]["0"];
+                    //CSVNepaliDate = dates[i]["1"] >= 10 ? dates[i]["1"] + "" + dates[i]["0"] : "0" + dates[i]["1"] + "" + dates[i]["0"];
+                    CSVNepaliDate = dates[i]["1"] >= 10 ? dates[i]["0"] + dates[i]["1"] : dates[i]["0"] + "0" + dates[i]["1"];
+                    document.querySelector("#nepali-date").innerHTML = nepaliDate
+                    checkValidDate = 0;
+                }
+
+            }
+
+            document.querySelector("#loader").style.display = "block";
+            document.querySelector("#print-data").style.display = "none";
+            setTimeout(() => getData(), 1000);
+        }
+
+        function getData() {
+
+            document.querySelector("#periodFrom").innerHTML = startWeek;
+            document.querySelector("#periodTo").innerHTML = endWeek;
+            document.querySelector("#ouName").innerHTML = selectedOU.name;
+
+            var getBetweenDates = function (startDate, endDate) {
+                var arr = [], lastDay, start, end;
+                var startYear = startDate.split("-");
+                var endYear = endDate.split("-");
+
+                for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+
+                    startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                    endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                    for (var j = startMonth; j <= endMonth; j++) {
+                        startDay = (i == startYear["0"] && startMonth == j) ? parseInt(startYear["2"]) : 1;
+                        lastDay = (endYear["0"] == i && endMonth == j) ? endYear["2"] : new Date(i, j, 0).getDate();
+
+                        for (var k = startDay; k <= lastDay; k++) {
+                            let checkMonth = j < 10 ? i + "0" + j : i + "" + j;
+                            let value = k < 10 ? checkMonth + "0" + k : checkMonth + "" + k;
+                            arr.push(value);
+                        }
+                    }
+                }
+
+                return arr;
+            }
+
+            //getting between dates
+            var swToEw = getBetweenDates(startWeek, endWeek);
+            var period = swToEw.reverse().join(";");
+
+            debugger;
+            var dataValues = {};
+            var deIds = [
+                'istD6a2abr9', 'kyEZ3KlbwWV', 'izqIE7V0T8J', 's4Rn23QDj6Q', 'blSWzRogZIf', 'SI53pBBGLbz', 'mVIVmIdEalv;jelzmJDZ7tQ', 'wrkFNPz99Wb;cfoq7H6o91p', 'LmsAODn5299;Tt4IaX4sNDs', 'vhfjHc4yfaC', 'GJBTAsU2eZv', 'FCVxw8Y67vW', 'wE2dFapVvGO', 'U8Kdem0J9Vl', 'RVuYuEhQYT0', 'coGCBSjeHhw', 'AMRrKho0MuR', 'ND00gjsSg7Q', 'r0CQdaybTgJ', 'wxFwkW86XfW', 'a0awstYrwB2', 'v1ScLE4SEtE', 'BNFpHu9Szjf', 'lCNJRezKE8X', 'xY3CLEGF9ZA;ngmzBPa46m1', 'YUBRAnaGENV;j5RTTUATmku', 'AAJJnwgyWGU;QzT2c0c2xBh', 'xdswYPvRBA3', 'IWuvQqNRp8B', 'RfMg9Zjy2cj'
+            ];
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: "../../analytics.json?dimension=ou:" + selectedOU.id + "&dimension=dx:" + deIds.join(';') + "&dimension=pe:" + period + "&displayProperty=NAME&outputIdScheme=UID",
+                success: function (res) {
+                    res.rows.forEach(row => {
+                        if (!dataValues[row[0]]) dataValues[row[0]] = Number(row[3]);
+                        else dataValues[row[0]] += Number(row[3])
+                    })
+                }
+            });
+            debugger;
+            var dataRows = `<tr><td>पोजिटिभ</td>`;
+            deIds.forEach((de, index) => {
+                if (de.includes(';')) {
+                    let ids = de.split(';');
+                    let val = '';
+                    val = dataValues[ids[0]] ? Number(dataValues[ids[0]]) + Number(val) : '';
+                    val = dataValues[ids[1]] ? Number(dataValues[ids[1]]) + Number(val) : '';
+                    dataRows += `<td>${val}</td>`;
+                }
+                else dataRows += `<td>${(dataValues[de] ? Number(dataValues[de]) : '')}</td>`;
+
+            })
+            dataRows += `</tr>`;
+
+            document.querySelector('#table-first > #tableBody').innerHTML += dataRows;
+            document.querySelector("#loader").style.display = "none";
+            document.querySelector("#print-data").style.display = "block";
+        }
+
+        var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,'
+                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+            return function (table, name, filename) {
+                if (!table.nodeType) table = document.getElementById(table)
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+                document.getElementById("dlink").href = uri + base64(format(template, ctx));
+                document.getElementById("dlink").download = filename + '-' + selectedOU.name + '.xls';
+                document.getElementById("dlink").click();
+            }
+        })()
+
+
+        function printContent(el) {
+            var restorePage = document.body.innerHTML;
+            var table = document.querySelector(el).innerHTML;
+            document.body.innerHTML = table;
+            window.print();
+            document.body.innerHTML = restorePage;
+        }
+    </script>
+</body>

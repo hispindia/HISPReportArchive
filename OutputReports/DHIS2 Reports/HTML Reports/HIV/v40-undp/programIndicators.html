@@ -1,0 +1,219 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'indicators', 'indicators.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-left" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+var programIndicators = [];
+var attributes = {};
+var stages = {};
+var dataElements = {};
+
+$.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/programIndicators.json?paging=false&fields=name,code,filter`,
+            data: JSON,
+            success: function (res, status) {
+                programIndicators = res.programIndicators;
+            }
+        });
+
+$.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/trackedEntityAttributes.json?paging`,
+            data: JSON,
+            success: function (res, status) {
+                res.trackedEntityAttributes.forEach(attr => attributes[attr.id] = attr.displayName);
+            }
+        });
+
+$.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/dataElements.json?paging`,
+            data: JSON,
+            success: function (res, status) {
+                res.dataElements.forEach(attr => dataElements[attr.id] = attr.displayName);
+            }
+        });
+
+$.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/programStages.json?paging`,
+            data: JSON,
+            success: function (res, status) {
+                res.programStages.forEach(attr => stages[attr.id] = attr.displayName);
+            }
+        });
+        var tbody = '';
+        programIndicators.forEach(indicator => {
+            if(indicator.filter) {
+
+            const matches = [...indicator.filter.matchAll(/\{([^}]+)\}/g)].map(m => m[1]);
+            var idValue = {};
+            
+            matches.forEach(match => {
+                if(attributes[match]) idValue[match] = attributes[match];
+                for(let id in stages) {
+                    if(match.includes(id)) idValue[id]= stages[id];
+                }
+                for(let id in dataElements) {
+                    if(match.includes(id)) idValue[id] = dataElements[id];
+                }
+            })
+            const replaced = indicator.filter.replace(/\{([^}]+)\}/g, (_, key) => {
+                    const parts = key.split('.');
+                    const vals = parts.map(part => idValue[part]).filter(v => v !== undefined);
+                    return `{${vals.join('')}}` // join them directly, or use "-" or " " if you want
+                })
+            tbody += `<tr>
+                <td>${indicator.name}</td>
+                <td>${indicator?.code}</td>
+                <td>${indicator.filter}</td>
+                <td>${replaced}</td>
+                </tr>`
+            }
+        })
+
+        document.getElementById('tableHead').innerHTML = `<tr>
+            <td>name</td>
+            <td>code</td>
+            <td>filter</td>
+            <td>idValue</td>
+            </tr>`;
+        document.getElementById('tableBody').innerHTML = tbody;
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>

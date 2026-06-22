@@ -1,0 +1,293 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+    }
+
+    /* Center the loader  */
+    #loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #34B4DB;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #printing {
+
+        text-align: center;
+    }
+</style>
+
+<a id="dlink" style="display:none;"></a>
+
+<button type="button" class="btn btn-success btn-sm" style="vertical-align: middle; cursor:pointer" id="btnExport"
+    onclick="tableToExcel('dataTable', 'HIV HTC', 'HIV HTC.xls')"><span
+        class="glyphicon glyphicon-download-alt" style="font-size: 15px;"></span>Download As Excel</button>
+<!-- 
+<button type="button" class="btn btn-primary btn-sm" style="vertical-align: middle;"
+    onclick="printContent('printing')"><span class="glyphicon glyphicon-print" style="font-size: 15px;"></span> &nbsp;
+    Print
+</button> -->
+
+<div style="width: 40%; margin-left:30%;">
+    <table class="table table-borderless table-striped">
+        <tr style="border: 1px solid #DDDDDD;">
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>Start Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input type="month" class="form-control" id="startDate">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 15px;padding-top: 15px;">
+                <strong>End Month : </strong>
+            </td>
+            <td style="width: 60%;">
+                <input type="month" class="form-control" id="endDate">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onClick="submitData()" class="btn btn-primary" id="tap">Submit</button></td>
+        </tr>
+    </table>
+</div>
+
+<div id="loader"></div>
+<div id="printing" class="animate-bottom">
+    <div id='state'>
+        <table border="1" id="dataTable" class="table  table-hover text-left" cellspacing="6" cellpadding="4"
+            style="border-collapse: collapse; visibility:hidden">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+
+    document.getElementById("loader").style.display = "none";
+
+    var selectedOU = dhis2.report.organisationUnit;
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    function submitData() {
+        document.getElementById("loader").style.display = "block";
+        document.getElementById("dataTable").style.visibility = "hidden";
+        document.getElementById("tableBody").innerHTML = "";
+
+        var startDate = document.getElementById("startDate").value;
+        var endDate = document.getElementById("endDate").value;
+        var data = {
+            startDate: startDate,
+            endDate: endDate,
+        }
+        if (new Date(startDate) > new Date(endDate) || !startDate || !endDate) {
+            alert("Please Select dates Correctly!");
+            document.getElementById("loader").style.display = "none";
+            return;
+        } else {
+            $('#loader').show();
+            setTimeout(function () {
+                getData(data);
+            }, 1000);
+        }
+
+    }
+
+    function getData(data) {
+        var getBetweenDates = function (startDate, endDate) {
+            var arr = [], lastDay, start, end;
+            var startYear = startDate.split("-");
+            var endYear = endDate.split("-");
+
+            for (var i = parseInt(startYear["0"]); i <= parseInt(endYear["0"]); i++) {
+
+                startMonth = (i > parseInt(startYear["0"])) ? 1 : parseInt(startYear["1"]);
+                endMonth = (i == endYear["0"]) ? endYear["1"] : 12;
+
+                for (var j = startMonth; j <= endMonth; j++) {
+                    let month = j < 10 ? i + "0" + j : i + "" + j;
+                    arr.push(month);
+                }
+            }
+
+            return arr;
+        }
+
+        //getting between dates
+        var smToEm = getBetweenDates(data.startDate, data.endDate);
+        var counsellingHeading = ['Sex Workers', 'People who inject drugs (PWIDs)', 'MSM & TG', 'Blood or Organ Recipients', 'Clients of Sex Workers', 'Migrants', 'Spouse/Partners of Migrants', 'Others']
+
+        var tableHead = `<tr>
+                    <td colspan="27" style="font-weight: bold;border:1px solid black;background:rgb(44, 102, 147);color:white;text-align:center">12. HIV/AIDS Program</td> 
+                    </tr>
+                    <tr>
+                    <td colspan="27" style="font-weight: bold;border:1px solid black;background:rgb(44, 102, 147);color:white;text-align:center"> ${selectedOU.name} ( ${months[(Number(data.startDate.split("-")["1"] - 1))]} ${data.startDate.split("-")["0"]} to  ${months[(Number(data.endDate.split("-")["1"] - 1))]} ${data.endDate.split("-")["0"]} )</td> 
+                    </tr>
+                    <tr>
+                    <td colspan="27" style="font-weight: bold;border:1px solid black;background:rgb(44, 102, 147);color:white;text-align:center">Testing and Counseling with Result (To be filled by HTC Sites only)</td> 
+                    </tr>
+                    <tr>
+                        <td rowspan= "2" style="font-weight: bold;border:1px solid black;background: #eceeef;text-align:center"></td>
+                        <td rowspan= "2" style="font-weight: bold;border:1px solid black;background: #eceeef;text-align:center">Age Group</td>
+                        <td rowspan= "2" style="font-weight: bold;border:1px solid black;background: #eceeef;text-align:center">Indicator</td>
+                    `
+        counsellingHeading.forEach(head => tableHead += `<td colspan="3" style="font-weight: bold;border:1px solid black;background: #eceeef;text-align:center">${head}</td>`)
+        tableHead += '</tr><tr>'
+        counsellingHeading.forEach(head => tableHead += `<td style="font-weight: bold;border:1px solid black;background: #eceeef;text-align:center">Female</td>
+                                                        <td style="font-weight: bold;border:1px solid black;background: #eceeef;text-align:center">Male</td>
+                                                        <td style="font-weight: bold;border:1px solid black;background: #eceeef;text-align:center">Trans-Gender</td>`)
+        tableHead += `</tr>`
+        document.getElementById('tableHead').innerHTML = tableHead;
+
+
+        var dataElementIds = [
+            'MoGN6YSt4qj', 'nPJfRn4iuOs', 'iS5K7eEp9Az', 'ZtTj07CbFK3', 'GCGg2ocO4AA', 'U94efhxY9rZ', 'm92J7NEzc5p', 'pplUUMaEJLd', 'R4W97dBHoVj', 'iZQMHhTrCQI', 'kjggmsXc5gv', 'bWM6IIcyWT0', 'hvNLBImITKJ', 'yX8cMrrsT9A', 'Dl98WHRikuh', 'i2ZB5ehhnVv', 'RIoeX03AF29', 'QpDMQ1tcJ0n', 'z4xyocZs4yA', 'dZoHD9c2FtN', 'Wa7fvRB10bT', 'Zhi5flzMnpE', 'StTZit5sx8y', 'KROI1CpZE1m',
+            'ZViofitxMcn', 'yFQiq5RGCMI', 'R03gn0TrFMO', 'EzVJXRPJxDs', 'v8dsLMLOJId', 'mMM0GpaMPg1', 'dGWMTcVJNET', 'ltBEQtQqMu5', 'lrqjH2bUZ33', 'PRcLAO1uqes', 'WmMrIwBpkLo', 'BfuFHlXQOK0', 'dS1i1NLtVOs', 'uYUiGig1MQD', 'nIMv7pVqajs', 'pNcV2nDARS2', 'ylo3SIpmwXl', 'vXhdd3GrhsL', 'ilzPHaG4oxD', 'NJuW4j5esey', 'Sf1X5ToqQ1E', 'Kdx010aIh6p', 'AvyjCTURq7x', 'xUcYKfgb8Hm',
+            'HJHXUTEtwsP', 'bLEXyDMFjyQ', 'zO2r1zOAwXU', 'ztcUIkkGtaC', 'D56O1yfvnMk', 'tkBwX44Zbep', 'NrlV6jFg61V', 'WMSmxUBv7Kx', 'NSS9dsEXRRA', 'erHqckiw1QG', 'S30gKnaTObY', 'faVKJ2rEySm', 'LEAKxwfrLHC', 'CbWaKRmJw9L', 'OXAePrq6tG5', 'aIM4BR4FqYG', 'ygXhSH97ccc', 'CK3YBsEbC38', 'XldTt5GxTev', 'x0kBA2EIDGC', 'S7UOOAETENg', 'EiLOHD5X3SU', 'z3jeI1yAT2l', 'NbpIJMTXiNN',
+            'Co7ZHTse2um', 'kwO6rwjwjNY', 'rvGaWGHSlWH', 'fsIwOjZDpY0', 'zb7GDkLQ7uj', 'NhsOwkChmwh', 'SwV2toEZCbB', 'oiPbg3xu9RZ', 'Pxh4d1VvMrL', 'jMwJYOXBRGb', 't0DRItFmSFQ', 'O3ILjLnjHQ0', 'tr4u0ewGekj', 'IPNNtuNvz4C', 'dwbVW90hylF', 'bLgkGixalB7', 'BPh3tkDpGGp', 'xmJotmEvGUR', 'lGPFnCz5Auk', 'yvPLOySOB6J', 'sPtf0AXHgo3', 'iJdKCjaayG8', 'UFgrmlt9F89', 'QNuhXgsRl2s'
+
+        ]
+
+        var dataValues = {};
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: `../api/analytics.json?dimension=dx:${dataElementIds.join(';')}&filter=ou:${selectedOU.id}&filter=pe:${smToEm.join(";")}&displayProperty=NAME&paging=false`,
+            data: JSON,
+            success: function (res, status) {
+                if (res.rows.length) {
+                    res.rows.forEach(row => dataValues[row[0]] = row[1])
+                }
+            }
+        });
+
+        var tableBody = `<tr>    
+        <td rowspan="5">Testing and Counseling with Result</td>
+        `;
+        [...Array(26).keys()].forEach(arr => tableBody += `<td style="background:#eceeef;text-align:center">${(arr + 1)}</td>`)
+        tableBody += `</tr>
+        <tr>
+            <td rowspan="2"><= 14 yrs</td>
+            <td>Tested</td>
+        `
+        dataElementIds.forEach((id, index) => {
+
+            if ((index+1)==49) {
+                tableBody += '</tr><tr><td rowspan="2">>= 15 yrs</td><td>Tested</td>'
+            }
+            else if ((index+1)==25 || (index+1)==73) {
+                tableBody += '</tr><tr><td>Positive</td>'
+            }
+
+            tableBody += `<td style='text-align:center'>${dataValues[id] ? Number(dataValues[id]) : ''}</td>`
+            
+        })
+
+        document.getElementById("tableBody").innerHTML = tableBody;
+        document.getElementById("dataTable").style.visibility = "visible";
+        document.getElementById("loader").style.display = "none";
+    }
+
+
+    var tableToExcel = (function () {
+        var uri = 'data:application/vnd.ms-excel;base64,'
+            , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+            , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+            , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+        return function (table, name, filename) {
+            if (!table.nodeType) table = document.getElementById(table)
+            var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+            document.getElementById("dlink").href = uri + base64(format(template, ctx));
+            document.getElementById("dlink").download = filename;
+            document.getElementById("dlink").click();
+        }
+    })()
+
+</script>
+
+
+<!-- printing script -->
+<script type="text/javascript">
+    function printContent(el) {
+        var restorepage = document.body.innerHTML;
+        var printcontent = document.getElementById(el).innerHTML;
+        document.body.innerHTML = printcontent;
+        window.print();
+        document.body.innerHTML = restorepage;
+    }
+
+</script>
