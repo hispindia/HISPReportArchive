@@ -362,7 +362,7 @@
     </div>
 
     <script>
-      const BASE = "https://links.hispindia.org/ippf_uin/api";
+      const BASE = "https://uin.ippf.org/api";
 
       const riskNames = [
         'Arms Trafficking & WMD',
@@ -377,19 +377,62 @@
       ];
 
       const DE_ROLE_MAP = {
-        'UkQI1dWzZOv': 'Organisation',
-        'daG91uRV8pi': 'President',
-        'uT1NdSet4eo': 'Vice President',
-        'DMJOfwrOwo8': 'Secretary',
-        'fKFIKK33FRc': 'Treasurer',
-        'xCJOBTvagP9': 'Youth Member',
-        'RA5zVHd7pVO': 'Chief Executive Officer',
-        'glFVJpRaGWK': 'Director of Finance',
-        'YjmSPK8DMOZ': 'Director of HR',
-        'U4OSVfrlPxQ': 'Director of Programs',
-        'TfCXfVv6j2O': 'Bank Account',
-        'cvI0Tq2uPjC': 'Bank',
-        'CkulnRpyanv': 'Bank'
+        'UkQI1dWzZOv': {
+          id: "",
+          value: "Organisation"
+        },
+        'daG91uRV8pi': {
+          id: "",
+          value: "President"
+        },
+        'uT1NdSet4eo': {
+          id: "",
+          value: "Vice President"
+        },
+        'DMJOfwrOwo8': {
+          id: "",
+          value: "Secretary"
+        },
+        'fKFIKK33FRc': {
+          id: "",
+          value: "Treasurer"
+        },
+        'xCJOBTvagP9': {
+          id: "",
+          value: "Youth Member"
+        },
+        'RA5zVHd7pVO': {
+          id: "BFlTIibR06y",
+          value: ""
+        },
+        'glFVJpRaGWK': {
+          id: "nVzxk8GQ04j",
+          value: ""
+        },
+        'YjmSPK8DMOZ': {
+          id: "",
+          value: "Senior Management (Director of HR)"
+        },
+        'U4OSVfrlPxQ': {
+          id: "",
+          value: "Director of Programs"
+        },
+        'TfCXfVv6j2O': {
+          id: "",
+          value: "Director of Organisation Learning and Evaluation"
+        },
+        'cvI0Tq2uPjC': {
+          id: "",
+          value: "Bank"
+        },
+        'CkulnRpyanv': {
+          id: "",
+          value: "Bank"
+        },
+        'OHPBCB8PgSo': {
+          id: "",
+          value: "Bank"
+        }
       };
 
       const RISK_CODE_MAP = {
@@ -406,11 +449,19 @@
         "Associated Entity": 'AE'
       };
 
-      const PROGRAM_STAGE_PDF = 'pHiRWkSg9Wx';
-
       let orgName = null;
       let pdfData = {};
       let allEvents = [];
+      
+      function getLatestDataElementValue(dataElementId) {
+        if (!dataElementId) return null;
+        const latestEvent = [...allEvents]
+          .filter(event => {
+            const value = event.data?.[dataElementId];
+            return value !== undefined && value !== null &&  value !== "";
+          }).sort((a, b) => new Date(b.occurredAt || 0) - new Date(a.occurredAt || 0))[0];
+        return latestEvent?.data?.[dataElementId] || null;
+      }
 
        function formatDate(isoStr) {
         if (!isoStr) return '—';
@@ -478,24 +529,30 @@
           });
         });
 
-        const pdfEvent = allEvents.find(e => e.programStage === PROGRAM_STAGE_PDF);
-        pdfData = pdfEvent?.data || {};
-
+        debugger;
         const dataStoreRes = await fetch(`${BASE}/dataStore/accuityResponse/${teiUId}`);
         const allRecords = await dataStoreRes.json();
+        console.log("Total Records:", allRecords.length);
 
         const personMap = new Map();
 
         for (const rec of allRecords) {
           debugger;
           const deUID = rec.id?.split('_')[0];
-          const designation = DE_ROLE_MAP[deUID] || '--';
-          const finalDesignation = designation || "Unknown";
+          const roleConfig = DE_ROLE_MAP[deUID];
+          let designation = "--";
           const name = rec[deUID] || rec.value;
-
           if (!name || name.trim() === "" || name === "—") {
             continue;
           }
+          if (roleConfig) {
+            if (roleConfig.value) {
+              designation = roleConfig.value;
+            } else if (roleConfig.id) {
+              designation = getLatestDataElementValue(roleConfig.id);
+            }
+          }
+          const finalDesignation = designation;
           const resultText = rec[rec.id];
 
           if (designation === 'Organisation') {
@@ -521,6 +578,7 @@
           });
         }
 
+        console.log("After Mapping:", personMap.size);
         if (orgName) {
           document.getElementById("org-name-heading").textContent = `Organisation: ${orgName}`;
         }
@@ -536,7 +594,7 @@
         const persons = [...personMap.values()];
 
         let totalFlags = 0;
-        let individualOut = 0;
+        let individualOut = 0;  
         let rowsHtml = '';
         const flagDetails = [];
 
@@ -552,7 +610,7 @@
           const statusKey = `${code}-Status-${memberId}`;
           const statusDe = dataElementCodeMap[statusKey];
 
-          const value = statusDe ? pdfData[statusDe] : null;
+          const value = statusDe ? getLatestDataElementValue(statusDe) : null;  
 
           const isFlagged = p.flaggedCategories.has(cat);
 
