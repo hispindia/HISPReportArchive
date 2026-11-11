@@ -371,7 +371,7 @@
         'Drug Trafficking',
         'Fraud',
         'Wanted Individuals',
-        'Wanted Individuals/Global Sanction List/Associated Entity',
+        'Sanction List/Global Sanction List/Associated Entity',
         'PEP',
         'Enforcement'
       ];
@@ -483,7 +483,7 @@
         if (!resultText || resultText.includes('No Records Found')) return [];
         const lower = resultText.toLowerCase();
         return riskNames.filter(cat => {
-          if (cat === 'Wanted Individuals/Global Sanction List/Associated Entity') {
+          if (cat === 'Sanction List/Global Sanction List/Associated Entity') {
             return lower.includes('.wanted individuals') ||
                   lower.includes('.sanction list') ||
                   lower.includes('.global sanction list') ||
@@ -513,6 +513,10 @@
         const teData = await teRes.json();
 
         const trackedEntity = teData.trackedEntities[0];
+        const legalNameAttribute = trackedEntity?.attributes?.find(
+          attr => attr.attribute === "UkQI1dWzZOv"
+        );
+        orgName = legalNameAttribute?.value
 
         trackedEntity?.enrollments?.forEach(en => {
           en.events?.forEach(event => {
@@ -549,15 +553,12 @@
             if (roleConfig.value) {
               designation = roleConfig.value;
             } else if (roleConfig.id) {
-              designation = getLatestDataElementValue(roleConfig.id);
+              designation = getLatestDataElementValue(roleConfig.id) || "--";
             }
           }
           const finalDesignation = designation;
           const resultText = rec[rec.id];
 
-          if (designation === 'Organisation') {
-            orgName = name;
-          }
           const key = `${rec.event_uid}_${deUID}_${rec.id}`;
 
           if (!personMap.has(key)) {
@@ -600,7 +601,6 @@
 
         for (const p of persons) {
           const uniqueFlags = [...p.flaggedCategories];
-          if (uniqueFlags.length > 0) individualOut++;
 
           const cells = riskNames.map(cat => {
 
@@ -621,6 +621,7 @@
           totalFlags++;
 
           if (cat === 'PEP' || cat === 'Enforcement') {
+            individualOut++;
             return `<td><span class="chk-orange">✔</span></td>`;
           }
 
